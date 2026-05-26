@@ -1,0 +1,72 @@
+{
+  "id": "bash-l1-m4",
+  "title": "Créer et exécuter un script",
+  "level": 1,
+  "lang": "bash",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Le shebang : #!",
+      "content": "La première ligne d'un script Bash commence par `#!` suivi du chemin vers l'interpréteur. On appelle cette ligne le **shebang** (ou hashbang).\n\n```bash\n#!/bin/bash\n```\n\nCela indique au système d'exploitation quel programme utiliser pour exécuter le script. Variantes courantes :\n- `#!/bin/bash` → Bash (le plus courant)\n- `#!/usr/bin/env bash` → Bash trouvé dans le PATH (plus portable)\n- `#!/bin/sh` → Shell POSIX basique\n\nSans shebang, le script s'exécutera quand même si vous l'appelez explicitement avec `bash script.sh`, mais pas si vous faites `./script.sh`."
+    },
+    {
+      "title": "Rendre un script exécutable",
+      "content": "Par défaut, les fichiers créés sous Linux ne sont pas exécutables. Il faut le faire explicitement avec `chmod` (Change Mode) :\n\n```bash\n# Rendre exécutable pour le propriétaire\nchmod +x monscript.sh\n\n# Vérifier les permissions\nls -l monscript.sh\n# -rwxr--r-- 1 alice alice 45 mai 23 monscript.sh\n#    ^ le x indique que le fichier est exécutable\n```\n\n**Explication des permissions :**\n```\n-rwxr-xr-x\n ^^^         propriétaire : lecture, écriture, exécution\n    ^^^      groupe : lecture, exécution\n       ^^^   autres : lecture, exécution\n```"
+    },
+    {
+      "title": "Exécuter un script",
+      "content": "Trois façons d'exécuter un script :\n\n**1. Avec le chemin (après chmod +x) :**\n```bash\n./monscript.sh           # dossier courant\n~/scripts/monscript.sh   # chemin relatif\n/home/alice/monscript.sh # chemin absolu\n```\n\n**2. En passant le fichier à Bash :**\n```bash\nbash monscript.sh\n```\nPas besoin de chmod +x dans ce cas.\n\n**3. En sourçant (exécute dans le shell courant) :**\n```bash\nsource monscript.sh\n. monscript.sh   # équivalent\n```\nLes variables définies dans le script restent disponibles après."
+    },
+    {
+      "title": "Les arguments d'un script",
+      "content": "Un script peut recevoir des **arguments** passés lors de son appel :\n\n```bash\n# saluer.sh\n#!/bin/bash\necho \"Bonjour $1 !\"       # $1 = premier argument\necho \"Vous êtes $2 ans\"   # $2 = deuxième argument\n```\n\n```bash\nbash saluer.sh Alice 30\n# Affiche : Bonjour Alice !\n# Affiche : Vous êtes 30 ans\n```\n\n**Variables spéciales :**\n| Variable | Signification |\n|----------|---------------|\n| `$0` | Nom du script |\n| `$1`, `$2`... | Arguments positionnels |\n| `$#` | Nombre d'arguments |\n| `$@` | Tous les arguments |\n| `$?` | Code de retour de la dernière commande |"
+    },
+    {
+      "title": "Exemple de script complet",
+      "content": "```bash\n#!/bin/bash\n# creation_dossier.sh — Crée un dossier et y ajoute un fichier de log\n\n# Vérifier qu'un argument a été fourni\nif [ $# -eq 0 ]; then\n    echo \"Usage : $0 <nom_dossier>\"\n    exit 1\nfi\n\ndossier=\"$1\"\n\n# Créer le dossier\nmkdir -p \"$dossier\"\necho \"Dossier '$dossier' créé.\"\n\n# Créer un fichier de log\nlog=\"$dossier/creation.log\"\necho \"Créé le $(date)\" > \"$log\"\necho \"Log enregistré dans $log\"\n```\n\n`exit 1` termine le script avec un code d'erreur (non nul = erreur). `exit 0` (ou simplement `exit`) signifie succès."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m4-1",
+      "order": 1,
+      "title": "Créer un script avec shebang",
+      "instructions": "Créez un fichier `~/scriptlearn/niveau1/bash/bonjour.sh` contenant :\n```bash\n#!/bin/bash\necho \"Mon premier script Bash !\"\n```\n\nUtilisez `echo` avec redirection `>` pour créer le fichier.",
+      "expectedOutput": "bonjour.sh",
+      "validationType": "contains",
+      "correction": "mkdir -p ~/scriptlearn/niveau1/bash\necho '#!/bin/bash\necho \"Mon premier script Bash !\"' > ~/scriptlearn/niveau1/bash/bonjour.sh",
+      "explanation": "La redirection `>` crée le fichier et y écrit le contenu. On utilise des guillemets simples `''` pour que le `$` du shebang ne soit pas interprété. Le fichier contient deux lignes : le shebang et la commande `echo`."
+    },
+    {
+      "id": "ex-bash-l1-m4-2",
+      "order": 2,
+      "title": "Rendre le script exécutable",
+      "instructions": "Rendez le script `bonjour.sh` exécutable, puis vérifiez ses permissions.\n\nDeux commandes attendues :\n1. `chmod +x ...`\n2. `ls -l ...`\n\nVous devez voir un `x` dans les permissions.",
+      "expectedOutput": "-rwx",
+      "validationType": "contains",
+      "correction": "chmod +x ~/scriptlearn/niveau1/bash/bonjour.sh\nls -l ~/scriptlearn/niveau1/bash/bonjour.sh",
+      "explanation": "`chmod +x` ajoute (`+`) le droit d'exécution (`x`) au fichier. `ls -l` affiche ensuite `-rwxr--r--` (ou similaire) : le `x` après le `rw` confirme que le fichier est exécutable."
+    },
+    {
+      "id": "ex-bash-l1-m4-3",
+      "order": 3,
+      "title": "Exécuter le script",
+      "instructions": "Exécutez votre script `bonjour.sh` avec `bash` (sans avoir besoin de chmod).\n\nRésultat attendu :\n```\nMon premier script Bash !\n```",
+      "expectedOutput": "Mon premier script Bash !",
+      "validationType": "contains",
+      "correction": "bash ~/scriptlearn/niveau1/bash/bonjour.sh",
+      "explanation": "En passant le script à `bash` directement, vous n'avez pas besoin de `chmod +x`. Cette méthode est utile pour tester rapidement ou si les permissions ne permettent pas l'exécution directe."
+    },
+    {
+      "id": "ex-bash-l1-m4-4",
+      "order": 4,
+      "title": "Script avec argument",
+      "instructions": "Tapez directement dans le terminal les commandes suivantes pour simuler un script avec argument :\n\n```bash\nnomScript=\"monScript.sh\"\nargument=\"Alice\"\necho \"Script : $nomScript\"\necho \"Bonjour $argument, bienvenue dans Bash !\"\n```\n\nRésultat attendu :\n```\nScript : monScript.sh\nBonjour Alice, bienvenue dans Bash !\n```",
+      "expectedOutput": "Bonjour Alice",
+      "validationType": "contains",
+      "correction": "nomScript=\"monScript.sh\"\nargument=\"Alice\"\necho \"Script : $nomScript\"\necho \"Bonjour $argument, bienvenue dans Bash !\"",
+      "explanation": "Ici on simule `$0` (nom du script) et `$1` (premier argument) avec des variables. Dans un vrai script, `$0` et `$1` seraient automatiquement définis lors de l'appel : `bash script.sh Alice`."
+    }
+  ]
+}

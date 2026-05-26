@@ -1,0 +1,74 @@
+{
+  "id": "spl-m1",
+  "title": "Introduction à SPL et Splunk",
+  "level": 8,
+  "lang": "spl",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Qu'est-ce que Splunk et SPL ?",
+      "content": "**Splunk** est une plateforme de collecte, indexation et analyse de données machine (logs, métriques, événements). Elle est très répandue dans les environnements SOC.\n\n**SPL** (Search Processing Language) est le langage de requête de Splunk. Comme KQL pour Sentinel, SPL permet d'interroger et d'analyser des données sans SQL traditionnel.\n\nCas d'usage courants :\n- Analyse de logs de sécurité\n- Détection d'anomalies et d'intrusions\n- Tableaux de bord opérationnels\n- Corrélation d'événements"
+    },
+    {
+      "title": "Structure d'une recherche SPL",
+      "content": "Une recherche SPL est une **pipeline de commandes** séparées par `|` :\n\n```spl\nindex=main sourcetype=syslog\n| head 10\n| fields host, _time, message\n```\n\nLa **première partie** (avant le premier `|`) est la **recherche de base** : elle définit les données à récupérer.\n\nEnsuite, chaque commande `| cmd` transforme les résultats.\n\nTermes de recherche clés :\n- `index=nom` — index à interroger\n- `sourcetype=type` — type de source\n- `host=serveur` — machine source\n- `source=fichier` — fichier source"
+    },
+    {
+      "title": "Commandes fondamentales",
+      "content": "| Commande | Description |\n|---|---|\n| `head N` | Premières N lignes |\n| `tail N` | Dernières N lignes |\n| `fields col1, col2` | Sélectionner des champs |\n| `fields -col` | Exclure un champ |\n| `table col1, col2` | Afficher sous forme de tableau |\n| `rename col AS alias` | Renommer un champ |\n| `sort col` / `sort -col` | Trier (asc/desc) |\n\nExemple :\n```spl\nindex=security sourcetype=wineventlog\n| head 50\n| fields EventCode, host, user\n| rename EventCode AS code, user AS utilisateur\n| table code, host, utilisateur\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-m1-1",
+      "order": 1,
+      "title": "Recherche de base dans un index",
+      "instructions": "Écrivez une recherche SPL pour récupérer tous les événements de l'index `security`.",
+      "requiredKeywords": ["index=security"],
+      "validationType": "keywords",
+      "correction": "index=security",
+      "explanation": "Une recherche SPL minimale spécifie l'index. Sans autres filtres, Splunk retourne tous les événements de cet index sur la période sélectionnée (par défaut les dernières 24h)."
+    },
+    {
+      "id": "ex-spl-m1-2",
+      "order": 2,
+      "title": "Limiter avec head",
+      "instructions": "Récupérez les **10 premiers événements** de l'index `main` avec le sourcetype `syslog`.",
+      "requiredKeywords": ["index=main", "sourcetype=syslog", "head", "10"],
+      "validationType": "keywords",
+      "correction": "index=main sourcetype=syslog\n| head 10",
+      "explanation": "`head 10` limite les résultats aux 10 premiers. Toujours bonne pratique lors des premières explorations pour éviter de surcharger l'interface."
+    },
+    {
+      "id": "ex-spl-m1-3",
+      "order": 3,
+      "title": "Sélectionner des champs",
+      "instructions": "Depuis `index=security`, récupérez uniquement les champs `host`, `user` et `EventCode`.",
+      "requiredKeywords": ["index=security", "fields", "host", "user", "eventcode"],
+      "validationType": "keywords",
+      "correction": "index=security\n| fields host, user, EventCode",
+      "explanation": "`fields` sélectionne les colonnes à afficher — comme `SELECT col1, col2` en SQL. Réduire les champs améliore les performances sur de gros volumes."
+    },
+    {
+      "id": "ex-spl-m1-4",
+      "order": 4,
+      "title": "Renommer et afficher en tableau",
+      "instructions": "Depuis `index=main`, affichez `host` et `source` en les renommant `serveur` et `fichier_source`, et affichez en format tableau.",
+      "requiredKeywords": ["index=main", "rename", "as", "table"],
+      "validationType": "keywords",
+      "correction": "index=main\n| rename host AS serveur, source AS fichier_source\n| table serveur, fichier_source",
+      "explanation": "`rename X AS Y` renomme un champ pour l'affichage. `table` force un affichage tabulaire propre, idéal pour les rapports."
+    },
+    {
+      "id": "ex-spl-m1-5",
+      "order": 5,
+      "title": "Trier les résultats",
+      "instructions": "Récupérez les événements de `index=security`, puis triez-les par `_time` en **ordre décroissant** (les plus récents en premier).",
+      "requiredKeywords": ["index=security", "sort", "-_time"],
+      "validationType": "keywords",
+      "correction": "index=security\n| sort -_time",
+      "explanation": "`sort -_time` trie par ordre décroissant (`-` devant = DESC). `sort _time` serait croissant. `_time` est le champ timestamp interne de Splunk."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "spl-m3",
+  "title": "Statistiques et visualisations SPL",
+  "level": 8,
+  "lang": "spl",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Agrégation avec stats",
+      "content": "La commande `stats` est le cœur de l'analyse Splunk. Elle agrège les événements :\n\n```spl\nindex=security EventCode=4625\n| stats count BY user, host\n| sort -count\n```\n\nFonctions `stats` courantes :\n| Fonction | Description |\n|---|---|\n| `count` | Nombre d'événements |\n| `count(champ)` | Nombre de valeurs non nulles |\n| `dc(champ)` | Valeurs distinctes (distinct count) |\n| `sum(champ)` | Somme |\n| `avg(champ)` | Moyenne |\n| `max(champ)` / `min(champ)` | Extrêmes |\n| `values(champ)` | Liste des valeurs uniques |\n| `list(champ)` | Liste de toutes les valeurs |"
+    },
+    {
+      "title": "Visualisations temporelles avec timechart",
+      "content": "`timechart` agrège les données sur des intervalles de temps — parfait pour détecter des pics d'activité :\n\n```spl\nindex=security EventCode=4625\n| timechart span=1h count BY user\n```\n\nLe paramètre `span` définit l'intervalle : `1m`, `1h`, `1d`, `7d`, etc.\n\n`chart` est similaire mais sur un axe X quelconque (pas forcément temporel) :\n```spl\n| chart count BY host, EventCode\n```\n\n**`top`** — trouver les N valeurs les plus fréquentes :\n```spl\n| top 10 user\n```\n\n**`rare`** — les moins fréquentes (détection d'anomalies) :\n```spl\n| rare user\n```"
+    },
+    {
+      "title": "Déduplication et jointure",
+      "content": "**`dedup`** — supprimer les doublons :\n```spl\n| dedup user\n| dedup host, EventCode\n```\n\n**`lookup`** — enrichir avec des données externes :\n```spl\nindex=security\n| lookup users.csv username AS user OUTPUT department\n```\n\n**`join`** — joindre deux recherches :\n```spl\nindex=security EventCode=4625\n| join user [\n    search index=security EventCode=4624\n    | stats count AS successes BY user\n  ]\n```\n\n**Alertes Splunk** : une recherche sauvegardée peut déclencher une alerte si `count > seuil`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-m3-1",
+      "order": 1,
+      "title": "Compter les échecs par utilisateur",
+      "instructions": "Depuis `index=security EventCode=4625`, comptez le nombre d'échecs de connexion **par utilisateur** (`user`) et triez du plus grand au plus petit.",
+      "requiredKeywords": ["index=security", "eventcode=4625", "stats", "count", "by", "user", "sort"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625\n| stats count BY user\n| sort -count",
+      "explanation": "`stats count BY user` compte les événements groupés par utilisateur. `sort -count` trie par ordre décroissant — on voit immédiatement les comptes suspects avec le plus de tentatives."
+    },
+    {
+      "id": "ex-spl-m3-2",
+      "order": 2,
+      "title": "Top 10 des IP sources",
+      "instructions": "Trouvez les **10 adresses IP** (`src_ip`) qui génèrent le plus d'événements dans `index=firewall`.",
+      "requiredKeywords": ["index=firewall", "top", "10", "src_ip"],
+      "validationType": "keywords",
+      "correction": "index=firewall\n| top 10 src_ip",
+      "explanation": "`top N champ` est un raccourci puissant : il compte, trie et limite en une commande. Il ajoute aussi les colonnes `count` et `percent` automatiquement."
+    },
+    {
+      "id": "ex-spl-m3-3",
+      "order": 3,
+      "title": "Évolution temporelle des erreurs",
+      "instructions": "Créez un graphe temporel des échecs d'authentification (`EventCode=4625`) **par heure** sur `index=security`.",
+      "requiredKeywords": ["index=security", "eventcode=4625", "timechart", "span=1h", "count"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625\n| timechart span=1h count",
+      "explanation": "`timechart span=1h count` crée un point de données toutes les heures. Dans l'interface Splunk, le résultat s'affiche comme un graphe en courbes — idéal pour détecter des pics de tentatives d'intrusion."
+    },
+    {
+      "id": "ex-spl-m3-4",
+      "order": 4,
+      "title": "Valeurs distinctes d'un champ",
+      "instructions": "Depuis `index=security`, comptez le nombre d'**hôtes distincts** (`host`) qui ont généré des événements, et le nombre total d'événements.",
+      "requiredKeywords": ["index=security", "stats", "dc(host)", "count"],
+      "validationType": "keywords",
+      "correction": "index=security\n| stats count, dc(host) AS hotes_distincts",
+      "explanation": "`dc()` (distinct count) compte les valeurs uniques. Ici on obtient en une requête : le nombre total d'événements ET combien de machines différentes ont émis ces événements."
+    },
+    {
+      "id": "ex-spl-m3-5",
+      "order": 5,
+      "title": "Détecter des comportements rares",
+      "instructions": "Depuis `index=security EventCode=4624` (connexions réussies), identifiez les **processus de connexion** (`LogonProcessName`) **les plus rares** — indicateurs potentiels de menaces.",
+      "requiredKeywords": ["index=security", "eventcode=4624", "rare", "logonprocessname"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4624\n| rare LogonProcessName",
+      "explanation": "`rare` retourne les valeurs les moins fréquentes. Un processus de connexion inhabituel peut indiquer une technique d'attaque (pass-the-hash, lateral movement). C'est une technique de threat hunting de base."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l5-m2",
+  "title": "Analyse comportementale et anomalies",
+  "lang": "python",
+  "level": 5,
+  "order": 2,
+  "estimatedMinutes": 70,
+  "course": [
+    {
+      "section": "Détection par baseline comportementale",
+      "content": "La détection par anomalie compare le comportement **actuel** à une **baseline** établie sur une période normale. Contrairement aux règles statiques, elle détecte les menaces inconnues.\n\n**Exemples d'anomalies comportementales** :\n- Un utilisateur se connecte à 3h du matin (hors de sa baseline horaire)\n- Un process génère 10x plus de trafic réseau que d'habitude\n- Un compte accède à 100 serveurs en 5 minutes (mouvement latéral)\n\n```python\nfrom collections import defaultdict\nfrom datetime import datetime\nimport statistics\n\n# Baseline : activité normale d'un utilisateur sur 30 jours\nbaseline_user = {\n    \"alice\": {\n        \"heures_connexion\": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17],  # Heures habituelles\n        \"nb_connexions_jour_moyen\": 3,\n        \"ips_habituelles\": {\"10.0.0.15\", \"10.0.0.16\"},\n        \"nb_fichiers_acces_moyen\": 50,\n    },\n    \"bob\": {\n        \"heures_connexion\": [9, 10, 11, 14, 15, 16],\n        \"nb_connexions_jour_moyen\": 2,\n        \"ips_habituelles\": {\"10.0.0.20\"},\n        \"nb_fichiers_acces_moyen\": 30,\n    }\n}\nprint(\"Baseline chargée pour\", list(baseline_user.keys()))\n```"
+    },
+    {
+      "section": "Détection d'anomalies horaires et géographiques",
+      "content": "```python\ndef detecter_anomalie_horaire(username, heure_connexion, baseline):\n    \"\"\"Détecte une connexion hors des heures habituelles.\"\"\"\n    if username not in baseline:\n        return {\"anomalie\": False, \"raison\": \"Utilisateur inconnu\"}\n    \n    heures_normales = baseline[username][\"heures_connexion\"]\n    if heure_connexion not in heures_normales:\n        return {\n            \"anomalie\": True,\n            \"severite\": \"HAUTE\",\n            \"raison\": f\"Connexion à {heure_connexion}h hors baseline ({min(heures_normales)}-{max(heures_normales)}h)\"\n        }\n    return {\"anomalie\": False}\n\ndef detecter_anomalie_ip(username, ip_source, baseline):\n    \"\"\"Détecte une connexion depuis une IP inconnue.\"\"\"\n    if username not in baseline:\n        return {\"anomalie\": False}\n    \n    ips_habituelles = baseline[username][\"ips_habituelles\"]\n    if ip_source not in ips_habituelles:\n        return {\n            \"anomalie\": True,\n            \"severite\": \"MOYENNE\",\n            \"raison\": f\"IP {ip_source} inconnue (habituelles: {ips_habituelles})\"\n        }\n    return {\"anomalie\": False}\n\n# Simulation d'événements suspects\nevenements_recents = [\n    {\"user\": \"alice\", \"heure\": 3,  \"ip\": \"185.220.101.3\"},  # 3h du matin + IP étrangère\n    {\"user\": \"alice\", \"heure\": 9,  \"ip\": \"10.0.0.15\"},      # Normal\n    {\"user\": \"bob\",   \"heure\": 22, \"ip\": \"10.0.0.20\"},      # Heure suspecte\n]\n\nfor evt in evenements_recents:\n    anomalie_h = detecter_anomalie_horaire(evt[\"user\"], evt[\"heure\"], baseline_user)\n    anomalie_ip = detecter_anomalie_ip(evt[\"user\"], evt[\"ip\"], baseline_user)\n    \n    if anomalie_h[\"anomalie\"] or anomalie_ip[\"anomalie\"]:\n        print(f\"ANOMALIE [{evt['user']}] :\")\n        if anomalie_h[\"anomalie\"]:  print(f\"  Horaire : {anomalie_h['raison']}\")\n        if anomalie_ip[\"anomalie\"]: print(f\"  IP      : {anomalie_ip['raison']}\")\n    else:\n        print(f\"Normal : {evt['user']} à {evt['heure']}h depuis {evt['ip']}\")\n```"
+    },
+    {
+      "section": "Détection statistique — écart à la moyenne",
+      "content": "```python\nimport statistics\n\ndef detecter_anomalie_volume(valeur_actuelle, historique, seuil_zscore=2.5):\n    \"\"\"\n    Détecte une anomalie par z-score.\n    z = (x - moyenne) / écart-type\n    z > 2.5 → anomalie (rare à < 1% des cas normaux)\n    \"\"\"\n    if len(historique) < 5:  # Pas assez de données\n        return {\"anomalie\": False, \"raison\": \"Historique insuffisant\"}\n    \n    moyenne = statistics.mean(historique)\n    ecart = statistics.stdev(historique)\n    \n    if ecart == 0:  # Toujours la même valeur\n        anomalie = valeur_actuelle != moyenne\n        return {\"anomalie\": anomalie, \"zscore\": float(\"inf\") if anomalie else 0}\n    \n    z = (valeur_actuelle - moyenne) / ecart\n    return {\n        \"anomalie\": abs(z) > seuil_zscore,\n        \"zscore\": round(z, 2),\n        \"moyenne\": round(moyenne, 1),\n        \"valeur\": valeur_actuelle\n    }\n\n# Trafic réseau quotidien en MB (30 derniers jours)\ntrafic_historique = [120, 135, 118, 142, 129, 131, 125, 140, 128, 133,\n                     121, 138, 126, 144, 130, 127, 136, 123, 141, 132,\n                     125, 139, 128, 134, 122, 137, 130, 143, 129, 135]\n\ntrafic_aujourd_hui = 890  # Exfiltration de données !\n\nresultat = detecter_anomalie_volume(trafic_aujourd_hui, trafic_historique)\nprint(f\"Trafic actuel : {trafic_aujourd_hui} MB\")\nprint(f\"Moyenne : {resultat['moyenne']} MB\")\nprint(f\"Z-score : {resultat['zscore']}\")\nprint(f\"Anomalie : {resultat['anomalie']}\")\n```"
+    },
+    {
+      "section": "Score comportemental agrégé (UEBA)",
+      "content": "```python\ndef calculer_score_ueba(username, evenements_recents, baseline):\n    \"\"\"\n    User and Entity Behavior Analytics (UEBA) simplifié.\n    Agrège plusieurs signaux faibles en un score de risque.\n    \"\"\"\n    score = 0\n    indicateurs = []\n    \n    heures = [e[\"heure\"] for e in evenements_recents if e[\"user\"] == username]\n    ips    = {e[\"ip\"]   for e in evenements_recents if e[\"user\"] == username}\n    \n    if username not in baseline:\n        return {\"score\": 0, \"niveau\": \"INCONNU\"}\n    \n    bl = baseline[username]\n    \n    # Signal 1 : connexions hors-heures\n    hors_heures = sum(1 for h in heures if h not in bl[\"heures_connexion\"])\n    if hors_heures > 0:\n        score += hors_heures * 15\n        indicateurs.append(f\"{hors_heures} connexion(s) hors-heures\")\n    \n    # Signal 2 : IPs inconnues\n    nouvelles_ips = ips - bl[\"ips_habituelles\"]\n    if nouvelles_ips:\n        score += len(nouvelles_ips) * 20\n        indicateurs.append(f\"IP(s) inconnue(s) : {nouvelles_ips}\")\n    \n    # Signal 3 : volume de connexions anormal\n    if len(heures) > bl[\"nb_connexions_jour_moyen\"] * 3:\n        score += 25\n        indicateurs.append(f\"Volume anormal : {len(heures)} connexions\")\n    \n    niveau = (\n        \"CRITIQUE\" if score >= 60 else\n        \"HAUTE\"    if score >= 40 else\n        \"MOYENNE\"  if score >= 20 else\n        \"FAIBLE\"\n    )\n    \n    return {\"user\": username, \"score\": score, \"niveau\": niveau, \"indicateurs\": indicateurs}\n\nevts_alice = [\n    {\"user\": \"alice\", \"heure\": 3,  \"ip\": \"185.220.101.3\"},\n    {\"user\": \"alice\", \"heure\": 4,  \"ip\": \"185.220.101.3\"},\n    {\"user\": \"alice\", \"heure\": 9,  \"ip\": \"10.0.0.15\"},\n]\nresultat = calculer_score_ueba(\"alice\", evts_alice, baseline_user)\nprint(f\"\\nUEBA [{resultat['user']}] : {resultat['score']}/100 [{resultat['niveau']}]\")\nfor i in resultat[\"indicateurs\"]:\n    print(f\"  - {i}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l5-m2-ex1",
+      "title": "Détecter une connexion hors-heures",
+      "description": "Comparer une heure de connexion à une baseline",
+      "instructions": "Soit :\n```python\nbaseline_heures = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]\nheure_connexion = 3\n```\nSi l'heure est hors baseline, affichez :\n```\nAnomalie horaire : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Anomalie horaire : True",
+      "correction": "baseline_heures = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]\nheure_connexion = 3\nanomalie = heure_connexion not in baseline_heures\nprint(f\"Anomalie horaire : {anomalie}\")",
+      "explanation": "`not in` pour une liste est O(n) mais suffisant pour une courte liste d'heures. Pour de grandes baselines, on utiliserait un `set` pour O(1). La détection hors-heures est l'un des signaux UEBA les plus efficaces."
+    },
+    {
+      "id": "py-l5-m2-ex2",
+      "title": "Calculer un z-score simple",
+      "description": "Détecter un volume anormal par écart statistique",
+      "instructions": "Soit un historique de trafic et une valeur actuelle :\n```python\nhistorique = [100, 110, 105, 108, 102, 99, 107]\nvaleur = 500\n```\nCalculez la moyenne et affichez si la valeur est anormale (> moyenne * 3) :\n```\nAnomalie volume : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Anomalie volume : True",
+      "correction": "historique = [100, 110, 105, 108, 102, 99, 107]\nvaleur = 500\nmoyenne = sum(historique) / len(historique)\nanomalie = valeur > moyenne * 3\nprint(f\"Anomalie volume : {anomalie}\")",
+      "explanation": "Le seuil `moyenne * 3` est une approximation rapide. En production on utilise le z-score (`statistics.stdev`) pour tenir compte de la variance. Cette technique détecte les exfiltrations de données (burst de trafic anormal)."
+    },
+    {
+      "id": "py-l5-m2-ex3",
+      "title": "Identifier les nouvelles IPs",
+      "description": "Comparer les IPs récentes à la baseline pour détecter des anomalies",
+      "instructions": "Soit :\n```python\nips_habituelles = {\"10.0.0.1\", \"10.0.0.2\"}\nips_recentes = {\"10.0.0.1\", \"185.220.101.3\", \"194.165.16.11\"}\n```\nAffichez le nombre d'IPs inconnues :\n```\nNouvelles IPs : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Nouvelles IPs : 2",
+      "correction": "ips_habituelles = {\"10.0.0.1\", \"10.0.0.2\"}\nips_recentes = {\"10.0.0.1\", \"185.220.101.3\", \"194.165.16.11\"}\nnouvelles = ips_recentes - ips_habituelles\nprint(f\"Nouvelles IPs : {len(nouvelles)}\")",
+      "explanation": "La soustraction d'ensembles (`-`) retourne les éléments présents dans le premier set mais pas dans le second. C'est l'opération fondamentale de la détection d'anomalies basée sur la whitelist."
+    }
+  ]
+}

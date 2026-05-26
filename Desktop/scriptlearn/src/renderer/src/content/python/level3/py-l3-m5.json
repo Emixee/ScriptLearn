@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m5",
+  "title": "Sockets et communication réseau",
+  "lang": "python",
+  "level": 3,
+  "order": 5,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Module socket — bases du réseau en Python",
+      "content": "```python\nimport socket\n\n# Résolution DNS\ndef resoudre_domaine(domaine):\n    try:\n        ip = socket.gethostbyname(domaine)\n        return ip\n    except socket.gaierror as e:\n        return f\"Erreur DNS : {e}\"\n\nprint(resoudre_domaine(\"google.com\"))\nprint(resoudre_domaine(\"malware-c2.xyz\"))  # Peut retourner une IP ou erreur\n\n# Résolution inverse (IP → domaine)\ndef resoudre_inverse(ip):\n    try:\n        hostname = socket.gethostbyaddr(ip)[0]\n        return hostname\n    except socket.herror:\n        return \"Pas de PTR\"\n\nprint(resoudre_inverse(\"8.8.8.8\"))  # dns.google\n```"
+    },
+    {
+      "section": "Vérifier la disponibilité d'un port",
+      "content": "```python\nimport socket\n\ndef verifier_port(ip, port, timeout=1):\n    \"\"\"Vérifie si un port TCP est ouvert.\"\"\"\n    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:\n        s.settimeout(timeout)\n        try:\n            s.connect((ip, port))\n            return True\n        except (socket.timeout, ConnectionRefusedError, OSError):\n            return False\n\n# Scanner quelques ports\ndef scanner_ports(ip, ports):\n    ouverts = []\n    for port in ports:\n        if verifier_port(ip, port, timeout=0.5):\n            ouverts.append(port)\n            print(f\"{ip}:{port} OUVERT\")\n    return ouverts\n\n# Scan rapide des ports communs\nPORTS_COMMUNS = {\n    21: \"FTP\", 22: \"SSH\", 23: \"Telnet\", 25: \"SMTP\",\n    53: \"DNS\", 80: \"HTTP\", 443: \"HTTPS\", 445: \"SMB\",\n    3389: \"RDP\", 4444: \"Metasploit\", 8080: \"HTTP-Alt\"\n}\n\nip = \"127.0.0.1\"\nfor port, service in PORTS_COMMUNS.items():\n    etat = verifier_port(ip, port, timeout=0.3)\n    if etat:\n        print(f\"  {port}/{service}: OUVERT\")\n```"
+    },
+    {
+      "section": "Vérification WHOIS simplifiée",
+      "content": "```python\nimport socket\n\ndef whois_simple(domaine):\n    \"\"\"Interroge le serveur WHOIS pour obtenir des infos sur un domaine.\"\"\"\n    try:\n        # Se connecter au serveur WHOIS\n        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:\n            s.settimeout(10)\n            s.connect((\"whois.iana.org\", 43))\n            s.send((domaine + \"\\r\\n\").encode())\n            reponse = b\"\"\n            while True:\n                data = s.recv(4096)\n                if not data:\n                    break\n                reponse += data\n        return reponse.decode(\"utf-8\", errors=\"ignore\")\n    except Exception as e:\n        return f\"Erreur WHOIS : {e}\"\n\n# Extraire les infos importantes\nimport re\n\ndef infos_whois(domaine):\n    reponse = whois_simple(domaine)\n    infos = {}\n    for cle, pattern in [\n        (\"registrar\", r\"Registrar:\\s*(.+)\"),\n        (\"creation\",  r\"Creation Date:\\s*(.+)\"),\n        (\"expiry\",    r\"Registry Expiry Date:\\s*(.+)\"),\n    ]:\n        m = re.search(pattern, reponse, re.I)\n        if m:\n            infos[cle] = m.group(1).strip()\n    return infos\n```"
+    },
+    {
+      "section": "Analyser les entêtes HTTP",
+      "content": "```python\nimport urllib.request\nimport socket\n\ndef inspecter_headers_http(url):\n    \"\"\"Inspecte les entêtes HTTP d'un serveur (utile pour identifier les technologies).\"\"\"\n    try:\n        req = urllib.request.Request(url, method=\"HEAD\")\n        req.add_header(\"User-Agent\", \"Mozilla/5.0\")\n        with urllib.request.urlopen(req, timeout=10) as resp:\n            headers = dict(resp.headers)\n            return headers\n    except Exception as e:\n        return {\"error\": str(e)}\n\n# Headers suspects à rechercher\nHEADERS_SUSPECTS = [\n    \"x-powered-by\",     # Révèle la technologie serveur\n    \"server\",           # Version du serveur\n    \"x-runtime\",        # Ruby on Rails (souvent vulnérable)\n    \"x-aspnet-version\",  # Version ASP.NET\n]\n\ndef analyser_headers(url):\n    headers = inspecter_headers_http(url)\n    print(f\"Headers de {url}:\")\n    for h, v in headers.items():\n        print(f\"  {h}: {v}\")\n        if h.lower() in HEADERS_SUSPECTS:\n            print(f\"  ⚠️  Header sensible : {h}\")\n\nanalyser_headers(\"http://httpbin.org\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m5-ex1",
+      "title": "Résolution DNS d'un domaine suspect",
+      "description": "Utiliser socket.gethostbyname pour résoudre un domaine",
+      "instructions": "Résolvez l'IP de `\"google.com\"` avec `socket.gethostbyname()` et affichez :\n```\ngoogle.com → X.X.X.X\n```\n(L'IP exacte peut varier selon les serveurs DNS)\n\nSi la résolution échoue (pas de réseau), affichez `google.com → Erreur DNS`.",
+      "validationType": "output_contains",
+      "expectedOutput": "google.com →",
+      "correction": "import socket\ntry:\n    ip = socket.gethostbyname(\"google.com\")\n    print(f\"google.com → {ip}\")\nexcept socket.gaierror:\n    print(\"google.com → Erreur DNS\")",
+      "explanation": "`gethostbyname` interroge le DNS local. En SOC, cela permet de vérifier si un domaine suspect se résout (actif vs. sinkholed), ou de comparer la résolution depuis différentes locations."
+    },
+    {
+      "id": "py-l3-m5-ex2",
+      "title": "Vérifier si un port est ouvert",
+      "description": "Tester la disponibilité d'un port TCP avec socket",
+      "instructions": "Vérifiez si le port `80` sur `127.0.0.1` est ouvert (timeout 0.5s). Affichez :\n```\n127.0.0.1:80 → OUVERT\n```\nou\n```\n127.0.0.1:80 → FERMÉ\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "127.0.0.1:80 →",
+      "correction": "import socket\nwith socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:\n    s.settimeout(0.5)\n    try:\n        s.connect((\"127.0.0.1\", 80))\n        etat = \"OUVERT\"\n    except:\n        etat = \"FERMÉ\"\nprint(f\"127.0.0.1:80 → {etat}\")",
+      "explanation": "`SOCK_STREAM` crée un socket TCP. `settimeout` définit le délai d'attente. `connect()` lève une exception si la connexion échoue (port fermé, filtré, ou timeout)."
+    },
+    {
+      "id": "py-l3-m5-ex3",
+      "title": "Résolution inverse (PTR)",
+      "description": "Faire une résolution DNS inverse pour identifier un serveur",
+      "instructions": "Faites une résolution inverse sur `\"8.8.8.8\"` avec `socket.gethostbyaddr()` et affichez :\n```\n8.8.8.8 → dns.google\n```\nSi la résolution échoue, affichez `Pas de PTR`.",
+      "validationType": "output_contains",
+      "expectedOutput": "8.8.8.8 →",
+      "correction": "import socket\ntry:\n    hostname = socket.gethostbyaddr(\"8.8.8.8\")[0]\n    print(f\"8.8.8.8 → {hostname}\")\nexcept socket.herror:\n    print(\"8.8.8.8 → Pas de PTR\")",
+      "explanation": "`gethostbyaddr` renvoie un tuple `(hostname, aliases, addresses)`. `[0]` extrait le nom d'hôte. La résolution inverse révèle souvent l'appartenance d'une IP (cloud provider, ISP, C2 server)."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "bash-l3-m4",
+  "title": "Scripting système",
+  "level": 3,
+  "lang": "bash",
+  "order": 4,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Informations système",
+      "content": "```bash\n# Système d'exploitation\nuname -a               # info kernel complète\nuname -s               # nom du système (Linux, Darwin...)\nlsb_release -a         # distro Linux\ncat /etc/os-release    # infos distro (universel)\n\n# Matériel\nnproc                  # nombre de CPUs\nfree -h                # mémoire RAM\ndf -h                  # espace disque\ndu -sh /var/log        # taille d'un dossier\nlscpu                  # infos CPU détaillées\n\n# Charge système\nuptime                 # charge sur 1, 5, 15 min\ncat /proc/loadavg      # même info, parseable\n\n# Variables système utiles\necho $HOME             # dossier utilisateur\necho $USER             # nom d'utilisateur\necho $HOSTNAME         # nom de la machine\necho $SHELL            # shell actuel\necho $PATH             # chemin de recherche des binaires\necho $(date +%Y%m%d)   # date du jour pour nommage\n```"
+    },
+    {
+      "title": "Gestion des fichiers et permissions",
+      "content": "```bash\n# Permissions (ls -la)\n# -rwxr-xr-- 1 alice admin 1024 jan 15 10:00 script.sh\n#  ||| ||| |||\n#  ||| ||| +++-- autres (others)\n#  ||| +++------ groupe\n#  +++---------- propriétaire\n\n# chmod — modifier les permissions\nchmod 755 script.sh    # rwxr-xr-x  (octal)\nchmod +x script.sh     # ajouter exécution\nchmod -w fichier.txt   # retirer écriture\nchmod u+x,g-w script   # combo\nchmod -R 755 dossier/  # récursif\n\n# chown — changer propriétaire\nchown alice fichier.txt\nchown alice:admin fichier.txt\nchown -R alice:alice dossier/\n\n# find avec permissions\nfind . -perm /111           # fichiers exécutables\nfind . -perm 644            # fichiers rw-r--r--\nfind . -user alice          # appartenant à alice\nfind . -type f -newer ref.txt  # plus récents que ref.txt\n\n# Liens symboliques\nln -s /chemin/original lien_symbolique\nln    /chemin/original lien_physique\n```"
+    },
+    {
+      "title": "Monitoring et alertes",
+      "content": "```bash\n#!/bin/bash\n# Script de monitoring système\n\nSEUIL_CPU=80\nSEUIL_MEM=90\nSEUIL_DISQUE=85\n\n# CPU (utilisation en %)\ncpu=$(top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d. -f1)\n\n# Mémoire\nmem=$(free | awk '/Mem:/ { printf \"%d\", $3/$2*100 }')\n\n# Disque (partition principale)\ndisk=$(df / | awk 'NR==2 { print $5 }' | tr -d '%')\n\n# Alertes\ncheck_seuil() {\n    local nom=$1 valeur=$2 seuil=$3\n    if [ \"$valeur\" -ge \"$seuil\" ]; then\n        echo \"[ALERTE] $nom : ${valeur}% (seuil: ${seuil}%)\" >&2\n        return 1\n    else\n        echo \"[OK] $nom : ${valeur}%\"\n        return 0\n    fi\n}\n\ncheck_seuil \"CPU\" \"$cpu\" \"$SEUIL_CPU\"\ncheck_seuil \"Mémoire\" \"$mem\" \"$SEUIL_MEM\"\ncheck_seuil \"Disque\" \"$disk\" \"$SEUIL_DISQUE\"\n```"
+    },
+    {
+      "title": "Automatisation et logs",
+      "content": "```bash\n# Logger dans un fichier avec horodatage\nLOG=\"/var/log/mon_script.log\"\n\nlog() {\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $*\" | tee -a \"$LOG\"\n}\n\nlog \"Démarrage du script\"\nlog \"Traitement de $HOSTNAME\"\n\n# Rotation des logs (logrotate ou manuel)\nif [ $(wc -l < \"$LOG\") -gt 1000 ]; then\n    mv \"$LOG\" \"${LOG}.bak\"\n    gzip \"${LOG}.bak\"\nfi\n\n# Rediriger toutes les sorties\nexec 1> >(tee -a \"$LOG\")  # stdout → log\nexec 2> >(tee -a \"$LOG\" >&2)  # stderr → log\n\n# Archiver avec date\ntar czf \"backup_$(date +%Y%m%d_%H%M%S).tar.gz\" /chemin/source/\n\n# Nettoyer les anciens fichiers\nfind /archives -name '*.tar.gz' -mtime +30 -delete  # suppr. > 30 jours\n```"
+    },
+    {
+      "title": "Gestion des utilisateurs et groupes",
+      "content": "```bash\n# Informations sur l'utilisateur courant\nwhoami\nid\ngroups\n\n# Lister les utilisateurs\ncat /etc/passwd | cut -d: -f1  # tous les utilisateurs\ngetent passwd                   # incluant LDAP/NIS\n\n# Créer/modifier des utilisateurs\nuseradd -m -s /bin/bash alice   # créer avec home\nusermod -aG sudo alice          # ajouter au groupe sudo\npasswd alice                    # changer le mot de passe\nuserdel -r alice                # supprimer avec home\n\n# Tester si on est root\nif [ \"$(id -u)\" -ne 0 ]; then\n    echo \"Ce script doit être lancé en root\" >&2\n    exit 1\nfi\n\n# Sudo\nsudo commande\nsudo -u alice commande  # exécuter en tant qu'alice\nsudo -l                 # lister les droits sudo\n\n# Environnement d'un script lancé avec sudo\nSCRIPT_USER=${SUDO_USER:-$USER}   # l'utilisateur réel\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m4-1",
+      "order": 1,
+      "title": "Informations système",
+      "instructions": "Affichez les informations suivantes dans un format lisible :\n1. Le nom du système (`uname -s`)\n2. Le nombre de CPUs (`nproc`)\n3. L'espace disque disponible sur `/` (avec `df -h /`)\n\nRésultat attendu :\n```\nSystème : Linux\nCPUs : 4\nDisque / : ...\n```",
+      "expectedOutput": "CPUs",
+      "validationType": "contains",
+      "correction": "echo \"Système : $(uname -s)\"\necho \"CPUs : $(nproc)\"\necho \"Disque / : $(df -h / | awk 'NR==2 { print $4 }') disponible\"",
+      "explanation": "`uname -s` retourne le nom du noyau (Linux, Darwin, etc.). `nproc` affiche le nombre de processeurs disponibles. `df -h /` affiche l'utilisation de la partition racine. `awk 'NR==2 { print $4 }'` sélectionne la 2ème ligne (NR==2) et le 4ème champ (espace disponible)."
+    },
+    {
+      "id": "ex-bash-l3-m4-2",
+      "order": 2,
+      "title": "Vérification de permissions",
+      "instructions": "Créez un script qui :\n1. Crée un fichier `test_perm.txt`\n2. Lui donne les permissions `644`\n3. Affiche ses permissions avec `stat -c \"%a %n\"`\n4. Supprime le fichier\n\nRésultat attendu :\n```\n644 test_perm.txt\n```",
+      "expectedOutput": "644",
+      "validationType": "contains",
+      "correction": "touch test_perm.txt\nchmod 644 test_perm.txt\nstat -c \"%a %n\" test_perm.txt\nrm test_perm.txt",
+      "explanation": "`chmod 644` donne `rw-r--r--` : lecture-écriture pour le propriétaire (6), lecture seule pour le groupe (4) et les autres (4). `stat -c \"%a %n\"` affiche les permissions en octal (`%a`) et le nom du fichier (`%n`). C'est plus fiable que `ls -la` pour parser les permissions dans un script."
+    },
+    {
+      "id": "ex-bash-l3-m4-3",
+      "order": 3,
+      "title": "Fonction de logging",
+      "instructions": "Créez une fonction `log` qui préfixe chaque message avec la date et l'heure au format `[HH:MM:SS]`.\n\nTestez avec 3 messages : `Démarrage`, `Traitement en cours`, `Fin`.\n\nRésultat attendu :\n```\n[12:34:56] Démarrage\n[12:34:56] Traitement en cours\n[12:34:56] Fin\n```",
+      "expectedOutput": "Démarrage",
+      "validationType": "contains",
+      "correction": "log() {\n    echo \"[$(date '+%H:%M:%S')] $*\"\n}\n\nlog \"Démarrage\"\nlog \"Traitement en cours\"\nlog \"Fin\"",
+      "explanation": "`date '+%H:%M:%S'` formate la date avec heures, minutes, secondes. `$*` dans la fonction regroupe tous les arguments en une chaîne. L'interpolation `$()` exécute `date` au moment de l'appel, donc chaque log a son propre horodatage précis."
+    }
+  ]
+}

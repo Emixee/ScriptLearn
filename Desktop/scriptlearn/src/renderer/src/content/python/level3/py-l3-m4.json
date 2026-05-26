@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m4",
+  "title": "Analyse de fichiers suspects",
+  "lang": "python",
+  "level": 3,
+  "order": 4,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Identification de fichiers par magic bytes",
+      "content": "Chaque type de fichier commence par des octets magiques. En SOC, on ne fait jamais confiance à l'extension !\n\n```python\nMAGIC_BYTES = {\n    b\"MZ\":           \"PE executable (EXE/DLL)\",\n    b\"\\x7fELF\":     \"ELF executable (Linux)\",\n    b\"PK\\x03\\x04\":  \"ZIP archive (ou DOCX/XLSX/PPTX)\",\n    b\"PK\\x05\\x06\":  \"ZIP vide\",\n    b\"\\x89PNG\":     \"PNG image\",\n    b\"\\xff\\xd8\\xff\": \"JPEG image\",\n    b\"\\xd0\\xcf\\x11\\xe0\": \"MS Office OLE (DOC/XLS ancien format)\",\n    b\"%PDF\":         \"PDF document\",\n    b\"#!\": \"Script shell (shebang)\",\n    b\"\\x1f\\x8b\":    \"GZIP archive\",\n}\n\ndef identifier_type_fichier(chemin):\n    \"\"\"Identifie le type réel d'un fichier par ses magic bytes.\"\"\"\n    try:\n        with open(chemin, \"rb\") as f:\n            header = f.read(16)\n        for magic, description in MAGIC_BYTES.items():\n            if header.startswith(magic):\n                return description\n        return \"Type inconnu\"\n    except Exception as e:\n        return f\"Erreur : {e}\"\n\n# Test\nimport os\nchemin_test = os.path.join(os.environ.get(\"SystemRoot\", \"/\"), \"System32\", \"calc.exe\")\nif os.path.exists(chemin_test):\n    print(f\"{chemin_test}: {identifier_type_fichier(chemin_test)}\")\nelse:\n    print(\"calc.exe non trouvé\")\n```"
+    },
+    {
+      "section": "Extraction de chaînes de caractères (strings)",
+      "content": "```python\nimport re\n\ndef extraire_strings(data, longueur_min=4):\n    \"\"\"\n    Extrait les chaînes ASCII et Unicode d'un fichier binaire.\n    Équivalent de la commande 'strings' sous Linux.\n    \"\"\"\n    # Chaînes ASCII\n    ascii_strings = re.findall(\n        rb\"[\\x20-\\x7e]{\" + str(longueur_min).encode() + rb\",}\",\n        data\n    )\n    # Chaînes Unicode (UTF-16 LE, commun dans les PE Windows)\n    unicode_strings = re.findall(\n        rb\"(?:[\\x20-\\x7e]\\x00){\" + str(longueur_min).encode() + rb\",}\",\n        data\n    )\n    \n    result = [s.decode(\"ascii\") for s in ascii_strings]\n    result += [s.decode(\"utf-16-le\") for s in unicode_strings]\n    return sorted(set(result))\n\n# Analyser un fichier\ndef analyser_strings_suspects(chemin):\n    \"\"\"Recherche des chaînes suspectes dans un binaire.\"\"\"\n    SUSPECTS = [\n        b\"cmd.exe\", b\"powershell\", b\"WScript\", b\"RegCreateKey\",\n        b\"VirtualAlloc\", b\"CreateRemoteThread\", b\"URLDownloadToFile\",\n        b\"http://\", b\"https://\", b\".onion\", b\"base64\"\n    ]\n    try:\n        with open(chemin, \"rb\") as f:\n            data = f.read()\n        \n        print(f\"Taille : {len(data)} octets\")\n        trouvees = [s.decode() for s in SUSPECTS if s.lower() in data.lower()]\n        if trouvees:\n            print(f\"Chaînes suspectes : {trouvees}\")\n        else:\n            print(\"Aucune chaîne suspecte détectée\")\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n\nanalyser_strings_suspects(r\"C:\\Windows\\System32\\cmd.exe\")\n```"
+    },
+    {
+      "section": "Calcul d'entropie — détecter le chiffrement/packing",
+      "content": "```python\nimport math\nfrom collections import Counter\n\ndef calculer_entropie(data):\n    \"\"\"\n    Calcule l'entropie de Shannon d'un bloc de données.\n    Haute entropie (> 7.5) = données chiffrées ou compressées.\n    Bas (< 4.0) = texte clair.\n    \"\"\"\n    if not data:\n        return 0.0\n    compteur = Counter(data)\n    total = len(data)\n    entropie = 0.0\n    for count in compteur.values():\n        p = count / total\n        entropie -= p * math.log2(p)\n    return entropie\n\ndef analyser_sections_pe(chemin, taille_bloc=4096):\n    \"\"\"Analyse l'entropie par blocs d'un fichier.\"\"\"\n    try:\n        with open(chemin, \"rb\") as f:\n            i = 0\n            while True:\n                bloc = f.read(taille_bloc)\n                if not bloc:\n                    break\n                ent = calculer_entropie(bloc)\n                statut = \"CHIFFRÉ/PACKÉ\" if ent > 7.5 else \"normal\"\n                print(f\"Bloc {i:04d}: entropie={ent:.2f} [{statut}]\")\n                i += 1\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n\n# Exemple sur un fichier texte (faible entropie)\nimport os\nhosts = r\"C:\\Windows\\System32\\drivers\\etc\\hosts\"\nif os.path.exists(hosts):\n    with open(hosts, \"rb\") as f:\n        data = f.read()\n    ent = calculer_entropie(data)\n    print(f\"Entropie du fichier hosts : {ent:.2f}\")\n```"
+    },
+    {
+      "section": "Détection de fichiers PowerShell obfusqués",
+      "content": "```python\nimport re\nimport base64\n\ndef analyser_powershell_suspect(script):\n    \"\"\"Détecte les techniques d'obfuscation PowerShell courantes.\"\"\"\n    indicateurs = []\n    \n    # EncodedCommand (base64)\n    if \"-EncodedCommand\" in script or \"-enc\" in script.lower():\n        indicateurs.append(\"EncodedCommand détecté\")\n        # Tenter de décoder\n        m = re.search(r\"-[Ee]nc\\w*\\s+([A-Za-z0-9+/=]+)\", script)\n        if m:\n            try:\n                decoded = base64.b64decode(m.group(1)).decode(\"utf-16-le\")\n                indicateurs.append(f\"Décodé : {decoded[:100]}\")\n            except Exception:\n                pass\n    \n    # Téléchargement de payload\n    if re.search(r\"(Invoke-WebRequest|IWR|WebClient|DownloadString)\", script, re.I):\n        indicateurs.append(\"Téléchargement de payload\")\n    \n    # Exécution en mémoire\n    if re.search(r\"(IEX|Invoke-Expression|\\[Reflection\\.Assembly\\])\", script, re.I):\n        indicateurs.append(\"Exécution en mémoire (IEX)\")\n    \n    # Bypass AMSI\n    if re.search(r\"(amsi|System.Management.Automation.A`msiUtils)\", script, re.I):\n        indicateurs.append(\"Bypass AMSI potentiel\")\n    \n    return indicateurs\n\nscript_suspect = \"powershell.exe -EncodedCommand aAB0AHQAcAA6AC8A -NoProfile\"\nfor indicateur in analyser_powershell_suspect(script_suspect):\n    print(f\"  [!] {indicateur}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m4-ex1",
+      "title": "Identifier le type d'un fichier",
+      "description": "Identifier un type de fichier par ses magic bytes",
+      "instructions": "Créez un faux fichier PE (Windows EXE) en écrivant `b\"MZ\\x90\\x00\"` dans `test.bin`. Puis lisez les 2 premiers octets et affichez :\n```\nType détecté : PE executable\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Type détecté : PE executable",
+      "correction": "# Créer un faux PE\nwith open(\"test.bin\", \"wb\") as f:\n    f.write(b\"MZ\\x90\\x00\")\n\n# Lire et identifier\nwith open(\"test.bin\", \"rb\") as f:\n    header = f.read(2)\nif header == b\"MZ\":\n    print(\"Type détecté : PE executable\")\nelse:\n    print(f\"Type inconnu: {header.hex()}\")",
+      "explanation": "Tous les fichiers PE (EXE, DLL, SYS) sous Windows commencent par `MZ` (les initiales de Mark Zbikowski, développeur MS-DOS). Ne jamais faire confiance à l'extension d'un fichier suspect."
+    },
+    {
+      "id": "py-l3-m4-ex2",
+      "title": "Calculer l'entropie",
+      "description": "Calculer l'entropie de Shannon et détecter un fichier chiffré",
+      "instructions": "Calculez l'entropie de ces deux données :\n```python\nimport os\ntexte = b\"AAAABBBBCCCCDDDD\" * 100  # Faible entropie\nalea = os.urandom(1600)            # Haute entropie\n```\nAffichez quel est le plus \"chiffré/aléatoire\" :\n```\nTexte: X.XX | Aléatoire: X.XX\nPlus aléatoire : alea\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Plus aléatoire : alea",
+      "correction": "import math, os\nfrom collections import Counter\n\ndef entropie(data):\n    c = Counter(data)\n    total = len(data)\n    return -sum((n/total)*math.log2(n/total) for n in c.values())\n\ntexte = b\"AAAABBBBCCCCDDDD\" * 100\nalea = os.urandom(1600)\ne1 = entropie(texte)\ne2 = entropie(alea)\nprint(f\"Texte: {e1:.2f} | Aléatoire: {e2:.2f}\")\nprint(f\"Plus aléatoire : {'alea' if e2 > e1 else 'texte'}\")",
+      "explanation": "L'entropie maximale est 8.0 (bits par byte). Les données chiffrées/compressées ont une entropie > 7.5. Un PE non packé a une entropie de 5-6. Une section de code chiffrée ou un packer révèle un malware."
+    },
+    {
+      "id": "py-l3-m4-ex3",
+      "title": "Décoder un EncodedCommand PowerShell",
+      "description": "Décoder une commande PowerShell encodée en base64",
+      "instructions": "Décodez cette commande PowerShell encodée :\n```python\nencoded = \"SQBuAHYAbwBrAGUALQBXAGUAYgBSAGUAcQB1AGUAcwB0AA==\"\n```\nLa chaîne est encodée en **UTF-16-LE**. Affichez le contenu décodé :\n```\nDécodé : Invoke-WebRequest\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Décodé : Invoke-WebRequest",
+      "correction": "import base64\nencoded = \"SQBuAHYAbwBrAGUALQBXAGUAYgBSAGUAcQB1AGUAcwB0AA==\"\ndecoded = base64.b64decode(encoded).decode(\"utf-16-le\")\nprint(f\"Décodé : {decoded}\")",
+      "explanation": "PowerShell utilise UTF-16-LE pour ses commandes encodées, pas UTF-8. `Invoke-WebRequest` est un signe classique de téléchargement de payload. Le décodage des commandes obfusquées est une compétence clé en analyse de malware."
+    }
+  ]
+}

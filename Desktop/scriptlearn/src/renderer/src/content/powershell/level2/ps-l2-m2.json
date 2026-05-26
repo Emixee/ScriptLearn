@@ -1,0 +1,72 @@
+{
+  "id": "ps-l2-m2",
+  "title": "Boucles",
+  "level": 2,
+  "lang": "powershell",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "La boucle for",
+      "content": "```powershell\n# Syntaxe classique (style C)\nfor ($i = 1; $i -le 5; $i++) {\n    Write-Host \"Tour $i\"\n}\n\n# Décrémentation\nfor ($i = 10; $i -ge 1; $i--) {\n    Write-Host -NoNewline \"$i \"\n}\nWrite-Host\n\n# Incrément de 2\nfor ($i = 0; $i -le 10; $i += 2) {\n    Write-Host $i\n}\n```\n\nLa boucle `for` PowerShell est identique à C# : initialisation, condition, incrément. Elle est idéale quand on connaît le nombre d'itérations à l'avance ou quand on a besoin de l'indice."
+    },
+    {
+      "title": "foreach et ForEach-Object",
+      "content": "**`foreach` (mot-clé) :**\n```powershell\n$fruits = @(\"pomme\", \"poire\", \"cerise\")\n\nforeach ($fruit in $fruits) {\n    Write-Host \"Fruit : $fruit\"\n}\n\n# Sur une plage\nforeach ($n in 1..5) {\n    Write-Host $n\n}\n```\n\n**`ForEach-Object` (cmdlet, via pipeline) :**\n```powershell\n# Avec $_ ou $PSItem\n1..5 | ForEach-Object { Write-Host \"Valeur : $_\" }\n\n# Alias %\nGet-ChildItem *.txt | % { Write-Host $_.Name }\n\n# Avec paramètre -Process\nGet-Process | ForEach-Object -Process {\n    if ($_.CPU -gt 10) { Write-Host $_.Name }\n}\n```\n\n**Différence clé :** `foreach` charge tout en mémoire ; `ForEach-Object` traite objet par objet via le pipeline (plus économe pour les grands volumes)."
+    },
+    {
+      "title": "while et do-while",
+      "content": "**`while` — tant que la condition est vraie :**\n```powershell\n$n = 1\nwhile ($n -le 5) {\n    Write-Host $n\n    $n++\n}\n```\n\n**`do-while` — exécute au moins une fois :**\n```powershell\n$tentatives = 0\ndo {\n    $tentatives++\n    Write-Host \"Tentative $tentatives\"\n} while ($tentatives -lt 3)\n```\n\n**`do-until` — inverse du while :**\n```powershell\n$compteur = 0\ndo {\n    $compteur++\n} until ($compteur -ge 5)\nWrite-Host \"Compteur final : $compteur\"\n```\n\n> La différence entre `while` et `do-while` : `while` peut ne jamais s'exécuter si la condition est fausse dès le départ ; `do-while` s'exécute toujours **au moins une fois**."
+    },
+    {
+      "title": "break et continue",
+      "content": "```powershell\n# break — sort de la boucle\nfor ($i = 1; $i -le 10; $i++) {\n    if ($i -eq 6) {\n        Write-Host \"Stop !\"\n        break\n    }\n    Write-Host $i\n}\n\n# continue — passe à l'itération suivante\nfor ($i = 1; $i -le 10; $i++) {\n    if ($i % 2 -eq 0) { continue }\n    Write-Host $i   # Affiche seulement les impairs\n}\n\n# break dans un switch imbriqué dans une boucle\nforeach ($item in 1..5) {\n    switch ($item) {\n        3 { Write-Host \"Trouvé 3 !\"; break }  # break du switch\n        default { Write-Host $item }\n    }\n}\n```\n\n> **Attention :** `break` dans un `switch` ne sort **pas** de la boucle englobante, seulement du `switch`. Pour sortir de la boucle depuis un `switch`, utilisez une variable flag."
+    },
+    {
+      "title": "Boucles et pipeline",
+      "content": "PowerShell excelle à combiner boucles et pipeline :\n\n```powershell\n# Traiter des fichiers\nGet-ChildItem \"C:\\Temp\" -Filter *.log | ForEach-Object {\n    $taille = [math]::Round($_.Length / 1KB, 1)\n    Write-Host \"$($_.Name) : ${taille} Ko\"\n}\n\n# Agréger des résultats\n$total = 0\n1..100 | ForEach-Object { $total += $_ }\nWrite-Host \"Somme 1..100 = $total\"   # 5050\n\n# Where-Object comme filtre dans une boucle\nGet-Process | Where-Object { $_.WorkingSet -gt 100MB } | ForEach-Object {\n    Write-Host \"Gros processus : $($_.Name) ($([math]::Round($_.WorkingSet/1MB,1)) Mo)\"\n}\n```\n\n**Méthode `.ForEach()` sur les collections (PS4+) :**\n```powershell\n@(1..5).ForEach({ Write-Host \"$_ au carré = $($_ * $_)\" })\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m2-1",
+      "order": 1,
+      "title": "Table de multiplication",
+      "instructions": "Utilisez une boucle `for` pour afficher la table de 7, de 1 à 5 :\n\n```\n7 x 1 = 7\n7 x 2 = 14\n...\n7 x 5 = 35\n```",
+      "expectedOutput": "7 x 5 = 35",
+      "validationType": "contains",
+      "correction": "for ($i = 1; $i -le 5; $i++) {\n    Write-Host \"7 x $i = $(7 * $i)\"\n}",
+      "explanation": "`$(7 * $i)` est une sous-expression dans une chaîne — PowerShell évalue d'abord `7 * $i` puis l'insère dans la chaîne. Sans `$()`, `\"7 * $i\"` afficherait littéralement `7 * 1`, `7 * 2`..."
+    },
+    {
+      "id": "ex-ps-l2-m2-2",
+      "order": 2,
+      "title": "foreach sur un tableau",
+      "instructions": "Définissez le tableau `$langages = @(\"Bash\", \"PowerShell\", \"Python\")` et utilisez `foreach` pour afficher chaque langage avec son numéro :\n\n```\n1. Bash\n2. PowerShell\n3. Python\n```",
+      "expectedOutput": "3. Python",
+      "validationType": "contains",
+      "correction": "$langages = @(\"Bash\", \"PowerShell\", \"Python\")\n$i = 1\nforeach ($lang in $langages) {\n    Write-Host \"$i. $lang\"\n    $i++\n}",
+      "explanation": "`foreach ($element in $collection)` est la syntaxe standard pour itérer sur un tableau en PowerShell. On maintient un compteur `$i` séparé car `foreach` ne fournit pas l'indice directement (contrairement à `for ($i=0; ...)`)."
+    },
+    {
+      "id": "ex-ps-l2-m2-3",
+      "order": 3,
+      "title": "Somme avec while",
+      "instructions": "Utilisez une boucle `while` pour calculer la somme de 1 à 10 et l'afficher.\n\nRésultat attendu :\n```\nSomme : 55\n```",
+      "expectedOutput": "Somme : 55",
+      "validationType": "contains",
+      "correction": "$n = 1\n$somme = 0\nwhile ($n -le 10) {\n    $somme += $n\n    $n++\n}\nWrite-Host \"Somme : $somme\"",
+      "explanation": "`$somme += $n` est équivalent à `$somme = $somme + $n`. L'opérateur `+=` fonctionne pour les nombres et les chaînes. La somme 1+2+…+10 = n*(n+1)/2 = 10*11/2 = 55."
+    },
+    {
+      "id": "ex-ps-l2-m2-4",
+      "order": 4,
+      "title": "Nombres pairs avec continue",
+      "instructions": "Utilisez une boucle `for` de 1 à 10 avec `continue` pour n'afficher que les nombres **pairs**.\n\nRésultat attendu :\n```\n2 4 6 8 10\n```",
+      "expectedOutput": "10",
+      "validationType": "contains",
+      "correction": "for ($i = 1; $i -le 10; $i++) {\n    if ($i % 2 -ne 0) { continue }\n    Write-Host -NoNewline \"$i \"\n}\nWrite-Host",
+      "explanation": "`$i % 2` calcule le modulo (reste de la division par 2). Si le reste est différent de 0, le nombre est impair, on l'ignore avec `continue`. `-NoNewline` empêche `Write-Host` de sauter à la ligne, permettant d'afficher tout sur une ligne."
+    }
+  ]
+}

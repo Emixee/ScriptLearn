@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m1",
+  "title": "Analyse de logs Linux en temps réel",
+  "lang": "bash",
+  "level": 6,
+  "order": 1,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Logs système Linux — sources clés pour le SOC",
+      "content": "Un analyste SOC surveille plusieurs fichiers de logs Linux. Les plus critiques :\n\n| Fichier | Contenu SOC |\n|---------|-------------|\n| `/var/log/auth.log` | SSH, sudo, su, PAM |\n| `/var/log/syslog` | Kernel, daemon, cron |\n| `/var/log/apache2/access.log` | Requêtes HTTP |\n| `/var/log/audit/audit.log` | Auditd (syscalls) |\n| `/var/log/fail2ban.log` | Blocages automatiques |\n| `/run/utmp` / `wtmp` | Connexions actives/historique |\n\n```bash\n# Voir les connexions SSH récentes\nlast -n 20\n\n# Connexions actives\nw\n\n# Dernières tentatives sudo\ngrep 'sudo' /var/log/auth.log | tail -20\n\n# Lignes auth.log du jour (format syslog)\ngrep \"$(date '+%b %e')\" /var/log/auth.log | wc -l\n```"
+    },
+    {
+      "section": "Parsing et filtrage avancé avec grep/awk/sed",
+      "content": "```bash\n# ─── Extraire les IPs qui ont échoué SSH ───\ngrep 'Failed password' /var/log/auth.log \\\n  | awk '{print $(NF-3)}' \\\n  | sort | uniq -c | sort -rn | head -10\n\n# ─── Compter les tentatives par utilisateur ───\ngrep 'Failed password' /var/log/auth.log \\\n  | awk '{print $9}' \\\n  | sort | uniq -c | sort -rn\n\n# ─── Extraire les connexions SSH réussies ───\ngrep 'Accepted' /var/log/auth.log \\\n  | awk '{print $1,$2,$3,$11,$9}'\n\n# ─── Détecter les escalades sudo ───\ngrep 'sudo' /var/log/auth.log \\\n  | grep 'COMMAND' \\\n  | awk -F'COMMAND=' '{print $2}'\n\n# ─── Regex pour extraire les IPs en brut ───\ngrep -oE '[0-9]{1,3}(\\.[0-9]{1,3}){3}' /var/log/auth.log \\\n  | sort | uniq -c | sort -rn | head -5\n```"
+    },
+    {
+      "section": "Script de détection brute force SSH",
+      "content": "```bash\n#!/bin/bash\n# Détection brute force SSH avec alertes\n\nSEUIL=10\nLOG_FILE=\"${1:-/var/log/auth.log}\"\n\nif [[ ! -f \"$LOG_FILE\" ]]; then\n    echo \"Fichier non trouvé : $LOG_FILE\" >&2\n    exit 1\nfi\n\necho \"=== Détection brute force SSH ===\"\necho \"Seuil : $SEUIL tentatives | Source : $LOG_FILE\"\necho \"---\"\n\n# Extraire IPs avec > SEUIL échecs\ngrep 'Failed password' \"$LOG_FILE\" \\\n  | awk '{print $(NF-3)}' \\\n  | sort | uniq -c | sort -rn \\\n  | while read count ip; do\n      if [[ $count -ge $SEUIL ]]; then\n          echo \"[ALERTE] $ip : $count tentatives\"\n          # Vérifier si connexion réussie depuis cette IP\n          if grep -q \"Accepted.*from $ip\" \"$LOG_FILE\"; then\n              echo \"  *** COMPROMISSION PROBABLE : connexion réussie depuis $ip ***\"\n          fi\n      fi\n  done\n\necho \"---\"\necho \"Analyse terminée : $(date)\"\n```"
+    },
+    {
+      "section": "Surveillance en temps réel avec tail -f",
+      "content": "```bash\n#!/bin/bash\n# Surveillance en temps réel — tail -f avec filtrage\n\nLOG_FILE=\"/var/log/auth.log\"\n\necho \"Surveillance de $LOG_FILE — Ctrl+C pour arrêter\"\necho \"---\"\n\n# Surveillance avec coloration des alertes\ntail -f \"$LOG_FILE\" | while read ligne; do\n    if echo \"$ligne\" | grep -q 'Failed password'; then\n        ip=$(echo \"$ligne\" | awk '{print $(NF-3)}')\n        user=$(echo \"$ligne\" | awk '{print $9}')\n        echo \"[ECHEC] $(date '+%H:%M:%S') user=$user ip=$ip\"\n    elif echo \"$ligne\" | grep -q 'Accepted'; then\n        ip=$(echo \"$ligne\" | awk '{print $11}')\n        user=$(echo \"$ligne\" | awk '{print $9}')\n        echo \"[SUCCES] $(date '+%H:%M:%S') user=$user ip=$ip\"\n    elif echo \"$ligne\" | grep -q 'sudo.*COMMAND'; then\n        cmd=$(echo \"$ligne\" | awk -F'COMMAND=' '{print $2}')\n        echo \"[SUDO] $(date '+%H:%M:%S') $cmd\"\n    fi\ndone\n\n# Alternative : utiliser multitail ou lnav pour plusieurs fichiers\n# multitail /var/log/auth.log /var/log/syslog\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m1-ex1",
+      "title": "Compter les échecs SSH par IP",
+      "description": "Analyser les tentatives de connexion SSH échouées",
+      "instructions": "Créez un fichier `auth_sim.log` avec ces lignes et comptez les occurrences de chaque IP dans les échecs :\n```\nFailed password for root from 185.220.101.3 port 54321 ssh2\nFailed password for admin from 185.220.101.3 port 54322 ssh2\nFailed password for root from 10.0.0.5 port 22100 ssh2\nAccepted password for www-data from 185.220.101.3 port 54330 ssh2\n```\nAffichez l'IP avec le plus de tentatives :\n```\n      2 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "2 185.220.101.3",
+      "correction": "cat > auth_sim.log << 'EOF'\nFailed password for root from 185.220.101.3 port 54321 ssh2\nFailed password for admin from 185.220.101.3 port 54322 ssh2\nFailed password for root from 10.0.0.5 port 22100 ssh2\nAccepted password for www-data from 185.220.101.3 port 54330 ssh2\nEOF\ngrep 'Failed password' auth_sim.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -1",
+      "explanation": "`awk '{print $(NF-3)}'` prend le 3ème champ depuis la fin — c'est l'IP dans le format syslog SSH. `uniq -c` compte les occurrences et `sort -rn` trie du plus grand au plus petit."
+    },
+    {
+      "id": "bash-l6-m1-ex2",
+      "title": "Détecter une connexion réussie après des échecs",
+      "description": "Identifier un brute force abouti dans les logs",
+      "instructions": "Avec le fichier `auth_sim.log` de l'exercice précédent, vérifiez si l'IP `185.220.101.3` a une ligne `Accepted` dans le fichier. Si oui, affichez :\n```\nCOMPROMISSION : 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "COMPROMISSION : 185.220.101.3",
+      "correction": "ip=\"185.220.101.3\"\nif grep -q \"Accepted.*from $ip\" auth_sim.log; then\n    echo \"COMPROMISSION : $ip\"\nfi",
+      "explanation": "`grep -q` retourne 0 (succès) si le pattern est trouvé, sans afficher de résultat. C'est le test idéal pour les conditions `if`. La corrélation fail→success est la règle de détection de brute force la plus fondamentale."
+    },
+    {
+      "id": "bash-l6-m1-ex3",
+      "title": "Extraire les IPs par regex",
+      "description": "Utiliser grep -oE pour extraire toutes les IPs d'un log",
+      "instructions": "Avec `auth_sim.log`, extrayez toutes les adresses IPv4 uniques présentes dans le fichier. Affichez le nombre d'IPs uniques :\n```\nIPs uniques : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs uniques : 2",
+      "correction": "count=$(grep -oE '[0-9]{1,3}(\\.[0-9]{1,3}){3}' auth_sim.log | sort -u | wc -l)\necho \"IPs uniques : $count\"",
+      "explanation": "`grep -oE` extrait uniquement les parties qui matchent le pattern (`-o`), en mode ERE (`-E`). `sort -u` trie et déduplique. Ce pipeline est la base de l'extraction d'IOC depuis des logs."
+    }
+  ]
+}

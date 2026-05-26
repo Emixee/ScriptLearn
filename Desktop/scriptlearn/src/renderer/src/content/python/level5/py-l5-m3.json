@@ -1,0 +1,58 @@
+{
+  "id": "py-l5-m3",
+  "title": "Automatisation de réponse (playbooks)",
+  "lang": "python",
+  "level": 5,
+  "order": 3,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Concept de playbook SOC",
+      "content": "Un **playbook** est une séquence d'actions automatisées déclenchée par une alerte. C'est le cœur du SOAR (Security Orchestration, Automation and Response).\n\n**Étapes d'un playbook typique** :\n1. Réception de l'alerte\n2. Enrichissement (géo, réputation, contexte)\n3. Décision (triage automatique)\n4. Actions de confinement (blocage IP, isolation machine)\n5. Notification (email, Slack, ticket)\n6. Documentation (rapport, mise à jour du cas)\n\n```python\nfrom dataclasses import dataclass, field\nfrom typing import List, Callable, Dict, Any\nfrom datetime import datetime\n\n@dataclass\nclass Etape:\n    nom: str\n    action: Callable\n    obligatoire: bool = True\n    conditions: List[Callable] = field(default_factory=list)\n\n@dataclass\nclass ResultatPlaybook:\n    playbook: str\n    alerte: Dict\n    etapes_executees: List[str] = field(default_factory=list)\n    actions_prises: List[str] = field(default_factory=list)\n    succes: bool = True\n    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())\n```"
+    },
+    {
+      "section": "Playbook de réponse à un brute force",
+      "content": "```python\n# Fonctions d'action simulées (en production, elles appellent des APIs réelles)\ndef enrichir_ip(contexte):\n    ip = contexte[\"alerte\"].get(\"ip\")\n    # Simulation d'enrichissement\n    contexte[\"geo\"] = {\"pays\": \"RU\", \"isp\": \"DataCamp\", \"proxy\": True}\n    contexte[\"reputation\"] = {\"score\": 92, \"tags\": [\"tor\", \"brute_force\"]}\n    print(f\"  → Enrichissement {ip}: score=92, pays=RU, proxy=True\")\n    return True\n\ndef triage_automatique(contexte):\n    score = contexte.get(\"reputation\", {}).get(\"score\", 0)\n    proxy = contexte.get(\"geo\", {}).get(\"proxy\", False)\n    contexte[\"verdict\"] = \"BLOQUER\" if score >= 80 or proxy else \"SURVEILLER\"\n    print(f\"  → Verdict : {contexte['verdict']}\")\n    return True\n\ndef bloquer_ip_firewall(contexte):\n    if contexte.get(\"verdict\") != \"BLOQUER\":\n        print(\"  → Blocage non requis (verdict != BLOQUER)\")\n        return False\n    ip = contexte[\"alerte\"].get(\"ip\")\n    # En production : appel API firewall / EDR / WAF\n    print(f\"  → [SIMULATION] IP {ip} bloquée dans le firewall\")\n    contexte[\"actions\"].append(f\"IP {ip} bloquée\")\n    return True\n\ndef creer_ticket(contexte):\n    ip = contexte[\"alerte\"].get(\"ip\")\n    ticket_id = f\"INC-{datetime.now().strftime('%Y%m%d-%H%M%S')}\"\n    print(f\"  → Ticket créé : {ticket_id} pour {ip}\")\n    contexte[\"ticket_id\"] = ticket_id\n    return True\n\ndef notifier_analyste(contexte):\n    ticket = contexte.get(\"ticket_id\", \"N/A\")\n    verdict = contexte.get(\"verdict\", \"INCONNU\")\n    print(f\"  → [EMAIL] Analyste notifié : {ticket} — verdict {verdict}\")\n    return True\n\n# Définition du playbook brute force\nPLAYBOOK_BRUTE_FORCE = [\n    Etape(\"enrichissement\",   enrichir_ip),\n    Etape(\"triage\",           triage_automatique),\n    Etape(\"blocage_firewall\", bloquer_ip_firewall, obligatoire=False),\n    Etape(\"creation_ticket\",  creer_ticket),\n    Etape(\"notification\",     notifier_analyste),\n]\n```"
+    },
+    {
+      "section": "Moteur d'exécution de playbook",
+      "content": "```python\ndef executer_playbook(nom, etapes, alerte):\n    \"\"\"Exécute un playbook étape par étape avec gestion des erreurs.\"\"\"\n    resultat = ResultatPlaybook(playbook=nom, alerte=alerte)\n    contexte = {\"alerte\": alerte, \"actions\": []}\n    \n    print(f\"\\n=== Playbook : {nom} ===\")\n    print(f\"Alerte : {alerte}\")\n    print(\"-\" * 40)\n    \n    for etape in etapes:\n        print(f\"[{etape.nom}]\")\n        try:\n            succes = etape.action(contexte)\n            resultat.etapes_executees.append(etape.nom)\n            if not succes and etape.obligatoire:\n                print(f\"  ÉCHEC obligatoire — arrêt du playbook\")\n                resultat.succes = False\n                break\n        except Exception as e:\n            print(f\"  ERREUR : {e}\")\n            resultat.succes = False\n            if etape.obligatoire:\n                break\n    \n    resultat.actions_prises = contexte[\"actions\"]\n    print(\"-\" * 40)\n    print(f\"Playbook terminé : {'OK' if resultat.succes else 'ÉCHEC'}\")\n    print(f\"Étapes : {len(resultat.etapes_executees)}/{len(etapes)}\")\n    print(f\"Actions : {resultat.actions_prises}\")\n    return resultat\n\n# Test\nalerte_test = {\n    \"type\": \"BRUTE_FORCE_SSH\",\n    \"ip\": \"185.220.101.3\",\n    \"tentatives\": 7,\n    \"timestamp\": datetime.now().isoformat()\n}\nexecuter_playbook(\"Réponse Brute Force SSH\", PLAYBOOK_BRUTE_FORCE, alerte_test)\n```"
+    },
+    {
+      "section": "Playbook multi-conditions et routage",
+      "content": "```python\n# Registre de playbooks : associe un type d'alerte à un playbook\nREGISTRE_PLAYBOOKS = {}\n\ndef enregistrer_playbook(type_alerte):\n    \"\"\"Décorateur pour enregistrer un playbook.\"\"\"\n    def decorator(fn):\n        REGISTRE_PLAYBOOKS[type_alerte] = fn\n        return fn\n    return decorator\n\n@enregistrer_playbook(\"BRUTE_FORCE_SSH\")\ndef playbook_ssh(alerte):\n    return executer_playbook(\"Brute Force SSH\", PLAYBOOK_BRUTE_FORCE, alerte)\n\n@enregistrer_playbook(\"MALWARE_DETECTED\")\ndef playbook_malware(alerte):\n    print(f\"\\n=== Playbook Malware ===\")\n    print(f\"Machine {alerte.get('host')} — Isolation en cours (simulation)\")\n    print(f\"Hash : {alerte.get('hash')}\")\n    print(\"Actions : isoler machine, collecter forensics, notifier\")\n    return {\"succes\": True}\n\ndef router_alerte(alerte):\n    \"\"\"Route une alerte vers le bon playbook.\"\"\"\n    type_alerte = alerte.get(\"type\", \"INCONNU\")\n    playbook_fn = REGISTRE_PLAYBOOKS.get(type_alerte)\n    \n    if playbook_fn:\n        print(f\"Routage → {type_alerte}\")\n        return playbook_fn(alerte)\n    else:\n        print(f\"Aucun playbook pour {type_alerte} — escalade manuelle\")\n        return None\n\n# Test du routage\nalertes_entrees = [\n    {\"type\": \"BRUTE_FORCE_SSH\", \"ip\": \"185.220.101.3\"},\n    {\"type\": \"MALWARE_DETECTED\", \"host\": \"WORKSTATION-42\", \"hash\": \"d41d8cd9...\"},\n    {\"type\": \"INCONNU\", \"ip\": \"1.2.3.4\"},\n]\nfor a in alertes_entrees:\n    router_alerte(a)\n    print()\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l5-m3-ex1",
+      "title": "Décider d'une action selon le verdict",
+      "description": "Implémenter la logique de décision d'un playbook",
+      "instructions": "Soit :\n```python\ncontexte = {\"verdict\": \"BLOQUER\", \"ip\": \"185.220.101.3\"}\n```\nSi le verdict est `BLOQUER`, simulez le blocage et affichez :\n```\nIP bloquée : 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IP bloquée : 185.220.101.3",
+      "correction": "contexte = {\"verdict\": \"BLOQUER\", \"ip\": \"185.220.101.3\"}\nif contexte[\"verdict\"] == \"BLOQUER\":\n    print(f\"IP bloquée : {contexte['ip']}\")\nelse:\n    print(f\"Surveillance : {contexte['ip']}\")",
+      "explanation": "Dans un playbook SOAR, cette condition appelle une API firewall (Palo Alto, Fortinet) ou un EDR (CrowdStrike, Defender). La simulation permet de tester la logique sans infrastructure."
+    },
+    {
+      "id": "py-l5-m3-ex2",
+      "title": "Enregistrer les actions d'un playbook",
+      "description": "Tracer les étapes exécutées d'un playbook",
+      "instructions": "Simulez l'exécution de 3 étapes d'un playbook. Chaque étape ajoute son nom à une liste `etapes` :\n```python\netapes = []\n# Simulez : enrichissement, triage, notification\n```\nAffichez :\n```\nÉtapes exécutées : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Étapes exécutées : 3",
+      "correction": "etapes = []\nfor nom in [\"enrichissement\", \"triage\", \"notification\"]:\n    etapes.append(nom)\nprint(f\"Étapes exécutées : {len(etapes)}\")",
+      "explanation": "Tracer les étapes exécutées est essentiel pour l'audit et le débogage des playbooks. Dans un SOAR (Splunk SOAR, Palo Alto XSOAR), chaque action est loguée avec son résultat et sa durée."
+    },
+    {
+      "id": "py-l5-m3-ex3",
+      "title": "Router une alerte vers un playbook",
+      "description": "Sélectionner le bon playbook selon le type d'alerte",
+      "instructions": "Soit :\n```python\nplaybooks = {\n    \"BRUTE_FORCE\": \"playbook_ssh\",\n    \"MALWARE\":     \"playbook_malware\",\n}\nalerte = {\"type\": \"BRUTE_FORCE\", \"ip\": \"10.0.0.1\"}\n```\nAffichez le playbook sélectionné :\n```\nPlaybook sélectionné : playbook_ssh\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Playbook sélectionné : playbook_ssh",
+      "correction": "playbooks = {\n    \"BRUTE_FORCE\": \"playbook_ssh\",\n    \"MALWARE\":     \"playbook_malware\",\n}\nalerte = {\"type\": \"BRUTE_FORCE\", \"ip\": \"10.0.0.1\"}\nplaybook = playbooks.get(alerte[\"type\"], \"escalade_manuelle\")\nprint(f\"Playbook sélectionné : {playbook}\")",
+      "explanation": "Le routage par dictionnaire est la façon Pythonique de remplacer un `if/elif` long. `dict.get(clé, défaut)` gère élégamment les types d'alertes sans playbook associé."
+    }
+  ]
+}

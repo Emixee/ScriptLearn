@@ -1,0 +1,72 @@
+{
+  "id": "ps-l2-m1",
+  "title": "Conditions avancées",
+  "level": 2,
+  "lang": "powershell",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Les opérateurs de comparaison",
+      "content": "PowerShell utilise des **opérateurs textuels** (pas de `==`, `<`, `>` pour les comparaisons) :\n\n**Comparaisons numériques et textuelles :**\n| Opérateur | Signification |\n|---|---|\n| `-eq` | Égal |\n| `-ne` | Différent |\n| `-lt` | Inférieur à |\n| `-gt` | Supérieur à |\n| `-le` | Inférieur ou égal |\n| `-ge` | Supérieur ou égal |\n| `-like` | Correspondance avec wildcards (`*`, `?`) |\n| `-match` | Correspondance regex |\n| `-contains` | Collection contient la valeur |\n\n```powershell\n$age = 25\n$age -gt 18          # $true\n$age -eq 25          # $true\n\"Bonjour\" -like \"B*\" # $true\n\"PS7\" -match \"\\d+\"  # $true (contient un chiffre)\n```"
+    },
+    {
+      "title": "if / elseif / else",
+      "content": "```powershell\n$temperature = 22\n\nif ($temperature -gt 30) {\n    Write-Host \"Il fait chaud !\"\n} elseif ($temperature -gt 20) {\n    Write-Host \"Température agréable.\"\n} elseif ($temperature -gt 10) {\n    Write-Host \"Frais.\"\n} else {\n    Write-Host \"Froid !\"\n}\n```\n\n**Note PowerShell :**\n- `elseif` s'écrit en un seul mot (contrairement à `elif` en Bash)\n- Les accolades `{}` sont obligatoires même pour une seule ligne\n- `$true` et `$false` sont les booléens natifs\n\n**Opérateurs logiques :**\n```powershell\nif ($age -ge 18 -and $permis -eq $true) {\n    Write-Host \"Peut conduire\"\n}\nif ($age -lt 12 -or $age -gt 65) {\n    Write-Host \"Tarif réduit\"\n}\nif (-not $estConnecte) {\n    Write-Host \"Déconnecté\"\n}\n```"
+    },
+    {
+      "title": "La structure switch",
+      "content": "`switch` est le `case` PowerShell, mais bien plus puissant :\n\n```powershell\n$jour = \"mardi\"\n\nswitch ($jour) {\n    \"lundi\"     { Write-Host \"Début de semaine\" }\n    \"vendredi\"  { Write-Host \"TGIF !\" }\n    { $_ -in \"samedi\",\"dimanche\" } { Write-Host \"Week-end !\" }\n    default     { Write-Host \"Milieu de semaine\" }\n}\n```\n\n**`switch` avec expressions :**\n```powershell\n$note = 15\n\nswitch ($note) {\n    { $_ -ge 16 } { \"Très bien\"; break }\n    { $_ -ge 14 } { \"Bien\"; break }\n    { $_ -ge 12 } { \"Assez bien\"; break }\n    { $_ -ge 10 } { \"Passable\"; break }\n    default        { \"Insuffisant\" }\n}\n```\n\n> `$_` représente la valeur courante testée. Sans `break`, plusieurs branches peuvent s'exécuter !"
+    },
+    {
+      "title": "L'opérateur ternaire et null-coalescing",
+      "content": "PowerShell 7 introduit des opérateurs concis :\n\n**Ternaire `? :`**\n```powershell\n$age = 20\n$statut = ($age -ge 18) ? \"Majeur\" : \"Mineur\"\nWrite-Host $statut   # Majeur\n```\n\n**Null-coalescing `??`** — valeur par défaut si null :\n```powershell\n$nom = $null\n$affichage = $nom ?? \"Anonyme\"\nWrite-Host $affichage  # Anonyme\n\n$nom = \"Alice\"\n$affichage = $nom ?? \"Anonyme\"\nWrite-Host $affichage  # Alice\n```\n\n**Null-conditional `?.`** — accède à une propriété seulement si l'objet n'est pas null :\n```powershell\n$fichier = Get-Item \"notes.txt\" -ErrorAction SilentlyContinue\n$taille = $fichier?.Length ?? 0\nWrite-Host \"Taille : $taille octets\"\n```"
+    },
+    {
+      "title": "Comparaisons de chaînes et wildcards",
+      "content": "```powershell\n# -like avec wildcards\n\"scriptlearn.ps1\" -like \"*.ps1\"     # $true\n\"HELLO\" -like \"hel*\"                # $true (insensible à la casse)\n\"HELLO\" -clike \"hel*\"               # $false (-clike = case-sensitive)\n\n# -match avec regex\n\"user@example.com\" -match \"^\\w+@\\w+\\.\\w+$\"  # $true\n\"abc123\" -match \"\\d+\"                       # $true\n$Matches[0]                                  # \"123\" (capture)\n\n# -in et -contains\n$fruits = @(\"pomme\", \"poire\", \"cerise\")\n\"poire\" -in $fruits        # $true\n$fruits -contains \"poire\" # $true\n\"banane\" -in $fruits       # $false\n```\n\n> `-like` est pour les wildcards simples (`*`, `?`). `-match` est pour les expressions régulières complètes."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m1-1",
+      "order": 1,
+      "title": "Classifier un nombre",
+      "instructions": "Créez un script qui affecte `$n = -3` et affiche :\n- `Positif` si > 0\n- `Négatif` si < 0\n- `Zéro` si = 0\n\nRésultat attendu :\n```\nNégatif\n```",
+      "expectedOutput": "Négatif",
+      "validationType": "contains",
+      "correction": "$n = -3\n\nif ($n -gt 0) {\n    Write-Host \"Positif\"\n} elseif ($n -lt 0) {\n    Write-Host \"Négatif\"\n} else {\n    Write-Host \"Zéro\"\n}",
+      "explanation": "PowerShell utilise `-gt` (greater than) et `-lt` (less than) pour les comparaisons numériques. `>` et `<` ont d'autres significations en PowerShell (redirections, opérateurs de pipeline). Un classique des erreurs de débutants !"
+    },
+    {
+      "id": "ex-ps-l2-m1-2",
+      "order": 2,
+      "title": "Switch avec des jours",
+      "instructions": "Créez un script avec `$jour = \"samedi\"` et utilisez `switch` pour afficher :\n- `Jour ouvré` pour lundi–vendredi\n- `Week-end !` pour samedi–dimanche\n\nRésultat attendu :\n```\nWeek-end !\n```",
+      "expectedOutput": "Week-end",
+      "validationType": "contains",
+      "correction": "$jour = \"samedi\"\n\nswitch ($jour) {\n    { $_ -in \"lundi\",\"mardi\",\"mercredi\",\"jeudi\",\"vendredi\" } {\n        Write-Host \"Jour ouvré\"\n    }\n    { $_ -in \"samedi\",\"dimanche\" } {\n        Write-Host \"Week-end !\"\n    }\n    default {\n        Write-Host \"Jour inconnu\"\n    }\n}",
+      "explanation": "Dans un `switch` PowerShell, `{ $_ -in @(...) }` est un bloc de script utilisé comme condition. `$_` représente la valeur testée. `-in` vérifie si la valeur est dans un tableau. Sans `break`, toutes les branches correspondantes s'exécutent — attention !"
+    },
+    {
+      "id": "ex-ps-l2-m1-3",
+      "order": 3,
+      "title": "Opérateur ternaire",
+      "instructions": "Utilisez l'opérateur ternaire PowerShell pour affecter `$message` :\n- Si `$age = 20` est ≥ 18 → `\"Majeur\"`\n- Sinon → `\"Mineur\"`\n\nPuis affichez le message.\n\nRésultat attendu :\n```\nMajeur\n```",
+      "expectedOutput": "Majeur",
+      "validationType": "contains",
+      "correction": "$age = 20\n$message = ($age -ge 18) ? \"Majeur\" : \"Mineur\"\nWrite-Host $message",
+      "explanation": "L'opérateur ternaire `condition ? valeurSiVrai : valeurSiFaux` est disponible depuis PowerShell 7. Il réduit considérablement le code pour les affectations conditionnelles simples. Requiert PS7+ (disponible sous Windows 11 via `winget install Microsoft.PowerShell`)."
+    },
+    {
+      "id": "ex-ps-l2-m1-4",
+      "order": 4,
+      "title": "Vérifier une extension de fichier",
+      "instructions": "Créez un script avec `$fichier = \"rapport.pdf\"` et utilisez `-like` pour vérifier si le fichier est un PDF ou un Word (.docx).\n\nAffichez :\n- `Document Office détecté` si c'est un .pdf ou .docx\n- `Autre type de fichier` sinon\n\nRésultat attendu :\n```\nDocument Office détecté\n```",
+      "expectedOutput": "Document Office",
+      "validationType": "contains",
+      "correction": "$fichier = \"rapport.pdf\"\n\nif ($fichier -like \"*.pdf\" -or $fichier -like \"*.docx\") {\n    Write-Host \"Document Office détecté\"\n} else {\n    Write-Host \"Autre type de fichier\"\n}",
+      "explanation": "`-like \"*.pdf\"` utilise le wildcard `*` qui représente zéro ou plusieurs caractères. C'est plus simple que les regex pour les patterns de noms de fichiers. PowerShell est insensible à la casse par défaut, donc `.PDF` et `.pdf` matcheraient tous les deux."
+    }
+  ]
+}

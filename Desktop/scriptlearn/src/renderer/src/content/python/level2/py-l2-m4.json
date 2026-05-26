@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m4",
+  "title": "Dates et timestamps",
+  "lang": "python",
+  "level": 2,
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "section": "Pourquoi les timestamps sont critiques en SOC",
+      "content": "L'**analyse de timeline** est fondamentale en forensics. Les timestamps permettent de :\n- Corréler des événements sur plusieurs systèmes\n- Détecter des anomalies temporelles (connexion à 3h du matin)\n- Reconstruire la chronologie d'une attaque\n- Respecter les SLA (temps de réponse aux incidents)\n\n```python\nfrom datetime import datetime, timedelta, timezone\n\n# Date et heure actuelles\nmaintenant = datetime.now()\nprint(maintenant)  # 2024-01-15 10:23:45.123456\n\n# Avec timezone (UTC — recommandé pour les logs)\nmaintenant_utc = datetime.now(timezone.utc)\nprint(maintenant_utc)  # 2024-01-15 09:23:45.123456+00:00\n```"
+    },
+    {
+      "section": "Parser les formats de timestamp courants",
+      "content": "```python\nfrom datetime import datetime\n\n# Formats courants dans les logs\nformats = [\n    (\"2024-01-15T10:23:45Z\",      \"%Y-%m-%dT%H:%M:%SZ\"),\n    (\"2024-01-15 10:23:45\",       \"%Y-%m-%d %H:%M:%S\"),\n    (\"Jan 15 10:23:45\",           \"%b %d %H:%M:%S\"),\n    (\"15/Jan/2024:10:23:45 +0000\",\"%d/%b/%Y:%H:%M:%S %z\"),\n    (\"01/15/2024 10:23:45 AM\",    \"%m/%d/%Y %I:%M:%S %p\"),\n]\n\nfor ts_str, fmt in formats:\n    try:\n        ts = datetime.strptime(ts_str, fmt)\n        print(f\"OK : {ts_str} → {ts}\")\n    except ValueError as e:\n        print(f\"Erreur : {e}\")\n```"
+    },
+    {
+      "section": "Calculs temporels",
+      "content": "```python\nfrom datetime import datetime, timedelta\n\n# Durée d'un incident\ndebut = datetime.strptime(\"2024-01-15 08:30:00\", \"%Y-%m-%d %H:%M:%S\")\nfin   = datetime.strptime(\"2024-01-15 11:45:30\", \"%Y-%m-%d %H:%M:%S\")\nduree = fin - debut\nprint(f\"Durée incident : {duree}\")\nprint(f\"En secondes : {duree.total_seconds():.0f}\")\nprint(f\"En heures   : {duree.total_seconds()/3600:.2f}\")\n\n# Fenêtre temporelle (alertes des 24 dernières heures)\nmaintenant = datetime.now()\nfenetre_debut = maintenant - timedelta(hours=24)\n\nevenements = [\n    (\"2024-01-14 15:00:00\", \"Connexion SSH\"),\n    (\"2024-01-15 09:00:00\", \"Scan de ports\"),\n    (\"2024-01-15 11:00:00\", \"Exfiltration data\"),\n]\n\nrecents = [\n    e for ts_str, e in evenements\n    if datetime.strptime(ts_str, \"%Y-%m-%d %H:%M:%S\") >= fenetre_debut\n]\nprint(f\"Événements récents : {recents}\")\n```"
+    },
+    {
+      "section": "Timestamps Unix (Epoch)",
+      "content": "```python\nimport time\nfrom datetime import datetime, timezone\n\n# Timestamp Unix actuel\nepoch = time.time()\nprint(f\"Epoch : {epoch:.0f}\")\n\n# Convertir epoch → datetime\nts_epoch = 1705311825  # Exemple\ndt = datetime.fromtimestamp(ts_epoch)\nprint(f\"Local : {dt}\")\ndt_utc = datetime.fromtimestamp(ts_epoch, tz=timezone.utc)\nprint(f\"UTC   : {dt_utc}\")\n\n# Convertir datetime → epoch\ndt_str = \"2024-01-15 10:23:45\"\ndt = datetime.strptime(dt_str, \"%Y-%m-%d %H:%M:%S\")\nepoch_conv = dt.timestamp()\nprint(f\"Epoch : {epoch_conv:.0f}\")\n\n# Détecter les anomalies horaires (connexion hors heures de bureau)\ndef hors_heures_bureau(dt):\n    heure = dt.hour\n    jour = dt.weekday()  # 0=Lundi, 6=Dimanche\n    return jour >= 5 or heure < 8 or heure >= 18\n\nconnexion = datetime(2024, 1, 15, 3, 15, 0)  # 3h15\nprint(f\"Hors heures bureau : {hors_heures_bureau(connexion)}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m4-ex1",
+      "title": "Parser un timestamp ISO 8601",
+      "description": "Convertir un timestamp ISO 8601 en objet datetime",
+      "instructions": "Parsez le timestamp `\"2024-03-15 14:30:00\"` avec `strptime` et affichez :\n```\nAnnée: 2024 | Heure: 14\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Année: 2024 | Heure: 14",
+      "correction": "from datetime import datetime\nts = datetime.strptime(\"2024-03-15 14:30:00\", \"%Y-%m-%d %H:%M:%S\")\nprint(f\"Année: {ts.year} | Heure: {ts.hour}\")",
+      "explanation": "`strptime` parse une chaîne selon un format. Une fois converti en `datetime`, vous pouvez accéder à `.year`, `.month`, `.day`, `.hour`, `.minute`, `.second` séparément."
+    },
+    {
+      "id": "py-l2-m4-ex2",
+      "title": "Calculer la durée d'un incident",
+      "description": "Calculer la durée entre deux timestamps",
+      "instructions": "Calculez la durée entre :\n- Début : `\"2024-01-15 08:30:00\"`\n- Fin : `\"2024-01-15 09:15:30\"`\n\nAffichez la durée en secondes :\n```\nDurée : 2730 secondes\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Durée : 2730 secondes",
+      "correction": "from datetime import datetime\nfmt = \"%Y-%m-%d %H:%M:%S\"\ndebut = datetime.strptime(\"2024-01-15 08:30:00\", fmt)\nfin = datetime.strptime(\"2024-01-15 09:15:30\", fmt)\nduree = int((fin - debut).total_seconds())\nprint(f\"Durée : {duree} secondes\")",
+      "explanation": "La soustraction de deux `datetime` donne un `timedelta`. `.total_seconds()` donne la durée totale en secondes sous forme de float. `int()` tronque la partie décimale."
+    },
+    {
+      "id": "py-l2-m4-ex3",
+      "title": "Détecter une connexion nocturne",
+      "description": "Vérifier si une connexion a eu lieu en dehors des heures de bureau",
+      "instructions": "Vérifiez si le timestamp `\"2024-01-15 02:30:00\"` correspond à une connexion hors des heures de bureau (08h-18h en semaine).\n\nAffichez :\n```\nALERTE: Connexion hors heures de bureau\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALERTE: Connexion hors heures de bureau",
+      "correction": "from datetime import datetime\nts = datetime.strptime(\"2024-01-15 02:30:00\", \"%Y-%m-%d %H:%M:%S\")\nif ts.weekday() >= 5 or ts.hour < 8 or ts.hour >= 18:\n    print(\"ALERTE: Connexion hors heures de bureau\")\nelse:\n    print(\"Connexion normale\")",
+      "explanation": "`.weekday()` retourne 0 (lundi) à 6 (dimanche). `.hour` est l'heure de 0 à 23. Cette vérification simple est la base de la détection d'anomalies comportementales (UBA)."
+    }
+  ]
+}

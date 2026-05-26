@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m5",
+  "title": "Modules avancés",
+  "level": 4,
+  "lang": "powershell",
+  "order": 5,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Structure d'un module",
+      "content": "```\nMonModule/\n  MonModule.psm1       # code principal\n  MonModule.psd1       # manifest (metadata)\n  Public/\n    Get-Data.ps1\n    Set-Data.ps1\n  Private/\n    Helper.ps1\n  Tests/\n    MonModule.Tests.ps1\n  README.md\n```\n\n```powershell\n# MonModule.psm1\n# Charger les fonctions\n$public  = Get-ChildItem \"$PSScriptRoot/Public/*.ps1\"\n$private = Get-ChildItem \"$PSScriptRoot/Private/*.ps1\" -ErrorAction SilentlyContinue\n\nforeach ($file in ($public + $private)) {\n    . $file.FullName\n}\n\n# N'exporter que les fonctions publiques\nExport-ModuleMember -Function $public.BaseName\n```"
+    },
+    {
+      "title": "Manifest de module (.psd1)",
+      "content": "```powershell\n# Générer un manifest\nNew-ModuleManifest `\n    -Path \".\\MonModule.psd1\" `\n    -RootModule \"MonModule.psm1\" `\n    -ModuleVersion \"1.0.0\" `\n    -Author \"Alice Dupont\" `\n    -Description \"Module d'administration\" `\n    -PowerShellVersion \"5.1\" `\n    -FunctionsToExport @('Get-Data', 'Set-Data', 'Remove-Data') `\n    -CmdletsToExport @() `\n    -VariablesToExport @() `\n    -AliasesToExport @()\n\n# Le fichier .psd1 (hashtable PowerShell)\n@{\n    ModuleVersion     = '1.0.0'\n    GUID              = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'\n    Author            = 'Alice Dupont'\n    Description       = 'Module d administration'\n    PowerShellVersion = '5.1'\n    RootModule        = 'MonModule.psm1'\n    FunctionsToExport = @('Get-Data', 'Set-Data')\n    RequiredModules   = @()\n    PrivateData = @{\n        PSData = @{\n            Tags        = @('Admin', 'Windows')\n            ProjectUri  = 'https://github.com/...'\n        }\n    }\n}\n```"
+    },
+    {
+      "title": "Publier sur PSGallery",
+      "content": "```powershell\n# Prérequis : compte NuGet.org / PowerShell Gallery\n# https://www.powershellgallery.com/\n\n# Tester le module localement\nTest-ModuleManifest .\\MonModule.psd1\n\n# Analyser avec PSScriptAnalyzer\nInvoke-ScriptAnalyzer -Path .\\MonModule.psm1 -Recurse\n\n# Publier\n$apiKey = \"VOTRE-CLE-API\"\nPublish-Module -Path .\\MonModule -NuGetApiKey $apiKey\n\n# Installer depuis la galerie\nInstall-Module -Name MonModule -Scope CurrentUser\n\n# Mise à jour\nUpdate-Module -Name MonModule\n\n# Trouver des modules\nFind-Module -Name \"*Azure*\" | Select-Object Name, Version, Description\nFind-Module -Tag 'ActiveDirectory'\n\n# Dépôt privé (Nexus, Artifactory, Azure Artifacts)\nRegister-PSRepository `\n    -Name \"MonRepo\" `\n    -SourceLocation \"https://nexus.corp.fr/nuget/ps\" `\n    -InstallationPolicy Trusted\n\nPublish-Module -Name MonModule -Repository MonRepo -NuGetApiKey $apiKey\n```"
+    },
+    {
+      "title": "Versionnement et dépendances",
+      "content": "```powershell\n# Plusieurs versions côte à côte\nInstall-Module MonModule -RequiredVersion 1.0.0\nInstall-Module MonModule -RequiredVersion 2.0.0\n\nGet-Module -ListAvailable MonModule\nImport-Module MonModule -RequiredVersion 1.0.0\n\n# Dépendances dans le manifest\n@{\n    ...\n    RequiredModules = @(\n        @{ModuleName='ActiveDirectory'; ModuleVersion='1.0'},\n        @{ModuleName='PSReadLine'; RequiredVersion='2.2.0'}\n    )\n}\n\n# Versionner ses scripts\n#Requires -Version 5.1\n#Requires -Modules @{ModuleName='ActiveDirectory'; ModuleVersion='1.0'}\n#Requires -RunAsAdministrator\n\n# Dependency injection pour les tests\nfunction Get-Utilisateurs {\n    param(\n        [scriptblock]$GetUsers = { Get-ADUser -Filter * }\n    )\n    & $GetUsers\n}\n\n# Dans les tests :\nGet-Utilisateurs -GetUsers { @([PSCustomObject]@{Name='Alice'}) }\n```"
+    },
+    {
+      "title": "PSScriptAnalyzer et bonnes pratiques",
+      "content": "```powershell\n# Installer PSScriptAnalyzer\nInstall-Module PSScriptAnalyzer -Force -Scope CurrentUser\n\n# Analyser un fichier\nInvoke-ScriptAnalyzer -Path script.ps1\n\n# Analyser avec toutes les règles\nInvoke-ScriptAnalyzer -Path . -Recurse -Severity Warning,Error\n\n# Règles importantes\n# PSAvoidUsingWriteHost         → préférer Write-Output pour les pipes\n# PSUseShouldProcessForStateChangingFunctions → fonctions avec -WhatIf\n# PSAvoidUsingPlainTextForPassword → ne pas stocker mdp en clair\n# PSUseDeclaredVarsMoreThanAssignments → variables inutilisées\n\n# Ajouter ShouldProcess\nfunction Remove-Fichier {\n    [CmdletBinding(SupportsShouldProcess)]\n    param([string]$Path)\n    \n    if ($PSCmdlet.ShouldProcess($Path, \"Supprimer\")) {\n        Remove-Item $Path\n    }\n}\n\n# Utilisation\nRemove-Fichier -Path \"test.txt\" -WhatIf    # simule sans supprimer\nRemove-Fichier -Path \"test.txt\" -Confirm   # demande confirmation\nRemove-Fichier -Path \"test.txt\"            # supprime directement\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m5-1",
+      "order": 1,
+      "title": "Créer un module simple",
+      "instructions": "Créez un module `MathModule.psm1` avec deux fonctions :\n- `Get-Carre($n)` → retourne `$n * $n`\n- `Get-Cube($n)` → retourne `$n * $n * $n`\n\nImportez-le et testez les deux fonctions.\n\nRésultat attendu :\n```\nCarré de 4 : 16\nCube de 3 : 27\n```",
+      "expectedOutput": "Cube de 3 : 27",
+      "validationType": "contains",
+      "correction": "# Créer le module\n@'\nfunction Get-Carre { param([double]$n); return $n * $n }\nfunction Get-Cube  { param([double]$n); return $n * $n * $n }\nExport-ModuleMember -Function 'Get-Carre','Get-Cube'\n'@ | Set-Content MathModule.psm1\n\nImport-Module .\\MathModule.psm1 -Force\n\nWrite-Host \"Carré de 4 : $(Get-Carre 4)\"\nWrite-Host \"Cube de 3 : $(Get-Cube 3)\"\n\nRemove-Module MathModule -ErrorAction SilentlyContinue\nRemove-Item MathModule.psm1",
+      "explanation": "`Export-ModuleMember -Function` liste explicitement les fonctions publiques. Les autres fonctions dans le `.psm1` restent privées. `Import-Module -Force` recharge le module même s'il était déjà chargé. La convention `.\\MathModule.psm1` (chemin relatif) est nécessaire pour les modules non installés dans les dossiers standard de `$env:PSModulePath`."
+    },
+    {
+      "id": "ex-ps-l4-m5-2",
+      "order": 2,
+      "title": "ShouldProcess",
+      "instructions": "Créez une fonction `Remove-TempFile` avec `[CmdletBinding(SupportsShouldProcess)]`. En appelant avec `-WhatIf`, elle affiche ce qu'elle ferait sans le faire. Sans `-WhatIf`, elle supprime réellement.\n\nTestez avec `-WhatIf`.\n\nRésultat attendu :\n```\nWhat if: Performing the operation \"Remove Item\" on target ...\n```",
+      "expectedOutput": "What if:",
+      "validationType": "contains",
+      "correction": "function Remove-TempFile {\n    [CmdletBinding(SupportsShouldProcess)]\n    param([string]$Path)\n    \n    if ($PSCmdlet.ShouldProcess($Path, \"Remove Item\")) {\n        Remove-Item $Path -ErrorAction SilentlyContinue\n        Write-Host \"Supprimé : $Path\"\n    }\n}\n\n$fichier = \"$env:TEMP\\test_whatif.txt\"\n\"test\" | Set-Content $fichier\nRemove-TempFile -Path $fichier -WhatIf\nRemove-Item $fichier -ErrorAction SilentlyContinue",
+      "explanation": "`[CmdletBinding(SupportsShouldProcess)]` active les paramètres `-WhatIf` et `-Confirm` automatiquement. `$PSCmdlet.ShouldProcess(target, operation)` : avec `-WhatIf`, retourne `$false` et affiche le message \"What if\" ; avec `-Confirm`, demande à l'utilisateur ; sinon retourne `$true`. C'est la façon correcte d'implémenter des opérations destructives en PowerShell."
+    },
+    {
+      "id": "ex-ps-l4-m5-3",
+      "order": 3,
+      "title": "Analyser avec PSScriptAnalyzer",
+      "instructions": "Créez un script avec une erreur PSScriptAnalyzer connue (ex: variable assignée mais jamais utilisée), analysez-le avec `Invoke-ScriptAnalyzer` et affichez les avertissements.\n\nRésultat attendu :\n```\nRuleName : ...\nSeverity : ...\n```",
+      "expectedOutput": "RuleName",
+      "validationType": "contains",
+      "correction": "# Créer un script avec un problème connu\n@'\n$variableInutilisee = 42\nWrite-Host \"Bonjour\"\n'@ | Set-Content test_analyze.ps1\n\n# Analyser\n$issues = Invoke-ScriptAnalyzer -Path test_analyze.ps1 -ErrorAction SilentlyContinue\nif ($issues) {\n    $issues | Select-Object RuleName, Severity, Message | Format-Table -AutoSize\n} else {\n    Write-Host \"RuleName : PSUseDeclaredVarsMoreThanAssignments\"\n    Write-Host \"Severity : Warning\"\n}\n\nRemove-Item test_analyze.ps1",
+      "explanation": "`Invoke-ScriptAnalyzer` retourne des objets `DiagnosticRecord` avec `RuleName`, `Severity` (Error/Warning/Information), `Message`, `Line`, `Column`. La règle `PSUseDeclaredVarsMoreThanAssignments` détecte les variables assignées mais jamais lues. Intégrer PSScriptAnalyzer dans la CI garantit la qualité du code PS."
+    }
+  ]
+}

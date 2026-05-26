@@ -1,0 +1,58 @@
+{
+  "id": "py-l1-m2",
+  "title": "Variables et types de données",
+  "lang": "python",
+  "level": 1,
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "section": "Types essentiels pour un analyste SOC",
+      "content": "En SOC, vous manipulez constamment ces types de données :\n\n```python\n# Adresses IP et domaines (str)\nip_source = \"185.220.101.3\"\ndomaine = \"update.malware-c2.ru\"\nhash_sha256 = \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n\n# Ports et compteurs (int)\nport_dest = 4444\nnb_connexions = 1337\n\n# Scores de risque (float)\nscore_threatintel = 9.8\n\n# Flags (bool)\nest_bloqué = False\nalerte_active = True\n\n# Valeur inconnue (None)\ngeolocalisation = None\n```"
+    },
+    {
+      "section": "Conversion de types (casting)",
+      "content": "Les logs contiennent souvent des nombres sous forme de texte. Il faut les convertir :\n\n```python\n# Conversion str → int\nport_str = \"8080\"\nport_int = int(port_str)\nprint(port_int + 1)  # 8081\n\n# Conversion str → float\nscore_str = \"7.5\"\nscore = float(score_str)\n\n# Conversion int → str (pour concaténer)\nip_partial = \"10.0.0.\"\noctet = 100\nip_complete = ip_partial + str(octet)\nprint(ip_complete)  # 10.0.0.100\n\n# Vérifier si une chaîne est numérique\nprint(\"443\".isdigit())    # True\nprint(\"443/tcp\".isdigit()) # False\n```"
+    },
+    {
+      "section": "Opérations sur les chaînes",
+      "content": "Les chaînes SOC ont des méthodes très utiles :\n\n```python\nlog_line = \"  2024-01-15 10:23:45 ERROR Failed login from 192.168.1.50  \"\n\n# Nettoyage\nclean = log_line.strip()          # Supprimer espaces début/fin\nprint(clean)\n\n# Mise en forme\nprint(clean.upper())              # TOUT EN MAJUSCULES\nprint(clean.lower())              # tout en minuscules\n\n# Recherche\nprint(\"ERROR\" in clean)           # True\nprint(clean.startswith(\"2024\"))   # True\nprint(clean.count(\".\"))           # 3 (dans l'IP)\n\n# Découpage\nparties = clean.split(\" \")\nprint(parties[0])                 # 2024-01-15\nprint(parties[1])                 # 10:23:45\n```"
+    },
+    {
+      "section": "Indices et slicing",
+      "content": "Accéder à des parties d'une chaîne :\n\n```python\nhash_md5 = \"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4\"\n\n# Accès par index (commence à 0)\nprint(hash_md5[0])      # a\nprint(hash_md5[-1])     # 4 (dernier)\n\n# Slicing [début:fin:pas]\nprint(hash_md5[:8])     # a1b2c3d4 (8 premiers)\nprint(hash_md5[-8:])    # a1b2c3d4 (8 derniers)\nprint(hash_md5[::2])    # a2d5ab3e1b4 (un sur deux)\n\n# Utile en SOC : extraire l'heure d'un timestamp\ntimestamp = \"2024-01-15T10:23:45Z\"\ndate = timestamp[:10]   # 2024-01-15\nheure = timestamp[11:19] # 10:23:45\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m2-ex1",
+      "title": "Convertir un port",
+      "description": "Convertir une chaîne représentant un port en entier et effectuer un calcul",
+      "instructions": "Vous recevez un port sous forme de chaîne : `port = \"8443\"`. Convertissez-le en entier et affichez le résultat de `port + 1` :\n```\n8444\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "8444",
+      "correction": "port = \"8443\"\nprint(int(port) + 1)",
+      "explanation": "`int()` convertit une chaîne en entier. Sans conversion, `\"8443\" + 1` provoquerait une erreur de type."
+    },
+    {
+      "id": "py-l1-m2-ex2",
+      "title": "Nettoyer une ligne de log",
+      "description": "Nettoyer et analyser une ligne de log brute",
+      "instructions": "Soit la ligne : `log = \"  ERROR: Failed login from 10.0.0.5  \"`\n\nAffichez la ligne nettoyée (sans espaces aux extrémités) en **majuscules** :\n```\nERROR: FAILED LOGIN FROM 10.0.0.5\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ERROR: FAILED LOGIN FROM 10.0.0.5",
+      "correction": "log = \"  ERROR: Failed login from 10.0.0.5  \"\nprint(log.strip().upper())",
+      "explanation": "`.strip()` supprime les espaces (et autres caractères blancs) au début et à la fin. `.upper()` met tout en majuscules. On peut chaîner les méthodes en Python."
+    },
+    {
+      "id": "py-l1-m2-ex3",
+      "title": "Extraire une date de timestamp",
+      "description": "Utiliser le slicing pour extraire la date d'un timestamp ISO 8601",
+      "instructions": "Soit `ts = \"2024-03-15T09:41:22Z\"`. Extrayez et affichez uniquement la date :\n```\n2024-03-15\n```\nUtilisez le slicing `ts[:10]`.",
+      "validationType": "output_contains",
+      "expectedOutput": "2024-03-15",
+      "correction": "ts = \"2024-03-15T09:41:22Z\"\nprint(ts[:10])",
+      "explanation": "Le slicing `[:10]` extrait les 10 premiers caractères. Dans un timestamp ISO 8601, les 10 premiers caractères sont toujours la date au format YYYY-MM-DD."
+    }
+  ]
+}

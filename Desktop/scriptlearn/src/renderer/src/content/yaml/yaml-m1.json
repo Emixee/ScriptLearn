@@ -1,0 +1,74 @@
+{
+  "id": "yaml-m1",
+  "title": "Syntaxe YAML de base",
+  "level": 8,
+  "lang": "yaml",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce que YAML ?",
+      "content": "**YAML** (YAML Ain't Markup Language) est un format de sérialisation de données lisible par l'humain. Il est omniprésent dans l'écosystème DevOps :\n\n- **Docker Compose** : définir des services containerisés\n- **GitHub Actions / GitLab CI** : pipelines CI/CD\n- **Kubernetes** : manifests de déploiement\n- **Ansible** : playbooks d'automatisation\n- **Helm** : configuration Kubernetes\n\nYAML utilise l'**indentation** (espaces, jamais des tabulations) pour définir la structure."
+    },
+    {
+      "title": "Scalaires et paires clé-valeur",
+      "content": "La structure de base est `clé: valeur` :\n\n```yaml\nnom: Alice\nage: 30\nactif: true\nprix: 19.99\nvide: null\n```\n\nTypes scalaires :\n- **Chaîne** : `texte` ou `\"texte avec espaces\"`\n- **Entier** : `42`\n- **Flottant** : `3.14`\n- **Booléen** : `true` / `false` (ou `yes` / `no`)\n- **Nul** : `null` ou `~`\n\n**Commentaires** avec `#` :\n```yaml\nnom: Alice  # nom de l'utilisateur\n# ceci est un commentaire de ligne\n```"
+    },
+    {
+      "title": "Chaînes multi-lignes",
+      "content": "YAML propose deux styles pour les chaînes multi-lignes :\n\n**Littéral `|`** — conserve les sauts de ligne :\n```yaml\nmessage: |\n  Ligne 1\n  Ligne 2\n  Ligne 3\n```\n\n**Replié `>`** — les sauts de ligne deviennent des espaces :\n```yaml\ndescription: >\n  Cette description est longue\n  et tient sur plusieurs lignes\n  mais sera jointe en un seul paragraphe.\n```\n\nLe contenu doit être **indenté** par rapport à la clé."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-m1-1",
+      "order": 1,
+      "title": "Déclarer des paires clé-valeur",
+      "instructions": "Écrivez un bloc YAML avec trois champs :\n- `name` avec la valeur `Alice`\n- `age` avec la valeur `30`\n- `active` avec la valeur `true`",
+      "requiredKeywords": ["name:", "age:", "active:"],
+      "validationType": "keywords",
+      "correction": "name: Alice\nage: 30\nactive: true",
+      "explanation": "Les paires clé-valeur YAML s'écrivent `clé: valeur`. Les chaînes simples n'ont pas besoin de guillemets. Les booléens s'écrivent `true`/`false`."
+    },
+    {
+      "id": "ex-yaml-m1-2",
+      "order": 2,
+      "title": "Utiliser les commentaires",
+      "instructions": "Écrivez un fichier YAML avec :\n- Un **commentaire** de ligne `# Configuration du serveur`\n- `host: localhost`\n- `port: 8080`",
+      "requiredKeywords": ["# configuration", "host:", "port:"],
+      "validationType": "keywords",
+      "correction": "# Configuration du serveur\nhost: localhost\nport: 8080",
+      "explanation": "Les commentaires YAML commencent par `#`. Ils sont ignorés lors du parsing mais indispensables pour documenter des configurations complexes."
+    },
+    {
+      "id": "ex-yaml-m1-3",
+      "order": 3,
+      "title": "Valeur null et types",
+      "instructions": "Créez un bloc YAML avec :\n- `database: postgres`\n- `password: null`\n- `timeout: 30`\n- `ssl: false`",
+      "requiredKeywords": ["database:", "password:", "null", "timeout:", "ssl:"],
+      "validationType": "keywords",
+      "correction": "database: postgres\npassword: null\ntimeout: 30\nssl: false",
+      "explanation": "`null` représente l'absence de valeur. YAML infère automatiquement les types : `30` est un entier, `false` un booléen, `postgres` une chaîne."
+    },
+    {
+      "id": "ex-yaml-m1-4",
+      "order": 4,
+      "title": "Chaîne multi-ligne littérale",
+      "instructions": "Définissez un champ `script` contenant plusieurs lignes de commandes avec le style **littéral** (`|`) :\n```\napt update\napt install -y nginx\nsystemctl start nginx\n```",
+      "requiredKeywords": ["script:", "|", "apt update", "nginx"],
+      "validationType": "keywords",
+      "correction": "script: |\n  apt update\n  apt install -y nginx\n  systemctl start nginx",
+      "explanation": "Le style `|` (littéral) préserve les sauts de ligne — parfait pour des scripts embarqués dans du YAML (GitHub Actions, docker-compose `command`)."
+    },
+    {
+      "id": "ex-yaml-m1-5",
+      "order": 5,
+      "title": "Chaînes avec guillemets",
+      "instructions": "Créez un champ `message` avec la valeur `\"Bonjour : bienvenue !\"` (guillemets nécessaires car la valeur contient `:`).\n\nAjoutez aussi `version: \"1.0.0\"` (guillemets pour forcer le type chaîne).",
+      "requiredKeywords": ["message:", "\"bonjour", "version:", "\"1.0.0\""],
+      "validationType": "keywords",
+      "correction": "message: \"Bonjour : bienvenue !\"\nversion: \"1.0.0\"",
+      "explanation": "Les guillemets sont nécessaires quand la valeur contient des caractères spéciaux YAML (`:`, `#`, `{`, `}`, `[`, `]`). `\"1.0.0\"` force le type chaîne (sans guillemets, serait interprété comme flottant dans certains parsers)."
+    }
+  ]
+}

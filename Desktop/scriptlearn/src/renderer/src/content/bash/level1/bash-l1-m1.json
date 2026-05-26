@@ -1,0 +1,72 @@
+{
+  "id": "bash-l1-m1",
+  "title": "Introduction au terminal",
+  "level": 1,
+  "lang": "bash",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'un terminal ?",
+      "content": "Un **terminal** (ou console) est une interface en mode texte qui permet de donner des instructions à votre ordinateur par écrit. Contrairement à une interface graphique (clic, glisser-déposer), le terminal utilise des **commandes textuelles**.\n\nSur Windows, Bash est disponible via **WSL** (Windows Subsystem for Linux) : une couche Linux intégrée à Windows. Pour l'ouvrir, cherchez « WSL » ou « Ubuntu » dans le menu Démarrer.\n\n**Pourquoi apprendre le terminal ?**\n- Automatiser des tâches répétitives\n- Gérer des serveurs distants\n- Travailler plus vite qu'avec une interface graphique\n- Compétence indispensable en administration système et DevOps"
+    },
+    {
+      "title": "Le shell et Bash",
+      "content": "Le **shell** est le programme qui interprète vos commandes. Le plus répandu sur Linux est **Bash** (Bourne Again Shell).\n\nLorsque vous ouvrez un terminal, vous voyez une **invite de commande** (prompt) :\n```\nutilisateur@machine:~$\n```\n\nDécomposition :\n- `utilisateur` → votre nom d'utilisateur\n- `machine` → le nom de la machine\n- `~` → le dossier courant (`~` = dossier personnel)\n- `$` → vous êtes un utilisateur normal (`#` = administrateur root)\n\nC'est ici que vous tapez vos commandes, puis appuyez sur **Entrée** pour les exécuter."
+    },
+    {
+      "title": "Première commande : echo",
+      "content": "`echo` affiche un message dans le terminal.\n\n```bash\necho \"Bonjour Bash !\"\n# Affiche : Bonjour Bash !\n\necho \"La date est : $(date)\"\n# Affiche : La date est : Sat May 23 12:00:00 UTC 2026\n```\n\n`$(commande)` s'appelle une **substitution de commande** : elle exécute la commande et insère le résultat dans la chaîne. C'est une des fonctionnalités les plus puissantes de Bash."
+    },
+    {
+      "title": "Obtenir de l'aide : man et --help",
+      "content": "Deux façons d'obtenir de la documentation sur une commande :\n\n**man (manual) :** documentation complète\n```bash\nman ls\nman echo\n```\nNaviguez avec les flèches, quittez avec `q`.\n\n**--help :** aide rapide\n```bash\nls --help\necho --help\n```\n\nSi `man` n'est pas disponible (WSL minimal), utilisez `--help` ou `info commande`.\n\n**Astuce :** Dans `man`, tapez `/motclé` pour rechercher un mot dans la page."
+    },
+    {
+      "title": "Raccourcis clavier essentiels",
+      "content": "Ces raccourcis vous feront gagner énormément de temps :\n\n| Raccourci | Action |\n|-----------|--------|\n| `Ctrl+C` | Annuler la commande en cours |\n| `Ctrl+L` | Effacer l'écran (équivalent de `clear`) |\n| `↑` / `↓` | Naviguer dans l'historique des commandes |\n| `Tab` | Complétion automatique du nom de fichier/commande |\n| `Tab Tab` | Voir toutes les compléments possibles |\n| `Ctrl+A` | Aller au début de la ligne |\n| `Ctrl+E` | Aller à la fin de la ligne |\n| `Ctrl+R` | Rechercher dans l'historique |\n\nLa **complétion automatique** (`Tab`) est particulièrement précieuse : commencez à taper un nom de fichier ou commande, appuyez sur Tab, et Bash complète automatiquement."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m1-1",
+      "order": 1,
+      "title": "Premier message dans le terminal",
+      "instructions": "Utilisez `echo` pour afficher exactement le message suivant :\n```\nBonjour Bash !\n```",
+      "expectedOutput": "Bonjour Bash !",
+      "validationType": "contains",
+      "correction": "echo \"Bonjour Bash !\"",
+      "explanation": "`echo` affiche son argument dans le terminal, suivi d'un retour à la ligne. Les guillemets doubles permettent d'inclure des espaces et caractères spéciaux. Ils sont optionnels pour du texte simple sans espaces, mais c'est une bonne habitude de toujours les utiliser."
+    },
+    {
+      "id": "ex-bash-l1-m1-2",
+      "order": 2,
+      "title": "Afficher la date et l'heure",
+      "instructions": "Affichez une phrase contenant la **date et l'heure actuelles**, par exemple :\n```\nNous sommes le : sam. 23 mai 2026 12:00:00\n```\n\nIndice : utilisez `echo` avec une substitution de commande `$(date)`.",
+      "expectedOutput": "Nous sommes le",
+      "validationType": "contains",
+      "correction": "echo \"Nous sommes le : $(date)\"",
+      "explanation": "`$(date)` est une **substitution de commande** : Bash exécute `date` et insère son résultat à cet endroit dans la chaîne. C'est l'équivalent des backticks `` `date` `` (ancienne syntaxe). La syntaxe `$()` est préférée car elle est plus lisible et peut être imbriquée."
+    },
+    {
+      "id": "ex-bash-l1-m1-3",
+      "order": 3,
+      "title": "Afficher le nom d'utilisateur",
+      "instructions": "Affichez votre nom d'utilisateur avec la commande `whoami`, puis construisez un message personnalisé :\n```\nBonjour, je suis : votrenom\n```\n\nUtilisez `echo` avec `$(whoami)`.",
+      "expectedOutput": "Bonjour, je suis",
+      "validationType": "contains",
+      "correction": "echo \"Bonjour, je suis : $(whoami)\"",
+      "explanation": "`whoami` (« qui suis-je ») affiche le nom de l'utilisateur courant. Combiné à `echo` et la substitution `$()`, il permet de personnaliser les messages dynamiquement."
+    },
+    {
+      "id": "ex-bash-l1-m1-4",
+      "order": 4,
+      "title": "Obtenir de l'aide sur echo",
+      "instructions": "Affichez l'aide de la commande `echo` avec l'option `--help`.\n\nNote : en Bash, `echo` est une commande intégrée (builtin) et ignore `--help`. Pour voir les options `-n` et `-e`, vous pouvez aussi utiliser `help echo`.",
+      "expectedOutput": "",
+      "validationType": "output_nonempty",
+      "correction": "echo --help",
+      "explanation": "`--help` est une convention universelle sous Linux/Bash : presque toute commande externe l'accepte et affiche un résumé de ses options. Pour les commandes intégrées comme `echo`, utilisez `help echo` à la place. C'est plus rapide que `man` pour une référence rapide."
+    }
+  ]
+}

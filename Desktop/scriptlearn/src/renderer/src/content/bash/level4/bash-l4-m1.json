@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m1",
+  "title": "Scripts de déploiement",
+  "level": 4,
+  "lang": "bash",
+  "order": 1,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Structure d'un script de déploiement",
+      "content": "```bash\n#!/bin/bash\nset -euo pipefail\n\n# --- Configuration ---\nAPP_NAME=\"mon-app\"\nAPP_DIR=\"/var/www/$APP_NAME\"\nREPO_URL=\"https://github.com/org/mon-app.git\"\nBRANCH=\"${DEPLOY_BRANCH:-main}\"\nLOG=\"/var/log/$APP_NAME-deploy.log\"\n\n# --- Fonctions ---\nlog()  { echo \"[$(date '+%H:%M:%S')] $*\" | tee -a \"$LOG\"; }\nerr()  { log \"ERREUR : $*\" >&2; exit 1; }\ninfo() { log \"INFO  : $*\"; }\nok()   { log \"OK    : $*\"; }\n\n# --- Vérifications préalables ---\n[ -d \"$APP_DIR\" ] || err \"Répertoire $APP_DIR introuvable\"\ncommand -v git    >/dev/null || err \"git non installé\"\ncommand -v node   >/dev/null || err \"node non installé\"\n\n# --- Déploiement ---\ninfo \"Démarrage du déploiement de $APP_NAME branche $BRANCH\"\n\ncd \"$APP_DIR\"\ngit fetch --all\ngit checkout \"$BRANCH\"\ngit pull origin \"$BRANCH\"\n\nnpm ci --production\nok \"Dépendances installées\"\n\nnpm run build\nok \"Build terminé\"\n\n# Redémarrage du service\nsystemctl restart \"$APP_NAME\" || err \"Redémarrage échoué\"\nok \"Service redémarré\"\n```"
+    },
+    {
+      "title": "Blue-Green deployment",
+      "content": "```bash\n#!/bin/bash\n# Déploiement Blue-Green : deux environnements alternants\n\nBLUE_PORT=8081\nGREEN_PORT=8082\nLB_CONFIG=\"/etc/nginx/current-backend\"\n\ncurrent=$(cat \"$LB_CONFIG\" 2>/dev/null || echo \"blue\")\n\nif [ \"$current\" = \"blue\" ]; then\n    new_env=\"green\"\n    new_port=$GREEN_PORT\nelse\n    new_env=\"blue\"\n    new_port=$BLUE_PORT\nfi\n\necho \"Déploiement sur $new_env (port $new_port)\"\n\n# Déployer sur le slot inactif\ndeploy_to \"$new_env\" \"$new_port\"\n\n# Health check\nfor i in $(seq 1 10); do\n    if curl -sf \"http://localhost:$new_port/health\" | grep -q '\"status\":\"ok\"'; then\n        echo \"Health check OK après $i tentative(s)\"\n        break\n    fi\n    [ $i -eq 10 ] && { echo \"Health check échoué\"; exit 1; }\n    sleep 2\ndone\n\n# Basculer le trafic\necho \"$new_env\" > \"$LB_CONFIG\"\nnginx -s reload\n\necho \"Trafic basculé vers $new_env\"\n\n# Arrêter l'ancien environnement (optionnel)\nstop_env \"$current\"\n```"
+    },
+    {
+      "title": "Rollback automatique",
+      "content": "```bash\n#!/bin/bash\n\nDEPLOY_DIR=\"/var/www/app\"\nBACKUP_DIR=\"/var/www/app.backup\"\n\n# Sauvegarder l'état actuel\nbackup() {\n    rm -rf \"$BACKUP_DIR\"\n    cp -a \"$DEPLOY_DIR\" \"$BACKUP_DIR\"\n    echo \"Backup créé : $BACKUP_DIR\"\n}\n\n# Rollback vers la sauvegarde\nrollback() {\n    echo \"ROLLBACK en cours...\"\n    if [ ! -d \"$BACKUP_DIR\" ]; then\n        echo \"Pas de backup disponible\" >&2\n        return 1\n    fi\n    rm -rf \"$DEPLOY_DIR\"\n    cp -a \"$BACKUP_DIR\" \"$DEPLOY_DIR\"\n    systemctl restart app\n    echo \"Rollback terminé\"\n}\n\n# Trap pour rollback automatique en cas d'erreur\ntrap 'echo \"Échec du déploiement — rollback automatique\"; rollback' ERR\n\n# Déploiement\nbackup\ncd \"$DEPLOY_DIR\"\ngit pull origin main\nnpm ci\nnpm run build\nsystemctl restart app\n\n# Vérification post-déploiement\nsleep 3\nif ! curl -sf http://localhost:3000/health; then\n    exit 1  # déclenche le trap ERR → rollback\nfi\n\necho \"Déploiement réussi\"\n```"
+    },
+    {
+      "title": "Gestion de la configuration",
+      "content": "```bash\n# Charger une config depuis un fichier .env\nload_env() {\n    local env_file=\"${1:-.env}\"\n    [ -f \"$env_file\" ] || return 0\n    while IFS='=' read -r key value; do\n        # Ignorer les commentaires et les lignes vides\n        [[ $key =~ ^\\s*# ]] && continue\n        [[ -z $key ]] && continue\n        # Supprimer guillemets et espaces\n        value=$(echo \"$value\" | sed \"s/^[\\\"']//; s/[\\\"']$//; s/#.*$//; s/[[:space:]]*$//\")\n        export \"$key=$value\"\n    done < \"$env_file\"\n}\n\nload_env \".env.production\"\n\n# Validation des variables requises\nrequired_vars=(DATABASE_URL SECRET_KEY API_TOKEN)\nfor var in \"${required_vars[@]}\"; do\n    [ -z \"${!var:-}\" ] && { echo \"Variable $var manquante\" >&2; exit 1; }\ndone\n\n# Substitution de template\n# fichier: config.template\n# DATABASE_URL=__DATABASE_URL__\nenvsub() {\n    local template=$1 output=$2\n    envsubst < \"$template\" > \"$output\"\n}\n```"
+    },
+    {
+      "title": "Tests de déploiement",
+      "content": "```bash\n#!/bin/bash\n# Suite de tests post-déploiement\n\nPASSED=0\nFAILED=0\n\nassert_http() {\n    local url=$1 expected=${2:-200}\n    local actual\n    actual=$(curl -s -o /dev/null -w \"%{http_code}\" \"$url\")\n    if [ \"$actual\" -eq \"$expected\" ]; then\n        echo \"  [PASS] GET $url → $actual\"\n        ((PASSED++))\n    else\n        echo \"  [FAIL] GET $url → $actual (attendu: $expected)\"\n        ((FAILED++))\n    fi\n}\n\nassert_contains() {\n    local url=$1 text=$2\n    if curl -sf \"$url\" | grep -q \"$text\"; then\n        echo \"  [PASS] $url contient '$text'\"\n        ((PASSED++))\n    else\n        echo \"  [FAIL] $url ne contient pas '$text'\"\n        ((FAILED++))\n    fi\n}\n\nBASE=\"http://localhost:3000\"\n\necho \"=== Tests de déploiement ===\"\nassert_http \"$BASE/\"          200\nassert_http \"$BASE/api/health\" 200\nassert_http \"$BASE/inexistant\" 404\nassert_contains \"$BASE/api/health\" '\"status\":\"ok\"'\n\necho \"Résultat : $PASSED passés, $FAILED échoués\"\n[ $FAILED -eq 0 ] || exit 1\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m1-1",
+      "order": 1,
+      "title": "Vérifications préalables",
+      "instructions": "Écrivez la partie \"vérifications\" d'un script de déploiement qui :\n1. Vérifie que `git` est installé (`command -v git`)\n2. Vérifie que le dossier `/tmp` existe\n3. Affiche `Vérifications OK` si tout est en ordre\n\nRésultat attendu :\n```\nVérifications OK\n```",
+      "expectedOutput": "Vérifications OK",
+      "validationType": "contains",
+      "correction": "set -euo pipefail\n\nerr() { echo \"ERREUR : $*\" >&2; exit 1; }\n\ncommand -v git >/dev/null 2>&1 || err \"git non installé\"\n[ -d \"/tmp\" ] || err \"Dossier /tmp introuvable\"\n\necho \"Vérifications OK\"",
+      "explanation": "`command -v git >/dev/null 2>&1` vérifie si `git` est dans le PATH sans afficher sa localisation. `>/dev/null 2>&1` redirige stdout et stderr vers /dev/null. `||` exécute la partie droite seulement si la gauche échoue (code de sortie non-zéro). Ce pattern est le standard pour les vérifications de pré-requis."
+    },
+    {
+      "id": "ex-bash-l4-m1-2",
+      "order": 2,
+      "title": "Health check avec retry",
+      "instructions": "Écrivez une fonction `health_check` qui tente jusqu'à 5 fois de joindre `https://jsonplaceholder.typicode.com/todos/1` avec `curl -sf`. Attendez 1 seconde entre chaque tentative.\n\nRésultat attendu :\n```\nHealth check OK (tentative 1)\n```",
+      "expectedOutput": "Health check OK",
+      "validationType": "contains",
+      "correction": "health_check() {\n    local url=$1\n    local max_attempts=5\n    for i in $(seq 1 $max_attempts); do\n        if curl -sf \"$url\" > /dev/null; then\n            echo \"Health check OK (tentative $i)\"\n            return 0\n        fi\n        [ $i -lt $max_attempts ] && sleep 1\n    done\n    echo \"Health check échoué après $max_attempts tentatives\" >&2\n    return 1\n}\n\nhealth_check \"https://jsonplaceholder.typicode.com/todos/1\"",
+      "explanation": "`curl -sf` : `-s` silencieux, `-f` échoue avec code non-zéro si le serveur répond avec une erreur HTTP (4xx/5xx). Le pattern retry est essentiel en déploiement car les services prennent quelques secondes à démarrer après un redémarrage. `return 0` sort de la fonction dès le succès, `return 1` indique l'échec total."
+    },
+    {
+      "id": "ex-bash-l4-m1-3",
+      "order": 3,
+      "title": "Script avec assert",
+      "instructions": "Créez des fonctions `assert_eq` et `assert_ne` pour tester des valeurs. Testez :\n- `assert_eq 5 5 \"5 égal 5\"`\n- `assert_ne 5 6 \"5 différent de 6\"`\n\nRésultat attendu :\n```\n[PASS] 5 égal 5\n[PASS] 5 différent de 6\n```",
+      "expectedOutput": "[PASS]",
+      "validationType": "contains",
+      "correction": "assert_eq() {\n    local a=$1 b=$2 msg=$3\n    if [ \"$a\" = \"$b\" ]; then\n        echo \"[PASS] $msg\"\n    else\n        echo \"[FAIL] $msg (attendu: $b, obtenu: $a)\" >&2\n    fi\n}\n\nassert_ne() {\n    local a=$1 b=$2 msg=$3\n    if [ \"$a\" != \"$b\" ]; then\n        echo \"[PASS] $msg\"\n    else\n        echo \"[FAIL] $msg ($a ne devrait pas être égal à $b)\" >&2\n    fi\n}\n\nassert_eq 5 5 \"5 égal 5\"\nassert_ne 5 6 \"5 différent de 6\"",
+      "explanation": "Ces fonctions de test suivent le pattern xUnit : chaque assertion imprime `[PASS]` ou `[FAIL]`. `local a=$1 b=$2 msg=$3` capture les arguments dans des variables locales nommées pour la lisibilité. Ce pattern est la base des frameworks de test shell comme bats (Bash Automated Testing System)."
+    }
+  ]
+}

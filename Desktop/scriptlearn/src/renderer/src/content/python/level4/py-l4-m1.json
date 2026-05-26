@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m1",
+  "title": "Collecte de preuves automatisée (triage)",
+  "lang": "python",
+  "level": 4,
+  "order": 1,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Le triage d'incident — objectifs et méthodes",
+      "content": "Lors d'un incident, l'analyste doit **collecter rapidement** les données volatiles avant qu'elles disparaissent (RAM, connexions réseau, processus actifs). L'ordre de volatilité (du plus au moins volatile) :\n\n1. Registres CPU et cache\n2. **Mémoire RAM** (contenu perdu au redémarrage)\n3. **Connexions réseau actives** (état TCP)\n4. **Processus actifs** (liste des processus)\n5. Fichiers ouverts / handles\n6. Disque dur (plus stable)\n7. Logs distants / sauvegardes\n\nPython permet d'automatiser cette collecte et de générer un rapport de triage en quelques secondes."
+    },
+    {
+      "section": "Collecte des processus actifs",
+      "content": "```python\nimport subprocess\nimport json\nimport os\nfrom datetime import datetime\n\ndef collecter_processus():\n    \"\"\"Collecte la liste des processus actifs.\"\"\"\n    try:\n        if os.name == \"nt\":  # Windows\n            result = subprocess.run(\n                [\"tasklist\", \"/fo\", \"csv\", \"/v\"],\n                capture_output=True, text=True, timeout=30\n            )\n            lignes = result.stdout.strip().splitlines()\n            processus = []\n            for ligne in lignes[1:]:  # Sauter l'en-tête\n                parts = [p.strip('\"') for p in ligne.split(',')]\n                if len(parts) >= 5:\n                    processus.append({\n                        \"nom\": parts[0],\n                        \"pid\": parts[1],\n                        \"session\": parts[2],\n                        \"memoire\": parts[4]\n                    })\n            return processus\n        else:  # Linux\n            result = subprocess.run(\n                [\"ps\", \"-auxw\"],\n                capture_output=True, text=True\n            )\n            return [{\"raw\": l} for l in result.stdout.splitlines()[1:]]\n    except Exception as e:\n        return [{\"error\": str(e)}]\n\nprocs = collecter_processus()[:5]  # Afficher les 5 premiers\nfor p in procs:\n    print(p)\n```"
+    },
+    {
+      "section": "Collecte des connexions réseau",
+      "content": "```python\nimport subprocess\nimport re\nimport os\n\ndef collecter_connexions():\n    \"\"\"Collecte les connexions réseau actives.\"\"\"\n    connexions = []\n    try:\n        if os.name == \"nt\":\n            result = subprocess.run(\n                [\"netstat\", \"-ano\"],\n                capture_output=True, text=True, timeout=15\n            )\n        else:\n            result = subprocess.run(\n                [\"ss\", \"-tnp\"],\n                capture_output=True, text=True\n            )\n        \n        # Parser les lignes\n        pattern = re.compile(\n            r\"(TCP|UDP)\\s+(\\S+):(\\d+)\\s+(\\S+):(\\d+)\\s+(\\S+)(?:\\s+(\\d+))?\",\n            re.I\n        )\n        for ligne in result.stdout.splitlines():\n            m = pattern.search(ligne)\n            if m:\n                connexions.append({\n                    \"protocole\": m.group(1),\n                    \"local_ip\":  m.group(2),\n                    \"local_port\": m.group(3),\n                    \"remote_ip\":  m.group(4),\n                    \"remote_port\": m.group(5),\n                    \"etat\":       m.group(6),\n                    \"pid\":        m.group(7) or \"N/A\"\n                })\n    except Exception as e:\n        connexions.append({\"error\": str(e)})\n    \n    return connexions\n\nconns = collecter_connexions()[:5]\nfor c in conns:\n    if \"error\" not in c:\n        print(f\"{c['protocole']} {c['local_ip']}:{c['local_port']} → {c['remote_ip']}:{c['remote_port']} [{c['etat']}]\")\n```"
+    },
+    {
+      "section": "Rapport de triage complet",
+      "content": "```python\nimport json\nimport os\nimport subprocess\nfrom datetime import datetime\n\ndef generer_rapport_triage(chemin_sortie=\"triage_report.json\"):\n    \"\"\"Génère un rapport de triage d'incident complet.\"\"\"\n    rapport = {\n        \"metadata\": {\n            \"timestamp\": datetime.now().isoformat(),\n            \"hostname\": subprocess.run([\"hostname\"], capture_output=True, text=True).stdout.strip(),\n            \"os\": os.name,\n            \"analyste\": os.getenv(\"USERNAME\") or os.getenv(\"USER\", \"inconnu\")\n        },\n        \"processus\": collecter_processus(),\n        \"connexions\": collecter_connexions(),\n        \"artefacts\": {}\n    }\n    \n    # Variables d'environnement (peuvent contenir des secrets)\n    rapport[\"artefacts\"][\"env_vars\"] = {\n        k: v for k, v in os.environ.items()\n        if k.upper() in [\"PATH\", \"USERNAME\", \"COMPUTERNAME\", \"USERDOMAIN\"]\n    }\n    \n    # Sauvegarder\n    with open(chemin_sortie, \"w\", encoding=\"utf-8\") as f:\n        json.dump(rapport, f, indent=2, ensure_ascii=False, default=str)\n    \n    nb_procs = len(rapport[\"processus\"])\n    nb_conns = len(rapport[\"connexions\"])\n    print(f\"Rapport généré : {chemin_sortie}\")\n    print(f\"  Processus : {nb_procs}\")\n    print(f\"  Connexions : {nb_conns}\")\n    return rapport\n\ngenerer_rapport_triage()\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m1-ex1",
+      "title": "Collecter le hostname et l'OS",
+      "description": "Rassembler des métadonnées système de base pour le triage",
+      "instructions": "Collectez les informations système de base et affichez un JSON structuré :\n```\n{\"hostname\": \"...\", \"os\": \"nt\", \"analyste\": \"...\"}\n```\n(Les valeurs exactes dépendent de votre système)\n\nUsez `subprocess`, `os.name` et `os.getenv`.",
+      "validationType": "output_contains",
+      "expectedOutput": "\"os\":",
+      "correction": "import json\nimport subprocess\nimport os\ninfo = {\n    \"hostname\": subprocess.run([\"hostname\"], capture_output=True, text=True).stdout.strip(),\n    \"os\": os.name,\n    \"analyste\": os.getenv(\"USERNAME\") or os.getenv(\"USER\", \"inconnu\")\n}\nprint(json.dumps(info, indent=2))",
+      "explanation": "`os.name` retourne `'nt'` sur Windows et `'posix'` sur Linux/Mac. Ces métadonnées sont les premières lignes de tout rapport d'incident."
+    },
+    {
+      "id": "py-l4-m1-ex2",
+      "title": "Lister les connexions établies",
+      "description": "Utiliser netstat/ss pour collecter les connexions ESTABLISHED",
+      "instructions": "Exécutez `netstat -n` (Windows) ou `ss -tn` (Linux) avec subprocess, filtrez les lignes contenant `ESTABLISHED` et affichez le nombre de connexions établies :\n```\nConnexions établies : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Connexions établies :",
+      "correction": "import subprocess\nimport os\ncmd = [\"netstat\", \"-n\"] if os.name == \"nt\" else [\"ss\", \"-tn\"]\ntry:\n    r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)\n    etablies = [l for l in r.stdout.splitlines() if \"ESTABLISHED\" in l.upper() or \"ESTAB\" in l.upper()]\n    print(f\"Connexions établies : {len(etablies)}\")\nexcept Exception as e:\n    print(f\"Connexions établies : 0 ({e})\")",
+      "explanation": "Le mot clé varie : `ESTABLISHED` sous Windows netstat, `ESTAB` sous Linux ss. D'où l'utilisation de `.upper()` et deux conditions."
+    },
+    {
+      "id": "py-l4-m1-ex3",
+      "title": "Générer un rapport de triage JSON",
+      "description": "Créer un rapport JSON complet avec les données collectées",
+      "instructions": "Créez un rapport de triage `triage.json` contenant :\n```python\n{\"timestamp\": \"...\", \"hostname\": \"...\", \"os\": \"...\"}\n```\nRelisez le fichier et affichez sa clé `\"os\"` :\n```\nOS collecté : nt\n```\n(ou `posix` selon votre système)",
+      "validationType": "output_contains",
+      "expectedOutput": "OS collecté :",
+      "correction": "import json\nimport subprocess\nimport os\nfrom datetime import datetime\nrapport = {\n    \"timestamp\": datetime.now().isoformat(),\n    \"hostname\": subprocess.run([\"hostname\"], capture_output=True, text=True).stdout.strip(),\n    \"os\": os.name\n}\nwith open(\"triage.json\", \"w\") as f:\n    json.dump(rapport, f)\nwith open(\"triage.json\") as f:\n    r = json.load(f)\nprint(f\"OS collecté : {r['os']}\")",
+      "explanation": "Le rapport JSON est lisible par des humains ET par d'autres outils. C'est le format standard d'échange entre les outils SOC et les plateformes SIEM/SOAR."
+    }
+  ]
+}

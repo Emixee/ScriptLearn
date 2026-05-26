@@ -1,0 +1,62 @@
+{
+  "id": "ps-l5-m2",
+  "title": "Performance et optimisation",
+  "level": 5,
+  "lang": "powershell",
+  "order": 2,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Mesurer et profiler",
+      "content": "```powershell\n# Measure-Command : mesurer le temps d'exécution\n$temps = Measure-Command {\n    1..10000 | ForEach-Object { $_ * $_ }\n}\nWrite-Host \"Durée : $($temps.TotalMilliseconds)ms\"\n\n# Comparer des approches\nfunction Compare-Approches {\n    param(\n        [hashtable]$Approches,\n        [int]$Iterations = 3\n    )\n    \n    $results = foreach ($nom in $Approches.Keys) {\n        $durees = 1..$Iterations | ForEach-Object {\n            (Measure-Command $Approches[$nom]).TotalMilliseconds\n        }\n        [PSCustomObject]@{\n            Nom       = $nom\n            Moy_ms    = [math]::Round(($durees | Measure-Object -Average).Average, 2)\n            Min_ms    = [math]::Round(($durees | Measure-Object -Minimum).Minimum, 2)\n        }\n    }\n    $results | Sort-Object Moy_ms | Format-Table\n}\n\nCompare-Approches @{\n    'Pipeline'  = { 1..1000 | ForEach-Object { $_ * 2 } }\n    'Foreach'   = { $r = @(); foreach($i in 1..1000){ $r += $i*2 }; $r }\n    'Tableau'   = { [int[]]$r = 1..1000; for($i=0;$i-lt1000;$i++){$r[$i]*=2}; $r }\n}\n```"
+    },
+    {
+      "title": "Optimisations des collections",
+      "content": "```powershell\n# LENT : += sur les tableaux (copie à chaque itération)\n$array = @()\n1..10000 | ForEach-Object { $array += $_ }  # O(n²) !\n\n# RAPIDE : pipeline direct\n$array = 1..10000 | ForEach-Object { $_ }\n\n# RAPIDE : ArrayList (si besoin d'ajouter dynamiquement)\n$list = [System.Collections.ArrayList]::new()\n1..10000 | ForEach-Object { [void]$list.Add($_) }  # O(1) amortized\n\n# RAPIDE : List[T] (générique, type-safe)\n$list = [System.Collections.Generic.List[int]]::new()\n1..10000 | ForEach-Object { $list.Add($_) }\n\n# Hashtable vs. PSCustomObject\n# Hashtable : lookup O(1) par clé\n$ht = @{}\n$ht['Alice'] = 30\n\n# Éviter la construction d'objets dans les boucles\n[System.Collections.Generic.List[PSObject]]$results = @()\n1..1000 | ForEach-Object {\n    $results.Add([PSCustomObject]@{N=$_; V=$_*$_})\n}\n\n# StringBuilder pour les chaînes\n$sb = [System.Text.StringBuilder]::new()\n1..1000 | ForEach-Object { [void]$sb.Append(\"$_ \") }\n$sb.ToString()\n```"
+    },
+    {
+      "title": "Pipelines vs boucles",
+      "content": "```powershell\n# Quand utiliser le pipeline :\n# - Traitement séquentiel d'objets\n# - Filtrage et transformation\n# - Chainabilité\n\n# Quand utiliser les boucles :\n# - Accès à l'index\n# - Modification en place\n# - Plusieurs variables d'état\n# - Early exit complexe\n\n# Pipeline RAPIDE pour le filtrage\nGet-Process | Where-Object CPU -gt 1  # filtre en streaming\n\n# Boucle for RAPIDE pour les tableaux\n[int[]]$data = 1..10000\nfor ($i = 0; $i -lt $data.Length; $i++) {\n    $data[$i] *= 2\n}\n\n# Hashtable pour la déduplication (O(1) lookup)\n$seen = @{}\n$unique = $items | Where-Object { -not $seen[$_] } | ForEach-Object { $seen[$_] = $true; $_ }\n\n# LINQ via [Enumerable]\n$nums = 1..100\n[System.Linq.Enumerable]::Where($nums, [Func[int,bool]]{ $args[0] % 2 -eq 0 }) | Select-Object -First 5\n[System.Linq.Enumerable]::Sum([int[]]$nums)\n```"
+    },
+    {
+      "title": "Runspaces et async",
+      "content": "```powershell\n# RunspacePool pour un parallélisme fin\n$pool = [runspacefactory]::CreateRunspacePool(1, [Environment]::ProcessorCount)\n$pool.Open()\n\n$jobs = 1..10 | ForEach-Object {\n    $n = $_\n    $ps = [PowerShell]::Create()\n    $ps.RunspacePool = $pool\n    \n    [void]$ps.AddScript({\n        param($n)\n        Start-Sleep -Milliseconds (Get-Random -Max 500)\n        \"Résultat de $n : $($n * $n)\"\n    }).AddArgument($n)\n    \n    @{ PS = $ps; Result = $ps.BeginInvoke() }\n}\n\n# Récupérer les résultats\n$jobs | ForEach-Object {\n    $_.PS.EndInvoke($_.Result)\n    $_.PS.Dispose()\n}\n\n$pool.Close()\n$pool.Dispose()\n\n# Task async .NET\n$task = [System.Threading.Tasks.Task]::Run({\n    Start-Sleep 1\n    \"Fait!\"\n})\n$task.Wait()\n$task.Result\n```"
+    },
+    {
+      "title": "Mémoire et garbage collection",
+      "content": "```powershell\n# Surveiller l'utilisation mémoire\nfunction Get-MemUsage {\n    $proc = [System.Diagnostics.Process]::GetCurrentProcess()\n    [PSCustomObject]@{\n        WorkingSet_MB  = [math]::Round($proc.WorkingSet64/1MB, 1)\n        Private_MB     = [math]::Round($proc.PrivateMemorySize64/1MB, 1)\n        GC_Gen0        = [GC]::CollectionCount(0)\n        GC_Gen1        = [GC]::CollectionCount(1)\n        GC_Gen2        = [GC]::CollectionCount(2)\n        TotalMemory_MB = [math]::Round([GC]::GetTotalMemory($false)/1MB, 1)\n    }\n}\n\n# Forcer le GC (utile pour les tests)\n[GC]::Collect()\n[GC]::WaitForPendingFinalizers()\n\n# Détecter les fuites mémoire\n$baseline = Get-MemUsage\nfor ($i = 0; $i -lt 5; $i++) {\n    # Simuler une opération\n    $data = 1..100000 | ForEach-Object { [PSCustomObject]@{N=$_} }\n    $data = $null  # libérer la référence\n    [GC]::Collect()\n    \n    $current = Get-MemUsage\n    Write-Host \"Itération $i — RAM: $($current.WorkingSet_MB)Mo\"\n}\n\n# IDisposable\n$stream = [System.IO.FileStream]::new('C:\\temp\\test.bin', 'Create')\ntry {\n    $stream.WriteByte(65)\n} finally {\n    $stream.Dispose()  # ou $stream.Close()\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l5-m2-1",
+      "order": 1,
+      "title": "Benchmark de collections",
+      "instructions": "Comparez le temps de création d'une liste de 1000 éléments avec `+=` (tableau) vs `List[int]`. Affichez les durées.\n\nRésultat attendu :\n```\nTableau += :  XXms\nList<int>  :   Yms\n```",
+      "expectedOutput": "List",
+      "validationType": "contains",
+      "correction": "$t1 = Measure-Command {\n    $arr = @()\n    for ($i = 0; $i -lt 1000; $i++) { $arr += $i }\n}\n\n$t2 = Measure-Command {\n    $list = [System.Collections.Generic.List[int]]::new()\n    for ($i = 0; $i -lt 1000; $i++) { $list.Add($i) }\n}\n\nWrite-Host (\"Tableau += :  {0:F1}ms\" -f $t1.TotalMilliseconds)\nWrite-Host (\"List<int>  :  {0:F1}ms\" -f $t2.TotalMilliseconds)",
+      "explanation": "`$array += $item` crée un **nouveau tableau** à chaque itération en copiant tous les éléments existants — complexité O(n²). `List<T>.Add()` est O(1) amorti car la liste double sa capacité quand elle est pleine. Pour 1000 éléments, la différence est déjà visible ; pour 100 000, le tableau `+=` peut prendre des secondes là où la liste prend des millisecondes."
+    },
+    {
+      "id": "ex-ps-l5-m2-2",
+      "order": 2,
+      "title": "StringBuilder vs concaténation",
+      "instructions": "Comparez la construction d'une chaîne de 1000 fragments avec `+=` vs `StringBuilder`.\n\nRésultat attendu :\n```\nConcaténation : XXms\nStringBuilder : Yms\nRésultat identique : True\n```",
+      "expectedOutput": "Résultat identique : True",
+      "validationType": "contains",
+      "correction": "$fragments = 1..1000 | ForEach-Object { \"item$_ \" }\n\n$t1 = Measure-Command {\n    $s1 = \"\"\n    foreach ($f in $fragments) { $s1 += $f }\n}\n\n$t2 = Measure-Command {\n    $sb = [System.Text.StringBuilder]::new()\n    foreach ($f in $fragments) { [void]$sb.Append($f) }\n    $s2 = $sb.ToString()\n}\n\nWrite-Host (\"Concaténation : {0:F1}ms\" -f $t1.TotalMilliseconds)\nWrite-Host (\"StringBuilder : {0:F1}ms\" -f $t2.TotalMilliseconds)\nWrite-Host \"Résultat identique : $($s1 -eq $s2)\"",
+      "explanation": "`StringBuilder` accumule les fragments dans un buffer interne redimensionnable. `+=` sur les chaînes crée une **nouvelle chaîne** à chaque itération car les chaînes .NET sont immuables — c'est le même problème que `+=` sur les tableaux. `[void]$sb.Append()` supprime le retour de valeur pour éviter d'encombrer le pipeline. `ToString()` matérialise la chaîne finale."
+    },
+    {
+      "id": "ex-ps-l5-m2-3",
+      "order": 3,
+      "title": "Parallélisme RunspacePool",
+      "instructions": "Utilisez `ForEach-Object -Parallel` pour calculer les carrés de 1 à 8 en parallèle (4 threads max). Affichez les résultats.\n\nRésultat attendu (ordre variable) :\n```\n1 → 1\n4 → 16\n...\n```",
+      "expectedOutput": "4 → 16",
+      "validationType": "contains",
+      "correction": "1..8 | ForEach-Object -Parallel {\n    \"$_ → $($_ * $_)\"\n} -ThrottleLimit 4",
+      "explanation": "`ForEach-Object -Parallel` (PowerShell 7+) est l'API la plus simple pour le parallélisme. Chaque itération s'exécute dans un runspace séparé d'un pool. `-ThrottleLimit 4` limite à 4 threads simultanés. L'ordre de sortie n'est pas garanti. Pour des résultats ordonnés, collectez-les dans une liste et triez après. C'est approprié pour les opérations I/O-bound (réseau, disque)."
+    }
+  ]
+}

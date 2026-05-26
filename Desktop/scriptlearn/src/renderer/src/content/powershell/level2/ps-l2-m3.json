@@ -1,0 +1,72 @@
+{
+  "id": "ps-l2-m3",
+  "title": "Tableaux et hashtables",
+  "level": 2,
+  "lang": "powershell",
+  "order": 3,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Tableaux de base",
+      "content": "```powershell\n# Créer un tableau\n$noms = @(\"Alice\", \"Bob\", \"Charlie\")\n$notes = @(14, 16, 12, 18)\n\n# Accès par indice (commence à 0)\n$noms[0]     # Alice\n$noms[-1]    # Charlie (dernier)\n\n# Taille\n$noms.Count   # 3\n$noms.Length  # 3 (identique)\n\n# Tous les éléments\n$noms         # affiche la liste\n\n# Sous-tableau\n$noms[1..2]   # Bob Charlie (indices 1 et 2)\n$noms[0, 2]   # Alice Charlie (indices 0 et 2)\n```\n\n**Créer un tableau vide et ajouter :**\n```powershell\n$liste = @()\n$liste += \"premier\"\n$liste += \"deuxième\"\n$liste += @(\"troisième\", \"quatrième\")\n```\n\n> **Note :** En PowerShell, les tableaux sont **de taille fixe** par défaut. `+=` crée un nouveau tableau à chaque fois. Pour de meilleures performances avec beaucoup d'ajouts, utilisez `System.Collections.Generic.List`."
+    },
+    {
+      "title": "Méthodes sur les tableaux",
+      "content": "```powershell\n$noms = @(\"Alice\", \"Bob\", \"Charlie\", \"Bob\")\n\n# Contient un élément ?\n$noms -contains \"Bob\"      # True\n$noms -contains \"Diana\"    # False\n\n# Index d'un élément\n[Array]::IndexOf($noms, \"Charlie\")   # 2\n\n# Trier\n$notes = @(14, 7, 19, 12)\n$notes | Sort-Object                  # 7 12 14 19\n$notes | Sort-Object -Descending      # 19 14 12 7\n\n# Filtrer\n$noms | Where-Object { $_ -like \"*li*\" }  # Alice Charlie\n\n# Transformer\n$notes | ForEach-Object { $_ * 2 }    # 28 14 38 24\n\n# Mesures\n$notes | Measure-Object -Sum -Average -Maximum -Minimum\n```"
+    },
+    {
+      "title": "Hashtables (dictionnaires)",
+      "content": "Une hashtable associe des **clés** à des **valeurs** :\n\n```powershell\n# Créer une hashtable\n$personne = @{\n    Nom    = \"Alice\"\n    Age    = 30\n    Ville  = \"Paris\"\n}\n\n# Accéder aux valeurs\n$personne[\"Nom\"]    # Alice\n$personne.Age       # 30 (notation objet)\n\n# Ajouter une clé\n$personne[\"Email\"] = \"alice@exemple.fr\"\n$personne.Tel = \"06 12 34 56 78\"\n\n# Modifier\n$personne.Age = 31\n\n# Supprimer\n$personne.Remove(\"Tel\")\n\n# Vérifier l'existence d'une clé\n$personne.ContainsKey(\"Nom\")   # True\n```"
+    },
+    {
+      "title": "Itérer sur les hashtables",
+      "content": "```powershell\n$capitales = @{\n    France   = \"Paris\"\n    Espagne  = \"Madrid\"\n    Italie   = \"Rome\"\n}\n\n# Toutes les clés\n$capitales.Keys\n\n# Toutes les valeurs\n$capitales.Values\n\n# Itérer sur les paires\nforeach ($paire in $capitales.GetEnumerator()) {\n    Write-Host \"$($paire.Key) → $($paire.Value)\"\n}\n\n# Trier par clé\n$capitales.GetEnumerator() | Sort-Object Key | ForEach-Object {\n    Write-Host \"$($_.Key) : $($_.Value)\"\n}\n\n# Hashtable ordonnée (preserve l'ordre d'insertion)\n$config = [ordered]@{\n    Host = \"localhost\"\n    Port = 5432\n    DB   = \"production\"\n}\n```"
+    },
+    {
+      "title": "Tableaux d'objets (PSCustomObject)",
+      "content": "PowerShell manipule des **objets** riches, pas seulement du texte :\n\n```powershell\n# Tableau d'objets personnalisés\n$employes = @(\n    [PSCustomObject]@{ Nom = \"Alice\"; Poste = \"Dev\";   Salaire = 50000 },\n    [PSCustomObject]@{ Nom = \"Bob\";   Poste = \"Admin\"; Salaire = 45000 },\n    [PSCustomObject]@{ Nom = \"Carol\"; Poste = \"Dev\";   Salaire = 52000 }\n)\n\n# Accéder aux propriétés\n$employes[0].Nom        # Alice\n$employes[0].Salaire    # 50000\n\n# Filtrer par propriété\n$employes | Where-Object { $_.Poste -eq \"Dev\" }\n\n# Calculer\n$employes | Measure-Object -Property Salaire -Average\n\n# Sélectionner des colonnes\n$employes | Select-Object Nom, Salaire\n\n# Trier\n$employes | Sort-Object Salaire -Descending\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m3-1",
+      "order": 1,
+      "title": "Travailler avec un tableau",
+      "instructions": "Créez un tableau `$notes = @(14, 18, 11, 16, 9)` et affichez :\n1. La note maximale\n2. La note minimale\n3. La moyenne\n\nUtilisez `Measure-Object`.\n\nRésultat attendu (ordre quelconque) :\n```\nMaximum : 18\nMinimum : 9\nMoyenne : 13.6\n```",
+      "expectedOutput": "Maximum : 18",
+      "validationType": "contains",
+      "correction": "$notes = @(14, 18, 11, 16, 9)\n$stats = $notes | Measure-Object -Maximum -Minimum -Average\nWrite-Host \"Maximum : $($stats.Maximum)\"\nWrite-Host \"Minimum : $($stats.Minimum)\"\nWrite-Host \"Moyenne : $($stats.Average)\"",
+      "explanation": "`Measure-Object` calcule des statistiques sur une collection. Il retourne un objet avec les propriétés `Maximum`, `Minimum`, `Average`, `Sum` et `Count`. C'est bien plus pratique qu'une boucle for avec accumulation manuelle."
+    },
+    {
+      "id": "ex-ps-l2-m3-2",
+      "order": 2,
+      "title": "Créer une hashtable personne",
+      "instructions": "Créez une hashtable `$personne` avec les clés `Nom`, `Prenom`, `Age` et affichez une phrase de présentation :\n\n```\nBonjour, je suis Alice Dupont et j'ai 28 ans.\n```\n\nRemplacez par les valeurs de votre choix.",
+      "expectedOutput": "ans.",
+      "validationType": "contains",
+      "correction": "$personne = @{\n    Nom    = \"Dupont\"\n    Prenom = \"Alice\"\n    Age    = 28\n}\nWrite-Host \"Bonjour, je suis $($personne.Prenom) $($personne.Nom) et j'ai $($personne.Age) ans.\"",
+      "explanation": "`$($personne.Prenom)` est une sous-expression dans une chaîne. Le `$()` est nécessaire pour accéder aux propriétés d'un objet à l'intérieur d'une chaîne entre guillemets. Sans `$()`, PowerShell n'évaluerait pas `.Prenom`."
+    },
+    {
+      "id": "ex-ps-l2-m3-3",
+      "order": 3,
+      "title": "Itérer sur une hashtable",
+      "instructions": "Créez une hashtable de 3 pays et leurs capitales, puis affichez chaque paire dans l'ordre alphabétique :\n\n```\nAllemagne → Berlin\nEspagne → Madrid\nFrance → Paris\n```",
+      "expectedOutput": "→",
+      "validationType": "contains",
+      "correction": "$capitales = @{\n    France    = \"Paris\"\n    Espagne   = \"Madrid\"\n    Allemagne = \"Berlin\"\n}\n\n$capitales.GetEnumerator() | Sort-Object Key | ForEach-Object {\n    Write-Host \"$($_.Key) → $($_.Value)\"\n}",
+      "explanation": "`GetEnumerator()` retourne une séquence de paires clé-valeur. `Sort-Object Key` trie par la propriété `Key`. `$_.Key` et `$_.Value` accèdent aux membres de chaque paire. Les hashtables normales ne garantissent pas l'ordre d'insertion — utiliser `[ordered]@{}` pour un ordre fixe."
+    },
+    {
+      "id": "ex-ps-l2-m3-4",
+      "order": 4,
+      "title": "Tableau d'objets",
+      "instructions": "Créez un tableau de 3 `PSCustomObject` représentant des produits (Nom, Prix), filtrez ceux dont le prix est supérieur à 20, et affichez-les.\n\nRésultat attendu (si vous avez des produits > 20€) :\n```\nNom  Prix\n---  ----\n```\n(Le format exact peut varier)",
+      "expectedOutput": "Prix",
+      "validationType": "contains",
+      "correction": "$produits = @(\n    [PSCustomObject]@{ Nom = \"Café\";     Prix = 3 },\n    [PSCustomObject]@{ Nom = \"Livre\";    Prix = 25 },\n    [PSCustomObject]@{ Nom = \"Clavier\";  Prix = 80 }\n)\n\n$produits | Where-Object { $_.Prix -gt 20 } | Format-Table",
+      "explanation": "`Where-Object { $_.Prix -gt 20 }` filtre en gardant seulement les objets où la propriété `Prix` est supérieure à 20. `Format-Table` affiche le résultat sous forme de tableau. La combinaison `PSCustomObject` + pipeline + `Where-Object` + `Format-Table` est un pattern très PowerShell."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m6",
+  "title": "APIs de renseignement cyber",
+  "lang": "python",
+  "level": 3,
+  "order": 6,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Écosystème Threat Intelligence",
+      "content": "Un analyste SOC interroge régulièrement ces APIs :\n\n| API | Usage | Gratuit |\n|-----|-------|---------|\n| **VirusTotal** | Hash, IP, URL, domaine | 4 req/min |\n| **AbuseIPDB** | Score de réputation IP | 1000 req/jour |\n| **Shodan** | Services exposés d'une IP | 1 req/sec |\n| **AlienVault OTX** | IOC complets | Illimité |\n| **ip-api.com** | Géolocalisation | 45 req/min |\n| **MXToolbox** | Email/DNS | Limité |\n\nToutes ces APIs fonctionnent en HTTPS avec une clé API dans les headers."
+    },
+    {
+      "section": "Client TI générique avec retry",
+      "content": "```python\nimport urllib.request\nimport urllib.error\nimport json\nimport time\n\nclass ThreatIntelClient:\n    \"\"\"Client générique pour les APIs de Threat Intelligence.\"\"\"\n    \n    def __init__(self, base_url, api_key=None, key_header=\"x-apikey\"):\n        self.base_url = base_url\n        self.api_key = api_key\n        self.key_header = key_header\n    \n    def get(self, endpoint, params=None, max_retries=3):\n        \"\"\"Requête GET avec retry automatique sur rate limit.\"\"\"\n        url = self.base_url + endpoint\n        if params:\n            from urllib.parse import urlencode\n            url += \"?\" + urlencode(params)\n        \n        headers = {\"Accept\": \"application/json\", \"User-Agent\": \"SOC-Script/1.0\"}\n        if self.api_key:\n            headers[self.key_header] = self.api_key\n        \n        for tentative in range(max_retries):\n            try:\n                req = urllib.request.Request(url, headers=headers)\n                with urllib.request.urlopen(req, timeout=15) as resp:\n                    return json.loads(resp.read())\n            except urllib.error.HTTPError as e:\n                if e.code == 429:  # Rate limit\n                    print(f\"Rate limit. Attente {2**tentative}s...\")\n                    time.sleep(2 ** tentative)\n                else:\n                    print(f\"HTTP {e.code}: {e.reason}\")\n                    return None\n            except Exception as e:\n                print(f\"Erreur : {e}\")\n                return None\n        return None\n```"
+    },
+    {
+      "section": "Vérification IP multi-sources",
+      "content": "```python\nimport urllib.request\nimport json\n\ndef geoip(ip):\n    \"\"\"Géolocalisation gratuite via ip-api.com.\"\"\"\n    try:\n        with urllib.request.urlopen(f\"http://ip-api.com/json/{ip}?fields=country,city,isp,org,as,proxy,hosting\", timeout=5) as r:\n            return json.loads(r.read())\n    except Exception:\n        return {}\n\ndef analyser_ip_complete(ip):\n    \"\"\"Analyse complète d'une IP (sans clé API nécessaire).\"\"\"\n    print(f\"\\n=== Analyse de {ip} ===\")\n    \n    # Géolocalisation\n    geo = geoip(ip)\n    if geo:\n        print(f\"Pays     : {geo.get('country', 'N/A')}\")\n        print(f\"Ville    : {geo.get('city', 'N/A')}\")\n        print(f\"ISP      : {geo.get('isp', 'N/A')}\")\n        print(f\"AS       : {geo.get('as', 'N/A')}\")\n        print(f\"Proxy    : {geo.get('proxy', False)}\")\n        print(f\"Hosting  : {geo.get('hosting', False)}\")\n        \n        # Alertes sur les hébergeurs Tor/VPN/Proxy\n        if geo.get(\"proxy\") or geo.get(\"hosting\"):\n            print(\"[!] ALERTE : IP de proxy/hébergeur — potentiellement utilisée pour masquer l'origine\")\n\n# Test\nanalyser_ip_complete(\"185.220.101.3\")  # IP Tor typique\nanalyser_ip_complete(\"8.8.8.8\")       # DNS Google\n```"
+    },
+    {
+      "section": "Enrichisseur d'IOC complet",
+      "content": "```python\nimport json\nimport re\nfrom datetime import datetime\n\ndef enrichir_ioc(valeur):\n    \"\"\"Enrichit automatiquement un IOC selon son type.\"\"\"\n    \n    # Détecter le type d'IOC\n    if re.fullmatch(r\"\\d{1,3}(?:\\.\\d{1,3}){3}\", valeur):\n        type_ioc = \"ip\"\n    elif re.fullmatch(r\"[0-9a-fA-F]{32}\", valeur):\n        type_ioc = \"md5\"\n    elif re.fullmatch(r\"[0-9a-fA-F]{64}\", valeur):\n        type_ioc = \"sha256\"\n    elif re.fullmatch(r\"https?://\\S+\", valeur):\n        type_ioc = \"url\"\n    elif re.search(r\"\\.[a-z]{2,}\", valeur):\n        type_ioc = \"domain\"\n    else:\n        type_ioc = \"unknown\"\n    \n    resultat = {\n        \"valeur\": valeur,\n        \"type\": type_ioc,\n        \"timestamp\": datetime.now().isoformat(),\n        \"enrichissement\": {}\n    }\n    \n    if type_ioc == \"ip\":\n        geo = geoip(valeur)\n        resultat[\"enrichissement\"][\"geo\"] = geo\n    \n    return resultat\n\n# Test\nfor ioc in [\"185.220.101.3\", \"d41d8cd98f00b204e9800998ecf8427e\", \"malware.example.com\"]:\n    r = enrichir_ioc(ioc)\n    print(f\"{r['valeur']} → type={r['type']}\")\n    if r['enrichissement']:\n        geo = r['enrichissement'].get('geo', {})\n        print(f\"  Pays: {geo.get('country', 'N/A')}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m6-ex1",
+      "title": "Détecter le type d'IOC",
+      "description": "Classifier automatiquement des IOC selon leur format",
+      "instructions": "Écrivez une fonction `type_ioc(v)` qui retourne `\"ip\"`, `\"md5\"`, `\"sha256\"` ou `\"inconnu\"` selon le format. Testez avec :\n```python\nvaleurs = [\"185.220.101.3\", \"d41d8cd98f00b204e9800998ecf8427e\", \"abc\"]\n```\nAffichez :\n```\n185.220.101.3 → ip\nd41d8cd98f00b204e9800998ecf8427e → md5\nabc → inconnu\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "185.220.101.3 → ip",
+      "correction": "import re\n\ndef type_ioc(v):\n    if re.fullmatch(r\"\\d{1,3}(?:\\.\\d{1,3}){3}\", v):\n        return \"ip\"\n    elif re.fullmatch(r\"[0-9a-fA-F]{32}\", v):\n        return \"md5\"\n    elif re.fullmatch(r\"[0-9a-fA-F]{64}\", v):\n        return \"sha256\"\n    return \"inconnu\"\n\nvaleurs = [\"185.220.101.3\", \"d41d8cd98f00b204e9800998ecf8427e\", \"abc\"]\nfor v in valeurs:\n    print(f\"{v} → {type_ioc(v)}\")",
+      "explanation": "`re.fullmatch` s'assure que TOUTE la chaîne correspond (pas juste une partie). La détection automatique du type d'IOC est la base d'un système d'enrichissement."
+    },
+    {
+      "id": "py-l3-m6-ex2",
+      "title": "Géolocaliser une IP suspecte",
+      "description": "Interroger ip-api.com pour géolocaliser une IP",
+      "instructions": "Géolocalisez `\"8.8.8.8\"` via `http://ip-api.com/json/8.8.8.8` et affichez le pays.\n\nRésultat :\n```\n8.8.8.8 : United States\n```\nSi pas de réseau : `8.8.8.8 : (hors ligne)`",
+      "validationType": "output_contains",
+      "expectedOutput": "8.8.8.8 :",
+      "correction": "import urllib.request\nimport json\ntry:\n    with urllib.request.urlopen(\"http://ip-api.com/json/8.8.8.8\", timeout=5) as r:\n        data = json.loads(r.read())\n        print(f\"8.8.8.8 : {data.get('country', 'N/A')}\")\nexcept Exception:\n    print(\"8.8.8.8 : (hors ligne)\")",
+      "explanation": "ip-api.com offre 45 requêtes/minute gratuitement sans clé API. En production, utilisez des services comme AbuseIPDB ou MaxMind GeoIP avec une clé pour des limites plus élevées."
+    },
+    {
+      "id": "py-l3-m6-ex3",
+      "title": "Trier des IOC par type",
+      "description": "Séparer une liste d'IOC mixtes en catégories",
+      "instructions": "Soit :\n```python\nioc_mixtes = [\"10.0.0.1\", \"abc123def456abc123def456abc123de\", \"malware.ru\", \"8.8.8.8\", \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"]\n```\nClassifiez et affichez :\n```\nIPs: 2\nHashs MD5: 1\nHashs SHA256: 1\nAutres: 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs: 2",
+      "correction": "import re\n\ndef type_ioc(v):\n    if re.fullmatch(r\"\\d{1,3}(?:\\.\\d{1,3}){3}\", v): return \"ip\"\n    if re.fullmatch(r\"[0-9a-fA-F]{32}\", v): return \"md5\"\n    if re.fullmatch(r\"[0-9a-fA-F]{64}\", v): return \"sha256\"\n    return \"autre\"\n\nioc_mixtes = [\"10.0.0.1\", \"abc123def456abc123def456abc123de\", \"malware.ru\", \"8.8.8.8\", \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"]\nfrom collections import Counter\ntypes = Counter(type_ioc(v) for v in ioc_mixtes)\nprint(f\"IPs: {types['ip']}\")\nprint(f\"Hashs MD5: {types['md5']}\")\nprint(f\"Hashs SHA256: {types['sha256']}\")\nprint(f\"Autres: {types['autre']}\")",
+      "explanation": "Trier les IOC par type est la première étape d'un système d'enrichissement automatique : chaque type d'IOC est ensuite envoyé à l'API appropriée."
+    }
+  ]
+}

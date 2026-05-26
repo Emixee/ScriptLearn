@@ -1,0 +1,72 @@
+{
+  "id": "bash-l1-m5",
+  "title": "Lire et écrire des fichiers",
+  "level": 1,
+  "lang": "bash",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Afficher le contenu : cat, head, tail",
+      "content": "```bash\n# Afficher tout le fichier\ncat notes.txt\n\n# Afficher avec numéros de ligne\ncat -n notes.txt\n\n# Afficher les 5 premières lignes\nhead -5 notes.txt\nhead -n 5 notes.txt   # équivalent\n\n# Afficher les 5 dernières lignes\ntail -5 notes.txt\n\n# Suivre un fichier en temps réel (utile pour les logs)\ntail -f journal.log\n```\n\n`cat` (concatenate) peut aussi **concaténer** plusieurs fichiers :\n```bash\ncat fichier1.txt fichier2.txt > tout.txt\n```"
+    },
+    {
+      "title": "Redirections : >, >> et <",
+      "content": "Les **redirections** permettent d'envoyer la sortie d'une commande vers un fichier, ou de lire l'entrée depuis un fichier.\n\n```bash\n# > Redirection de sortie (crée ou ÉCRASE le fichier)\necho \"Première ligne\" > notes.txt\n\n# >> Redirection d'ajout (AJOUTE à la fin)\necho \"Deuxième ligne\" >> notes.txt\necho \"Troisième ligne\" >> notes.txt\n\n# 2> Redirection des erreurs\nls dossier_inexistant 2> erreurs.txt\n\n# 2>&1 Rediriger erreurs vers la même sortie que la sortie standard\nls dossier_inexistant > tout.txt 2>&1\n\n# < Lire depuis un fichier\nsort < liste.txt\n```"
+    },
+    {
+      "title": "Lire ligne par ligne : while read",
+      "content": "Pour traiter un fichier ligne par ligne :\n\n```bash\nwhile IFS= read -r ligne; do\n    echo \"Ligne : $ligne\"\ndone < notes.txt\n```\n\n- `IFS=` préserve les espaces en début/fin de ligne\n- `-r` évite l'interprétation des backslashes\n- `< notes.txt` passe le fichier comme entrée de la boucle\n\n**Exemple pratique :** Compter les lignes d'un fichier :\n```bash\ncompteur=0\nwhile IFS= read -r ligne; do\n    ((compteur++))\ndone < notes.txt\necho \"Nombre de lignes : $compteur\"\n```"
+    },
+    {
+      "title": "Vérifier l'existence d'un fichier",
+      "content": "Le bloc `if` avec des **tests de fichier** est très utile :\n\n```bash\nfichier=\"notes.txt\"\n\nif [ -f \"$fichier\" ]; then\n    echo \"Le fichier existe.\"\nelif [ -d \"$fichier\" ]; then\n    echo \"C'est un dossier.\"\nelse\n    echo \"N'existe pas.\"\nfi\n```\n\n**Tests courants :**\n| Test | Signification |\n|------|---------------|\n| `-f fichier` | Existe et est un fichier régulier |\n| `-d chemin` | Existe et est un dossier |\n| `-e chemin` | Existe (fichier ou dossier) |\n| `-r fichier` | Lisible |\n| `-w fichier` | Modifiable |\n| `-x fichier` | Exécutable |\n| `-s fichier` | Existe et n'est pas vide |"
+    },
+    {
+      "title": "Commandes utiles : wc, grep, sort",
+      "content": "```bash\n# wc (word count) — compter lignes, mots, caractères\nwc -l fichier.txt    # nombre de lignes\nwc -w fichier.txt    # nombre de mots\nwc -c fichier.txt    # nombre de caractères\n\n# grep — chercher du texte\ngrep \"motclé\" fichier.txt       # lignes contenant le mot\ngrep -i \"motclé\" fichier.txt    # insensible à la casse\ngrep -n \"motclé\" fichier.txt    # avec numéros de ligne\ngrep -r \"motclé\" dossier/       # recherche récursive\n\n# sort — trier\nsort fichier.txt           # tri alphabétique\nsort -r fichier.txt        # tri inverse\nsort -n fichier.txt        # tri numérique\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m5-1",
+      "order": 1,
+      "title": "Créer un fichier de journal",
+      "instructions": "Créez un fichier `~/scriptlearn/journal.txt` avec la ligne suivante :\n```\nDébut du journal Bash\n```\n\nPuis ajoutez deux lignes supplémentaires avec `>>` :\n```\nDate : (la date du jour)\nStatut : En formation\n```",
+      "expectedOutput": "En formation",
+      "validationType": "contains",
+      "correction": "mkdir -p ~/scriptlearn\necho \"Début du journal Bash\" > ~/scriptlearn/journal.txt\necho \"Date : $(date +%d/%m/%Y)\" >> ~/scriptlearn/journal.txt\necho \"Statut : En formation\" >> ~/scriptlearn/journal.txt",
+      "explanation": "`>` crée le fichier ou écrase son contenu. `>>` ajoute à la fin sans écraser. `$(date +%d/%m/%Y)` utilise le format `+%d/%m/%Y` pour afficher la date en français (jour/mois/année)."
+    },
+    {
+      "id": "ex-bash-l1-m5-2",
+      "order": 2,
+      "title": "Lire et compter les lignes",
+      "instructions": "Affichez le contenu du fichier `journal.txt`, puis comptez son nombre de lignes avec `wc -l`.\n\nRésultat attendu :\n```\nDébut du journal Bash\nDate : ...\nStatut : En formation\n3 journal.txt\n```",
+      "expectedOutput": "journal Bash",
+      "validationType": "contains",
+      "correction": "cat ~/scriptlearn/journal.txt\nwc -l ~/scriptlearn/journal.txt",
+      "explanation": "`cat` affiche le contenu. `wc -l` compte le nombre de lignes et affiche le résultat avec le nom du fichier. Si vous voulez seulement le nombre : `wc -l < ~/scriptlearn/journal.txt` (sans le nom de fichier)."
+    },
+    {
+      "id": "ex-bash-l1-m5-3",
+      "order": 3,
+      "title": "Chercher dans un fichier",
+      "instructions": "Utilisez `grep` pour chercher le mot `Statut` dans votre fichier `journal.txt`.\n\nRésultat attendu :\n```\nStatut : En formation\n```",
+      "expectedOutput": "Statut",
+      "validationType": "contains",
+      "correction": "grep \"Statut\" ~/scriptlearn/journal.txt",
+      "explanation": "`grep` cherche un motif (texte ou expression régulière) dans un fichier et affiche les lignes qui le contiennent. C'est l'une des commandes les plus utilisées en administration système pour analyser des logs."
+    },
+    {
+      "id": "ex-bash-l1-m5-4",
+      "order": 4,
+      "title": "Test d'existence de fichier",
+      "instructions": "Écrivez une série de commandes qui :\n1. Vérifie si `~/scriptlearn/journal.txt` existe avec `[ -f ... ]`\n2. Affiche `Fichier trouvé.` si oui\n3. Affiche `Fichier absent.` si non\n\n```bash\nif [ -f ~/scriptlearn/journal.txt ]; then\n    echo ???\nelse\n    echo ???\nfi\n```",
+      "expectedOutput": "Fichier trouvé",
+      "validationType": "contains",
+      "correction": "if [ -f ~/scriptlearn/journal.txt ]; then\n    echo \"Fichier trouvé.\"\nelse\n    echo \"Fichier absent.\"\nfi",
+      "explanation": "`[ -f chemin ]` est un test qui retourne `0` (vrai) si le chemin est un fichier régulier existant. Notez les **espaces obligatoires** après `[` et avant `]`. C'est une erreur de syntaxe très courante d'oublier ces espaces."
+    }
+  ]
+}

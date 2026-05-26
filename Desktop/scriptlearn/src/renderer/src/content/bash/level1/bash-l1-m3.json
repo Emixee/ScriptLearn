@@ -1,0 +1,72 @@
+{
+  "id": "bash-l1-m3",
+  "title": "Variables et affichage",
+  "level": 1,
+  "lang": "bash",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Déclarer une variable",
+      "content": "En Bash, une variable s'assigne sans espace autour du `=` :\n\n```bash\nprenom=\"Alice\"\nage=30\nville=\"Paris\"\n```\n\n> ⚠️ **Pas d'espaces autour du `=` !** `prenom = \"Alice\"` est une erreur de syntaxe.\n\nPour **lire** une variable, on la préfixe avec `$` :\n```bash\necho $prenom       # Alice\necho \"Bonjour $prenom\"  # Bonjour Alice\n```\n\nPar convention, les variables de scripts sont en **minuscules**, et les variables d'environnement (système) en **MAJUSCULES** (`$HOME`, `$PATH`, `$USER`)."
+    },
+    {
+      "title": "Guillemets simples, doubles et backticks",
+      "content": "**Guillemets doubles `\"\"` :** Les variables et `$()` sont interprétés.\n```bash\nnom=\"Alice\"\necho \"Bonjour $nom\"      # Bonjour Alice\necho \"Date : $(date)\"    # Date : sam. 23 mai...\n```\n\n**Guillemets simples `''` :** Tout est littéral, rien n'est interprété.\n```bash\necho 'Bonjour $nom'     # Bonjour $nom (variable non interprétée)\necho '$(date)'          # $(date) (commande non exécutée)\n```\n\n**Accolades `${}` :** Utiles pour délimiter le nom de variable.\n```bash\nfruit=\"pomme\"\necho \"J'ai des ${fruit}s\"  # J'ai des pommes\necho \"J'ai des $fruits\"    # Erreur : cherche $fruits\n```"
+    },
+    {
+      "title": "Variables d'environnement",
+      "content": "Bash fournit des **variables prédéfinies** contenant des informations sur le système :\n\n```bash\necho $HOME      # /home/alice   — votre dossier personnel\necho $USER      # alice         — votre nom d'utilisateur\necho $PATH      # /usr/bin:...  — chemins de recherche des commandes\necho $SHELL     # /bin/bash     — le shell actif\necho $PWD       # /home/alice   — dossier courant (comme pwd)\necho $RANDOM    # 17432         — nombre aléatoire\n```\n\nPour voir toutes les variables d'environnement : `env` ou `printenv`\n\nPour créer une variable **exportée** (accessible aux processus enfants) :\n```bash\nexport MA_VAR=\"valeur\"\n```"
+    },
+    {
+      "title": "Opérations arithmétiques",
+      "content": "Bash traite tout comme du texte par défaut. Pour les calculs, utilisez `$((...))` :\n\n```bash\na=10\nb=3\necho $((a + b))    # 13\necho $((a - b))    # 7\necho $((a * b))    # 30\necho $((a / b))    # 3  (division entière)\necho $((a % b))    # 1  (modulo)\n```\n\nPour les décimaux, utilisez `bc` :\n```bash\necho \"scale=2; 10 / 3\" | bc   # 3.33\n```\n\n**Incrémenter une variable :**\n```bash\ncompteur=0\n((compteur++))\necho $compteur    # 1\n```"
+    },
+    {
+      "title": "Longueur et manipulation de chaînes",
+      "content": "```bash\ntexte=\"Bonjour Bash\"\n\n# Longueur\necho ${#texte}              # 12\n\n# Extraire une partie (substring)\necho ${texte:0:7}           # Bonjour  (position 0, 7 caractères)\necho ${texte:8}             # Bash     (à partir de la position 8)\n\n# Remplacer\necho ${texte/Bash/Monde}    # Bonjour Monde\necho ${texte//o/0}          # B0nj0ur Bash (toutes les occurrences)\n\n# Mettre en majuscules/minuscules (Bash 4+)\necho ${texte^^}             # BONJOUR BASH\necho ${texte,,}             # bonjour bash\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m3-1",
+      "order": 1,
+      "title": "Créer et afficher une variable",
+      "instructions": "Créez une variable `message` avec la valeur `\"Scripting Bash\"`, puis affichez-la.\n\nRésultat attendu :\n```\nScripting Bash\n```",
+      "expectedOutput": "Scripting Bash",
+      "validationType": "contains",
+      "correction": "message=\"Scripting Bash\"\necho $message",
+      "explanation": "En Bash, on assigne sans espace : `message=\"Scripting Bash\"`. Pour lire, on utilise `$` : `echo $message`. Attention : `message = \"Scripting Bash\"` (avec espaces) est interprété comme la commande `message` avec les arguments `=` et `\"Scripting Bash\"`, ce qui provoque une erreur."
+    },
+    {
+      "id": "ex-bash-l1-m3-2",
+      "order": 2,
+      "title": "Utiliser les variables d'environnement",
+      "instructions": "Affichez une phrase qui utilise les variables d'environnement `$USER` et `$HOME` :\n```\nL'utilisateur alice travaille dans /home/alice\n```\n\n(Remplacez alice par votre vrai nom d'utilisateur.)",
+      "expectedOutput": "L'utilisateur",
+      "validationType": "contains",
+      "correction": "echo \"L'utilisateur $USER travaille dans $HOME\"",
+      "explanation": "`$USER` et `$HOME` sont des variables d'environnement pré-définies par le système. Elles sont disponibles automatiquement dans tous les scripts et sessions Bash. Les guillemets doubles permettent leur interprétation."
+    },
+    {
+      "id": "ex-bash-l1-m3-3",
+      "order": 3,
+      "title": "Calcul arithmétique",
+      "instructions": "Créez deux variables `a=20` et `b=7`, puis affichez :\n- Leur somme\n- Leur différence\n- Le reste de la division (`a % b`)\n\nRésultat attendu :\n```\nSomme : 27\nDifférence : 13\nModulo : 6\n```",
+      "expectedOutput": "Somme : 27",
+      "validationType": "contains",
+      "correction": "a=20\nb=7\necho \"Somme : $((a + b))\"\necho \"Différence : $((a - b))\"\necho \"Modulo : $((a % b))\"",
+      "explanation": "`$(( ))` est la syntaxe d'**expansion arithmétique** de Bash. Elle évalue l'expression mathématique et retourne le résultat. Sans ces doubles parenthèses, `a + b` serait interprété comme du texte."
+    },
+    {
+      "id": "ex-bash-l1-m3-4",
+      "order": 4,
+      "title": "Manipuler une chaîne",
+      "instructions": "Créez une variable `texte=\"linux bash scripting\"` et affichez :\n1. La **longueur** de la chaîne\n2. La chaîne en **majuscules**\n\nRésultat attendu :\n```\n20\nLINUX BASH SCRIPTING\n```",
+      "expectedOutput": "LINUX BASH SCRIPTING",
+      "validationType": "contains",
+      "correction": "texte=\"linux bash scripting\"\necho ${#texte}\necho ${texte^^}",
+      "explanation": "`${#texte}` retourne la longueur de la chaîne (nombre de caractères, espaces inclus). `${texte^^}` convertit tous les caractères en majuscules (Bash 4+, disponible sous WSL). Ces **expansions de paramètres** sont très puissantes pour manipuler des chaînes sans commandes externes."
+    }
+  ]
+}

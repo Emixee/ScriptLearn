@@ -1,0 +1,62 @@
+{
+  "id": "ps-l5-m5",
+  "title": "Interopérabilité et intégrations",
+  "level": 5,
+  "lang": "powershell",
+  "order": 5,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Interop COM",
+      "content": "```powershell\n# COM Objects — interagir avec les applications Windows\n\n# Excel automation\n$excel = New-Object -ComObject Excel.Application\n$excel.Visible = $false\n$workbook = $excel.Workbooks.Add()\n$sheet = $workbook.Sheets(1)\n\n# Écrire des données\n$data = @(\n    @('Nom', 'Age', 'Ville'),\n    @('Alice', 30, 'Paris'),\n    @('Bob', 25, 'Lyon')\n)\n\nfor ($row = 1; $row -le $data.Count; $row++) {\n    for ($col = 1; $col -le $data[$row-1].Count; $col++) {\n        $sheet.Cells($row, $col) = $data[$row-1][$col-1]\n    }\n}\n\n$workbook.SaveAs(\"C:\\Temp\\rapport.xlsx\")\n$workbook.Close()\n$excel.Quit()\n[System.Runtime.InteropServices.Marshal]::ReleaseComObject($excel) | Out-Null\n[GC]::Collect()\n\n# Word\n$word = New-Object -ComObject Word.Application\n$word.Visible = $false\n$doc = $word.Documents.Add()\n$doc.Content.Text = \"Rapport généré par PowerShell\"\n$doc.SaveAs(\"C:\\Temp\\rapport.docx\")\n$word.Quit()\n```"
+    },
+    {
+      "title": "Intégration avec .NET",
+      "content": "```powershell\n# Utiliser les assemblies .NET dans PS\n\n# Charger une assembly\nAdd-Type -AssemblyName System.Net.Http\nAdd-Type -AssemblyName 'System.Drawing'\n\n# HttpClient (alternative à Invoke-RestMethod)\n$client = [System.Net.Http.HttpClient]::new()\n$response = $client.GetAsync('https://jsonplaceholder.typicode.com/todos/1').Result\n$content  = $response.Content.ReadAsStringAsync().Result\n$json     = $content | ConvertFrom-Json\n$client.Dispose()\n\n# Manipulation d'images\n$bitmap = [System.Drawing.Bitmap]::new(200, 200)\n$graphics = [System.Drawing.Graphics]::FromImage($bitmap)\n$graphics.FillRectangle([System.Drawing.Brushes]::Blue, 0, 0, 200, 200)\n$graphics.DrawString('PS', [System.Drawing.SystemFonts]::DefaultFont, \n    [System.Drawing.Brushes]::White, 80, 80)\n$bitmap.Save('C:\\Temp\\image.png')\n$graphics.Dispose(); $bitmap.Dispose()\n\n# Sérialisation binaire\n$formatter = [System.Runtime.Serialization.Formatters.Binary.BinaryFormatter]::new()\n$stream = [System.IO.MemoryStream]::new()\n$formatter.Serialize($stream, @{a=1; b=2})\n$bytes = $stream.ToArray()\n```"
+    },
+    {
+      "title": "Windows Management — WPF dans PS",
+      "content": "```powershell\n# Interface graphique WPF dans PowerShell\nAdd-Type -AssemblyName PresentationFramework\n\n$xaml = @'\n<Window xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"\n        Title=\"Mon App PS\" Height=\"200\" Width=\"300\">\n    <StackPanel Margin=\"10\">\n        <Label Content=\"Votre nom :\" />\n        <TextBox Name=\"tbNom\" />\n        <Button Name=\"btnOk\" Content=\"OK\" Margin=\"0,10,0,0\" />\n        <Label Name=\"lblResult\" />\n    </StackPanel>\n</Window>\n'@\n\n$reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xaml))\n$window = [Windows.Markup.XamlReader]::Load($reader)\n\n$tbNom   = $window.FindName('tbNom')\n$btnOk   = $window.FindName('btnOk')\n$lblResult = $window.FindName('lblResult')\n\n$btnOk.Add_Click({\n    $lblResult.Content = \"Bonjour, $($tbNom.Text) !\"\n})\n\n$window.ShowDialog() | Out-Null\n```"
+    },
+    {
+      "title": "GraphQL et API modernes",
+      "content": "```powershell\n# Requête GraphQL\nfunction Invoke-GraphQL {\n    param(\n        [string]$Url,\n        [string]$Query,\n        [hashtable]$Variables = @{},\n        [string]$Token = $null\n    )\n    \n    $body = @{\n        query     = $Query\n        variables = $Variables\n    } | ConvertTo-Json -Depth 10\n    \n    $headers = @{ 'Content-Type' = 'application/json' }\n    if ($Token) { $headers['Authorization'] = \"Bearer $Token\" }\n    \n    $response = Invoke-RestMethod `\n        -Uri $Url `\n        -Method POST `\n        -Body $body `\n        -Headers $headers\n    \n    if ($response.errors) {\n        throw \"GraphQL error: $($response.errors[0].message)\"\n    }\n    \n    return $response.data\n}\n\n# GitHub GraphQL API\n$query = @'\n{\n  viewer {\n    login\n    repositories(first: 5) {\n      nodes { name stargazerCount }\n    }\n  }\n}\n'@\n\n$data = Invoke-GraphQL `\n    -Url 'https://api.github.com/graphql' `\n    -Query $query `\n    -Token $env:GITHUB_TOKEN\n$data.viewer.login\n```"
+    },
+    {
+      "title": "Interop Python et autres langages",
+      "content": "```powershell\n# Appeler Python depuis PowerShell\nfunction Invoke-Python {\n    param([string]$Code, [string]$Interpreter = 'python3')\n    $tmpFile = [System.IO.Path]::GetTempFileName() + '.py'\n    Set-Content $tmpFile $Code\n    try {\n        & $Interpreter $tmpFile\n    } finally {\n        Remove-Item $tmpFile -ErrorAction SilentlyContinue\n    }\n}\n\n$result = Invoke-Python @'\nimport json\ndata = {'message': 'Hello from Python', 'pi': 3.14159}\nprint(json.dumps(data))\n'@\n$obj = $result | ConvertFrom-Json\nWrite-Host \"Message : $($obj.message)\"\n\n# Node.js\n$nodeResult = node -e @'\nconsole.log(JSON.stringify({version: process.version, platform: process.platform}))\n'@\n$nodeInfo = $nodeResult | ConvertFrom-Json\nWrite-Host \"Node version : $($nodeInfo.version)\"\n\n# Appeler PowerShell depuis PowerShell (sous-processus)\n$output = pwsh -NonInteractive -Command { Get-Date -Format 'yyyy-MM-dd' }\nWrite-Host \"Date depuis PS7 : $output\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l5-m5-1",
+      "order": 1,
+      "title": "HttpClient .NET",
+      "instructions": "Utilisez `[System.Net.Http.HttpClient]` pour faire une requête GET et parser la réponse JSON.\n\nRésultat attendu :\n```\nTitre : delectus aut autem\n```",
+      "expectedOutput": "delectus",
+      "validationType": "contains",
+      "correction": "Add-Type -AssemblyName System.Net.Http\n\n$client = [System.Net.Http.HttpClient]::new()\ntry {\n    $task = $client.GetStringAsync('https://jsonplaceholder.typicode.com/todos/1')\n    $json = $task.Result\n    $obj = $json | ConvertFrom-Json\n    Write-Host \"Titre : $($obj.title)\"\n} finally {\n    $client.Dispose()\n}",
+      "explanation": "`HttpClient` est la classe HTTP .NET recommandée depuis .NET 4.5. `GetStringAsync().Result` appelle de façon synchrone (dans PS, où l'async natif est moins utilisé). `try/finally` garantit `Dispose()` même en cas d'erreur. `HttpClient` supporte les pools de connexions, le retry, et les certificats personnalisés — plus configurable qu'`Invoke-RestMethod`."
+    },
+    {
+      "id": "ex-ps-l5-m5-2",
+      "order": 2,
+      "title": "Interop Python",
+      "instructions": "Appelez Python depuis PowerShell pour calculer les 5 premiers nombres premiers. Récupérez la sortie JSON et affichez-la.\n\nRésultat attendu :\n```\nNombres premiers : 2 3 5 7 11\n```",
+      "expectedOutput": "2 3 5 7 11",
+      "validationType": "contains",
+      "correction": "$pythonCode = @'\nimport json\ndef premiers(n):\n    primes = []\n    candidate = 2\n    while len(primes) < n:\n        if all(candidate % p != 0 for p in primes):\n            primes.append(candidate)\n        candidate += 1\n    return primes\nprint(json.dumps(premiers(5)))\n'@\n\n$tmpFile = [System.IO.Path]::GetTempFileName() + '.py'\nSet-Content $tmpFile $pythonCode\ntry {\n    $result = python3 $tmpFile 2>$null ?? (python $tmpFile)\n    $primes = $result | ConvertFrom-Json\n    Write-Host \"Nombres premiers : $($primes -join ' ')\"\n} finally {\n    Remove-Item $tmpFile -ErrorAction SilentlyContinue\n}",
+      "explanation": "Écrire le code dans un fichier temporaire puis l'exécuter est plus fiable que `-c '...'` pour du code multi-lignes. `[System.IO.Path]::GetTempFileName()` crée un fichier temporaire unique. `try/finally` garantit la suppression. `$result | ConvertFrom-Json` parse le JSON retourné par Python. `$primes -join ' '` joint le tableau avec des espaces."
+    },
+    {
+      "id": "ex-ps-l5-m5-3",
+      "order": 3,
+      "title": "Requête GraphQL simulée",
+      "instructions": "Simulez une requête GraphQL en envoyant un POST JSON à `https://jsonplaceholder.typicode.com/posts` avec `userId=1`. Traitez la réponse et affichez le nombre de posts retournés.\n\nRésultat attendu :\n```\nNombre de posts : 100\n```",
+      "expectedOutput": "Nombre de posts",
+      "validationType": "contains",
+      "correction": "$body = @{ userId = 1 } | ConvertTo-Json\n\n$posts = Invoke-RestMethod `\n    -Uri 'https://jsonplaceholder.typicode.com/posts' `\n    -Method GET\n\nWrite-Host \"Nombre de posts : $($posts.Count)\"",
+      "explanation": "Cette API REST retourne tous les posts (100 au total). `Invoke-RestMethod` parse le JSON automatiquement en tableau PS. `.Count` donne le nombre d'éléments. En GraphQL réel, vous ajouteriez un filtre `userId` dans la query pour ne retourner que les posts de l'utilisateur 1 — mais l'API JSONPlaceholder ne supporte que REST, pas GraphQL."
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "levels": [
+    {
+      "id": 1,
+      "name": "Découverte",
+      "description": "Premiers pas dans le scripting — terminal, variables, scripts simples.",
+      "color": "#10b981",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l1-m1", "title": "Introduction au terminal",                "order": 1, "estimatedMinutes": 40 },
+          { "id": "bash-l1-m2", "title": "Navigation dans le système de fichiers",  "order": 2, "estimatedMinutes": 45 },
+          { "id": "bash-l1-m3", "title": "Variables et affichage",                  "order": 3, "estimatedMinutes": 40 },
+          { "id": "bash-l1-m4", "title": "Créer et exécuter un script",             "order": 4, "estimatedMinutes": 45 },
+          { "id": "bash-l1-m5", "title": "Lire et écrire des fichiers",             "order": 5, "estimatedMinutes": 45 },
+          { "id": "bash-l1-m6", "title": "Structure d'un script",                   "order": 6, "estimatedMinutes": 50 }
+        ],
+        "python": [
+          { "id": "py-l1-m1", "title": "Introduction à Python",                     "order": 1, "estimatedMinutes": 40 },
+          { "id": "py-l1-m2", "title": "Variables et types de données",             "order": 2, "estimatedMinutes": 40 },
+          { "id": "py-l1-m3", "title": "Conditions et boucles",                     "order": 3, "estimatedMinutes": 45 },
+          { "id": "py-l1-m4", "title": "Fonctions et modules standards",            "order": 4, "estimatedMinutes": 45 },
+          { "id": "py-l1-m5", "title": "Listes et dictionnaires",                   "order": 5, "estimatedMinutes": 45 },
+          { "id": "py-l1-m6", "title": "Lecture et écriture de fichiers",           "order": 6, "estimatedMinutes": 50 }
+        ],
+        "powershell": [
+          { "id": "ps-l1-m1", "title": "Découvrir PowerShell",                  "order": 1, "estimatedMinutes": 40 },
+          { "id": "ps-l1-m2", "title": "Navigation dans le système de fichiers", "order": 2, "estimatedMinutes": 45 },
+          { "id": "ps-l1-m3", "title": "Variables et affichage",                 "order": 3, "estimatedMinutes": 40 },
+          { "id": "ps-l1-m4", "title": "Créer et exécuter un script .ps1",       "order": 4, "estimatedMinutes": 45 },
+          { "id": "ps-l1-m5", "title": "Lire et écrire des fichiers",            "order": 5, "estimatedMinutes": 45 },
+          { "id": "ps-l1-m6", "title": "Structure d'un script",                  "order": 6, "estimatedMinutes": 50 }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Débutant",
+      "description": "Conditions, boucles, tableaux, fonctions — les bases solides du scripting.",
+      "color": "#6366f1",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l2-m1", "title": "Conditions avancées",     "order": 1, "estimatedMinutes": 45 },
+          { "id": "bash-l2-m2", "title": "Boucles",                 "order": 2, "estimatedMinutes": 50 },
+          { "id": "bash-l2-m3", "title": "Tableaux",                "order": 3, "estimatedMinutes": 40 },
+          { "id": "bash-l2-m4", "title": "Traitement de texte",     "order": 4, "estimatedMinutes": 55 },
+          { "id": "bash-l2-m5", "title": "Fonctions avancées",      "order": 5, "estimatedMinutes": 45 },
+          { "id": "bash-l2-m6", "title": "Débogage et robustesse",  "order": 6, "estimatedMinutes": 45 }
+        ],
+        "python": [
+          { "id": "py-l2-m1", "title": "Expressions régulières en Python",      "order": 1, "estimatedMinutes": 50 },
+          { "id": "py-l2-m2", "title": "Traitement de fichiers et logs texte",  "order": 2, "estimatedMinutes": 50 },
+          { "id": "py-l2-m3", "title": "JSON, CSV et données structurées",      "order": 3, "estimatedMinutes": 50 },
+          { "id": "py-l2-m4", "title": "Dates et timestamps",                   "order": 4, "estimatedMinutes": 45 },
+          { "id": "py-l2-m5", "title": "Requêtes HTTP et APIs Web",             "order": 5, "estimatedMinutes": 50 },
+          { "id": "py-l2-m6", "title": "Manipulation du système (os, subprocess)", "order": 6, "estimatedMinutes": 50 }
+        ],
+        "powershell": [
+          { "id": "ps-l2-m1", "title": "Conditions avancées",       "order": 1, "estimatedMinutes": 45 },
+          { "id": "ps-l2-m2", "title": "Boucles",                   "order": 2, "estimatedMinutes": 50 },
+          { "id": "ps-l2-m3", "title": "Tableaux et hashtables",    "order": 3, "estimatedMinutes": 45 },
+          { "id": "ps-l2-m4", "title": "Pipeline et filtrage",      "order": 4, "estimatedMinutes": 50 },
+          { "id": "ps-l2-m5", "title": "Gestion des erreurs",       "order": 5, "estimatedMinutes": 45 },
+          { "id": "ps-l2-m6", "title": "Fonctions avancées",        "order": 6, "estimatedMinutes": 50 }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Intermédiaire",
+      "description": "Regex, processus, réseau, système — automatiser des tâches réelles.",
+      "color": "#f59e0b",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l3-m1", "title": "Expressions régulières", "order": 1, "estimatedMinutes": 50 },
+          { "id": "bash-l3-m2", "title": "Processus et jobs",      "order": 2, "estimatedMinutes": 50 },
+          { "id": "bash-l3-m3", "title": "Réseau et HTTP",         "order": 3, "estimatedMinutes": 55 },
+          { "id": "bash-l3-m4", "title": "Scripting système",      "order": 4, "estimatedMinutes": 55 },
+          { "id": "bash-l3-m5", "title": "Cron et planification",  "order": 5, "estimatedMinutes": 45 },
+          { "id": "bash-l3-m6", "title": "sed et awk avancés",     "order": 6, "estimatedMinutes": 55 }
+        ],
+        "python": [
+          { "id": "py-l3-m1", "title": "Parsing de logs Linux (auth, syslog)",    "order": 1, "estimatedMinutes": 55 },
+          { "id": "py-l3-m2", "title": "Parsing de logs Windows (Event XML/CSV)", "order": 2, "estimatedMinutes": 55 },
+          { "id": "py-l3-m3", "title": "Hachage et intégrité des fichiers",       "order": 3, "estimatedMinutes": 50 },
+          { "id": "py-l3-m4", "title": "Analyse de fichiers suspects",            "order": 4, "estimatedMinutes": 55 },
+          { "id": "py-l3-m5", "title": "Sockets et communication réseau",         "order": 5, "estimatedMinutes": 55 },
+          { "id": "py-l3-m6", "title": "APIs de renseignement cyber",             "order": 6, "estimatedMinutes": 60 }
+        ],
+        "powershell": [
+          { "id": "ps-l3-m1", "title": "Expressions régulières",  "order": 1, "estimatedMinutes": 50 },
+          { "id": "ps-l3-m2", "title": "Gestion des processus",   "order": 2, "estimatedMinutes": 50 },
+          { "id": "ps-l3-m3", "title": "Réseau et Web",           "order": 3, "estimatedMinutes": 50 },
+          { "id": "ps-l3-m4", "title": "WMI et CIM",              "order": 4, "estimatedMinutes": 50 },
+          { "id": "ps-l3-m5", "title": "Tâches planifiées",       "order": 5, "estimatedMinutes": 45 },
+          { "id": "ps-l3-m6", "title": "Format, export et import","order": 6, "estimatedMinutes": 45 }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Avancé",
+      "description": "Déploiement, sécurité, tests, infrastructure — scripts de production.",
+      "color": "#ef4444",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l4-m1", "title": "Scripts de déploiement",    "order": 1, "estimatedMinutes": 60 },
+          { "id": "bash-l4-m2", "title": "Sécurité et cryptographie", "order": 2, "estimatedMinutes": 55 },
+          { "id": "bash-l4-m3", "title": "Performance et optimisation","order": 3, "estimatedMinutes": 55 },
+          { "id": "bash-l4-m4", "title": "APIs et intégrations",       "order": 4, "estimatedMinutes": 60 },
+          { "id": "bash-l4-m5", "title": "Tests et CI/CD",             "order": 5, "estimatedMinutes": 55 },
+          { "id": "bash-l4-m6", "title": "Scripts système avancés",   "order": 6, "estimatedMinutes": 60 }
+        ],
+        "python": [
+          { "id": "py-l4-m1", "title": "Collecte de preuves automatisée (triage)",   "order": 1, "estimatedMinutes": 60 },
+          { "id": "py-l4-m2", "title": "Corrélation d'événements et détection",      "order": 2, "estimatedMinutes": 60 },
+          { "id": "py-l4-m3", "title": "Génération de rapports SOC",                 "order": 3, "estimatedMinutes": 55 },
+          { "id": "py-l4-m4", "title": "Automatisation d'investigation",             "order": 4, "estimatedMinutes": 60 },
+          { "id": "py-l4-m5", "title": "Analyse de fichiers PCAP (paquets réseau)",  "order": 5, "estimatedMinutes": 60 },
+          { "id": "py-l4-m6", "title": "Base d'IOC et détection de menaces",        "order": 6, "estimatedMinutes": 60 }
+        ],
+        "powershell": [
+          { "id": "ps-l4-m1", "title": "Classes PowerShell",          "order": 1, "estimatedMinutes": 55 },
+          { "id": "ps-l4-m2", "title": "PowerShell Remoting",         "order": 2, "estimatedMinutes": 50 },
+          { "id": "ps-l4-m3", "title": "Active Directory",            "order": 3, "estimatedMinutes": 55 },
+          { "id": "ps-l4-m4", "title": "Tests avec Pester",           "order": 4, "estimatedMinutes": 55 },
+          { "id": "ps-l4-m5", "title": "Modules avancés",             "order": 5, "estimatedMinutes": 55 },
+          { "id": "ps-l4-m6", "title": "DSC et Infrastructure as Code","order": 6, "estimatedMinutes": 55 }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "Expert",
+      "description": "Métaprogrammation, performance, sécurité, interopérabilité — maîtrise totale du scripting.",
+      "color": "#8b5cf6",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l5-m1", "title": "Parsing et DSL",                          "order": 1, "estimatedMinutes": 65 },
+          { "id": "bash-l5-m2", "title": "Monitoring haute disponibilité",           "order": 2, "estimatedMinutes": 65 },
+          { "id": "bash-l5-m3", "title": "Débogage avancé",                          "order": 3, "estimatedMinutes": 60 },
+          { "id": "bash-l5-m4", "title": "Architecture de scripts complexes",        "order": 4, "estimatedMinutes": 65 },
+          { "id": "bash-l5-m5", "title": "Interopérabilité et intégrations",         "order": 5, "estimatedMinutes": 65 },
+          { "id": "bash-l5-m6", "title": "Projets et bonnes pratiques finales",      "order": 6, "estimatedMinutes": 65 }
+        ],
+        "python": [
+          { "id": "py-l5-m1", "title": "Moteur de détection basé sur des règles",   "order": 1, "estimatedMinutes": 65 },
+          { "id": "py-l5-m2", "title": "Analyse comportementale et anomalies",      "order": 2, "estimatedMinutes": 65 },
+          { "id": "py-l5-m3", "title": "Automatisation de réponse (playbooks)",     "order": 3, "estimatedMinutes": 65 },
+          { "id": "py-l5-m4", "title": "Reverse engineering basique en Python",     "order": 4, "estimatedMinutes": 65 },
+          { "id": "py-l5-m5", "title": "Plateforme de Threat Intelligence",         "order": 5, "estimatedMinutes": 65 },
+          { "id": "py-l5-m6", "title": "Projet final — outil SOC complet",          "order": 6, "estimatedMinutes": 75 }
+        ],
+        "powershell": [
+          { "id": "ps-l5-m1", "title": "Réflexion et métaprogrammation",   "order": 1, "estimatedMinutes": 65 },
+          { "id": "ps-l5-m2", "title": "Performance et optimisation",      "order": 2, "estimatedMinutes": 60 },
+          { "id": "ps-l5-m3", "title": "Sécurité avancée",                 "order": 3, "estimatedMinutes": 60 },
+          { "id": "ps-l5-m4", "title": "Extensibilité du pipeline",        "order": 4, "estimatedMinutes": 60 },
+          { "id": "ps-l5-m5", "title": "Interopérabilité et intégrations", "order": 5, "estimatedMinutes": 60 },
+          { "id": "ps-l5-m6", "title": "Projet final et bonnes pratiques", "order": 6, "estimatedMinutes": 75 }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "SOC Analyst",
+      "description": "Cybersécurité appliquée — analyse de logs, forensics, threat hunting, incident response.",
+      "color": "#f97316",
+      "locked": false,
+      "languages": {
+        "bash": [
+          { "id": "bash-l6-m1", "title": "Analyse des logs Linux (auth, syslog)",    "order": 1, "estimatedMinutes": 65 },
+          { "id": "bash-l6-m2", "title": "Analyse du trafic réseau (tcpdump/tshark)","order": 2, "estimatedMinutes": 65 },
+          { "id": "bash-l6-m3", "title": "Détection d'intrusion et anomalies",       "order": 3, "estimatedMinutes": 65 },
+          { "id": "bash-l6-m4", "title": "Forensics Linux — artefacts et timeline",  "order": 4, "estimatedMinutes": 70 },
+          { "id": "bash-l6-m5", "title": "Automatisation Incident Response Linux",   "order": 5, "estimatedMinutes": 70 },
+          { "id": "bash-l6-m6", "title": "Scripts de threat hunting Bash",           "order": 6, "estimatedMinutes": 70 }
+        ],
+        "python": [
+          { "id": "py-l6-m1", "title": "Analyse de malware avec Python",             "order": 1, "estimatedMinutes": 70 },
+          { "id": "py-l6-m2", "title": "DFIR — forensics mémoire et disque",         "order": 2, "estimatedMinutes": 70 },
+          { "id": "py-l6-m3", "title": "Corrélation multi-sources et SIEM-like",     "order": 3, "estimatedMinutes": 70 },
+          { "id": "py-l6-m4", "title": "Threat hunting avancé en Python",            "order": 4, "estimatedMinutes": 70 },
+          { "id": "py-l6-m5", "title": "Intégrations SOAR et APIs tierces",          "order": 5, "estimatedMinutes": 70 },
+          { "id": "py-l6-m6", "title": "Projet expert — plateforme SOC Python",      "order": 6, "estimatedMinutes": 80 }
+        ],
+        "powershell": [
+          { "id": "ps-l6-m1", "title": "Analyse des événements Windows (WinEvent)",  "order": 1, "estimatedMinutes": 65 },
+          { "id": "ps-l6-m2", "title": "Threat hunting Active Directory",            "order": 2, "estimatedMinutes": 65 },
+          { "id": "ps-l6-m3", "title": "Forensics Windows — registre et artefacts",  "order": 3, "estimatedMinutes": 70 },
+          { "id": "ps-l6-m4", "title": "PowerShell Blue Team (AMSI, logging, JEA)",  "order": 4, "estimatedMinutes": 65 },
+          { "id": "ps-l6-m5", "title": "Incident Response Windows automation",       "order": 5, "estimatedMinutes": 70 },
+          { "id": "ps-l6-m6", "title": "Intégration Microsoft Defender / Sentinel",  "order": 6, "estimatedMinutes": 70 }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "name": "KQL / Sentinel",
+      "description": "Kusto Query Language pour Microsoft Sentinel — requêtes, détection et règles analytiques.",
+      "color": "#e879f9",
+      "locked": false,
+      "languages": {
+        "kql": [
+          { "id": "kql-m1", "title": "Introduction à KQL et Microsoft Sentinel",    "order": 1, "estimatedMinutes": 50 },
+          { "id": "kql-m2", "title": "Opérateurs fondamentaux KQL",                 "order": 2, "estimatedMinutes": 55 },
+          { "id": "kql-m3", "title": "Analyse des logs de sécurité Windows",        "order": 3, "estimatedMinutes": 60 },
+          { "id": "kql-m4", "title": "Détection de menaces avec KQL",               "order": 4, "estimatedMinutes": 60 },
+          { "id": "kql-m5", "title": "Requêtes avancées et optimisation",           "order": 5, "estimatedMinutes": 60 },
+          { "id": "kql-m6", "title": "Création de règles analytiques Sentinel",     "order": 6, "estimatedMinutes": 65 }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "name": "Outils & Données",
+      "description": "SQL pour les bases de données, Regex pour la recherche de patterns, Git pour le versioning, SPL pour Splunk.",
+      "color": "#34d399",
+      "locked": false,
+      "languages": {
+        "sql": [
+          { "id": "sql-m1", "title": "Introduction à SQL",              "order": 1, "estimatedMinutes": 50 },
+          { "id": "sql-m2", "title": "Filtrage et tri des données",     "order": 2, "estimatedMinutes": 50 },
+          { "id": "sql-m3", "title": "Jointures et agrégations",        "order": 3, "estimatedMinutes": 55 },
+          { "id": "sql-m4", "title": "Sous-requêtes et vues",           "order": 4, "estimatedMinutes": 55 }
+        ],
+        "regex": [
+          { "id": "regex-m1", "title": "Introduction aux expressions régulières",            "order": 1, "estimatedMinutes": 45 },
+          { "id": "regex-m2", "title": "Quantificateurs, groupes et alternance",            "order": 2, "estimatedMinutes": 50 },
+          { "id": "regex-m3", "title": "Regex avancées : lookahead et lookbehind",          "order": 3, "estimatedMinutes": 55 },
+          { "id": "regex-m4", "title": "Applications pratiques des regex",                  "order": 4, "estimatedMinutes": 55 }
+        ],
+        "git": [
+          { "id": "git-m1", "title": "Introduction à Git",                           "order": 1, "estimatedMinutes": 45 },
+          { "id": "git-m2", "title": "Branches et fusion",                           "order": 2, "estimatedMinutes": 50 },
+          { "id": "git-m3", "title": "Dépôts distants et collaboration",             "order": 3, "estimatedMinutes": 55 },
+          { "id": "git-m4", "title": "Git avancé — stash, rebase et tags",           "order": 4, "estimatedMinutes": 55 }
+        ],
+        "spl": [
+          { "id": "spl-m1", "title": "Introduction à SPL et Splunk",      "order": 1, "estimatedMinutes": 50 },
+          { "id": "spl-m2", "title": "Filtrage et transformation SPL",    "order": 2, "estimatedMinutes": 55 },
+          { "id": "spl-m3", "title": "Statistiques et visualisations SPL","order": 3, "estimatedMinutes": 55 }
+        ],
+        "yaml": [
+          { "id": "yaml-m1", "title": "Syntaxe YAML de base",                      "order": 1, "estimatedMinutes": 40 },
+          { "id": "yaml-m2", "title": "Listes et structures imbriquées",            "order": 2, "estimatedMinutes": 45 },
+          { "id": "yaml-m3", "title": "YAML en pratique — Docker & CI/CD",         "order": 3, "estimatedMinutes": 55 },
+          { "id": "yaml-m4", "title": "Ancres, alias et YAML avancé",              "order": 4, "estimatedMinutes": 50 }
+        ]
+      }
+    }
+  ]
+}

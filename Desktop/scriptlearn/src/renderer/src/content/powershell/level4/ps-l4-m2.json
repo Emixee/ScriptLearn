@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m2",
+  "title": "PowerShell Remoting",
+  "level": 4,
+  "lang": "powershell",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Introduction au Remoting",
+      "content": "PowerShell Remoting permet d'exécuter des commandes sur des machines distantes via WS-Management :\n\n```powershell\n# Activer le remoting (à faire une fois, en admin)\nEnable-PSRemoting -Force\n\n# Tester la connexion\nTest-WSMan -ComputerName \"serveur1\"\n\n# Session interactive\nEnter-PSSession -ComputerName \"serveur1\"\n# Prompt change : [serveur1]: PS C:\\>\n# Commandes s'exécutent sur le serveur distant\nGet-Process\nExit-PSSession\n\n# Commande rapide (sans session persistante)\nInvoke-Command -ComputerName \"serveur1\" -ScriptBlock {\n    Get-Service | Where-Object Status -eq 'Running' | Measure-Object\n}\n\n# Plusieurs machines en parallèle\nInvoke-Command -ComputerName \"srv1\",\"srv2\",\"srv3\" -ScriptBlock {\n    [PSCustomObject]@{\n        Ordinateur = $env:COMPUTERNAME\n        RAM_Go     = [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB, 1)\n    }\n}\n```"
+    },
+    {
+      "title": "Sessions persistantes",
+      "content": "```powershell\n# Créer une session persistante (efficace pour plusieurs commandes)\n$session = New-PSSession -ComputerName \"serveur1\"\n\n# Utiliser la session\nInvoke-Command -Session $session -ScriptBlock { Get-Date }\nInvoke-Command -Session $session -ScriptBlock { hostname }\n\n# Variables persistent dans la session\nInvoke-Command -Session $session -ScriptBlock { $x = 42 }\nInvoke-Command -Session $session -ScriptBlock { $x }  # 42\n\n# Copier des fichiers via la session\nCopy-Item -Path \"C:\\local\\fichier.txt\" `\n    -Destination \"C:\\remote\\\" `\n    -ToSession $session\n\nCopy-Item -Path \"C:\\remote\\rapport.csv\" `\n    -Destination \"C:\\local\\\" `\n    -FromSession $session\n\n# Plusieurs sessions\n$sessions = New-PSSession -ComputerName \"srv1\",\"srv2\"\nInvoke-Command -Session $sessions -ScriptBlock { ... }\n\n# Fermer\nRemove-PSSession $session\nRemove-PSSession $sessions\n```"
+    },
+    {
+      "title": "Authentification et sécurité",
+      "content": "```powershell\n# Avec des credentials\n$cred = Get-Credential\n$session = New-PSSession -ComputerName \"serveur\" -Credential $cred\n\n# Credentials en script (non interactif)\n$password = ConvertTo-SecureString \"MonMDP\" -AsPlainText -Force\n$cred = New-Object PSCredential(\"DOMAINE\\admin\", $password)\n\n# Authentification Kerberos (domaine AD)\nNew-PSSession -ComputerName \"srv\" -Authentication Kerberos\n\n# SSL (recommandé en production)\nNew-PSSession -ComputerName \"srv\" -UseSSL -Port 5986\n\n# Double-hop problem : accéder à une 3ème machine depuis la session\n# Solution : CredSSP (à activer explicitement)\nEnable-WSManCredSSP -Role Client -DelegateComputer \"srv2\" -Force\nNew-PSSession -ComputerName \"srv1\" -Authentication CredSSP -Credential $cred\n\n# JEA : Just Enough Administration (accès limité)\n# Définir ce qu'un utilisateur peut faire en remote\nNew-PSSessionConfigurationFile -Path jea.pssc -SessionType RestrictedRemoteServer\n```"
+    },
+    {
+      "title": "Invoke-Command avancé",
+      "content": "```powershell\n# Passer des variables locales avec $using:\n$seuil = 100\nInvoke-Command -ComputerName \"srv1\" -ScriptBlock {\n    Get-Process | Where-Object WorkingSet -gt ($using:seuil * 1MB)\n}\n\n# Exécuter en parallèle avec -AsJob\n$job = Invoke-Command -ComputerName \"srv1\",\"srv2\" `\n    -ScriptBlock { Start-Sleep 3; $env:COMPUTERNAME } `\n    -AsJob\n\nWait-Job $job\n$resultats = Receive-Job $job\n$resultats | ForEach-Object { Write-Host $_.PSComputerName, $_ }\n\n# Déployer un script sur plusieurs machines\n$script = Get-Content \"C:\\deploy\\setup.ps1\" -Raw\nInvoke-Command -ComputerName $servers -ScriptBlock {\n    param($code)\n    Invoke-Expression $code\n} -ArgumentList $script\n\n# Fan-out avec ThrottleLimit\nInvoke-Command -ComputerName $centMachines `\n    -ScriptBlock { Restart-Service 'wuauserv' } `\n    -ThrottleLimit 25   # max 25 connexions simultanées\n```"
+    },
+    {
+      "title": "Remoting vers Linux/SSH",
+      "content": "```powershell\n# PowerShell 6+ supporte SSH comme transport\n\n# Connexion SSH (PS 6+)\nEnter-PSSession -HostName \"linux-server\" -UserName \"alice\" -SSHTransport\n\n# Session SSH\n$session = New-PSSession -HostName \"linux-server\" `\n    -UserName \"alice\" `\n    -KeyFilePath \"~/.ssh/id_rsa\" `\n    -SSHTransport\n\nInvoke-Command -Session $session -ScriptBlock { uname -a }\n\n# Sans SSH : exécuter bash via Invoke-Command\nInvoke-Command -HostName \"linux\" -UserName \"alice\" -ScriptBlock {\n    bash -c 'df -h / | tail -1'\n}\n\n# Résumé multi-plateforme\n$machines = @(\n    @{HostName='win-srv'; Transport='WsMan'},\n    @{HostName='linux-srv'; Transport='SSH'; UserName='admin'}\n)\n\nforeach ($m in $machines) {\n    $params = if ($m.Transport -eq 'SSH') {\n        @{HostName=$m.HostName; UserName=$m.UserName; SSHTransport=$true}\n    } else {\n        @{ComputerName=$m.HostName}\n    }\n    Invoke-Command @params -ScriptBlock { $env:COMPUTERNAME ?? hostname }\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m2-1",
+      "order": 1,
+      "title": "Invoke-Command local",
+      "instructions": "Utilisez `Invoke-Command` avec `-ComputerName localhost` pour récupérer le nom de la machine distante via `$env:COMPUTERNAME`.\n\nRésultat attendu :\n```\nMachine distante : MONPC\n```",
+      "expectedOutput": "Machine distante",
+      "validationType": "contains",
+      "correction": "$result = Invoke-Command -ComputerName localhost -ScriptBlock {\n    $env:COMPUTERNAME\n}\nWrite-Host \"Machine distante : $result\"",
+      "explanation": "`Invoke-Command -ComputerName localhost` exécute le scriptblock dans une session remoting sur la machine locale — utile pour tester le remoting sans autre machine. `$env:COMPUTERNAME` est une variable d'environnement Windows contenant le nom de la machine. Le résultat est retourné comme objet PowerShell."
+    },
+    {
+      "id": "ex-ps-l4-m2-2",
+      "order": 2,
+      "title": "Passer des variables avec $using:",
+      "instructions": "Utilisez `Invoke-Command -ComputerName localhost` pour exécuter une commande qui utilise une variable locale via `$using:`.\n\n```powershell\n$message = \"Bonjour depuis le script local\"\n```\n\nRésultat attendu :\n```\nMessage reçu : Bonjour depuis le script local\n```",
+      "expectedOutput": "Bonjour depuis le script local",
+      "validationType": "contains",
+      "correction": "$message = \"Bonjour depuis le script local\"\n\nInvoke-Command -ComputerName localhost -ScriptBlock {\n    Write-Host \"Message reçu : $using:message\"\n}",
+      "explanation": "`$using:message` dans un scriptblock de remoting sérialise la valeur de `$message` depuis le scope local et la transmet au processus distant. Sans `$using:`, la variable serait undefined dans le contexte distant. Cette syntaxe fonctionne aussi dans `ForEach-Object -Parallel` et `Start-Job`."
+    },
+    {
+      "id": "ex-ps-l4-m2-3",
+      "order": 3,
+      "title": "Session persistante",
+      "instructions": "Créez une PSSession vers localhost, exécutez deux commandes qui partagent un état (définissez `$x = 42` puis lisez `$x`), puis fermez la session.\n\nRésultat attendu :\n```\nValeur dans la session : 42\n```",
+      "expectedOutput": "42",
+      "validationType": "contains",
+      "correction": "$session = New-PSSession -ComputerName localhost\n\nInvoke-Command -Session $session -ScriptBlock { $x = 42 }\n$result = Invoke-Command -Session $session -ScriptBlock { $x }\n\nWrite-Host \"Valeur dans la session : $result\"\n\nRemove-PSSession $session",
+      "explanation": "Une `PSSession` maintient un runspace persistant sur la machine distante. Les variables définies dans une invocation sont disponibles dans les invocations suivantes sur la même session — contrairement à `Invoke-Command -ComputerName` sans session, qui crée et détruit un runspace à chaque appel. Toujours `Remove-PSSession` pour libérer les ressources."
+    }
+  ]
+}

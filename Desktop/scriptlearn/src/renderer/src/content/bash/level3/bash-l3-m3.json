@@ -1,0 +1,62 @@
+{
+  "id": "bash-l3-m3",
+  "title": "Réseau et HTTP",
+  "level": 3,
+  "lang": "bash",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "curl — requêtes HTTP",
+      "content": "```bash\n# GET basique\ncurl https://api.example.com/data\n\n# Options utiles\ncurl -s URL              # silencieux (pas de barre de progression)\ncurl -o fichier.json URL # sauvegarder dans un fichier\ncurl -L URL              # suivre les redirections\ncurl -I URL              # en-têtes HTTP seulement (HEAD)\ncurl -v URL              # verbeux (débogage)\n\n# POST avec données JSON\ncurl -s -X POST \\\n     -H \"Content-Type: application/json\" \\\n     -d '{\"nom\": \"Alice\", \"age\": 30}' \\\n     https://api.example.com/users\n\n# Avec authentification\ncurl -u user:password URL\ncurl -H \"Authorization: Bearer TOKEN\" URL\n\n# Vérifier le code HTTP\ncode=$(curl -s -o /dev/null -w \"%{http_code}\" URL)\nif [ \"$code\" -eq 200 ]; then\n    echo \"Succès\"\nfi\n\n# Télécharger avec progression\ncurl -# -O https://example.com/fichier.zip\n```"
+    },
+    {
+      "title": "Traiter du JSON avec jq",
+      "content": "`jq` est l'outil incontournable pour traiter du JSON en Bash :\n\n```bash\n# Exemples avec l'API JSONPlaceholder\ndata='{\"id\": 1, \"name\": \"Alice\", \"email\": \"alice@example.com\"}'\n\n# Accéder à un champ\necho \"$data\" | jq '.name'          # \"Alice\"\necho \"$data\" | jq -r '.name'       # Alice (raw, sans guillemets)\n\n# Tableau JSON\nusers='[{\"id\":1,\"name\":\"Alice\"},{\"id\":2,\"name\":\"Bob\"}]'\necho \"$users\" | jq '.[].name'      # \"Alice\" \"Bob\"\necho \"$users\" | jq 'length'        # 2\necho \"$users\" | jq '.[0]'          # premier élément\n\n# Filtrer\necho \"$users\" | jq '.[] | select(.id > 1) | .name'\n\n# Transformer\necho \"$users\" | jq '[.[] | {nom: .name, identifiant: .id}]'\n\n# Avec curl\ncurl -s https://jsonplaceholder.typicode.com/users | \\\n    jq -r '.[] | \"\\(.name) : \\(.email)\"'\n```"
+    },
+    {
+      "title": "Vérifications réseau",
+      "content": "```bash\n# Tester la connectivité\nping -c 3 google.com\n\n# Vérifier si un hôte répond\nif ping -c 1 -W 2 8.8.8.8 &>/dev/null; then\n    echo \"Internet accessible\"\nelse\n    echo \"Pas de connexion\"\nfi\n\n# Résolution DNS\nnslookup example.com\ndig example.com\nhost example.com\n\n# Récupérer l'IP de son hôte\nhostname -I\nip addr show\n\n# Tester un port\nnc -zv hostname 80 2>&1 | grep -q \"succeeded\" && echo \"Port ouvert\"\n\n# Ou avec bash directement\nif (echo >/dev/tcp/google.com/80) 2>/dev/null; then\n    echo \"Port 80 ouvert\"\nfi\n\n# Connexions actives\nnetstat -tuln     # ports en écoute\nss -tuln          # alternative moderne\n```"
+    },
+    {
+      "title": "SSH et transferts de fichiers",
+      "content": "```bash\n# Connexion SSH\nssh user@hôte\nssh -p 2222 user@hôte          # port personnalisé\nssh -i ~/.ssh/ma_cle user@hôte  # clé spécifique\n\n# Exécuter une commande distante\nssh user@hôte 'ls -la /var/log'\nssh user@hôte 'df -h && uptime'\n\n# Transfert de fichiers\nscp fichier.txt user@hôte:/chemin/     # upload\nscp user@hôte:/chemin/fichier.txt .    # download\nscp -r dossier/ user@hôte:/dest/       # dossier entier\n\n# rsync — synchronisation intelligente\nrsync -avz source/ user@hôte:/dest/    # sync avec compression\nrsync -avz --delete source/ dest/      # sync avec suppression\nrsync -n source/ dest/                 # dry-run (simuler)\n\n# Tunnel SSH\nssh -L 8080:localhost:80 user@hôte     # port forwarding local\nssh -N -f -L 5432:db_interne:5432 user@bastion  # en arrière-plan\n\n# Générer une paire de clés\nssh-keygen -t ed25519 -C \"mon@email.com\"\nssh-copy-id user@hôte  # copier la clé publique\n```"
+    },
+    {
+      "title": "Scripts de monitoring réseau",
+      "content": "```bash\n#!/bin/bash\n# Surveiller la disponibilité d'un service\n\ncheck_service() {\n    local host=$1\n    local port=$2\n    local name=$3\n    \n    if (echo >/dev/tcp/$host/$port) 2>/dev/null; then\n        echo \"[OK]  $name ($host:$port)\"\n        return 0\n    else\n        echo \"[KO]  $name ($host:$port) — INDISPONIBLE\" >&2\n        return 1\n    fi\n}\n\n# Vérifier plusieurs services\nservices=(\n    \"google.com:80:HTTP\"\n    \"google.com:443:HTTPS\"\n    \"8.8.8.8:53:DNS\"\n)\n\nfor s in \"${services[@]}\"; do\n    IFS=: read -r host port name <<< \"$s\"\n    check_service \"$host\" \"$port\" \"$name\"\ndone\n\n# Attendre qu'un service soit disponible\nwait_for_service() {\n    local host=$1 port=$2 timeout=${3:-30}\n    local elapsed=0\n    while ! (echo >/dev/tcp/$host/$port) 2>/dev/null; do\n        sleep 1\n        ((elapsed++))\n        [ $elapsed -ge $timeout ] && return 1\n    done\n    return 0\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m3-1",
+      "order": 1,
+      "title": "Requête HTTP avec curl",
+      "instructions": "Faites une requête GET sur `https://jsonplaceholder.typicode.com/todos/1` et affichez le résultat avec `jq` pour extraire le champ `title`.\n\nRésultat attendu :\n```\ndelectus aut autem\n```\n(ou le titre du todo #1)",
+      "expectedOutput": "delectus",
+      "validationType": "contains",
+      "correction": "curl -s https://jsonplaceholder.typicode.com/todos/1 | jq -r '.title'",
+      "explanation": "`curl -s` désactive la barre de progression. `jq -r '.title'` extrait le champ `title` et l'affiche sans guillemets (mode raw `-r`). `jq` reçoit le JSON via le pipe. Cette combinaison `curl | jq` est le standard pour consommer des APIs REST en Bash."
+    },
+    {
+      "id": "ex-bash-l3-m3-2",
+      "order": 2,
+      "title": "Vérification de connectivité",
+      "instructions": "Écrivez une fonction `verifier_connexion` qui teste si `google.com` répond sur le port 80 via `/dev/tcp`. Affichez `Connexion OK` ou `Pas de connexion`.\n\nRésultat attendu :\n```\nConnexion OK\n```",
+      "expectedOutput": "Connexion OK",
+      "validationType": "contains",
+      "correction": "verifier_connexion() {\n    if (echo >/dev/tcp/google.com/80) 2>/dev/null; then\n        echo \"Connexion OK\"\n    else\n        echo \"Pas de connexion\"\n    fi\n}\n\nverifier_connexion",
+      "explanation": "`/dev/tcp/host/port` est une fonctionnalité spéciale de Bash : ouvrir ce fichier établit une connexion TCP. `(echo >...)` tente la connexion dans un sous-shell. `2>/dev/null` cache les erreurs. Si la connexion réussit le code de retour est 0, sinon non-zéro."
+    },
+    {
+      "id": "ex-bash-l3-m3-3",
+      "order": 3,
+      "title": "Parser du JSON avec jq",
+      "instructions": "Récupérez la liste des 3 premiers utilisateurs depuis `https://jsonplaceholder.typicode.com/users` et affichez leur nom et email.\n\nRésultat attendu :\n```\nLeanne Graham : Sincere@april.biz\nErvin Howell : Shanna@melissa.tv\nClementine Bauch : Nathan@yesenia.net\n```",
+      "expectedOutput": "Leanne Graham",
+      "validationType": "contains",
+      "correction": "curl -s https://jsonplaceholder.typicode.com/users | jq -r '.[:3][] | \"\\(.name) : \\(.email)\"'",
+      "explanation": "`.[:3]` coupe le tableau aux 3 premiers éléments. `.[]` itère sur chaque élément. `\"\\(.name) : \\(.email)\"` est une interpolation de chaîne jq (string interpolation). `-r` supprime les guillemets autour du résultat. La syntaxe `\\(expression)` dans une chaîne jq évalue l'expression et l'insère."
+    }
+  ]
+}

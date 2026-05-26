@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m4",
+  "title": "Architecture de scripts complexes",
+  "level": 5,
+  "lang": "bash",
+  "order": 4,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "title": "Patterns de conception en Bash",
+      "content": "```bash\n#!/bin/bash\n# Pattern : Command Pattern (commandes enregistrables et annulables)\n\ndeclare -a COMMAND_HISTORY\ndeclare -a UNDO_STACK\n\nregister_command() {\n    local name=$1 do_cmd=$2 undo_cmd=$3\n    COMMAND_HISTORY+=(\"$name\")\n    execute_command() { eval \"$do_cmd\"; }\n    UNDO_STACK+=(\"$undo_cmd\")\n}\n\nundo_last() {\n    if [ ${#UNDO_STACK[@]} -eq 0 ]; then\n        echo \"Rien à annuler\"\n        return 1\n    fi\n    local last_undo=${UNDO_STACK[-1]}\n    unset 'UNDO_STACK[-1]'\n    eval \"$last_undo\"\n    echo \"Annulé\"\n}\n\n# Pattern : Observer\ndeclare -A OBSERVERS\n\nsubscribe() {\n    local event=$1 callback=$2\n    OBSERVERS[\"$event\"]+=\"$callback \"\n}\n\nemit() {\n    local event=$1; shift\n    for cb in ${OBSERVERS[$event]:-}; do\n        \"$cb\" \"$@\"\n    done\n}\n\n# Utilisation\non_file_created() { echo \"Observateur: fichier créé - $1\"; }\nsubscribe \"file_created\" on_file_created\n\ntouch /tmp/test_file\nemit \"file_created\" /tmp/test_file\nrm /tmp/test_file\n```"
+    },
+    {
+      "title": "Gestion d'état distribuée",
+      "content": "```bash\n#!/bin/bash\n# Coordination inter-scripts via fichiers de verrou et signaux\n\nLOCK_DIR=\"/tmp/app_locks\"\nSTATE_DIR=\"/tmp/app_state\"\nmkdir -p \"$LOCK_DIR\" \"$STATE_DIR\"\n\n# Verrou avec propriétaire et timeout\nacquire_lock() {\n    local name=$1 timeout=${2:-30}\n    local lock_file=\"$LOCK_DIR/${name}.lock\"\n    local deadline=$(($(date +%s) + timeout))\n    \n    while [ $(date +%s) -lt $deadline ]; do\n        # Création atomique du verrou\n        if (set -C; echo \"$$:$(date +%s)\" > \"$lock_file\") 2>/dev/null; then\n            trap \"release_lock $name\" EXIT\n            return 0\n        fi\n        \n        # Vérifier si le détenteur est toujours vivant\n        local owner_pid\n        owner_pid=$(cut -d: -f1 \"$lock_file\" 2>/dev/null)\n        if [ -n \"$owner_pid\" ] && ! kill -0 \"$owner_pid\" 2>/dev/null; then\n            echo \"Verrou orphelin de $owner_pid, récupération...\"\n            rm -f \"$lock_file\"\n            continue\n        fi\n        \n        sleep 0.5\n    done\n    \n    echo \"Impossible d'acquérir le verrou '$name'\" >&2\n    return 1\n}\n\nrelease_lock() {\n    rm -f \"$LOCK_DIR/${1}.lock\"\n}\n\n# Partager l'état entre scripts\nset_state() {\n    local key=$1 value=$2\n    echo \"$value\" > \"$STATE_DIR/$key\"\n}\n\nget_state() {\n    cat \"$STATE_DIR/$1\" 2>/dev/null\n}\n```"
+    },
+    {
+      "title": "Pipeline de traitement résilient",
+      "content": "```bash\n#!/bin/bash\n# Pipeline avec reprise sur erreur et journalisation\n\nPIPELINE_STATE=\"/tmp/pipeline_state\"\nPIPELINE_LOG=\"/tmp/pipeline_$(date +%Y%m%d_%H%M%S).log\"\nmkdir -p \"$PIPELINE_STATE\"\n\nlog() { echo \"[$(date +%H:%M:%S)] $*\" | tee -a \"$PIPELINE_LOG\"; }\n\n# Exécuter une étape avec checkpoint\nrun_step() {\n    local step_name=$1\n    shift\n    local checkpoint=\"$PIPELINE_STATE/${step_name}.done\"\n    \n    if [ -f \"$checkpoint\" ]; then\n        log \"Étape $step_name : déjà complétée (skip)\"\n        return 0\n    fi\n    \n    log \"Étape $step_name : démarrage\"\n    \n    if \"$@\"; then\n        touch \"$checkpoint\"\n        log \"Étape $step_name : OK\"\n        return 0\n    else\n        log \"Étape $step_name : ÉCHEC\"\n        return 1\n    fi\n}\n\n# Réinitialiser (pour recommencer)\nreset_pipeline() {\n    rm -rf \"$PIPELINE_STATE\"\n    mkdir -p \"$PIPELINE_STATE\"\n    log \"Pipeline réinitialisé\"\n}\n\n# Définir le pipeline\nstep_extract()   { sleep 0.1; echo \"Données extraites\"; }\nstep_transform() { sleep 0.1; echo \"Données transformées\"; }\nstep_load()      { sleep 0.1; echo \"Données chargées\"; }\n\nrun_step \"extract\"   step_extract\nrun_step \"transform\" step_transform\nrun_step \"load\"      step_load\n\nlog \"Pipeline terminé avec succès\"\nrm -rf \"$PIPELINE_STATE\"\n```"
+    },
+    {
+      "title": "Outils de scripting avancés",
+      "content": "```bash\n# expect — automatiser les programmes interactifs\nexpect << 'EOF'\nspawn ssh user@server\nexpect \"password:\"\nsend \"mon_mot_de_passe\\r\"\nexpect \"$\"\nsend \"ls -la\\r\"\nexpect \"$\"\nsend \"exit\\r\"\nEOF\n\n# dialog — interfaces TUI (Terminal UI)\ndialog --menu \"Choisissez une option\" 15 50 4 \\\n    1 \"Installation\" \\\n    2 \"Configuration\" \\\n    3 \"Mise à jour\" \\\n    4 \"Quitter\" 2>/tmp/choice\nchoice=$(cat /tmp/choice)\n\n# whiptail (souvent préinstallé)\nwhiptail --inputbox \"Votre nom :\" 8 40 \"Alice\" 2>/tmp/name\n\n# fzf — sélection interactive\nls | fzf\ngit branch | fzf | xargs git checkout\n\n# pv — barre de progression\ntar czf - /var/data | pv -s $(du -sb /var/data | awk '{print $1}') | ssh host 'cat > backup.tar.gz'\n\n# parallel GNU — parallélisme de production\ncat urls.txt | parallel -j8 'curl -s {} > {#}.html'\n```"
+    },
+    {
+      "title": "Scripts d'entreprise",
+      "content": "```bash\n#!/bin/bash\n# Template d'entreprise complet\n\n# --- Métadonnées ---\n# Nom        : enterprise_script.sh\n# Version    : 1.0.0\n# Auteur     : DevOps Team\n# Description: Script d'entreprise avec toutes les bonnes pratiques\n\nset -euo pipefail\n\n# --- Constantes ---\nreadonly SCRIPT_NAME=$(basename \"$0\")\nreadonly SCRIPT_DIR=$(cd \"$(dirname \"$0\")\" && pwd)\nreadonly SCRIPT_VERSION=\"1.0.0\"\nreadonly LOG_FILE=\"/var/log/${SCRIPT_NAME%.sh}.log\"\n\n# --- Fonctions utilitaires ---\nusage() {\n    cat << EOF\nUsage : $SCRIPT_NAME [OPTIONS] ARGUMENTS\n\nOptions :\n  -e, --env ENV     Environnement (dev/staging/prod)\n  -v, --verbose     Mode verbeux\n  -d, --dry-run     Simulation (pas d'action réelle)\n  -h, --help        Afficher cette aide\nEOF\n}\n\n# --- Parsing des arguments ---\nENV=\"dev\"\nVERBOSE=false\nDRY_RUN=false\n\nwhile [[ $# -gt 0 ]]; do\n    case $1 in\n        -e|--env)     ENV=\"$2\"; shift 2 ;;\n        -v|--verbose) VERBOSE=true; shift ;;\n        -d|--dry-run) DRY_RUN=true; shift ;;\n        -h|--help)    usage; exit 0 ;;\n        --) shift; break ;;\n        -*) echo \"Option inconnue : $1\" >&2; usage >&2; exit 1 ;;\n        *)  break ;;\n    esac\ndone\n\nlog \"Démarrage $SCRIPT_NAME v$SCRIPT_VERSION (env: $ENV, dry-run: $DRY_RUN)\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m4-1",
+      "order": 1,
+      "title": "Parser les arguments CLI",
+      "instructions": "Créez un script avec `getopt` ou boucle `while case` qui accepte :\n- `-n NOM` ou `--nom NOM`\n- `-v` ou `--verbose` (flag)\n- `-h` ou `--help`\n\nTestez avec `-n Alice -v`.\n\nRésultat attendu :\n```\nNom : Alice\nVerbose : true\n```",
+      "expectedOutput": "Verbose : true",
+      "validationType": "contains",
+      "correction": "NOM=\"\"\nVERBOSE=false\n\nwhile [[ $# -gt 0 ]]; do\n    case $1 in\n        -n|--nom)     NOM=\"$2\"; shift 2 ;;\n        -v|--verbose) VERBOSE=true; shift ;;\n        -h|--help)    echo \"Usage : $0 -n NOM [-v]\"; exit 0 ;;\n        *) echo \"Option inconnue : $1\" >&2; exit 1 ;;\n    esac\ndone\n\n[ -z \"$NOM\" ] && { echo \"--nom requis\" >&2; exit 1; }\n\necho \"Nom : $NOM\"\necho \"Verbose : $VERBOSE\"",
+      "explanation": "Le pattern `while [[ $# -gt 0 ]]; do case $1 in` est la façon idiomatic de parser les arguments Bash. `shift 2` consomme l'option et sa valeur. `shift` seul consomme uniquement le flag. `$#` compte les arguments restants. Ce pattern gère les options courtes (`-n`) et longues (`--nom`) de façon cohérente sans dépendances externes."
+    },
+    {
+      "id": "ex-bash-l5-m4-2",
+      "order": 2,
+      "title": "Pipeline avec checkpoints",
+      "instructions": "Créez un pipeline en 3 étapes avec checkpoints : si le script est relancé, les étapes déjà complétées sont sautées.\n\nAffichez `skip` pour les étapes déjà faites et `OK` pour les nouvelles.\n\nRésultat attendu (2ème exécution) :\n```\nÉtape extract : déjà complétée (skip)\nÉtape transform : déjà complétée (skip)\nÉtape load : déjà complétée (skip)\n```",
+      "expectedOutput": "skip",
+      "validationType": "contains",
+      "correction": "STATE=\"/tmp/pipeline_ckpt_$$\"\nmkdir -p \"$STATE\"\ntrap 'rm -rf \"$STATE\"' EXIT\n\nrun_step() {\n    local name=$1; shift\n    local ckpt=\"$STATE/${name}.done\"\n    if [ -f \"$ckpt\" ]; then\n        echo \"Étape $name : déjà complétée (skip)\"\n        return 0\n    fi\n    \"$@\" && { touch \"$ckpt\"; echo \"Étape $name : OK\"; }\n}\n\nrun_step \"extract\"   echo \"extraction...\"\nrun_step \"transform\" echo \"transformation...\"\nrun_step \"load\"      echo \"chargement...\"\n\n# Simuler relancement (les fichiers .done existent encore)\nrun_step \"extract\"   echo \"extraction...\"\nrun_step \"transform\" echo \"transformation...\"\nrun_step \"load\"      echo \"chargement...\"",
+      "explanation": "Les checkpoints permettent la reprise idempotente d'un pipeline long. Sans checkpoints, une étape qui prend 2h doit recommencer depuis zéro si elle échoue à la 3ème étape. La commande `touch $ckpt` ne s'exécute qu'après le succès (`&& { ... }`). En production, les checkpoints sont souvent des enregistrements en base de données."
+    },
+    {
+      "id": "ex-bash-l5-m4-3",
+      "order": 3,
+      "title": "Verrou inter-processus",
+      "instructions": "Créez deux processus (avec `&`) qui tentent d'acquérir le même verrou. Un seul doit réussir, l'autre doit afficher `Verrou occupé`.\n\nRésultat attendu :\n```\nProcessus X a le verrou\nVerrou occupé\n```",
+      "expectedOutput": "Verrou occupé",
+      "validationType": "contains",
+      "correction": "LOCK=\"/tmp/test_lock_$$.lock\"\ntrap 'rm -f \"$LOCK\"' EXIT\n\nessayer_verrou() {\n    local pid=$1\n    # Création atomique (set -C = noclobber)\n    if (set -C; echo \"$pid\" > \"$LOCK\") 2>/dev/null; then\n        echo \"Processus $pid a le verrou\"\n        sleep 0.3\n        rm -f \"$LOCK\"\n    else\n        echo \"Verrou occupé\"\n    fi\n}\n\nessayer_verrou 1 &\nessayer_verrou 2 &\nwait",
+      "explanation": "`set -C` active le mode noclobber : si le fichier existe déjà, la redirection `>` échoue au lieu d'écraser. Cela rend la création du fichier **atomique** — un seul processus peut réussir même en parallèle. C'est la primitive de synchronisation de base en Bash. `$LOCK` utilise `$$` pour être unique par instance du script."
+    }
+  ]
+}

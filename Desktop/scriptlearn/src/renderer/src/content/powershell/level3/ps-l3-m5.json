@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m5",
+  "title": "Tâches planifiées",
+  "level": 3,
+  "lang": "powershell",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Créer des tâches planifiées",
+      "content": "```powershell\n# Créer une tâche planifiée en 3 étapes :\n# 1. L'action (quoi exécuter)\n# 2. Le déclencheur (quand)\n# 3. Les paramètres (options)\n\n# Action\n$action = New-ScheduledTaskAction `\n    -Execute 'PowerShell.exe' `\n    -Argument '-NonInteractive -File \"C:\\Scripts\\backup.ps1\"'\n\n# Déclencheur : tous les jours à 2h\n$trigger = New-ScheduledTaskTrigger -Daily -At 2:00AM\n\n# Paramètres\n$settings = New-ScheduledTaskSettingsSet `\n    -ExecutionTimeLimit (New-TimeSpan -Hours 1) `\n    -RunOnlyIfNetworkAvailable\n\n# Enregistrer la tâche\nRegister-ScheduledTask `\n    -TaskName \"BackupQuotidien\" `\n    -Action $action `\n    -Trigger $trigger `\n    -Settings $settings `\n    -Description \"Sauvegarde quotidienne des données\" `\n    -RunLevel Highest   # avec privilèges élevés\n```"
+    },
+    {
+      "title": "Types de déclencheurs",
+      "content": "```powershell\n# Chaque minute\n$t = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) `\n    -Once -At (Get-Date)\n\n# Toutes les heures\n$t = New-ScheduledTaskTrigger -Daily -At 00:00 `\n    -RepetitionInterval (New-TimeSpan -Hours 1) `\n    -RepetitionDuration ([TimeSpan]::MaxValue)\n\n# Chaque lundi\n$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 09:00AM\n\n# Au démarrage du système\n$t = New-ScheduledTaskTrigger -AtStartup\n\n# À la connexion de l'utilisateur\n$t = New-ScheduledTaskTrigger -AtLogOn\n\n# À une date précise\n$t = New-ScheduledTaskTrigger -Once -At \"2024-12-31 23:59:00\"\n\n# Plusieurs déclencheurs\n$triggers = @(\n    (New-ScheduledTaskTrigger -Daily -At 2:00AM),\n    (New-ScheduledTaskTrigger -AtStartup)\n)\nRegister-ScheduledTask ... -Trigger $triggers\n```"
+    },
+    {
+      "title": "Gérer les tâches existantes",
+      "content": "```powershell\n# Lister les tâches\nGet-ScheduledTask\nGet-ScheduledTask -TaskName \"BackupQuotidien\"\nGet-ScheduledTask | Where-Object State -eq 'Ready'\n\n# Lancer une tâche manuellement\nStart-ScheduledTask -TaskName \"BackupQuotidien\"\n\n# Arrêter une tâche\nStop-ScheduledTask -TaskName \"BackupQuotidien\"\n\n# Activer/désactiver\nEnable-ScheduledTask -TaskName \"BackupQuotidien\"\nDisable-ScheduledTask -TaskName \"BackupQuotidien\"\n\n# Modifier une tâche\nSet-ScheduledTask -TaskName \"BackupQuotidien\" `\n    -Trigger (New-ScheduledTaskTrigger -Daily -At 3:00AM)\n\n# Supprimer une tâche\nUnregister-ScheduledTask -TaskName \"BackupQuotidien\" -Confirm:$false\n\n# Historique d'exécution\nGet-ScheduledTaskInfo -TaskName \"BackupQuotidien\" | \n    Select-Object LastRunTime, LastTaskResult, NextRunTime\n\n# Organiser dans un dossier\nGet-ScheduledTask -TaskPath \"\\MesScripts\\\"\nRegister-ScheduledTask ... -TaskPath \"\\MesScripts\\\"\n```"
+    },
+    {
+      "title": "Exporter et importer des tâches",
+      "content": "```powershell\n# Exporter une tâche en XML\nExport-ScheduledTask -TaskName \"BackupQuotidien\" | \n    Out-File \"C:\\Configs\\backup_task.xml\"\n\n# Importer depuis XML\nRegister-ScheduledTask -Xml (Get-Content \"backup_task.xml\" | Out-String) `\n    -TaskName \"BackupQuotidien\"\n\n# Copier une tâche vers un autre PC (via PSRemoting)\n$xml = Export-ScheduledTask -TaskName \"BackupQuotidien\"\nInvoke-Command -ComputerName \"serveur2\" -ScriptBlock {\n    Register-ScheduledTask -Xml $using:xml -TaskName \"BackupQuotidien\"\n}\n\n# Inventaire de toutes les tâches\nGet-ScheduledTask | ForEach-Object {\n    $info = Get-ScheduledTaskInfo -TaskName $_.TaskName -TaskPath $_.TaskPath\n    [PSCustomObject]@{\n        Nom          = $_.TaskName\n        État         = $_.State\n        DernierRun   = $info.LastRunTime\n        ProchainRun  = $info.NextRunTime\n    }\n} | Format-Table\n```"
+    },
+    {
+      "title": "Scénarios pratiques",
+      "content": "```powershell\n# Scénario 1 : Nettoyage auto des fichiers temporaires\n$action = New-ScheduledTaskAction `\n    -Execute 'PowerShell.exe' `\n    -Argument '-Command \"Get-ChildItem $env:TEMP -Recurse | Where-Object { $_.CreationTime -lt (Get-Date).AddDays(-7) } | Remove-Item -Force -ErrorAction SilentlyContinue\"'\n\nRegister-ScheduledTask `\n    -TaskName \"NettoyageTemp\" `\n    -Action $action `\n    -Trigger (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 1:00AM) `\n    -RunLevel Highest `\n    -Force\n\n# Scénario 2 : Rapport santé système toutes les 4h\n$action = New-ScheduledTaskAction `\n    -Execute 'PowerShell.exe' `\n    -Argument '-File \"C:\\Scripts\\rapport-sante.ps1\" -LogPath \"C:\\Logs\\sante.log\"'\n\n# Scénario 3 : Vérifier si une tâche existe avant de la créer\nif (-not (Get-ScheduledTask -TaskName \"MaTache\" -ErrorAction SilentlyContinue)) {\n    Register-ScheduledTask ...\n    Write-Host \"Tâche créée\"\n} else {\n    Write-Host \"Tâche déjà existante\"\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m5-1",
+      "order": 1,
+      "title": "Lister les tâches planifiées",
+      "instructions": "Listez les tâches planifiées activées (`State -eq 'Ready'`) et affichez leur nom et leur état.\n\nRésultat attendu :\n```\nTaskName         State\n--------         -----\n...              Ready\n```",
+      "expectedOutput": "Ready",
+      "validationType": "contains",
+      "correction": "Get-ScheduledTask | Where-Object State -eq 'Ready' | Select-Object TaskName, State | Format-Table -AutoSize",
+      "explanation": "`Get-ScheduledTask` retourne des objets `CimInstance` représentant les tâches planifiées Windows. La propriété `State` peut valoir `Ready`, `Running`, `Disabled`, ou `Unknown`. `Format-Table -AutoSize` ajuste la largeur des colonnes automatiquement."
+    },
+    {
+      "id": "ex-ps-l3-m5-2",
+      "order": 2,
+      "title": "Créer une tâche planifiée",
+      "instructions": "Créez une tâche planifiée `TestTask` qui exécute `Write-Host Test` chaque jour à 3h du matin, puis vérifiez qu'elle existe avec `Get-ScheduledTask`, puis supprimez-la.\n\nRésultat attendu :\n```\nTaskName  State\n--------  -----\nTestTask  Ready\n```",
+      "expectedOutput": "TestTask",
+      "validationType": "contains",
+      "correction": "$action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-Command \"Write-Host Test\"'\n$trigger = New-ScheduledTaskTrigger -Daily -At 3:00AM\nRegister-ScheduledTask -TaskName 'TestTask' -Action $action -Trigger $trigger -Force\n\nGet-ScheduledTask -TaskName 'TestTask' | Select-Object TaskName, State | Format-Table\n\nUnregister-ScheduledTask -TaskName 'TestTask' -Confirm:$false",
+      "explanation": "`Register-ScheduledTask` enregistre la tâche dans le planificateur Windows. `-Force` permet de remplacer une tâche existante du même nom. `Unregister-ScheduledTask -Confirm:$false` supprime sans demander confirmation — important dans les scripts automatisés. Les tâches créées sans `-Principal` s'exécutent avec les droits de l'utilisateur courant."
+    },
+    {
+      "id": "ex-ps-l3-m5-3",
+      "order": 3,
+      "title": "Historique des tâches",
+      "instructions": "Affichez les informations de la dernière exécution et de la prochaine exécution pour les 3 premières tâches planifiées actives.\n\nRésultat attendu :\n```\nNom  DernierRun  ProchainRun\n---  ----------  -----------\n...  ...         ...\n```",
+      "expectedOutput": "ProchainRun",
+      "validationType": "contains",
+      "correction": "Get-ScheduledTask | Where-Object State -eq 'Ready' | Select-Object -First 3 | ForEach-Object {\n    $info = Get-ScheduledTaskInfo -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue\n    [PSCustomObject]@{\n        Nom         = $_.TaskName\n        DernierRun  = $info.LastRunTime\n        ProchainRun = $info.NextRunTime\n    }\n} | Format-Table -AutoSize",
+      "explanation": "`Get-ScheduledTaskInfo` retourne les informations dynamiques d'une tâche (dernière et prochaine exécution, dernier code de retour). Il faut préciser `-TaskPath` pour les tâches dans des sous-dossiers. `[PSCustomObject]@{...}` crée un objet avec des propriétés nommées pour un affichage tabulaire propre."
+    }
+  ]
+}

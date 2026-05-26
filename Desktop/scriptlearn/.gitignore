@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+.env
+*.local
+
+# Installer build artifacts
+installer/assets/
+installer/output/

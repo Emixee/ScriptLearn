@@ -1,0 +1,72 @@
+{
+  "id": "ps-l1-m3",
+  "title": "Variables et affichage",
+  "level": 1,
+  "lang": "powershell",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Déclarer une variable",
+      "content": "En PowerShell, toutes les variables commencent par le symbole `$`.\n\n```powershell\n$prenom = \"Alice\"\n$age = 30\n$estActif = $true\n```\n\nPas besoin de déclarer le type : PowerShell le déduit automatiquement. On appelle cela le **typage dynamique**.\n\nPour afficher la valeur d'une variable, tapez simplement son nom :\n```powershell\n$prenom\n# Affiche : Alice\n```"
+    },
+    {
+      "title": "Les types de base",
+      "content": "PowerShell gère plusieurs types de données :\n\n| Type | Exemple | Description |\n|------|---------|-------------|\n| `String` | `\"Bonjour\"` | Chaîne de caractères |\n| `Int32` | `42` | Nombre entier |\n| `Double` | `3.14` | Nombre décimal |\n| `Boolean` | `$true` / `$false` | Vrai ou Faux |\n| `DateTime` | `Get-Date` | Date et heure |\n\nPour connaître le type d'une variable :\n```powershell\n$age = 30\n$age.GetType().Name   # Affiche : Int32\n```"
+    },
+    {
+      "title": "Afficher avec Write-Host et Write-Output",
+      "content": "Il existe deux façons d'afficher du texte :\n\n**Write-Host** → affiche directement dans la console (ne peut pas être capturé dans le pipeline)\n```powershell\nWrite-Host \"Bonjour !\"\nWrite-Host \"Texte en rouge\" -ForegroundColor Red\nWrite-Host \"Fond vert\" -BackgroundColor Green\n```\n\n**Write-Output** (alias `echo`) → envoie la valeur dans le pipeline, peut être redirigé\n```powershell\nWrite-Output \"Bonjour\"\n\"Bonjour\"   # équivalent : une chaîne seule est écrite dans le pipeline\n```\n\n> **En pratique :** Utilisez `Write-Host` pour les messages à l'utilisateur, `Write-Output` quand la valeur doit être traitée par la suite."
+    },
+    {
+      "title": "Interpolation de variables dans les chaînes",
+      "content": "PowerShell permet d'**insérer des variables directement dans une chaîne** avec les guillemets doubles `\"` :\n\n```powershell\n$nom = \"Alice\"\nWrite-Host \"Bonjour, $nom !\"        # Affiche : Bonjour, Alice !\nWrite-Host \"Bonjour, $($nom.ToUpper()) !\"  # Affiche : Bonjour, ALICE !\n```\n\n⚠️ Avec les guillemets **simples** `'`, les variables ne sont **pas** interprétées :\n```powershell\nWrite-Host 'Bonjour, $nom !'   # Affiche : Bonjour, $nom !\n```\n\nUtilisez `$()` pour évaluer des expressions plus complexes dans une chaîne."
+    },
+    {
+      "title": "Opérations sur les variables",
+      "content": "```powershell\n# Arithmétique\n$a = 10\n$b = 3\n$a + $b    # 13\n$a - $b    # 7\n$a * $b    # 30\n$a / $b    # 3.333...\n$a % $b    # 1 (modulo)\n\n# Concaténation de chaînes\n$prenom = \"Alice\"\n$nom = \"Martin\"\n$nomComplet = $prenom + \" \" + $nom   # Alice Martin\n\n# Longueur d'une chaîne\n$prenom.Length    # 5\n\n# Mise en majuscules / minuscules\n$prenom.ToUpper()  # ALICE\n$prenom.ToLower()  # alice\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m3-1",
+      "order": 1,
+      "title": "Créer et afficher une variable",
+      "instructions": "Créez une variable `$message` contenant la chaîne `\"Scripting PowerShell\"`, puis affichez-la avec `Write-Host`.\n\nLe résultat attendu :\n```\nScripting PowerShell\n```",
+      "expectedOutput": "Scripting PowerShell",
+      "validationType": "contains",
+      "correction": "$message = \"Scripting PowerShell\"\nWrite-Host $message",
+      "explanation": "On affecte une valeur à `$message` avec `=`. `Write-Host $message` affiche la valeur stockée. Pas besoin de guillemets autour de `$message` dans `Write-Host` car PowerShell évalue la variable automatiquement."
+    },
+    {
+      "id": "ex-ps-l1-m3-2",
+      "order": 2,
+      "title": "Interpolation dans une phrase",
+      "instructions": "Créez deux variables :\n- `$prenom` contenant votre prénom\n- `$niveau` contenant `1`\n\nPuis affichez une phrase qui les utilise toutes les deux, par exemple :\n```\nJe m'appelle Alice et je suis au niveau 1.\n```\n\nUtilisez l'interpolation dans une chaîne entre guillemets doubles.",
+      "expectedOutput": "niveau 1",
+      "validationType": "contains",
+      "correction": "$prenom = \"Alice\"\n$niveau = 1\nWrite-Host \"Je m'appelle $prenom et je suis au niveau $niveau.\"",
+      "explanation": "Les guillemets doubles `\"\"` permettent l'interpolation : `$prenom` et `$niveau` sont remplacés par leurs valeurs dans la chaîne. Avec des guillemets simples `''`, les variables apparaîtraient telles quelles (`$prenom`, `$niveau`)."
+    },
+    {
+      "id": "ex-ps-l1-m3-3",
+      "order": 3,
+      "title": "Calcul et affichage",
+      "instructions": "Créez deux variables numériques `$a = 15` et `$b = 4`, puis affichez leur **somme**, leur **différence** et leur **produit**, chacun sur une ligne séparée :\n```\nSomme : 19\nDifférence : 11\nProduit : 60\n```",
+      "expectedOutput": "Somme : 19",
+      "validationType": "contains",
+      "correction": "$a = 15\n$b = 4\nWrite-Host \"Somme : $($a + $b)\"\nWrite-Host \"Différence : $($a - $b)\"\nWrite-Host \"Produit : $($a * $b)\"",
+      "explanation": "`$($a + $b)` est une **sous-expression** : le `$()` force PowerShell à évaluer l'expression `$a + $b` avant de l'insérer dans la chaîne. Sans les parenthèses, `\"$a + $b\"` afficherait littéralement `15 + 4`."
+    },
+    {
+      "id": "ex-ps-l1-m3-4",
+      "order": 4,
+      "title": "Manipuler une chaîne",
+      "instructions": "Créez une variable `$texte = \"powershell\"` et affichez :\n1. Le texte en **MAJUSCULES**\n2. La **longueur** du texte (nombre de caractères)\n\nRésultat attendu :\n```\nPOWERSHELL\n10\n```",
+      "expectedOutput": "POWERSHELL",
+      "validationType": "contains",
+      "correction": "$texte = \"powershell\"\nWrite-Host $texte.ToUpper()\nWrite-Host $texte.Length",
+      "explanation": "`.ToUpper()` est une **méthode** de l'objet String qui retourne la version en majuscules. `.Length` est une **propriété** qui contient le nombre de caractères. En PowerShell, tout est objet, donc toutes les chaînes ont ces méthodes et propriétés disponibles."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m3",
+  "title": "Débogage avancé",
+  "level": 5,
+  "lang": "bash",
+  "order": 3,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Techniques de débogage profondes",
+      "content": "```bash\n# DEBUG trap : exécuté avant chaque commande\ntrap 'echo \"[DEBUG line $LINENO] $BASH_COMMAND\" >&2' DEBUG\n\n# Trace personnalisée avec contexte\nPS4='+(${BASH_SOURCE[0]}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'\nset -x\n\n# Détecter les erreurs avec contexte\nset -e\ntrap 'rc=$?; echo \"ERREUR code $rc à la ligne $LINENO : $BASH_COMMAND\" >&2; exit $rc' ERR\n\n# Call stack en cas d'erreur\nerror_handler() {\n    local exit_code=$1\n    local line_no=$2\n    echo \"\\nERREUR (code $exit_code) à la ligne $line_no\" >&2\n    echo \"Call stack :\" >&2\n    for i in \"${!FUNCNAME[@]}\"; do\n        echo \"  $i: ${FUNCNAME[$i]} (${BASH_SOURCE[$i]}:${BASH_LINENO[$i]})\" >&2\n    done\n}\ntrap 'error_handler $? $LINENO' ERR\n\n# Vérifier les variables non définies\ndeclare -p ma_variable 2>/dev/null || echo \"ma_variable non définie\"\n\n# strace : tracer les appels système\nstrace -ff -o /tmp/trace bash mon_script.sh\n```"
+    },
+    {
+      "title": "Analyse post-mortem",
+      "content": "```bash\n#!/bin/bash\n# Framework de diagnostic post-mortem\n\nCRASH_LOG=\"/tmp/crash_$(date +%Y%m%d_%H%M%S).log\"\n\ncapture_crash_info() {\n    local exit_code=$1 line=$2 cmd=$3\n    {\n    echo \"=== CRASH REPORT ===\"\n    echo \"Date : $(date)\"\n    echo \"Script : $0\"\n    echo \"Ligne : $line\"\n    echo \"Commande : $cmd\"\n    echo \"Exit code : $exit_code\"\n    echo \"\"\n    echo \"=== CALL STACK ===\"\n    for i in \"${!FUNCNAME[@]}\"; do\n        printf \"  #%d %s() [%s:%d]\\n\" \\\n            \"$i\" \"${FUNCNAME[$i]:-main}\" \\\n            \"${BASH_SOURCE[$i]:-script}\" \\\n            \"${BASH_LINENO[$((i-1))]:-0}\"\n    done\n    echo \"\"\n    echo \"=== ENVIRONMENT ===\"\n    env | sort\n    echo \"\"\n    echo \"=== ULIMITS ===\"\n    ulimit -a\n    } > \"$CRASH_LOG\"\n    \n    echo \"Rapport crash : $CRASH_LOG\" >&2\n}\n\nset -eE\ntrap 'capture_crash_info $? $LINENO \"$BASH_COMMAND\"' ERR\n\n# Test\nfoo() { bar; }\nbar() { baz; }\nbaz() { false; }  # provoque une erreur\n\nfoo\n```"
+    },
+    {
+      "title": "Profilage de performances",
+      "content": "```bash\n#!/bin/bash\n# Profiler un script avec des marqueurs temporels\n\ndeclare -A PROFILE_START\ndeclare -A PROFILE_TOTAL\n\nprofile_start() {\n    PROFILE_START[$1]=$(date +%s%N)\n}\n\nprofile_end() {\n    local name=$1\n    local now\n    now=$(date +%s%N)\n    local elapsed=$(( (now - PROFILE_START[$name]) / 1000000 ))\n    PROFILE_TOTAL[$name]=$(( ${PROFILE_TOTAL[$name]:-0} + elapsed ))\n}\n\nprofile_report() {\n    echo \"=== Rapport de performances ===\"\n    for name in \"${!PROFILE_TOTAL[@]}\"; do\n        printf \"%-30s %6dms\\n\" \"$name\" \"${PROFILE_TOTAL[$name]}\"\n    done | sort -t$'\\t' -k2 -rn\n}\n\n# Utilisation\nprofile_start \"extraction\"\n    sleep 0.1  # simuler une opération\nprofile_end \"extraction\"\n\nprofile_start \"transformation\"\n    sleep 0.05\nprofile_end \"transformation\"\n\nprofile_start \"chargement\"\n    sleep 0.2\nprofile_end \"chargement\"\n\nprofile_report\n```"
+    },
+    {
+      "title": "Fuzzing et tests de robustesse",
+      "content": "```bash\n#!/bin/bash\n# Tester la robustesse d'une fonction avec des entrées aléatoires\n\n# Générer des entrées de fuzzing\nfuzz_string() {\n    local type=${1:-any}\n    case $type in\n        empty)   echo \"\" ;;\n        null)    echo -e \"\\0\" ;;\n        space)   echo \"   \" ;;\n        newline) echo -e \"a\\nb\\nc\" ;;\n        special) echo '!@#$%^&*()[]{}|\\;:\",./<>?' ;;\n        unicode) echo \"héllo wörld 日本語\" ;;\n        long)    head -c 10000 /dev/urandom | tr -dc 'a-zA-Z' ;;\n        inject)  echo \"'; rm -rf /tmp/test; echo '\" ;;\n        *) openssl rand -base64 16 ;;\n    esac\n}\n\n# Tester une fonction\ntest_robustness() {\n    local func=$1\n    local types=(empty space special unicode long inject)\n    \n    echo \"Test de robustesse : $func\"\n    for type in \"${types[@]}\"; do\n        local input\n        input=$(fuzz_string \"$type\")\n        if $func \"$input\" > /dev/null 2>&1; then\n            echo \"  [OK] $type\"\n        else\n            echo \"  [KO] $type — exit $?\"\n        fi\n    done\n}\n\n# Exemple de fonction à tester\nprocess_input() {\n    local input=$1\n    [ -z \"$input\" ] && return 1  # rejeter l'entrée vide\n    echo \"Traité : ${input:0:50}\"  # tronquer à 50 chars\n    return 0\n}\n\ntest_robustness process_input\n```"
+    },
+    {
+      "title": "Analyse de logs avancée",
+      "content": "```bash\n#!/bin/bash\n# Analyseur de logs sophistiqué\n\nanalyze_log() {\n    local log=$1\n    \n    echo \"=== Analyse de $log ===\"\n    echo \"Taille : $(du -sh \"$log\" | cut -f1)\"\n    echo \"Lignes : $(wc -l < \"$log\")\"\n    echo \"\"\n    \n    # Fréquence par niveau\n    echo \"--- Niveaux de log ---\"\n    grep -oE '\\[(ERROR|WARN|INFO|DEBUG)\\]' \"$log\" | \\\n        sort | uniq -c | sort -rn\n    \n    echo \"\"\n    \n    # Top erreurs\n    echo \"--- Top 5 erreurs ---\"\n    grep '\\[ERROR\\]' \"$log\" | \\\n        sed 's/^.*\\[ERROR\\] //' | \\\n        sort | uniq -c | sort -rn | head -5\n    \n    echo \"\"\n    \n    # Distribution temporelle\n    echo \"--- Erreurs par heure ---\"\n    grep '\\[ERROR\\]' \"$log\" | \\\n        grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}' | \\\n        sort | uniq -c\n    \n    echo \"\"\n    \n    # Détecter les patterns répétitifs\n    echo \"--- Bursts détectés ---\"\n    awk '/\\[ERROR\\]/ {\n        split($0, t, \":\")\n        minute = substr($0, 1, 16)  # YYYY-MM-DD HH:MM\n        count[minute]++\n    }\n    END {\n        for (m in count) if (count[m] > 10) print count[m], \"erreurs à\", m\n    }' \"$log\" | sort -rn | head -5\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m3-1",
+      "order": 1,
+      "title": "Trap ERR avec call stack",
+      "instructions": "Créez un script avec une fonction `a()` qui appelle `b()` qui appelle `c()` qui échoue (`false`). Installez un trap ERR qui affiche le call stack via `${FUNCNAME[@]}`.\n\nRésultat attendu :\n```\nERREUR ligne ...\nCall stack :\n  c (ligne ...)\n  b (ligne ...)\n  a (ligne ...)\n```",
+      "expectedOutput": "Call stack",
+      "validationType": "contains",
+      "correction": "set -eE\n\ntrap 'echo \"ERREUR ligne $LINENO\"; echo \"Call stack :\"; for i in \"${!FUNCNAME[@]}\"; do echo \"  ${FUNCNAME[$i]} (ligne ${BASH_LINENO[$((i-1))]})\"; done' ERR\n\nc() { false; }\nb() { c; }\na() { b; }\n\na",
+      "explanation": "`set -eE` : `-e` arrête sur erreur, `-E` propage le trap ERR aux fonctions. `${FUNCNAME[@]}` est un tableau des noms de fonctions dans la pile d'appel. `${BASH_LINENO[@]}` contient les numéros de ligne correspondants. `${!FUNCNAME[@]}` itère sur les indices. C'est l'équivalent bash d'un stack trace Python ou Java."
+    },
+    {
+      "id": "ex-bash-l5-m3-2",
+      "order": 2,
+      "title": "Profilage de fonctions",
+      "instructions": "Créez un profiler simple qui mesure le temps d'exécution de deux fonctions. Affichez un rapport trié par durée.\n\nRésultat attendu :\n```\noperation_lente   200ms\noperation_rapide   50ms\n```",
+      "expectedOutput": "ms",
+      "validationType": "contains",
+      "correction": "declare -A TEMPS\n\nmesurer() {\n    local nom=$1; shift\n    local start end\n    start=$(date +%s%N)\n    \"$@\"\n    end=$(date +%s%N)\n    TEMPS[$nom]=$(( (end - start) / 1000000 ))\n}\n\noperation_rapide() { sleep 0.05; }\noperation_lente()  { sleep 0.2;  }\n\nmesurer \"operation_rapide\" operation_rapide\nmesurer \"operation_lente\"  operation_lente\n\nfor nom in \"${!TEMPS[@]}\"; do\n    printf \"%-20s %5dms\\n\" \"$nom\" \"${TEMPS[$nom]}\"\ndone | sort -k2 -rn",
+      "explanation": "`date +%s%N` donne les nanosecondes depuis l'epoch. La soustraction donne la durée en nanosecondes, divisée par 1000000 pour avoir des millisecondes. `sort -k2 -rn` trie sur la 2ème colonne (le temps) numériquement en ordre décroissant. Ce profiler est utile pour identifier les goulots d'étranglement dans un pipeline bash."
+    },
+    {
+      "id": "ex-bash-l5-m3-3",
+      "order": 3,
+      "title": "Test de robustesse d'une fonction",
+      "instructions": "Créez une fonction `nettoyer_entree` qui :\n1. Rejette les entrées vides (`return 1`)\n2. Tronque à 20 caractères\n3. Supprime les caractères spéciaux (garde seulement `[a-zA-Z0-9 ]`)\n\nTestez avec des entrées vide, normale, et avec caractères spéciaux.\n\nRésultat attendu :\n```\nVide : REJETÉ\nNormal : hello world\nSpécial : hello world\n```",
+      "expectedOutput": "REJETÉ",
+      "validationType": "contains",
+      "correction": "nettoyer_entree() {\n    local input=$1\n    [ -z \"$input\" ] && return 1\n    echo \"${input:0:20}\" | tr -dc 'a-zA-Z0-9 '\n}\n\n# Test vide\nif ! nettoyer_entree \"\" > /dev/null; then\n    echo \"Vide : REJETÉ\"\nfi\n\n# Test normal\nresult=$(nettoyer_entree \"hello world\")\necho \"Normal : $result\"\n\n# Test spéciaux\nresult=$(nettoyer_entree \"hello! world@#$\")\necho \"Spécial : $result\"",
+      "explanation": "`[ -z \"$input\" ] && return 1` valide l'entrée à la frontière. `${input:0:20}` tronque aux 20 premiers caractères (expansion de paramètre bash, sans appel externe). `tr -dc 'a-zA-Z0-9 '` supprime (`-d`) tout sauf (`-c` complement) les caractères alphanumériques et espaces. Ce type de validation est essentiel pour éviter les injections."
+    }
+  ]
+}

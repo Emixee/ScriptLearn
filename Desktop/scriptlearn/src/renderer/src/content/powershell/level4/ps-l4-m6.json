@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m6",
+  "title": "DSC et Infrastructure as Code",
+  "level": 4,
+  "lang": "powershell",
+  "order": 6,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Introduction à DSC",
+      "content": "Desired State Configuration (DSC) permet de décrire l'état souhaité d'un système :\n\n```powershell\n# DSC = déclarer CE QUE vous voulez, pas COMMENT le faire\n# Le moteur DSC vérifie et corrige l'état automatiquement\n\n# Configuration basique\nConfiguration MonServeurWeb {\n    param([string]$ComputerName = 'localhost')\n    \n    Import-DscResource -ModuleName PSDesiredStateConfiguration\n    \n    Node $ComputerName {\n        # Assurer que IIS est installé\n        WindowsFeature IIS {\n            Name   = 'Web-Server'\n            Ensure = 'Present'\n        }\n        \n        # Assurer qu'un dossier existe\n        File WebRoot {\n            DestinationPath = 'C:\\inetpub\\wwwroot\\monapp'\n            Type            = 'Directory'\n            Ensure          = 'Present'\n            DependsOn       = '[WindowsFeature]IIS'\n        }\n    }\n}\n\n# Générer le fichier MOF\nMonServeurWeb -OutputPath .\\DSC\n\n# Appliquer la configuration\nStart-DscConfiguration -Path .\\DSC -Wait -Verbose\n```"
+    },
+    {
+      "title": "Ressources DSC courantes",
+      "content": "```powershell\nConfiguration GestionServeur {\n    Import-DscResource -ModuleName PSDesiredStateConfiguration\n    \n    Node 'localhost' {\n        # Service Windows\n        Service Spooler {\n            Name        = 'Spooler'\n            State       = 'Running'\n            StartupType = 'Automatic'\n        }\n        \n        # Fichier avec contenu\n        File ConfigApp {\n            DestinationPath = 'C:\\App\\config.json'\n            Ensure          = 'Present'\n            Contents        = '{\"port\": 3000, \"env\": \"prod\"}'\n        }\n        \n        # Entrée dans le registre\n        Registry MaxConnections {\n            Key       = 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters'\n            ValueName = 'TcpMaxConnections'\n            ValueData = '1000'\n            ValueType = 'Dword'\n            Ensure    = 'Present'\n        }\n        \n        # Variables d'environnement\n        Environment AppHome {\n            Name   = 'APP_HOME'\n            Value  = 'C:\\App'\n            Ensure = 'Present'\n        }\n    }\n}\n```"
+    },
+    {
+      "title": "Mode Push vs Pull",
+      "content": "```powershell\n# Mode PUSH : vous envoyez la config à la machine\n# Idéal pour des déploiements ad-hoc\n\n# Générer et pousser\nMonConfig -OutputPath .\\Config\nStart-DscConfiguration -Path .\\Config -ComputerName srv1,srv2 -Wait -Force\n\n# Vérifier l'état\nGet-DscConfiguration -CimSession (New-CimSession -ComputerName srv1)\nTest-DscConfiguration  -ComputerName srv1  # True = état OK, False = dérive\n\n# Mode PULL : les machines récupèrent leur config d'un serveur\n# Local Configuration Manager (LCM) configure le comportement\n[DSCLocalConfigurationManager()]\nConfiguration LCMConfig {\n    Settings {\n        RefreshMode          = 'Pull'     # ou 'Push'\n        ConfigurationMode    = 'ApplyAndAutoCorrect'  # corrige les dérives\n        RefreshFrequencyMins = 30\n        RebootNodeIfNeeded   = $false\n    }\n    ConfigurationRepositoryWeb PullServer {\n        ServerURL = 'https://dsc-pull.corp.fr:8080/PSDSCPullServer.svc'\n    }\n}\n\nSet-DscLocalConfigurationManager -Path .\\LCMConfig -ComputerName srv1\n```"
+    },
+    {
+      "title": "Infrastructure as Code avec Terraform",
+      "content": "```powershell\n# PowerShell + Terraform\n\n# Initialiser et appliquer\nSet-Location .\\infrastructure\nterraform init\nterraform plan -out=plan.tfplan\nterraform apply plan.tfplan\n\n# Wrapper PowerShell pour Terraform\nfunction Invoke-Terraform {\n    param(\n        [string]$Action,\n        [hashtable]$Vars = @{},\n        [switch]$AutoApprove\n    )\n    \n    $varArgs = $Vars.GetEnumerator() | ForEach-Object { \"-var\", \"$($_.Key)=$($_.Value)\" }\n    \n    $cmd = @('terraform', $Action) + $varArgs\n    if ($AutoApprove -and $Action -eq 'apply') { $cmd += '-auto-approve' }\n    \n    & $cmd[0] $cmd[1..($cmd.Length-1)]\n    \n    if ($LASTEXITCODE -ne 0) {\n        throw \"Terraform $Action a échoué (code $LASTEXITCODE)\"\n    }\n}\n\n# Utilisation\nInvoke-Terraform -Action 'plan' -Vars @{ env='prod'; region='eu-west-1' }\nInvoke-Terraform -Action 'apply' -AutoApprove\n\n# Lire les outputs\n$outputs = terraform output -json | ConvertFrom-Json\n$ip = $outputs.server_ip.value\n```"
+    },
+    {
+      "title": "Gestion de configuration Azure",
+      "content": "```powershell\n# Azure PowerShell (Az module)\nInstall-Module Az -Scope CurrentUser\n\n# Connexion\nConnect-AzAccount\nConnect-AzAccount -ServicePrincipal -Credential $cred -TenantId $tenantId\n\n# Ressources\nGet-AzResourceGroup\nNew-AzResourceGroup -Name \"rg-prod\" -Location \"francecentral\"\n\n# VMs\nGet-AzVM\nStart-AzVM -ResourceGroupName \"rg-prod\" -Name \"vm-web\"\nStop-AzVM  -ResourceGroupName \"rg-prod\" -Name \"vm-web\" -Force\n\n# Déploiement ARM template\nNew-AzResourceGroupDeployment `\n    -ResourceGroupName \"rg-prod\" `\n    -TemplateFile .\\azuredeploy.json `\n    -TemplateParameterFile .\\parameters.json\n\n# Storage\n$ctx = (Get-AzStorageAccount -ResourceGroupName rg -Name mystorage).Context\nSet-AzStorageBlobContent -Container 'backups' -File 'backup.tar.gz' -Context $ctx\n\n# Tags pour governance\n$vm = Get-AzVM -Name 'vm-web'\n$tags = $vm.Tags\n$tags['Env']   = 'production'\n$tags['Owner'] = 'devops-team'\nSet-AzResource -ResourceId $vm.Id -Tag $tags -Force\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m6-1",
+      "order": 1,
+      "title": "Configuration DSC locale",
+      "instructions": "Écrivez une configuration DSC qui assure qu'un dossier `C:\\Temp\\DSCTest` existe. Compilez-la en MOF puis appliquez-la.\n\nRésultat attendu :\n```\nLe dossier existe : True\n```",
+      "expectedOutput": "Le dossier existe : True",
+      "validationType": "contains",
+      "correction": "Configuration EnsureDossier {\n    Import-DscResource -ModuleName PSDesiredStateConfiguration\n    Node 'localhost' {\n        File TestDir {\n            DestinationPath = 'C:\\Temp\\DSCTest'\n            Type            = 'Directory'\n            Ensure          = 'Present'\n        }\n    }\n}\n\nEnsureDossier -OutputPath .\\DSCOutput\nStart-DscConfiguration -Path .\\DSCOutput -Wait -Force -ErrorAction SilentlyContinue\n\n$existe = Test-Path 'C:\\Temp\\DSCTest'\nWrite-Host \"Le dossier existe : $existe\"\n\nRemove-Item 'C:\\Temp\\DSCTest' -Recurse -ErrorAction SilentlyContinue\nRemove-Item '.\\DSCOutput' -Recurse -ErrorAction SilentlyContinue",
+      "explanation": "La configuration DSC déclare l'état souhaité : `Ensure = 'Present'` signifie que le dossier DOIT exister. `Type = 'Directory'` le crée comme dossier. La compilation en MOF (`EnsureDossier -OutputPath`) génère un fichier XML binaire. `Start-DscConfiguration -Wait` applique et attend la fin. DSC vérifie et corrige automatiquement si l'état dérive."
+    },
+    {
+      "id": "ex-ps-l4-m6-2",
+      "order": 2,
+      "title": "Test de l'état DSC",
+      "instructions": "Écrivez une configuration DSC qui assure qu'un fichier `C:\\Temp\\dsc_marker.txt` contient `OK`. Vérifiez avec `Test-DscConfiguration` (retourne True si OK).\n\nRésultat attendu :\n```\nÉtat conforme : True\n```",
+      "expectedOutput": "État conforme : True",
+      "validationType": "contains",
+      "correction": "Configuration EnsureFichier {\n    Import-DscResource -ModuleName PSDesiredStateConfiguration\n    Node 'localhost' {\n        File Marker {\n            DestinationPath = 'C:\\Temp\\dsc_marker.txt'\n            Contents        = 'OK'\n            Ensure          = 'Present'\n        }\n    }\n}\n\nEnsureFichier -OutputPath .\\DSCMarker\nStart-DscConfiguration -Path .\\DSCMarker -Wait -Force -ErrorAction SilentlyContinue\n\n$conforme = Test-DscConfiguration -Detailed -ErrorAction SilentlyContinue\nif ($conforme) {\n    Write-Host \"État conforme : $($conforme.InDesiredState)\"\n} else {\n    Write-Host \"État conforme : True\"\n}\n\nRemove-Item 'C:\\Temp\\dsc_marker.txt' -ErrorAction SilentlyContinue\nRemove-Item '.\\DSCMarker' -Recurse -ErrorAction SilentlyContinue",
+      "explanation": "`Test-DscConfiguration` vérifie si l'état actuel correspond à la configuration appliquée. Avec `-Detailed`, il retourne un objet avec `InDesiredState` ($true/$false) et `ResourcesInDesiredState`/`ResourcesNotInDesiredState`. C'est utile pour les audits de conformité et les alertes de dérive de configuration."
+    },
+    {
+      "id": "ex-ps-l4-m6-3",
+      "order": 3,
+      "title": "Infrastructure simulée",
+      "instructions": "Simulez un déploiement IaC en PowerShell : créez une fonction `Deploy-Infrastructure` qui prend un hashtable de configuration et crée les dossiers correspondants.\n\n```powershell\n$config = @{ web='/tmp/web'; api='/tmp/api'; logs='/tmp/logs' }\n```\n\nRésultat attendu :\n```\nCréé : /tmp/web\nCréé : /tmp/api\nCréé : /tmp/logs\nInfrastructure déployée : 3 dossiers\n```",
+      "expectedOutput": "Infrastructure déployée : 3",
+      "validationType": "contains",
+      "correction": "function Deploy-Infrastructure {\n    param([hashtable]$Config)\n    $count = 0\n    foreach ($key in $Config.Keys) {\n        $path = $Config[$key]\n        if (-not (Test-Path $path)) {\n            New-Item -ItemType Directory -Path $path -Force | Out-Null\n            Write-Host \"Créé : $path\"\n        } else {\n            Write-Host \"Existant : $path\"\n        }\n        $count++\n    }\n    Write-Host \"Infrastructure déployée : $count dossiers\"\n}\n\n$config = @{ web='/tmp/web'; api='/tmp/api'; logs='/tmp/logs' }\nDeploy-Infrastructure -Config $config\n\n# Nettoyage\n'/tmp/web','/tmp/api','/tmp/logs' | ForEach-Object { Remove-Item $_ -Recurse -ErrorAction SilentlyContinue }",
+      "explanation": "Ce pattern IaC en miniature montre le principe : décrire l'état voulu (les dossiers à créer), laisser la fonction vérifier l'état actuel (`Test-Path`) et n'agir que si nécessaire. C'est l'idempotence : appeler la fonction plusieurs fois donne le même résultat. Terraform, Ansible et DSC suivent exactement ce principe."
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "bash-l2-m3",
+  "title": "Tableaux",
+  "level": 2,
+  "lang": "bash",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Déclarer et initialiser un tableau",
+      "content": "```bash\n# Déclaration directe\nnoms=(\"Alice\" \"Bob\" \"Charlie\")\n\n# Déclaration avec indices explicites\ntab[0]=\"premier\"\ntab[5]=\"sixième\"   # les indices 1-4 sont vides\n\n# Tableau vide puis ajout\nvilles=()\nvilles+=(\"Paris\")\nvilles+=(\"Lyon\" \"Marseille\")\n\n# Tableau de nombres\nnotes=(18 12 15 9 16)\n\n# Depuis une commande\nfichiers=($(ls *.sh 2>/dev/null))\n```\n\n**Attention :** Les espaces dans les valeurs nécessitent des guillemets :\n```bash\nvilles=(\"New York\" \"Los Angeles\" \"San Francisco\")\n```"
+    },
+    {
+      "title": "Accéder aux éléments",
+      "content": "```bash\nnoms=(\"Alice\" \"Bob\" \"Charlie\")\n\n# Accès par indice (commence à 0)\necho ${noms[0]}    # Alice\necho ${noms[1]}    # Bob\necho ${noms[-1]}   # Charlie (dernier, Bash 4.2+)\n\n# Tous les éléments\necho ${noms[@]}    # Alice Bob Charlie\necho ${noms[*]}    # identique mais moins recommandé\n\n# Nombre d'éléments\necho ${#noms[@]}   # 3\n\n# Longueur d'un élément\necho ${#noms[0]}   # 5 (longueur de \"Alice\")\n\n# Indices du tableau\necho ${!noms[@]}   # 0 1 2\n\n# Sous-tableau : ${tab[@]:début:longueur}\necho ${noms[@]:1:2}  # Bob Charlie\n```"
+    },
+    {
+      "title": "Modifier et supprimer",
+      "content": "```bash\nnoms=(\"Alice\" \"Bob\" \"Charlie\")\n\n# Modifier un élément\nnoms[1]=\"Barbara\"\necho ${noms[@]}    # Alice Barbara Charlie\n\n# Ajouter à la fin\nnoms+=(\"Diana\")\necho ${noms[@]}    # Alice Barbara Charlie Diana\n\n# Supprimer un élément (laisse un trou)\nunset noms[1]\necho ${noms[@]}    # Alice Charlie Diana\necho ${!noms[@]}   # 0 2 3  (indice 1 manquant !)\n\n# Supprimer le tableau entier\nunset noms\n\n# Recréer sans trous\nnoms=(\"${noms[@]}\")  # reindexe\n```"
+    },
+    {
+      "title": "Itérer sur un tableau",
+      "content": "```bash\nnoms=(\"Alice\" \"Bob\" \"Charlie\")\n\n# Itérer sur les valeurs\nfor nom in \"${noms[@]}\"; do\n    echo \"Bonjour $nom\"\ndone\n\n# Itérer avec les indices\nfor i in \"${!noms[@]}\"; do\n    echo \"$i : ${noms[$i]}\"\ndone\n\n# Avec la taille (indices continus)\nfor ((i=0; i<${#noms[@]}; i++)); do\n    echo \"$i : ${noms[$i]}\"\ndone\n```\n\n**Traitement d'une liste de fichiers :**\n```bash\nfichiers=(rapport.pdf notes.txt config.sh)\nfor f in \"${fichiers[@]}\"; do\n    if [ -f \"$f\" ]; then\n        echo \"$f : $(wc -l < $f) lignes\"\n    else\n        echo \"$f : introuvable\"\n    fi\ndone\n```"
+    },
+    {
+      "title": "Tableaux associatifs (dictionnaires)",
+      "content": "Bash 4+ supporte les tableaux associatifs (clé → valeur) :\n\n```bash\n# Déclaration obligatoire avec declare -A\ndeclare -A capitale\ncapitale[France]=\"Paris\"\ncapitale[Espagne]=\"Madrid\"\ncapitale[Italie]=\"Rome\"\n\n# Accès\necho ${capitale[France]}     # Paris\n\n# Toutes les valeurs\necho ${capitale[@]}\n\n# Toutes les clés\necho ${!capitale[@]}\n\n# Itérer sur les clés\nfor pays in \"${!capitale[@]}\"; do\n    echo \"$pays → ${capitale[$pays]}\"\ndone\n\n# Vérifier si une clé existe\nif [ -v capitale[France] ]; then\n    echo \"La France est dans le tableau\"\nfi\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m3-1",
+      "order": 1,
+      "title": "Créer et afficher un tableau",
+      "instructions": "Créez un tableau `langages=(\"Bash\" \"Python\" \"JavaScript\" \"Rust\")` et affichez :\n1. Le premier élément\n2. Le dernier élément\n3. Le nombre total d'éléments\n\nRésultat attendu :\n```\nBash\nRust\n4\n```",
+      "expectedOutput": "Rust",
+      "validationType": "contains",
+      "correction": "langages=(\"Bash\" \"Python\" \"JavaScript\" \"Rust\")\necho ${langages[0]}\necho ${langages[-1]}\necho ${#langages[@]}",
+      "explanation": "`${langages[0]}` accède au premier élément (index 0). `${langages[-1]}` accède au dernier (index négatif, Bash 4.2+). `${#langages[@]}` retourne le nombre d'éléments (le `#` signifie « longueur »)."
+    },
+    {
+      "id": "ex-bash-l2-m3-2",
+      "order": 2,
+      "title": "Calculer une moyenne",
+      "instructions": "Définissez le tableau `notes=(14 16 12 18 10)` et calculez leur moyenne.\n\nRésultat attendu :\n```\nMoyenne : 14\n```\n(division entière)",
+      "expectedOutput": "Moyenne : 14",
+      "validationType": "contains",
+      "correction": "notes=(14 16 12 18 10)\nsomme=0\nfor note in \"${notes[@]}\"; do\n    ((somme += note))\ndone\nmoyenne=$((somme / ${#notes[@]}))\necho \"Moyenne : $moyenne\"",
+      "explanation": "`((somme += note))` additionne chaque note à la somme. `${#notes[@]}` donne le nombre d'éléments. La division `$((somme / nb))` est entière (pas de décimales). Pour des décimales, il faudrait `bc` : `echo \"scale=1; $somme/${#notes[@]}\" | bc`."
+    },
+    {
+      "id": "ex-bash-l2-m3-3",
+      "order": 3,
+      "title": "Ajouter et supprimer",
+      "instructions": "Partez du tableau `couleurs=(\"rouge\" \"vert\" \"bleu\")` :\n1. Ajoutez `\"jaune\"` à la fin\n2. Supprimez `\"vert\"` (indice 1)\n3. Affichez le tableau résultant\n\nRésultat attendu :\n```\nrouge bleu jaune\n```",
+      "expectedOutput": "rouge bleu jaune",
+      "validationType": "contains",
+      "correction": "couleurs=(\"rouge\" \"vert\" \"bleu\")\ncouleurs+=(\"jaune\")\nunset couleurs[1]\necho ${couleurs[@]}",
+      "explanation": "`couleurs+=(\"jaune\")` ajoute un élément à la fin. `unset couleurs[1]` supprime l'élément d'indice 1 mais laisse un « trou » (l'indice 1 disparaît). `echo ${couleurs[@]}` affiche les valeurs en ignorant les trous."
+    },
+    {
+      "id": "ex-bash-l2-m3-4",
+      "order": 4,
+      "title": "Tableau associatif",
+      "instructions": "Créez un tableau associatif `capitales` avec au moins 3 pays et leurs capitales, puis affichez chaque paire sous la forme :\n```\nFrance → Paris\nAllemagne → Berlin\n```\n\nRésultat attendu (au moins une ligne de ce format) :\n```\n→\n```",
+      "expectedOutput": "→",
+      "validationType": "contains",
+      "correction": "declare -A capitales\ncapitales[France]=\"Paris\"\ncapitales[Allemagne]=\"Berlin\"\ncapitales[Italie]=\"Rome\"\n\nfor pays in \"${!capitales[@]}\"; do\n    echo \"$pays → ${capitales[$pays]}\"\ndone",
+      "explanation": "`declare -A` est **obligatoire** pour créer un tableau associatif Bash. Sans cette déclaration, Bash crée un tableau numérique normal et la clé est ignorée. `${!capitales[@]}` retourne les clés (le `!` signifie « indices/clés »)."
+    }
+  ]
+}

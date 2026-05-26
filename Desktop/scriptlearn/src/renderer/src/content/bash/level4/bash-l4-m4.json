@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m4",
+  "title": "APIs et intégrations",
+  "level": 4,
+  "lang": "bash",
+  "order": 4,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "API REST avancée avec curl",
+      "content": "```bash\n# Wrapper API complet\ncall_api() {\n    local method=$1 url=$2\n    shift 2\n    local body=\"\"\n    local token=\"${API_TOKEN:-}\"\n    \n    local args=(-s -w \"\\n%{http_code}\" -X \"$method\")\n    [ -n \"$token\" ] && args+=(-H \"Authorization: Bearer $token\")\n    \n    for arg; do\n        case $arg in\n            --body=*) body=${arg#*=}; args+=(-H 'Content-Type: application/json' -d \"$body\") ;;\n            --header=*) args+=(-H \"${arg#*=}\") ;;\n        esac\n    done\n    \n    args+=(\"$url\")\n    \n    # Exécuter et séparer corps/code HTTP\n    local response\n    response=$(curl \"${args[@]}\")\n    local http_code\n    http_code=$(echo \"$response\" | tail -1)\n    local body_response\n    body_response=$(echo \"$response\" | head -n -1)\n    \n    if [ \"$http_code\" -ge 400 ]; then\n        echo \"[HTTP $http_code] $body_response\" >&2\n        return 1\n    fi\n    echo \"$body_response\"\n}\n\n# Usage\ncall_api GET \"https://api.example.com/users\"\ncall_api POST \"https://api.example.com/users\" --body='{\"name\":\"Alice\"}'\n```"
+    },
+    {
+      "title": "Authentification OAuth2",
+      "content": "```bash\n# Obtenir un token OAuth2 (Client Credentials)\nget_token() {\n    local client_id=$1\n    local client_secret=$2\n    local token_url=$3\n    \n    local response\n    response=$(curl -sf -X POST \"$token_url\" \\\n        -H 'Content-Type: application/x-www-form-urlencoded' \\\n        -d \"grant_type=client_credentials\" \\\n        -d \"client_id=$client_id\" \\\n        -d \"client_secret=$client_secret\")\n    \n    echo \"$response\" | jq -r '.access_token'\n}\n\n# Utiliser le token avec expiration\nTOKEN_FILE=\"/tmp/.api_token\"\nTOKEN_TTL=3600\n\nensure_token() {\n    local now\n    now=$(date +%s)\n    \n    if [ -f \"$TOKEN_FILE\" ]; then\n        local created\n        created=$(stat -c %Y \"$TOKEN_FILE\")\n        [ $((now - created)) -lt $TOKEN_TTL ] && {\n            cat \"$TOKEN_FILE\"\n            return\n        }\n    fi\n    \n    local token\n    token=$(get_token \"$CLIENT_ID\" \"$CLIENT_SECRET\" \"$TOKEN_URL\")\n    echo \"$token\" > \"$TOKEN_FILE\"\n    chmod 600 \"$TOKEN_FILE\"\n    echo \"$token\"\n}\n\nTOKEN=$(ensure_token)\ncurl -H \"Authorization: Bearer $TOKEN\" https://api.example.com/data\n```"
+    },
+    {
+      "title": "Webhooks et événements",
+      "content": "```bash\n# Serveur webhook simple avec netcat (pour tests)\n# nc -l -p 8080 -k -c 'echo -e \"HTTP/1.1 200 OK\\r\\n\\r\\n{\\\"status\\\":\\\"received\\\"}\"; cat'\n\n# Envoyer un webhook GitHub\nsend_github_webhook() {\n    local payload=$1\n    local secret=$2\n    local url=$3\n    \n    local signature\n    signature=$(echo -n \"$payload\" | \\\n        openssl dgst -sha256 -hmac \"$secret\" | \\\n        awk '{print \"sha256=\"$2}')\n    \n    curl -sf -X POST \"$url\" \\\n        -H \"Content-Type: application/json\" \\\n        -H \"X-Hub-Signature-256: $signature\" \\\n        -d \"$payload\"\n}\n\n# Écouter et traiter des webhooks (script de réception)\n# Dans un vraie application, utiliser un serveur web\n# Pour le test : parser les données envoyées\nparse_webhook() {\n    local payload=$1\n    local event_type\n    event_type=$(echo \"$payload\" | jq -r '.event')\n    \n    case \"$event_type\" in\n        push)   handle_push \"$payload\" ;;\n        pr)     handle_pr \"$payload\" ;;\n        *)      echo \"Événement inconnu : $event_type\" ;;\n    esac\n}\n```"
+    },
+    {
+      "title": "Intégration avec des services cloud",
+      "content": "```bash\n# AWS CLI\n# Lister les buckets S3\naws s3 ls\naws s3 cp fichier.txt s3://mon-bucket/\naws s3 sync ./local/ s3://mon-bucket/remote/\n\n# Uploader avec metadata\naws s3 cp fichier.txt s3://bucket/ \\\n    --metadata 'deployedBy=script,version=1.0'\n\n# Paramètres SSM (secrets)\nDB_PASSWORD=$(aws ssm get-parameter \\\n    --name \"/prod/db/password\" \\\n    --with-decryption \\\n    --query \"Parameter.Value\" \\\n    --output text)\n\n# GitHub API\ngithub_api() {\n    local endpoint=$1\n    curl -sf \\\n        -H \"Authorization: token $GITHUB_TOKEN\" \\\n        -H \"Accept: application/vnd.github.v3+json\" \\\n        \"https://api.github.com/$endpoint\"\n}\n\n# Créer une issue\ngithub_api \"repos/$REPO/issues\" --data \\\n    '{\"title\":\"Bug détecté\",\"body\":\"Description...\"}'\n\n# Gitlab CI variables\necho \"RELEASE_VERSION=$version\" >> build.env\n```"
+    },
+    {
+      "title": "Pipeline de traitement de données",
+      "content": "```bash\n#!/bin/bash\n# Pipeline ETL simple (Extract, Transform, Load)\n\nset -euo pipefail\n\nLOG=\"/tmp/etl_$(date +%Y%m%d_%H%M%S).log\"\n\nlog() { echo \"[$(date +%H:%M:%S)] $*\" | tee -a \"$LOG\"; }\n\n# EXTRACT : télécharger les données\nextract() {\n    log \"Extraction des données...\"\n    curl -sf \"https://jsonplaceholder.typicode.com/posts\" \\\n        > /tmp/raw_data.json\n    log \"$(jq length /tmp/raw_data.json) enregistrements extraits\"\n}\n\n# TRANSFORM : transformer les données\ntransform() {\n    log \"Transformation...\"\n    jq -r '.[] | select(.userId <= 3) | [.userId, .id, .title] | @csv' \\\n        /tmp/raw_data.json \\\n        > /tmp/transformed.csv\n    log \"$(wc -l < /tmp/transformed.csv) lignes transformées\"\n}\n\n# LOAD : charger les données\nload() {\n    log \"Chargement...\"\n    # Simuler l'insertion en DB\n    while IFS=, read -r userId postId title; do\n        title=$(echo \"$title\" | tr -d '\"')\n        log \"  User:$userId Post:$postId\"\n    done < /tmp/transformed.csv\n    log \"Chargement terminé\"\n}\n\n# Exécuter le pipeline\nextract\ntransform\nload\n\nlog \"Pipeline ETL terminé avec succès\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m4-1",
+      "order": 1,
+      "title": "Wrapper API avec code HTTP",
+      "instructions": "Créez une fonction `api_get` qui :\n1. Appelle une URL avec `curl -s -w \"\\n%{http_code}\"`\n2. Sépare le corps de la réponse du code HTTP\n3. Affiche `[200] {titre}` si succès, `[4xx] Erreur` si échec\n\nTestez avec `https://jsonplaceholder.typicode.com/posts/1`.\n\nRésultat attendu :\n```\n[200] sunt aut facere...\n```",
+      "expectedOutput": "[200]",
+      "validationType": "contains",
+      "correction": "api_get() {\n    local url=$1\n    local response\n    response=$(curl -s -w \"\\n%{http_code}\" \"$url\")\n    local http_code body\n    http_code=$(echo \"$response\" | tail -1)\n    body=$(echo \"$response\" | head -n -1)\n    \n    if [ \"$http_code\" -ge 400 ]; then\n        echo \"[$http_code] Erreur\"\n    else\n        local titre\n        titre=$(echo \"$body\" | jq -r '.title')\n        echo \"[$http_code] $titre\"\n    fi\n}\n\napi_get \"https://jsonplaceholder.typicode.com/posts/1\"",
+      "explanation": "`curl -w \"\\n%{http_code}\"` ajoute le code HTTP sur une nouvelle ligne à la fin de la sortie. `tail -1` extrait la dernière ligne (le code). `head -n -1` prend tout sauf la dernière ligne (le corps). Ce pattern évite les fichiers temporaires et permet d'inspecter à la fois le contenu et le statut HTTP."
+    },
+    {
+      "id": "ex-bash-l4-m4-2",
+      "order": 2,
+      "title": "Pipeline ETL simplifié",
+      "instructions": "Créez un mini-pipeline en 3 étapes :\n1. **Extract** : télécharger `https://jsonplaceholder.typicode.com/users` dans `/tmp/users.json`\n2. **Transform** : extraire nom + email avec jq dans `/tmp/users.csv`\n3. **Load** : afficher les 3 premières lignes du CSV\n\nRésultat attendu :\n```\nLeanne Graham,Sincere@april.biz\n...\n```",
+      "expectedOutput": "Leanne Graham",
+      "validationType": "contains",
+      "correction": "# Extract\ncurl -sf 'https://jsonplaceholder.typicode.com/users' > /tmp/users.json\n\n# Transform\njq -r '.[] | [.name, .email] | @csv' /tmp/users.json > /tmp/users.csv\n\n# Load\nhead -3 /tmp/users.csv\n\n# Nettoyage\nrm /tmp/users.json /tmp/users.csv",
+      "explanation": "`jq -r '.[] | [.name, .email] | @csv'` : `.[]` itère, `[.name, .email]` crée un tableau, `@csv` formate en CSV avec guillemets si nécessaire. `-r` (raw) supprime les guillemets JSON autour du résultat. `@csv` gère automatiquement l'échappement des virgules et guillemets dans les valeurs."
+    },
+    {
+      "id": "ex-bash-l4-m4-3",
+      "order": 3,
+      "title": "Pagination d'API",
+      "instructions": "Récupérez les posts des utilisateurs 1, 2 et 3 en boucle depuis `https://jsonplaceholder.typicode.com/posts?userId=N`. Comptez le total de posts récupérés.\n\nRésultat attendu :\n```\nUser 1 : 10 posts\nUser 2 : 10 posts\nUser 3 : 10 posts\nTotal : 30 posts\n```",
+      "expectedOutput": "Total : 30",
+      "validationType": "contains",
+      "correction": "total=0\nfor user_id in 1 2 3; do\n    count=$(curl -sf \"https://jsonplaceholder.typicode.com/posts?userId=$user_id\" | jq 'length')\n    echo \"User $user_id : $count posts\"\n    total=$((total + count))\ndone\necho \"Total : $total posts\"",
+      "explanation": "`curl -sf ... | jq 'length'` : `jq 'length'` retourne le nombre d'éléments d'un tableau JSON. `$((total + count))` effectue l'arithmétique entière. La variable `$user_id` est interpolée directement dans l'URL — attention à valider/échapper les entrées utilisateur avant de les utiliser dans des URLs en production."
+    }
+  ]
+}

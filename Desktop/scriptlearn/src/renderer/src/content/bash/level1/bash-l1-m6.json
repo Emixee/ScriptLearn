@@ -1,0 +1,62 @@
+{
+  "id": "bash-l1-m6",
+  "title": "Structure d'un script",
+  "level": 1,
+  "lang": "bash",
+  "order": 6,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Anatomie d'un script Bash professionnel",
+      "content": "Un bon script Bash suit une structure claire :\n\n```bash\n#!/bin/bash\n# =============================================================================\n# DESCRIPTION : Script de bienvenue personnalisé\n# AUTEUR      : Alice Martin\n# VERSION     : 1.0\n# =============================================================================\n\n# --- Configuration ---\nNOM_SCRIPT=$(basename \"$0\")\nDOSSIER_LOG=\"${HOME}/logs\"\n\n# --- Fonctions ---\nafficher_aide() {\n    echo \"Usage : $NOM_SCRIPT [options] <prénom>\"\n    echo \"Options :\"\n    echo \"  -h  Afficher cette aide\"\n}\n\nafficher_bienvenue() {\n    local prenom=\"$1\"\n    echo \"Bonjour, $prenom !\"\n    echo \"Date : $(date +\"%d/%m/%Y %H:%M\")\"\n}\n\n# --- Code principal ---\nif [ \"$1\" = \"-h\" ]; then\n    afficher_aide\n    exit 0\nfi\n\nafficher_bienvenue \"${1:-Apprenant}\"\n```"
+    },
+    {
+      "title": "Les fonctions",
+      "content": "Une **fonction** regroupe des commandes réutilisables.\n\n```bash\n# Déclaration\nma_fonction() {\n    echo \"Dans la fonction\"\n}\n\n# Avec paramètres (pas de déclaration explicite)\ncalculer_carre() {\n    local nombre=$1      # variable locale à la fonction\n    echo $((nombre * nombre))\n}\n\n# Appel\nma_fonction\ncarre=$(calculer_carre 5)\necho \"5² = $carre\"      # 5² = 25\n```\n\n**Points importants :**\n- Définissez les fonctions **avant** de les appeler\n- Utilisez `local` pour les variables **locales** (non visibles à l'extérieur)\n- Le `return` ne retourne qu'un code entier (0-255). Pour retourner une chaîne, utilisez `echo` et capturez avec `$()`."
+    },
+    {
+      "title": "Gestion des erreurs : set -e et trap",
+      "content": "Par défaut, Bash continue même si une commande échoue. Pour un script robuste :\n\n```bash\n#!/bin/bash\nset -e           # stoppe si une commande échoue\nset -u           # erreur si variable non définie\nset -o pipefail  # erreur si une commande dans un pipe échoue\n\n# Ou en une ligne :\nset -euo pipefail\n```\n\n**`trap` pour le nettoyage à la sortie :**\n```bash\ntmp_file=$(mktemp)\n\n# Nettoyage automatique à la sortie (normale ou erreur)\ntrap 'rm -f \"$tmp_file\"' EXIT\n\n# Suite du script...\necho \"données\" > \"$tmp_file\"\ncat \"$tmp_file\"\n# tmp_file est supprimé automatiquement à la fin\n```"
+    },
+    {
+      "title": "Codes de retour et gestion des erreurs",
+      "content": "Chaque commande Bash retourne un **code de retour** (`$?`) :\n- `0` = succès\n- Non-zéro = erreur\n\n```bash\nls /inexistant\necho \"Code de retour : $?\"   # 2 (erreur)\n\nls /tmp\necho \"Code de retour : $?\"   # 0 (succès)\n```\n\n**Tester le succès :**\n```bash\nif mkdir -p \"$dossier\"; then\n    echo \"Création réussie.\"\nelse\n    echo \"Échec de la création.\" >&2\n    exit 1\nfi\n```\n\n`>&2` redirige vers la **sortie d'erreur standard** (stderr) — la bonne pratique pour les messages d'erreur."
+    },
+    {
+      "title": "Exemple complet : script de sauvegarde",
+      "content": "```bash\n#!/bin/bash\nset -euo pipefail\n\n# Script de sauvegarde simple\n\nSOURCE=\"${1:-$HOME/Documents}\"\nDESTINATION=\"${2:-$HOME/Sauvegardes}\"\nDATE=$(date +\"%Y%m%d_%H%M%S\")\nARCHIVE=\"$DESTINATION/backup_$DATE.tar.gz\"\n\n# Vérifications\nif [ ! -d \"$SOURCE\" ]; then\n    echo \"Erreur : le dossier source '$SOURCE' n'existe pas.\" >&2\n    exit 1\nfi\n\nmkdir -p \"$DESTINATION\"\n\n# Sauvegarde\necho \"Sauvegarde de '$SOURCE' en cours...\"\ntar -czf \"$ARCHIVE\" -C \"$(dirname $SOURCE)\" \"$(basename $SOURCE)\"\necho \"Sauvegarde créée : $ARCHIVE\"\necho \"Taille : $(du -sh $ARCHIVE | cut -f1)\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m6-1",
+      "order": 1,
+      "title": "Écrire une fonction",
+      "instructions": "Écrivez une fonction `saluer` qui prend un prénom en argument et affiche :\n```\nBonjour, Alice ! Bienvenue dans Bash.\n```\n\nPuis appelez-la avec votre prénom.",
+      "expectedOutput": "Bienvenue dans Bash",
+      "validationType": "contains",
+      "correction": "saluer() {\n    local prenom=\"$1\"\n    echo \"Bonjour, $prenom ! Bienvenue dans Bash.\"\n}\n\nsaluer \"Alice\"",
+      "explanation": "`local prenom=\"$1\"` crée une variable locale qui ne pollue pas l'espace global. `$1` dans la fonction correspond au premier argument passé lors de l'appel. L'utilisation de `local` est une bonne pratique pour éviter les effets de bord."
+    },
+    {
+      "id": "ex-bash-l1-m6-2",
+      "order": 2,
+      "title": "Vérifier le code de retour",
+      "instructions": "Tapez la commande suivante (qui va échouer), puis vérifiez son code de retour :\n```bash\nls /dossier_qui_nexiste_pas\necho \"Code de retour : $?\"\n```\n\nEnsuite, tapez `ls /tmp` (qui réussit) et vérifiez également son code.",
+      "expectedOutput": "Code de retour :",
+      "validationType": "contains",
+      "correction": "ls /dossier_qui_nexiste_pas 2>/dev/null; echo \"Code de retour : $?\"\nls /tmp > /dev/null; echo \"Code de retour : $?\"",
+      "explanation": "`$?` contient le code de retour de la dernière commande. `0` = succès, valeur non nulle = erreur. `/dev/null` est un fichier spécial qui absorbe tout ce qu'on y écrit (corbeille Linux). `2>/dev/null` redirige les erreurs vers la corbeille pour ne pas polluer l'affichage."
+    },
+    {
+      "id": "ex-bash-l1-m6-3",
+      "order": 3,
+      "title": "Script de bilan complet",
+      "instructions": "Écrivez un script qui :\n1. Définit une variable `dossier` = `~/scriptlearn`\n2. Vérifie si ce dossier existe (`[ -d ... ]`)\n3. Si oui, affiche le nombre de fichiers qu'il contient\n4. Ajoute une ligne dans `~/scriptlearn/journal.txt` avec la date\n5. Affiche `Bilan enregistré.`\n\nRésultat attendu :\n```\nDossier trouvé. Fichiers : X\nBilan enregistré.\n```",
+      "expectedOutput": "Bilan enregistré",
+      "validationType": "contains",
+      "correction": "dossier=\"$HOME/scriptlearn\"\n\nif [ -d \"$dossier\" ]; then\n    nb=$(ls \"$dossier\" | wc -l)\n    echo \"Dossier trouvé. Fichiers : $nb\"\nelse\n    echo \"Dossier absent.\"\n    exit 1\nfi\n\necho \"[$(date +\"%Y-%m-%d %H:%M:%S\")] Bilan\" >> \"$dossier/journal.txt\"\necho \"Bilan enregistré.\"",
+      "explanation": "`ls \"$dossier\" | wc -l` compte les éléments du dossier : `ls` liste, `|` passe le résultat à `wc -l` qui compte les lignes. Les guillemets autour de `\"$dossier\"` protègent contre les espaces dans le chemin — une bonne pratique systématique."
+    }
+  ]
+}

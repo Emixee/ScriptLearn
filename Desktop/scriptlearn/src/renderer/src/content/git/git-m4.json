@@ -1,0 +1,74 @@
+{
+  "id": "git-m4",
+  "title": "Git avancé — stash, rebase et tags",
+  "level": 8,
+  "lang": "git",
+  "order": 4,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "git stash — mettre en pause",
+      "content": "`git stash` sauvegarde temporairement des modifications **non commitées** pour nettoyer le Working Directory.\n\n```bash\ngit stash          # empiler les modifications\ngit stash list     # voir la pile de stash\ngit stash pop      # restaurer et supprimer le dernier stash\ngit stash apply    # restaurer sans supprimer\ngit stash drop     # supprimer le dernier stash\n```\n\nUtile quand on doit changer de branche en urgence sans vouloir commiter des modifications incomplètes."
+    },
+    {
+      "title": "git rebase — réécrire l'historique",
+      "content": "`git rebase` déplace des commits d'une branche sur une autre, créant un historique **linéaire** :\n\n```bash\n# Rebaser feature sur main\ngit switch feature\ngit rebase main\n\n# Rebase interactif (éditer, squash, reorder)\ngit rebase -i HEAD~3   # les 3 derniers commits\n```\n\n**Règle d'or** : ne jamais rebaser une branche publique (partagée) — ça réécrira l'historique pour tout le monde.\n\n`git rebase` vs `git merge` : rebase = historique linéaire, merge = historique fidèle."
+    },
+    {
+      "title": "Tags, reset et revert",
+      "content": "**Tags** — marquer des versions :\n```bash\ngit tag v1.0.0                          # tag léger\ngit tag -a v1.0.0 -m \"Version 1.0.0\"   # tag annoté\ngit push origin --tags                  # pousser les tags\n```\n\n**Reset** — annuler des commits locaux :\n```bash\ngit reset --soft HEAD~1    # annule le commit, garde le staging\ngit reset --mixed HEAD~1   # annule + retire du staging\ngit reset --hard HEAD~1    # annule tout (DESTRUCTIF)\n```\n\n**Revert** — annuler proprement (crée un commit d'inversion) :\n```bash\ngit revert abc1234         # crée un commit qui annule abc1234\n```\nPréférer `revert` sur les branches publiques."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-m4-1",
+      "order": 1,
+      "title": "Empiler et restaurer avec stash",
+      "instructions": "Mettez en pause les modifications courantes avec `git stash`, puis restaurez-les.",
+      "requiredKeywords": ["git stash", "git stash pop"],
+      "validationType": "keywords",
+      "correction": "git stash && git stash pop",
+      "explanation": "`git stash` place les modifications dans une pile. `git stash pop` restaure le dernier stash et le supprime de la pile. Parfait pour les interruptions en cours de travail."
+    },
+    {
+      "id": "ex-git-m4-2",
+      "order": 2,
+      "title": "Créer un tag annoté",
+      "instructions": "Créez un **tag annoté** `v2.0.0` avec le message `\"Release 2.0.0\"`.",
+      "requiredKeywords": ["git tag", "-a", "v2.0.0", "-m", "release 2.0.0"],
+      "validationType": "keywords",
+      "correction": "git tag -a v2.0.0 -m \"Release 2.0.0\"",
+      "explanation": "Un tag annoté (avec `-a`) stocke le nom du tagger, la date et le message — contrairement au tag léger qui est juste un pointeur. Les tags annotés apparaissent dans les releases GitHub."
+    },
+    {
+      "id": "ex-git-m4-3",
+      "order": 3,
+      "title": "Annuler le dernier commit (sans perdre les fichiers)",
+      "instructions": "Annulez le **dernier commit** mais gardez les modifications dans le staging area.",
+      "requiredKeywords": ["git reset", "--soft", "head~1"],
+      "validationType": "keywords",
+      "correction": "git reset --soft HEAD~1",
+      "explanation": "`--soft` annule le commit mais laisse les fichiers en staging. Utile pour réécrire un message de commit ou regrouper plusieurs commits en un. `HEAD~1` = le commit précédant HEAD."
+    },
+    {
+      "id": "ex-git-m4-4",
+      "order": 4,
+      "title": "Annuler proprement avec revert",
+      "instructions": "Annulez le commit `a1b2c3d` de façon **non destructive** (en créant un commit d'inversion).",
+      "requiredKeywords": ["git revert", "a1b2c3d"],
+      "validationType": "keywords",
+      "correction": "git revert a1b2c3d",
+      "explanation": "`git revert` crée un **nouveau commit** qui annule les effets d'un commit précédent. L'historique reste intact — essentiel sur des branches partagées pour ne pas perturber les collègues."
+    },
+    {
+      "id": "ex-git-m4-5",
+      "order": 5,
+      "title": "cherry-pick — appliquer un commit précis",
+      "instructions": "Appliquez uniquement le commit `f3a9b12` sur la branche courante.",
+      "requiredKeywords": ["git cherry-pick", "f3a9b12"],
+      "validationType": "keywords",
+      "correction": "git cherry-pick f3a9b12",
+      "explanation": "`git cherry-pick` copie un commit spécifique d'une branche vers une autre. Utile pour appliquer un hotfix sur plusieurs branches sans faire un merge complet."
+    }
+  ]
+}

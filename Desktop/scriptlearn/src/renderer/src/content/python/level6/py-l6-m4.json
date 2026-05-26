@@ -1,0 +1,58 @@
+{
+  "id": "py-l6-m4",
+  "title": "Threat Hunting avec Python",
+  "lang": "python",
+  "level": 6,
+  "order": 4,
+  "estimatedMinutes": 75,
+  "course": [
+    {
+      "section": "Méthodologie du Threat Hunting Python",
+      "content": "Le threat hunting Python permet d'analyser de grands volumes de logs à la recherche de TTPs (Tactics, Techniques, Procedures) spécifiques du framework MITRE ATT&CK.\n\n```python\nfrom datetime import datetime\nfrom collections import defaultdict, Counter\nimport re\nimport json\n\n# MITRE ATT&CK — TTPs ciblés par le hunt\nTTPS = {\n    'T1059.001': 'PowerShell Execution',\n    'T1078':     'Valid Accounts',\n    'T1021.002': 'SMB/Windows Admin Shares',\n    'T1053.005': 'Scheduled Task',\n    'T1136':     'Create Account',\n    'T1055':     'Process Injection',\n    'T1003':     'Credential Dumping',\n    'T1041':     'Exfiltration Over C2',\n}\n\nclass ThreatHunt:\n    \"\"\"Orchestrateur de hunt ciblé.\"\"\"\n    \n    def __init__(self, hypothèse, ttp=None):\n        self.hypothèse = hypothèse\n        self.ttp = ttp\n        self.logs_analysés = 0\n        self.hits = []\n        self.début = datetime.now()\n    \n    def rapport_final(self):\n        durée = (datetime.now() - self.début).seconds\n        return {\n            'hypothèse': self.hypothèse,\n            'ttp': self.ttp,\n            'logs_analysés': self.logs_analysés,\n            'hits': len(self.hits),\n            'durée_sec': durée,\n            'résultat': 'CONFIRMÉ' if self.hits else 'NÉGATIF'\n        }\n\nhunt = ThreatHunt(\n    hypothèse='Un attaquant utilise des LOLBins pour établir une persistance',\n    ttp='T1059.001'\n)\nprint(f\"Hunt démarré : {hunt.hypothèse}\")\nprint(f\"TTP ciblé : {hunt.ttp} — {TTPS.get(hunt.ttp)}\")\n```"
+    },
+    {
+      "section": "Hunt — Détection de Credential Dumping",
+      "content": "```python\n# Hypothèse : Un attaquant a utilisé mimikatz ou LSASS dump\n\n# Patterns de credential dumping (T1003)\nPATTERNS_CRED_DUMP = [\n    re.compile(r'sekurlsa|lsadump|kerberos::ptc', re.I),\n    re.compile(r'procdump.*lsass|lsass.*procdump', re.I),\n    re.compile(r'mimikatz', re.I),\n    re.compile(r'NTDSutil|ntds\\.dit', re.I),\n    re.compile(r'vssadmin.*shadow|shadow.*vssadmin', re.I),\n    re.compile(r'reg.*save.*hklm.*sam', re.I),\n]\n\ndef hunt_credential_dumping(lignes_logs):\n    \"\"\"Cherche des indicateurs de credential dumping.\"\"\"\n    hits = []\n    \n    for i, ligne in enumerate(lignes_logs):\n        for pattern in PATTERNS_CRED_DUMP:\n            if pattern.search(ligne):\n                hits.append({\n                    'ligne': i + 1,\n                    'contenu': ligne.strip()[:120],\n                    'pattern': pattern.pattern,\n                    'ttp': 'T1003'\n                })\n                break\n    \n    return hits\n\n# Simulation de logs Windows\nlogs_windows = [\n    \"2024-01-15 10:00 powershell.exe started by winlogon.exe\",\n    \"2024-01-15 10:01 cmd.exe /c procdump -ma lsass.exe lsass.dmp\",\n    \"2024-01-15 10:02 mimikatz.exe privilege::debug sekurlsa::logonpasswords\",\n    \"2024-01-15 10:03 reg save hklm\\\\sam C:\\\\Users\\\\Public\\\\sam.hive\",\n    \"2024-01-15 10:04 notepad.exe document.txt\",  # Bénin\n    \"2024-01-15 10:05 vssadmin create shadow /for=C:\",\n]\n\nhits = hunt_credential_dumping(logs_windows)\nprint(f\"Hunt T1003 — {len(hits)} hit(s) trouvé(s) :\")\nfor h in hits:\n    print(f\"  Ligne {h['ligne']}: {h['contenu']}\")\n    print(f\"    Pattern: {h['pattern']}\")\n```"
+    },
+    {
+      "section": "Hunt — Détection de Lateral Movement",
+      "content": "```python\n# Hypothèse : Mouvement latéral via SMB ou PsExec (T1021.002)\n\nfrom collections import defaultdict\n\ndef hunt_lateral_movement(connexions):\n    \"\"\"\n    Détecte le mouvement latéral en analysant les patterns de connexions.\n    Indicateurs :\n    - Un host qui se connecte à beaucoup d'autres en peu de temps\n    - Connexions sur des ports d'administration (445, 135, 5985)\n    - User qui s'authentifie sur de nouveaux hôtes\n    \"\"\"\n    PORTS_ADMIN = {445, 135, 3389, 5985, 5986, 22, 23}\n    \n    # Connexions par source\n    par_src = defaultdict(list)\n    for conn in connexions:\n        par_src[conn['src']].append(conn)\n    \n    hits = []\n    \n    for src, conns in par_src.items():\n        dsts_admin = [\n            c for c in conns\n            if c.get('port') in PORTS_ADMIN\n        ]\n        dsts_uniques = {c['dst'] for c in dsts_admin}\n        \n        # Règle : > 3 destinations différentes sur ports admin = scan probable\n        if len(dsts_uniques) >= 3:\n            hits.append({\n                'src': src,\n                'ttp': 'T1021',\n                'destinations': list(dsts_uniques),\n                'connexions': len(dsts_admin),\n                'description': f\"{src} → {len(dsts_uniques)} hôtes sur ports admin\"\n            })\n    \n    return hits\n\n# Simulation de connexions réseau\nconns_réseau = [\n    {'src': '10.0.0.5', 'dst': '10.0.0.10', 'port': 445},   # SMB\n    {'src': '10.0.0.5', 'dst': '10.0.0.11', 'port': 445},   # SMB\n    {'src': '10.0.0.5', 'dst': '10.0.0.12', 'port': 445},   # SMB\n    {'src': '10.0.0.5', 'dst': '10.0.0.13', 'port': 3389},  # RDP\n    {'src': '10.0.0.7', 'dst': '8.8.8.8',   'port': 53},    # DNS (normal)\n]\n\nhits = hunt_lateral_movement(conns_réseau)\nprint(f\"Hunt T1021 — {len(hits)} hit(s) :\")\nfor h in hits:\n    print(f\"  [ALERTE] {h['description']}\")\n    print(f\"    TTP: {h['ttp']} | Destinations: {h['destinations']}\")\n```"
+    },
+    {
+      "section": "Hunt — Rapport et documentation ATT&CK",
+      "content": "```python\nimport json\nfrom datetime import datetime\n\ndef generer_rapport_hunt(hunt, hits_par_ttp):\n    \"\"\"Génère un rapport de threat hunt documenté MITRE ATT&CK.\"\"\"\n    \n    rapport = {\n        'type': 'Threat Hunt Report',\n        'hypothèse': hunt.hypothèse,\n        'date': datetime.now().isoformat(),\n        'durée_sec': (datetime.now() - hunt.début).seconds,\n        'findings': []\n    }\n    \n    for ttp_id, hits in hits_par_ttp.items():\n        if hits:\n            ttp_name = TTPS.get(ttp_id, 'Unknown')\n            rapport['findings'].append({\n                'ttp': ttp_id,\n                'name': ttp_name,\n                'hits': len(hits),\n                'confirmed': True,\n                'evidence': hits[:3],\n                'mitre_url': f'https://attack.mitre.org/techniques/{ttp_id.replace(\".\", \"/\")}'\n            })\n    \n    statut = 'CONFIRMÉ' if rapport['findings'] else 'NÉGATIF'\n    rapport['statut'] = statut\n    rapport['recommandations'] = [\n        f\"Investiguer les hosts impliqués dans {f['ttp']}\" \n        for f in rapport['findings']\n    ] or ['Aucune menace détectée — élargir la fenêtre de recherche']\n    \n    # Afficher le résumé\n    print(f\"\\n{'='*60}\")\n    print(f\" RAPPORT HUNT — {statut}\")\n    print('='*60)\n    print(f\" Hypothèse : {rapport['hypothèse']}\")\n    print(f\" Findings  : {len(rapport['findings'])} TTP(s) confirmé(s)\")\n    for f in rapport['findings']:\n        print(f\"   [{f['ttp']}] {f['name']} — {f['hits']} hit(s)\")\n    print('='*60)\n    \n    with open('/tmp/hunt_report.json', 'w') as fl:\n        json.dump(rapport, fl, indent=2, default=str)\n    \n    return rapport\n\n# Assembler les résultats\nhits_par_ttp = {\n    'T1003': hits,        # Credential dumping\n    'T1021': hits,        # Lateral movement  \n}\ngenerer_rapport_hunt(hunt, hits_par_ttp)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l6-m4-ex1",
+      "title": "Détecter un pattern de credential dumping",
+      "description": "Chercher des indicateurs de mimikatz dans des logs",
+      "instructions": "Soit :\n```python\nimport re\nlogs = [\n    \"powershell.exe started\",\n    \"mimikatz.exe sekurlsa::logonpasswords\",\n    \"notepad.exe opened file\"\n]\npattern = re.compile(r'mimikatz|sekurlsa|lsadump', re.I)\n```\nComptez les lignes suspectes et affichez :\n```\nIndicateurs T1003 : 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Indicateurs T1003 : 1",
+      "correction": "import re\nlogs = [\n    \"powershell.exe started\",\n    \"mimikatz.exe sekurlsa::logonpasswords\",\n    \"notepad.exe opened file\"\n]\npattern = re.compile(r'mimikatz|sekurlsa|lsadump', re.I)\nhits = sum(1 for l in logs if pattern.search(l))\nprint(f\"Indicateurs T1003 : {hits}\")",
+      "explanation": "T1003 (Credential Dumping) est l'une des techniques les plus critiques — elle permet à l'attaquant d'extraire tous les mots de passe en mémoire. La détection par regex sur les logs de processus est le moyen le plus simple d'identifier ces outils."
+    },
+    {
+      "id": "py-l6-m4-ex2",
+      "title": "Identifier un host scannant plusieurs destinations",
+      "description": "Détecter un mouvement latéral par volume de connexions",
+      "instructions": "Soit :\n```python\nconns = [\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.10\", \"port\": 445},\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.11\", \"port\": 445},\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.12\", \"port\": 445},\n    {\"src\": \"10.0.0.7\", \"dst\": \"8.8.8.8\",   \"port\": 53},\n]\n```\nAffichez le host avec le plus de destinations uniques sur port 445 :\n```\nHost suspect : 10.0.0.5 (3 destinations)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Host suspect : 10.0.0.5 (3 destinations)",
+      "correction": "from collections import defaultdict\nconns = [\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.10\", \"port\": 445},\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.11\", \"port\": 445},\n    {\"src\": \"10.0.0.5\", \"dst\": \"10.0.0.12\", \"port\": 445},\n    {\"src\": \"10.0.0.7\", \"dst\": \"8.8.8.8\",   \"port\": 53},\n]\npar_src = defaultdict(set)\nfor c in conns:\n    if c[\"port\"] == 445:\n        par_src[c[\"src\"]].add(c[\"dst\"])\nif par_src:\n    host = max(par_src, key=lambda x: len(par_src[x]))\n    print(f\"Host suspect : {host} ({len(par_src[host])} destinations)\")",
+      "explanation": "Le mouvement latéral via SMB (port 445) est caractéristique de PsExec, WMI, et des outils comme Cobalt Strike. Un host interne qui se connecte à 10+ autres machines en quelques minutes est un IOC fort de lateral movement."
+    },
+    {
+      "id": "py-l6-m4-ex3",
+      "title": "Résumer un rapport de hunt",
+      "description": "Produire un résumé exécutif d'un hunt terminé",
+      "instructions": "Soit :\n```python\nfindings = [\n    {\"ttp\": \"T1003\", \"hits\": 2},\n    {\"ttp\": \"T1021\", \"hits\": 4},\n]\n```\nAffichez le statut du hunt et le total de hits :\n```\nHunt : CONFIRMÉ — 6 indicateurs\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Hunt : CONFIRMÉ — 6 indicateurs",
+      "correction": "findings = [\n    {\"ttp\": \"T1003\", \"hits\": 2},\n    {\"ttp\": \"T1021\", \"hits\": 4},\n]\ntotal = sum(f[\"hits\"] for f in findings)\nstatut = \"CONFIRMÉ\" if total > 0 else \"NÉGATIF\"\nprint(f\"Hunt : {statut} — {total} indicateurs\")",
+      "explanation": "Un hunt avec des findings est un succès — il a prouvé sa valeur. Un hunt négatif est aussi utile car il réduit la surface d'incertitude. La documentation des deux est essentielle pour améliorer continuellement le programme de hunting."
+    }
+  ]
+}

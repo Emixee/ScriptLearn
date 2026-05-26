@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m5",
+  "title": "Analyse de fichiers PCAP (paquets réseau)",
+  "lang": "python",
+  "level": 4,
+  "order": 5,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Format PCAP — structure binaire",
+      "content": "Les captures réseau PCAP (Packet CAPture) sont des fichiers binaires utilisés par Wireshark, tcpdump, tshark. Comprendre leur structure permet de les analyser sans outils tiers.\n\n**Structure PCAP** :\n```\n[Global Header 24 bytes]\n  Magic Number: 0xd4c3b2a1 (little-endian)\n  Version Major/Minor\n  Snaplen, LinkType\n[Packet Record] x N\n  ts_sec + ts_usec (timestamp)\n  incl_len (longueur capturée)\n  orig_len (longueur originale)\n  [Packet Data]\n```\n\n```python\nimport struct\n\nPCAP_MAGIC_LE = 0xd4c3b2a1  # Little-endian\nPCAP_MAGIC_BE = 0xa1b2c3d4  # Big-endian\n\nETHERTYPES = {\n    0x0800: \"IPv4\",\n    0x0806: \"ARP\",\n    0x86DD: \"IPv6\",\n    0x8100: \"VLAN\"\n}\n\nIP_PROTOCOLS = {\n    1:  \"ICMP\",\n    6:  \"TCP\",\n    17: \"UDP\",\n    47: \"GRE\"\n}\n```"
+    },
+    {
+      "section": "Parser un fichier PCAP manuellement",
+      "content": "```python\nimport struct\nfrom datetime import datetime\n\ndef parser_pcap(chemin):\n    \"\"\"Parse un fichier PCAP et extrait les métadonnées des paquets.\"\"\"\n    paquets = []\n    \n    try:\n        with open(chemin, \"rb\") as f:\n            # Lire le header global\n            header = f.read(24)\n            if len(header) < 24:\n                return []\n            \n            magic = struct.unpack(\"<I\", header[:4])[0]\n            if magic == PCAP_MAGIC_LE:\n                endian = \"<\"  # Little-endian\n            elif magic == PCAP_MAGIC_BE:\n                endian = \">\"  # Big-endian\n            else:\n                print(f\"Format non reconnu: {hex(magic)}\")\n                return []\n            \n            # Lire les paquets\n            idx = 0\n            while True:\n                rec_header = f.read(16)\n                if len(rec_header) < 16:\n                    break\n                \n                ts_sec, ts_usec, incl_len, orig_len = struct.unpack(f\"{endian}IIII\", rec_header)\n                data = f.read(incl_len)\n                \n                paquets.append({\n                    \"index\": idx,\n                    \"timestamp\": datetime.fromtimestamp(ts_sec).isoformat(),\n                    \"taille\": orig_len,\n                    \"data\": data\n                })\n                idx += 1\n        \n        print(f\"{len(paquets)} paquets trouvés\")\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n    \n    return paquets\n```"
+    },
+    {
+      "section": "Extraire les connexions IP",
+      "content": "```python\nimport struct\n\ndef extraire_ip_ethernet(data):\n    \"\"\"\n    Extrait les IPs source et destination d'un paquet Ethernet/IPv4.\n    Structure Ethernet : 6+6+2 = 14 bytes header\n    Structure IPv4 : variable (IHL field)\n    \"\"\"\n    if len(data) < 34:  # Ethernet (14) + IP min (20)\n        return None, None\n    \n    # Ethertype (bytes 12-13)\n    ethertype = struct.unpack(\">H\", data[12:14])[0]\n    if ethertype != 0x0800:  # Seulement IPv4\n        return None, None\n    \n    # IP header commence à byte 14\n    ip_header = data[14:]\n    version_ihl = ip_header[0]\n    ihl = (version_ihl & 0x0F) * 4  # Longueur header IP\n    \n    # Protocole\n    protocole = ip_header[9]\n    \n    # IPs (bytes 12-15 et 16-19 du header IP)\n    ip_src = \".\".join(str(b) for b in ip_header[12:16])\n    ip_dst = \".\".join(str(b) for b in ip_header[16:20])\n    \n    # Port TCP/UDP (après header IP)\n    port_src, port_dst = None, None\n    if protocole in (6, 17) and len(ip_header) >= ihl + 4:\n        tcp_udp = ip_header[ihl:]\n        port_src = struct.unpack(\">H\", tcp_udp[:2])[0]\n        port_dst = struct.unpack(\">H\", tcp_udp[2:4])[0]\n    \n    return {\n        \"src\": ip_src, \"dst\": ip_dst,\n        \"proto\": IP_PROTOCOLS.get(protocole, str(protocole)),\n        \"sport\": port_src, \"dport\": port_dst\n    }\n\n# Tester sur des données simulées (paquet IPv4 fictif)\ntest_data = bytes(14) + bytes([0x45, 0, 0, 40, 0,0,0,0, 64, 6, 0, 0, 10,0,0,1, 185,220,101,3]) + bytes(20)\nresult = extraire_ip_ethernet(test_data)\nif result:\n    print(f\"{result['src']}:{result['sport']} → {result['dst']}:{result['dport']} [{result['proto']}]\")\n```"
+    },
+    {
+      "section": "Analyser avec tshark (recommandé en production)",
+      "content": "```python\nimport subprocess\nimport json\nimport os\n\ndef analyser_pcap_tshark(chemin_pcap):\n    \"\"\"\n    Utilise tshark pour analyser un PCAP (plus fiable que le parsing manuel).\n    Installer : choco install wireshark (Windows) ou apt install tshark\n    \"\"\"\n    if not os.path.exists(chemin_pcap):\n        print(f\"Fichier non trouvé : {chemin_pcap}\")\n        return []\n    \n    try:\n        result = subprocess.run(\n            [\n                \"tshark\", \"-r\", chemin_pcap,\n                \"-T\", \"fields\",\n                \"-e\", \"frame.number\",\n                \"-e\", \"ip.src\",\n                \"-e\", \"ip.dst\",\n                \"-e\", \"tcp.dstport\",\n                \"-e\", \"udp.dstport\",\n                \"-e\", \"frame.len\"\n            ],\n            capture_output=True, text=True, timeout=30\n        )\n        \n        connexions = []\n        for ligne in result.stdout.splitlines():\n            parts = ligne.split(\"\\t\")\n            if len(parts) >= 4:\n                connexions.append({\n                    \"num\": parts[0],\n                    \"src\": parts[1],\n                    \"dst\": parts[2],\n                    \"port\": parts[3] or parts[4]\n                })\n        return connexions\n    except FileNotFoundError:\n        print(\"tshark non installé\")\n        return []\n    except Exception as e:\n        print(f\"Erreur tshark : {e}\")\n        return []\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m5-ex1",
+      "title": "Lire le magic number d'un PCAP",
+      "description": "Vérifier le format d'un fichier PCAP par son magic number",
+      "instructions": "Créez un faux fichier PCAP avec les 4 premiers bytes `b\"\\xd4\\xc3\\xb2\\xa1\"` (magic number little-endian). Lisez-le et vérifiez que c'est bien un PCAP :\n```\nFormat PCAP valide : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Format PCAP valide : True",
+      "correction": "import struct\n# Créer un faux PCAP\nwith open(\"test.pcap\", \"wb\") as f:\n    f.write(b\"\\xd4\\xc3\\xb2\\xa1\" + bytes(20))\n# Vérifier\nwith open(\"test.pcap\", \"rb\") as f:\n    magic = struct.unpack(\"<I\", f.read(4))[0]\nprint(f\"Format PCAP valide : {magic == 0xd4c3b2a1}\")",
+      "explanation": "`struct.unpack('<I', ...)` décode 4 bytes en entier non-signé little-endian. Le magic number `0xd4c3b2a1` identifie les PCAP little-endian (standard sur Windows/Linux x86)."
+    },
+    {
+      "id": "py-l4-m5-ex2",
+      "title": "Extraire des IPs d'un header IP",
+      "description": "Parser un header IPv4 pour extraire les adresses",
+      "instructions": "Un header IP contient l'IP source aux octets 12-15 et destination aux octets 16-19. Parsez ce header :\n```python\nip_header = bytes([0x45,0,0,40, 0,0,0,0, 64,6,0,0, 185,220,101,3, 10,0,0,1])\n```\nAffichez :\n```\nSrc: 185.220.101.3 → Dst: 10.0.0.1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Src: 185.220.101.3 → Dst: 10.0.0.1",
+      "correction": "ip_header = bytes([0x45,0,0,40, 0,0,0,0, 64,6,0,0, 185,220,101,3, 10,0,0,1])\nip_src = \".\".join(str(b) for b in ip_header[12:16])\nip_dst = \".\".join(str(b) for b in ip_header[16:20])\nprint(f\"Src: {ip_src} → Dst: {ip_dst}\")",
+      "explanation": "Le slicing `[12:16]` extrait 4 octets. `str(b) for b in ...` convertit chaque octet en décimal. `\".\"join()` les concatène avec des points. Comprendre le format des headers IP est essentiel pour l'analyse de PCAP à bas niveau."
+    },
+    {
+      "id": "py-l4-m5-ex3",
+      "title": "Compter les flux par IP destination",
+      "description": "Analyser une liste de connexions et compter par IP de destination",
+      "instructions": "Soit :\n```python\nflux = [\n    {\"src\": \"10.0.0.1\", \"dst\": \"185.220.101.3\", \"port\": 443},\n    {\"src\": \"10.0.0.2\", \"dst\": \"185.220.101.3\", \"port\": 443},\n    {\"src\": \"10.0.0.1\", \"dst\": \"8.8.8.8\", \"port\": 53},\n]\n```\nAffichez la destination la plus fréquente :\n```\nTop destination : 185.220.101.3 (2 flux)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Top destination : 185.220.101.3 (2 flux)",
+      "correction": "from collections import Counter\nflux = [\n    {\"src\": \"10.0.0.1\", \"dst\": \"185.220.101.3\", \"port\": 443},\n    {\"src\": \"10.0.0.2\", \"dst\": \"185.220.101.3\", \"port\": 443},\n    {\"src\": \"10.0.0.1\", \"dst\": \"8.8.8.8\", \"port\": 53},\n]\nc = Counter(f[\"dst\"] for f in flux)\ntop, n = c.most_common(1)[0]\nprint(f\"Top destination : {top} ({n} flux)\")",
+      "explanation": "Analyser les destinations les plus fréquentes dans un PCAP révèle les serveurs C2 (Command & Control) ou les exfiltrations de données. C'est une technique fondamentale de l'analyse de trafic."
+    }
+  ]
+}

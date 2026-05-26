@@ -1,0 +1,72 @@
+{
+  "id": "bash-l2-m2",
+  "title": "Boucles",
+  "level": 2,
+  "lang": "bash",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "La boucle for",
+      "content": "**Itérer sur une liste :**\n```bash\nfor fruit in pomme banane cerise; do\n    echo \"Fruit : $fruit\"\ndone\n```\n\n**Itérer avec une plage numérique :**\n```bash\n# Syntaxe C-like\nfor ((i=1; i<=5; i++)); do\n    echo \"Compteur : $i\"\ndone\n\n# Avec {début..fin}\nfor i in {1..5}; do\n    echo \"$i\"\ndone\n\n# Avec pas : {1..10..2} → 1 3 5 7 9\nfor i in {0..10..2}; do\n    echo -n \"$i \"\ndone\n```\n\n**Itérer sur des fichiers :**\n```bash\n# Tous les .txt du dossier courant\nfor fichier in *.txt; do\n    echo \"Traitement : $fichier\"\ndone\n```"
+    },
+    {
+      "title": "La boucle while",
+      "content": "`while` s'exécute tant que la condition est vraie :\n\n```bash\ncompteur=1\nwhile [ $compteur -le 5 ]; do\n    echo \"Tour $compteur\"\n    ((compteur++))\ndone\n```\n\n**Lire un fichier ligne par ligne :**\n```bash\nwhile IFS= read -r ligne; do\n    echo \"→ $ligne\"\ndone < fichier.txt\n```\n\n**Boucle infinie avec condition de sortie :**\n```bash\ntentatives=0\nwhile true; do\n    ((tentatives++))\n    echo \"Tentative $tentatives\"\n    [ $tentatives -ge 3 ] && break\ndone\necho \"Fin après $tentatives tentatives\"\n```"
+    },
+    {
+      "title": "La boucle until",
+      "content": "`until` est l'inverse de `while` : elle s'exécute tant que la condition est **fausse**.\n\n```bash\ncompteur=1\nuntil [ $compteur -gt 5 ]; do\n    echo \"Compteur : $compteur\"\n    ((compteur++))\ndone\n```\n\n**Attendre qu'un fichier existe :**\n```bash\nuntil [ -f \"/tmp/signal.txt\" ]; do\n    echo \"En attente...\"\n    sleep 1\ndone\necho \"Signal reçu !\"\n```\n\n`until` est moins courant que `while` mais peut rendre certaines conditions plus lisibles : on exprime ce qu'on attend plutôt que ce qu'on fuit."
+    },
+    {
+      "title": "break et continue",
+      "content": "**`break`** — quitter la boucle immédiatement :\n```bash\nfor i in {1..10}; do\n    if [ $i -eq 5 ]; then\n        echo \"Stop à $i\"\n        break\n    fi\n    echo $i\ndone\n# Affiche : 1 2 3 4 Stop à 5\n```\n\n**`continue`** — passer à l'itération suivante :\n```bash\nfor i in {1..6}; do\n    if [ $((i % 2)) -eq 0 ]; then\n        continue   # sauter les pairs\n    fi\n    echo $i\ndone\n# Affiche : 1 3 5\n```\n\n**`break N`** — sortir de N niveaux de boucles imbriquées :\n```bash\nfor i in 1 2 3; do\n    for j in a b c; do\n        [ \"$j\" = \"b\" ] && break 2  # sort des DEUX boucles\n        echo \"$i-$j\"\n    done\ndone\n```"
+    },
+    {
+      "title": "Itérer sur un tableau",
+      "content": "Les tableaux Bash permettent des boucles très pratiques :\n\n```bash\nnoms=(\"Alice\" \"Bob\" \"Charlie\" \"Diana\")\n\n# Itérer sur les valeurs\nfor nom in \"${noms[@]}\"; do\n    echo \"Bonjour $nom\"\ndone\n\n# Itérer avec les indices\nfor i in \"${!noms[@]}\"; do\n    echo \"$i : ${noms[$i]}\"\ndone\n# Affiche : 0 : Alice  1 : Bob  2 : Charlie  3 : Diana\n\n# Itérer sur la sortie d'une commande\nfor fichier in $(ls /tmp/*.log 2>/dev/null); do\n    echo \"Log : $fichier\"\ndone\n```\n\n> **Astuce :** Utilisez `\"${tableau[@]}\"` avec des guillemets doubles pour gérer correctement les noms contenant des espaces."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m2-1",
+      "order": 1,
+      "title": "Table de multiplication",
+      "instructions": "Créez une boucle `for` qui affiche la table de multiplication de 3 :\n```\n3 x 1 = 3\n3 x 2 = 6\n...\n3 x 5 = 15\n```\n\nStoppez à 5.",
+      "expectedOutput": "3 x 5 = 15",
+      "validationType": "contains",
+      "correction": "for i in {1..5}; do\n    echo \"3 x $i = $((3 * i))\"\ndone",
+      "explanation": "`{1..5}` génère la séquence 1 2 3 4 5. `$(( ))` fait le calcul arithmétique. Cette syntaxe est plus lisible et plus rapide que d'utiliser `seq 1 5`."
+    },
+    {
+      "id": "ex-bash-l2-m2-2",
+      "order": 2,
+      "title": "Compter avec while",
+      "instructions": "Utilisez une boucle `while` pour afficher les nombres pairs de 2 à 10 :\n```\n2\n4\n6\n8\n10\n```",
+      "expectedOutput": "10",
+      "validationType": "contains",
+      "correction": "n=2\nwhile [ $n -le 10 ]; do\n    echo $n\n    ((n+=2))\ndone",
+      "explanation": "`((n+=2))` est l'équivalent de `n=$((n+2))`. Les doubles parenthèses permettent l'arithmétique directe sans `$`. `((n++))` incrémente, `((n+=2))` ajoute 2."
+    },
+    {
+      "id": "ex-bash-l2-m2-3",
+      "order": 3,
+      "title": "Filtrer avec continue",
+      "instructions": "Créez une boucle sur les nombres 1 à 10 qui :\n- Saute les multiples de 3 avec `continue`\n- Affiche les autres\n\nRésultat attendu :\n```\n1 2 4 5 7 8 10\n```\n(sur une ligne ou plusieurs, les chiffres doivent apparaître)",
+      "expectedOutput": "10",
+      "validationType": "contains",
+      "correction": "for i in {1..10}; do\n    if [ $((i % 3)) -eq 0 ]; then\n        continue\n    fi\n    echo -n \"$i \"\ndone\necho",
+      "explanation": "`$((i % 3))` calcule le reste de la division par 3 (modulo). Si le reste est 0, le nombre est multiple de 3 et on le saute avec `continue`. `echo -n` affiche sans saut de ligne, et le `echo` final ajoute la dernière ligne."
+    },
+    {
+      "id": "ex-bash-l2-m2-4",
+      "order": 4,
+      "title": "Traiter une liste de noms",
+      "instructions": "Définissez un tableau `noms=(\"Alice\" \"Bob\" \"Charlie\")` et affichez un message de bienvenue pour chaque personne :\n\nRésultat attendu :\n```\nBonjour Alice !\nBonjour Bob !\nBonjour Charlie !\n```",
+      "expectedOutput": "Bonjour Charlie",
+      "validationType": "contains",
+      "correction": "noms=(\"Alice\" \"Bob\" \"Charlie\")\nfor nom in \"${noms[@]}\"; do\n    echo \"Bonjour $nom !\"\ndone",
+      "explanation": "`\"${noms[@]}\"` (avec guillemets doubles) est la façon correcte d'itérer sur un tableau. Sans guillemets, les éléments contenant des espaces seraient splitttés en mots séparés. `@` signifie « tous les éléments »."
+    }
+  ]
+}

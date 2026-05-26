@@ -1,0 +1,62 @@
+{
+  "id": "bash-l2-m6",
+  "title": "Débogage et robustesse",
+  "level": 2,
+  "lang": "bash",
+  "order": 6,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "set -euo pipefail",
+      "content": "Ces options transforment un script fragile en un script robuste :\n\n```bash\n#!/bin/bash\nset -e           # Arrêter si une commande échoue (exit ≠ 0)\nset -u           # Erreur si variable non définie\nset -o pipefail  # Échec si n'importe quelle commande d'un pipe échoue\n\n# Équivalent compact\nset -euo pipefail\n```\n\n**Pourquoi c'est important :**\n```bash\n# Sans set -e :\nrm -rf /chemin/inexistant  # échoue silencieusement\necho \"suite du script\"      # s'exécute quand même !\n\n# Avec set -e :\nset -e\nrm -rf /chemin/inexistant  # échoue\necho \"ne s'exécute jamais\" # le script s'arrête à l'erreur\n```\n\n**Exceptions ciblées :**\n```bash\nset -e\n# Ignorer l'échec d'une commande spécifique\ncommande_optionnelle || true\n\n# Ou avec if (n'active pas set -e)\nif commande_qui_peut_echouer; then\n    echo \"Réussi\"\nfi\n```"
+    },
+    {
+      "title": "set -x : mode trace",
+      "content": "`set -x` affiche chaque commande avant de l'exécuter (mode débogage) :\n\n```bash\nset -x\n\nnoms=(\"Alice\" \"Bob\")\nfor nom in \"${noms[@]}\"; do\n    echo \"Bonjour $nom\"\ndone\n\nset +x  # désactiver le mode trace\n```\n\nSortie :\n```\n+ noms=([0]=\"Alice\" [1]=\"Bob\")\n+ for nom in \"${noms[@]}\"\n+ echo 'Bonjour Alice'\nBonjour Alice\n+ for nom in \"${noms[@]}\"\n+ echo 'Bonjour Bob'\nBonjour Bob\n+ set +x\n```\n\n**Déboguer seulement une section :**\n```bash\n# Activer temporairement\n{ set -x; commande_suspecte; set +x; } 2>&1\n\n# Ou avec une fonction\ndebug() {\n    local PS4='+ (${BASH_SOURCE}:${LINENO}): '\n    set -x\n    \"$@\"\n    set +x\n}\ndebug ma_fonction arg1 arg2\n```"
+    },
+    {
+      "title": "trap — gestionnaire de signaux",
+      "content": "`trap` exécute des commandes en réponse à des événements :\n\n```bash\n#!/bin/bash\n\n# Nettoyage automatique à la sortie\ntmp=$(mktemp)\ntrap 'rm -f \"$tmp\"; echo \"Nettoyage effectué\"' EXIT\n\n# Gestion de Ctrl+C\ntrap 'echo \"\\nInterrompu par l utilisateur\"; exit 1' INT\n\n# Gestion des erreurs\ntrap 'echo \"Erreur ligne $LINENO : $BASH_COMMAND\"' ERR\n\n# Suite du script...\necho \"Travail en cours...\"\necho \"données\" > \"$tmp\"\ncat \"$tmp\"\n# Le fichier est automatiquement supprimé à la fin\n```\n\n**Signaux courants :**\n| Signal | Événement |\n|--------|----------|\n| `EXIT` | Sortie du script (normal ou erreur) |\n| `INT` | Ctrl+C (interruption) |\n| `TERM` | Signal de terminaison |\n| `ERR` | Erreur (avec set -e) |\n| `DEBUG` | Avant chaque commande |"
+    },
+    {
+      "title": "Gestion robuste des erreurs",
+      "content": "```bash\n#!/bin/bash\nset -euo pipefail\n\n# Fonction d'erreur centralisée\nerreur() {\n    local message=\"$1\"\n    local code=\"${2:-1}\"\n    echo \"[ERREUR] $(date +%H:%M:%S) — $message\" >&2\n    exit \"$code\"\n}\n\n# Vérifications en entrée\n[ $# -eq 0 ] && erreur \"Aucun argument fourni. Usage : $0 <dossier>\"\n[ -d \"$1\" ] || erreur \"'$1' n'est pas un dossier valide\" 2\n\n# Commande avec repli\ndossier_cible=\"${2:-/tmp/backup}\"\nmkdir -p \"$dossier_cible\" || erreur \"Impossible de créer $dossier_cible\"\n\n# Vérifier un outil disponible\ncommand -v rsync >/dev/null 2>&1 || erreur \"rsync n'est pas installé\"\n\necho \"Tout est prêt.\"\n```"
+    },
+    {
+      "title": "Techniques de débogage avancées",
+      "content": "```bash\n# 1. Afficher la valeur de variables\ndeclare -p ma_variable   # affiche le type et la valeur\n\n# 2. Trace avec numéro de ligne\nPS4='+(${BASH_SOURCE}:${LINENO}): '\nset -x\n\n# 3. Vérifier le code de retour après chaque commande\ncommande\ncode=$?\n[ $code -eq 0 ] || echo \"Erreur : code $code\" >&2\n\n# 4. Logger dans un fichier\nexec 2>>/tmp/mon_script_errors.log  # toutes les erreurs dans un fichier\n\n# 5. Tester sans exécuter (dry-run)\nDRY_RUN=true\nrm_safe() {\n    if $DRY_RUN; then\n        echo \"[DRY-RUN] rm -f $*\"\n    else\n        rm -f \"$@\"\n    fi\n}\n\n# 6. shellcheck — outil externe d'analyse statique\n# shellcheck mon_script.sh  (à installer séparément)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m6-1",
+      "order": 1,
+      "title": "Activer les options de sécurité",
+      "instructions": "Écrivez un script qui :\n1. Active `set -euo pipefail`\n2. Définit une variable `dossier=\"$HOME/scriptlearn\"`\n3. Vérifie qu'elle est non-vide avec `[ -n \"$dossier\" ]`\n4. Affiche `Configuration valide`\n\nRésultat attendu :\n```\nConfiguration valide\n```",
+      "expectedOutput": "Configuration valide",
+      "validationType": "contains",
+      "correction": "set -euo pipefail\n\ndossier=\"$HOME/scriptlearn\"\n\nif [ -n \"$dossier\" ]; then\n    echo \"Configuration valide\"\nfi",
+      "explanation": "`set -euo pipefail` est la combinaison recommandée pour les scripts de production. `-e` : arrêt sur erreur, `-u` : erreur si variable non définie, `-o pipefail` : propagation des erreurs dans les pipes. Avec ces options, un `echo $variable_non_definie` causerait une erreur au lieu de rien afficher."
+    },
+    {
+      "id": "ex-bash-l2-m6-2",
+      "order": 2,
+      "title": "Trap pour nettoyage",
+      "instructions": "Créez un script qui :\n1. Crée un fichier temporaire avec `tmp=$(mktemp)`\n2. Installe un `trap` pour supprimer `$tmp` à la sortie (`EXIT`)\n3. Écrit `test` dans `$tmp`\n4. Affiche `Fichier créé et sera nettoyé`\n\nRésultat attendu :\n```\nFichier créé et sera nettoyé\n```",
+      "expectedOutput": "nettoyé",
+      "validationType": "contains",
+      "correction": "tmp=$(mktemp)\ntrap 'rm -f \"$tmp\"' EXIT\n\necho \"test\" > \"$tmp\"\necho \"Fichier créé et sera nettoyé\"",
+      "explanation": "`mktemp` crée un fichier temporaire avec un nom unique dans `/tmp`. `trap '...' EXIT` garantit que le code s'exécute à la fin du script, que ce soit une fin normale, une erreur, ou même un Ctrl+C. C'est le mécanisme RAII (Resource Acquisition Is Initialization) de Bash."
+    },
+    {
+      "id": "ex-bash-l2-m6-3",
+      "order": 3,
+      "title": "Débogage avec set -x",
+      "instructions": "Écrivez un script avec `set -x` activé, créez une variable `n=5` et calculez `n*n`. Désactivez ensuite le mode trace avec `set +x`.\n\nObservez les lignes `+` dans la sortie du terminal.",
+      "expectedOutput": "25",
+      "validationType": "contains",
+      "correction": "set -x\nn=5\nresultat=$((n * n))\nset +x\necho $resultat",
+      "explanation": "`set -x` affiche chaque commande précédée de `+` avant de l'exécuter. Vous verrez `+ n=5`, `+ resultat=25`, `+ set +x`. C'est l'outil de débogage principal pour comprendre ce que fait votre script étape par étape."
+    }
+  ]
+}

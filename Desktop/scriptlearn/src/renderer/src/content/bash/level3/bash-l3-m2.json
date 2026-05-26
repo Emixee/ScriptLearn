@@ -1,0 +1,62 @@
+{
+  "id": "bash-l3-m2",
+  "title": "Processus et jobs",
+  "level": 3,
+  "lang": "bash",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Gestion des processus",
+      "content": "```bash\n# Lister les processus\nps aux                    # tous les processus\nps aux | grep \"firefox\"   # chercher un processus\npgrep firefox             # PID du processus\n\n# Tuer un processus\nkill PID          # signal TERM (arrêt propre)\nkill -9 PID       # signal KILL (force)\nkillall firefox   # tuer par nom\npkill -f \"python\" # tuer par motif dans la commande\n\n# Informations sur les processus\ntop               # liste interactive\nhtop              # version améliorée\npidof bash        # PID d'un programme\n\n# PID du processus courant et du parent\necho \"Mon PID : $$\"\necho \"PID parent : $PPID\"\necho \"Dernier PID en arrière-plan : $!\"\n```\n\n**Codes de sortie :**\n```bash\ncommande\necho $?    # 0 = succès, non-zéro = erreur\n\nls /tmp && echo \"OK\" || echo \"Erreur\"\n```"
+    },
+    {
+      "title": "Jobs et arrière-plan",
+      "content": "```bash\n# Lancer en arrière-plan avec &\nsleep 10 &\necho \"PID du job : $!\"\n\n# Lister les jobs actifs\njobs\njobs -l   # avec les PIDs\n\n# Contrôle des jobs\nbg %1    # reprendre job 1 en arrière-plan\nfg %1    # ramener job 1 au premier plan\nfg       # ramener le dernier job\n\n# Suspendre un processus en cours\n# Ctrl+Z  suspend et met en arrière-plan\n\n# Attendre la fin d'un job\nsleep 5 &\nwait $!         # attendre le dernier job lancé\necho \"Terminé\"\n\n# Attendre plusieurs jobs\nproc1 &\npid1=$!\nproc2 &\npid2=$!\nwait $pid1 $pid2\necho \"Les deux processus sont terminés\"\n```"
+    },
+    {
+      "title": "Signaux",
+      "content": "```bash\n# Les signaux principaux\n# SIGHUP  (1)  — raccroché / recharger config\n# SIGINT  (2)  — Ctrl+C\n# SIGKILL (9)  — tuer immédiatement (ne peut pas être ignoré)\n# SIGTERM (15) — arrêt propre (par défaut)\n# SIGSTOP (19) — suspendre\n# SIGCONT (18) — reprendre\n\n# Envoyer un signal\nkill -TERM $PID\nkill -HUP $PID    # recharger (nginx, sshd...)\n\n# Capturer des signaux avec trap\ntrap 'echo \"Ctrl+C reçu — nettoyage...\"' INT\ntrap 'echo \"Arrêt demandé\"' TERM\n\n# Ignorer un signal\ntrap '' INT   # ignore Ctrl+C\n\n# Restaurer le comportement par défaut\ntrap - INT    # remet le comportement par défaut\n\n# Exemple complet\ncleanup() {\n    echo \"Suppression des fichiers temporaires...\"\n    rm -f /tmp/mon_script_*\n    exit 0\n}\ntrap cleanup EXIT INT TERM\n```"
+    },
+    {
+      "title": "Substitution de processus",
+      "content": "La substitution de processus `<()` et `>()` permet de traiter la sortie de commandes comme des fichiers :\n\n```bash\n# Comparer deux listes triées sans créer de fichiers\ndiff <(ls dir1/) <(ls dir2/)\n\n# Traiter la sortie d'une commande comme un fichier\nwhile IFS= read -r ligne; do\n    echo \"Ligne : $ligne\"\ndone < <(find /tmp -name '*.log' -newer /tmp/ref)\n\n# tee vers plusieurs processus\ncommande | tee >(grep ERROR > errors.log) >(grep WARN > warnings.log) > /dev/null\n\n# Comparaison de deux commandes\ndiff <(sort fichier1.txt) <(sort fichier2.txt)\n\n# Avantage : pas de fichiers temporaires, pipe bidirectionnel possible\n```\n\n**Différence `<()` vs `$()`:**\n- `$()` — capture la sortie dans une variable\n- `<()` — fournit la sortie comme un descripteur de fichier (FD)"
+    },
+    {
+      "title": "Parallélisme avec xargs et GNU parallel",
+      "content": "```bash\n# xargs : passer des arguments depuis stdin\necho \"fichier1 fichier2 fichier3\" | xargs ls -la\n\n# Exécuter en parallèle\nfind . -name '*.log' | xargs -P 4 gzip\n# -P 4 : 4 processus en parallèle\n\n# xargs avec argument nommé\nfind . -name '*.jpg' | xargs -I{} convert {} {}.png\n\n# Lancer plusieurs tâches en parallèle dans un script\nfor i in 1 2 3 4; do\n    traiter $i &\ndone\nwait   # attendre tous les jobs\n\n# Limite le nombre de jobs simultanés\nmax_jobs=3\nfor item in \"${liste[@]}\"; do\n    # Attendre si trop de jobs\n    while [ $(jobs -r | wc -l) -ge $max_jobs ]; do\n        sleep 0.1\n    done\n    traiter \"$item\" &\ndone\nwait\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m2-1",
+      "order": 1,
+      "title": "Informations sur les processus",
+      "instructions": "Affichez le PID du processus courant et son PID parent, puis lancez un `sleep 1` en arrière-plan et affichez son PID.\n\nRésultat attendu :\n```\nPID courant : ...\nPID parent : ...\nJob lancé : ...\n```",
+      "expectedOutput": "Job lancé",
+      "validationType": "contains",
+      "correction": "echo \"PID courant : $$\"\necho \"PID parent : $PPID\"\nsleep 1 &\necho \"Job lancé : $!\"\nwait",
+      "explanation": "`$$` est le PID du processus bash courant. `$PPID` est le PID du processus parent (le shell ou l'environnement qui a lancé ce script). `$!` contient le PID du dernier processus lancé en arrière-plan avec `&`. `wait` attend qu'il se termine."
+    },
+    {
+      "id": "ex-bash-l3-m2-2",
+      "order": 2,
+      "title": "Trap EXIT",
+      "instructions": "Créez un script qui :\n1. Installe un `trap` sur EXIT qui affiche `Nettoyage terminé`\n2. Crée un fichier temporaire avec `mktemp`\n3. Le supprime dans le trap\n4. Affiche `Travail terminé` à la fin\n\nRésultat attendu :\n```\nTravail terminé\nNettoyage terminé\n```",
+      "expectedOutput": "Nettoyage terminé",
+      "validationType": "contains",
+      "correction": "tmp=$(mktemp)\ntrap 'rm -f \"$tmp\"; echo \"Nettoyage terminé\"' EXIT\n\necho \"données\" > \"$tmp\"\necho \"Travail terminé\"",
+      "explanation": "Le `trap '...' EXIT` s'exécute automatiquement quand le script se termine, qu'il s'agisse d'une fin normale, d'une erreur, ou d'un signal. C'est un mécanisme de nettoyage garanti. Le `trap` s'exécute APRÈS `echo \"Travail terminé\"` puisque c'est lors de la sortie."
+    },
+    {
+      "id": "ex-bash-l3-m2-3",
+      "order": 3,
+      "title": "Substitution de processus",
+      "instructions": "Utilisez `diff` avec `<()` pour comparer deux listes générées dynamiquement :\n- Liste 1 : nombres pairs de 2 à 10 (`seq 2 2 10`)\n- Liste 2 : nombres de 1 à 5 (`seq 1 5`)\n\nRésultat attendu (les différences) :\n```\n< 6\n< 8\n< 10\n---\n> 3\n> 5\n```",
+      "expectedOutput": "---",
+      "validationType": "contains",
+      "correction": "diff <(seq 2 2 10) <(seq 1 5)",
+      "explanation": "`<(commande)` crée un descripteur de fichier virtuel qui contient la sortie de la commande. `diff` reçoit ainsi deux \"fichiers\" sans qu'ils soient jamais écrits sur le disque. C'est plus propre et plus rapide que de créer des fichiers temporaires avec `mktemp`."
+    }
+  ]
+}

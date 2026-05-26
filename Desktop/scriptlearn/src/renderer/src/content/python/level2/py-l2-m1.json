@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m1",
+  "title": "Expressions régulières en Python",
+  "lang": "python",
+  "level": 2,
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Le module re — indispensable en SOC",
+      "content": "Les regex sont **LA** compétence pour analyser des logs. En SOC vous les utiliserez pour extraire IPs, hashs, domaines, emails de milliers de lignes.\n\n```python\nimport re\n\n# Chercher une IP dans une ligne\nligne = \"Failed password from 192.168.1.50 port 22 ssh2\"\nmatch = re.search(r\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\", ligne)\nif match:\n    print(match.group(1))  # 192.168.1.50\n\n# Trouver TOUTES les IPs\ntexte = \"Connexion de 10.0.0.1 vers 185.220.101.3 via 172.16.0.1\"\nips = re.findall(r\"\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\", texte)\nprint(ips)  # ['10.0.0.1', '185.220.101.3', '172.16.0.1']\n```"
+    },
+    {
+      "section": "Patterns essentiels pour l'analyse de logs",
+      "content": "```python\nimport re\n\n# Patterns courants en SOC\nPATTERNS = {\n    \"ipv4\":    r\"\\b\\d{1,3}(?:\\.\\d{1,3}){3}\\b\",\n    \"email\":   r\"[\\w.+-]+@[\\w-]+\\.[\\w.-]+\",\n    \"url\":     r\"https?://[\\w./:%?#=&+-]+\",\n    \"hash_md5\": r\"\\b[0-9a-fA-F]{32}\\b\",\n    \"hash_sha256\": r\"\\b[0-9a-fA-F]{64}\\b\",\n    \"domaine\": r\"\\b(?:[\\w-]+\\.)+[a-zA-Z]{2,}\\b\",\n    \"timestamp_iso\": r\"\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}\"\n}\n\nlog = \"2024-01-15T10:23:45 ERROR: user admin@corp.fr from 10.0.0.50 hash=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4\"\n\nfor nom, pattern in PATTERNS.items():\n    found = re.findall(pattern, log)\n    if found:\n        print(f\"{nom}: {found}\")\n```"
+    },
+    {
+      "section": "Groupes de capture",
+      "content": "```python\nimport re\n\n# Parser une ligne de log SSH\nlog_ssh = \"Jan 15 10:23:45 server sshd[12345]: Failed password for root from 185.220.101.3 port 54321 ssh2\"\n\npattern = r\"(\\w+ \\d+ \\d+:\\d+:\\d+).*?(Failed|Accepted) password for (\\w+) from (\\d+\\.\\d+\\.\\d+\\.\\d+) port (\\d+)\"\n\nmatch = re.search(pattern, log_ssh)\nif match:\n    timestamp, action, user, ip, port = match.groups()\n    print(f\"Temps     : {timestamp}\")\n    print(f\"Action    : {action}\")\n    print(f\"Utilisateur : {user}\")\n    print(f\"IP source : {ip}\")\n    print(f\"Port      : {port}\")\n```"
+    },
+    {
+      "section": "Flags et compilation",
+      "content": "```python\nimport re\n\n# Ignorer la casse\npattern = re.compile(r\"error|warning|critical\", re.IGNORECASE)\nlignes = [\"2024 ERROR: disk full\", \"2024 Warning: low memory\", \"2024 info: ok\"]\n\nfor ligne in lignes:\n    if pattern.search(ligne):\n        print(f\"PROBLÈME : {ligne}\")\n\n# re.MULTILINE pour ^ et $ ligne par ligne\ntexte = \"\"\"10.0.0.1 login\n185.220.101.3 login\n10.0.0.2 login\"\"\"\n\nips_externes = re.findall(r\"^(?!10\\.)(\\d+\\.\\d+\\.\\d+\\.\\d+)\", texte, re.MULTILINE)\nprint(ips_externes)  # ['185.220.101.3']\n\n# Remplacer pour anonymiser\nlog_anonymisé = re.sub(r\"\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\", \"X.X.X.X\", log_ssh)\nprint(log_anonymisé)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m1-ex1",
+      "title": "Extraire des IPs d'un log",
+      "description": "Utiliser re.findall pour extraire toutes les adresses IP",
+      "instructions": "Soit :\n```python\nlog = \"Alert: 10.0.0.5 connected to 185.220.101.3 then 194.165.16.11\"\n```\n\nExtrayez toutes les IPs avec `re.findall` et affichez leur nombre :\n```\nIPs trouvées : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs trouvées : 3",
+      "correction": "import re\nlog = \"Alert: 10.0.0.5 connected to 185.220.101.3 then 194.165.16.11\"\nips = re.findall(r\"\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\", log)\nprint(f\"IPs trouvées : {len(ips)}\")",
+      "explanation": "`re.findall()` renvoie une liste de toutes les correspondances. Le pattern `\\d{1,3}\\.` correspond à 1 à 3 chiffres suivis d'un point."
+    },
+    {
+      "id": "py-l2-m1-ex2",
+      "title": "Valider un hash MD5",
+      "description": "Utiliser re.match pour vérifier le format d'un hash",
+      "instructions": "Vérifiez si la chaîne `h = \"d41d8cd98f00b204e9800998ecf8427e\"` est un hash MD5 valide (32 caractères hexadécimaux) avec `re.fullmatch`.\n\nAffichez :\n```\nHash MD5 valide : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Hash MD5 valide : True",
+      "correction": "import re\nh = \"d41d8cd98f00b204e9800998ecf8427e\"\nvalide = bool(re.fullmatch(r\"[0-9a-fA-F]{32}\", h))\nprint(f\"Hash MD5 valide : {valide}\")",
+      "explanation": "`re.fullmatch()` vérifie que TOUTE la chaîne correspond au pattern. `bool()` convertit le match object en True/False."
+    },
+    {
+      "id": "py-l2-m1-ex3",
+      "title": "Parser une ligne de log Apache",
+      "description": "Extraire les champs d'une ligne de log Apache avec des groupes",
+      "instructions": "Soit :\n```python\nlog = '185.220.101.3 - - [15/Jan/2024:10:23:45] \"GET /admin HTTP/1.1\" 403 512'\n```\n\nExtrayez l'IP source et le code HTTP (403) et affichez :\n```\nIP: 185.220.101.3 | Code: 403\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IP: 185.220.101.3 | Code: 403",
+      "correction": "import re\nlog = '185.220.101.3 - - [15/Jan/2024:10:23:45] \"GET /admin HTTP/1.1\" 403 512'\nm = re.search(r\"(\\d+\\.\\d+\\.\\d+\\.\\d+).*\\\" (\\d{3})\", log)\nif m:\n    print(f\"IP: {m.group(1)} | Code: {m.group(2)}\")",
+      "explanation": "Les groupes de capture `()` permettent d'extraire des parties spécifiques. `m.group(1)` est le premier groupe, `m.group(2)` le second."
+    }
+  ]
+}

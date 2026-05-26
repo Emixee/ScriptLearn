@@ -1,0 +1,62 @@
+{
+  "id": "bash-l3-m6",
+  "title": "sed et awk avancés",
+  "level": 3,
+  "lang": "bash",
+  "order": 6,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "sed avancé",
+      "content": "```bash\n# Adressage par numéro de ligne\nsed -n '3p'          # afficher seulement la ligne 3\nsed '1d'             # supprimer la première ligne\nsed '2,5d'           # supprimer les lignes 2 à 5\nsed -n '2,5p'        # afficher les lignes 2 à 5\nsed '$d'             # supprimer la dernière ligne\n\n# Adressage par motif\nsed '/^#/d'          # supprimer les lignes commençant par #\nsed -n '/ERROR/p'    # afficher les lignes avec ERROR\nsed '/DEBUT/,/FIN/d' # supprimer entre deux motifs\n\n# Commandes multiples\nsed -e 's/foo/bar/' -e 's/baz/qux/'\nsed '{ s/foo/bar/; s/baz/qux/ }'\n\n# Insérer / ajouter des lignes\nsed '2i\\Ligne insérée avant la ligne 2'\nsed '2a\\Ligne ajoutée après la ligne 2'\n\n# Transformation de caractères (y)\necho \"HELLO\" | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'\n# → hello\n\n# sed en mode multi-lignes (N)\nsed 'N; s/\\n/ /' fichier.txt  # joindre deux lignes\n```"
+    },
+    {
+      "title": "awk — variables et fonctions intégrées",
+      "content": "```bash\n# Variables intégrées awk\n# NR    — numéro de ligne courant (Number of Records)\n# NF    — nombre de champs dans la ligne (Number of Fields)\n# FS    — séparateur de champ (Field Separator), défaut : espace\n# OFS   — séparateur de champ en sortie\n# RS    — séparateur d'enregistrement (Record Separator)\n# ORS   — séparateur d'enregistrement en sortie\n# FILENAME — nom du fichier en cours\n\n# Exemples\necho -e \"a b c\\nd e f\" | awk '{ print NR, NF, $NF }'\n# 1 3 c\n# 2 3 f\n\n# Modifier le séparateur de sortie\necho \"a:b:c\" | awk -F: 'BEGIN { OFS=\"|\" } { print $1, $2, $3 }'\n# a|b|c\n\n# Fonctions string\necho \"hello world\" | awk '{ print toupper($0) }'\necho \"HELLO\" | awk '{ print tolower($0) }'\necho \"  trim  \" | awk '{ sub(/^ +/, \"\"); sub(/ +$/, \"\"); print }'\necho \"hello world\" | awk '{ print length($0) }'\necho \"hello\" | awk '{ print substr($0, 2, 3) }' # ell\n```"
+    },
+    {
+      "title": "awk — tableaux et logique",
+      "content": "```bash\n# Tableaux associatifs en awk\necho -e \"chat\\nchien\\nchat\\noiseau\\nchien\\nchien\" | awk '\n{\n    count[$0]++\n}\nEND {\n    for (animal in count) {\n        print animal, count[animal]\n    }\n}'\n# chat 2\n# chien 3\n# oiseau 1\n\n# Grouper et sommer\necho -e \"alice 100\\nbob 200\\nalice 150\\nbob 50\" | awk '\n{ total[$1] += $2 }\nEND {\n    for (name in total) print name, total[name]\n}'\n# alice 250\n# bob 250\n\n# Conditions dans awk\necho -e \"10\\n25\\n5\\n30\\n15\" | awk '\nNR==1 { max=min=$1 }\n{ if ($1 > max) max=$1; if ($1 < min) min=$1 }\nEND { print \"Min:\", min, \"Max:\", max }'\n# Min: 5 Max: 30\n```"
+    },
+    {
+      "title": "awk — rapports formatés",
+      "content": "```bash\n# printf dans awk pour un formatage précis\necho -e \"Alice 85\\nBob 92\\nCharlie 78\" | awk '\nBEGIN { printf \"%-10s %5s %s\\n\", \"Nom\", \"Note\", \"Mention\" }\n{\n    if ($2 >= 90) mention = \"Excellent\"\n    else if ($2 >= 80) mention = \"Bien\"\n    else mention = \"Passable\"\n    printf \"%-10s %5.1f %s\\n\", $1, $2, mention\n}\nEND { printf \"%-10s %5.0f\\n\", \"Total\", NR }'\n\n# Traitement de CSV\ncat donnees.csv | awk -F, '\nNR > 1 {  # sauter l'en-tête\n    nom=$1; valeur=$2\n    gsub(/\"/, \"\", nom)   # retirer les guillemets\n    gsub(/\"/, \"\", valeur)\n    print nom, valeur\n}'\n\n# Filtrer et reformatter un log Apache\n# 127.0.0.1 - - [01/Jan/2024:12:00:00] \"GET /index.html HTTP/1.1\" 200 1024\nawk '$9 == 200 { print $1, $7 }' access.log  # IP et URL des 200\nawk '$9 >= 400 { count[$9]++ } END { for (c in count) print c, count[c] }' access.log\n```"
+    },
+    {
+      "title": "Pipelines complexes",
+      "content": "```bash\n# Compter les mots uniques dans un fichier\ncat fichier.txt | tr '[:upper:]' '[:lower:]' | \\\n    tr -cs '[:alpha:]' '\\n' | sort | uniq -c | sort -rn | head -20\n\n# Analyser des logs : top 10 IPs\ncut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -10\n\n# Extraire des emails uniques\ngrep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' fichier.txt | \\\n    sort -u\n\n# Comparer deux fichiers (lignes communes)\ncomm -12 <(sort fichier1.txt) <(sort fichier2.txt)\n# comm -23 : uniquement dans fichier1\n# comm -13 : uniquement dans fichier2\n\n# Traiter des champs avec paste\npaste <(seq 1 5) <(seq 6 10) | awk '{ print $1 + $2 }'\n# 7 9 11 13 15\n\n# Statistiques rapides sur des nombres\ncat nombres.txt | awk '\n{ sum+=$1; sumsq+=$1^2; n++ }\nEND {\n    mean=sum/n\n    std=sqrt(sumsq/n - mean^2)\n    printf \"Moy: %.2f  Écart-type: %.2f\\n\", mean, std\n}'\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m6-1",
+      "order": 1,
+      "title": "sed pour transformer du texte",
+      "instructions": "En utilisant `sed`, transformez cette liste CSV en affichage lisible :\n\n```bash\ndata=\"alice,30,Paris\\nbob,25,Lyon\\ncharlie,35,Marseille\"\n```\n\nRemplacez les virgules par ` | ` et mettez la première lettre en majuscule.\n\nRésultat attendu :\n```\nAlice | 30 | Paris\nBob | 25 | Lyon\nCharlie | 35 | Marseille\n```",
+      "expectedOutput": "Alice | 30 | Paris",
+      "validationType": "contains",
+      "correction": "data=\"alice,30,Paris\\nbob,25,Lyon\\ncharlie,35,Marseille\"\necho -e \"$data\" | sed 's/,/ | /g' | sed 's/^./\\u&/'",
+      "explanation": "`sed 's/,/ | /g'` remplace toutes les virgules (`g` = global). `sed 's/^./\\u&/'` remplace le premier caractère (`^.`) par sa version majuscule (`\\u&` — `\\u` = majuscule, `&` = la correspondance). Cette syntaxe `\\u` nécessite GNU sed (Linux). Sur macOS, il faudrait `| awk '{print toupper(substr($0,1,1)) substr($0,2)}'`."
+    },
+    {
+      "id": "ex-bash-l3-m6-2",
+      "order": 2,
+      "title": "awk pour compter des occurrences",
+      "instructions": "Comptez les occurrences de chaque mot dans une phrase avec awk.\n\n```bash\nphrase=\"le chat mange le poisson et le chat dort\"\n```\n\nAffichez les mots et leur fréquence, triés par fréquence décroissante.\n\nRésultat attendu :\n```\n3 le\n2 chat\n1 mange\n...\n```",
+      "expectedOutput": "3 le",
+      "validationType": "contains",
+      "correction": "phrase=\"le chat mange le poisson et le chat dort\"\necho \"$phrase\" | tr ' ' '\\n' | awk '{ count[$0]++ } END { for (w in count) print count[w], w }' | sort -rn",
+      "explanation": "`tr ' ' '\\n'` met chaque mot sur une ligne. `awk '{ count[$0]++ }'` utilise un tableau associatif pour compter : la clé est le mot, la valeur son compteur. `END { for (w in count) print count[w], w }` affiche toutes les entrées. `sort -rn` trie numériquement en ordre décroissant."
+    },
+    {
+      "id": "ex-bash-l3-m6-3",
+      "order": 3,
+      "title": "Rapport awk formaté",
+      "instructions": "Formatez un tableau de ventes avec awk :\n\n```bash\nventes=\"Alice 150\\nBob 230\\nCharlie 89\\nDiana 310\"\n```\n\nAffichez un tableau avec total en bas :\n```\nVendeur    Ventes\n---------- ------\nAlice         150\nBob           230\nCharlie        89\nDiana         310\nTotal         779\n```",
+      "expectedOutput": "Total",
+      "validationType": "contains",
+      "correction": "ventes=\"Alice 150\\nBob 230\\nCharlie 89\\nDiana 310\"\necho -e \"$ventes\" | awk '\nBEGIN { printf \"%-10s %6s\\n\", \"Vendeur\", \"Ventes\"; printf \"%-10s %6s\\n\", \"----------\", \"------\" }\n{ total += $2; printf \"%-10s %6d\\n\", $1, $2 }\nEND { printf \"%-10s %6d\\n\", \"Total\", total }'",
+      "explanation": "`printf` en awk fonctionne comme en C : `%-10s` = chaîne alignée à gauche sur 10 caractères, `%6d` = entier aligné à droite sur 6 caractères. `BEGIN` s'exécute avant toutes les lignes (pour l'en-tête), le bloc principal s'exécute pour chaque ligne, `END` après la dernière (pour le total)."
+    }
+  ]
+}

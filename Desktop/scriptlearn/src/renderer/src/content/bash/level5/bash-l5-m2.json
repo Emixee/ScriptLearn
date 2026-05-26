@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m2",
+  "title": "Monitoring haute disponibilité",
+  "level": 5,
+  "lang": "bash",
+  "order": 2,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "title": "Système de monitoring distribué",
+      "content": "```bash\n#!/bin/bash\n# Monitoring distribué avec agrégation\n\ndeclare -A CHECK_RESULTS\ndeclare -a ALERTS\n\nrun_check() {\n    local name=$1 cmd=$2 timeout=${3:-10}\n    local start output exit_code duration\n    \n    start=$(date +%s%N)\n    output=$(timeout \"$timeout\" bash -c \"$cmd\" 2>&1)\n    exit_code=$?\n    duration=$(( ($(date +%s%N) - start) / 1000000 ))\n    \n    CHECK_RESULTS[$name]=\"$exit_code|$duration|$output\"\n    \n    if [ $exit_code -ne 0 ]; then\n        ALERTS+=(\"$name: $output\")\n    fi\n    \n    return $exit_code\n}\n\ngenerate_report() {\n    echo \"=== Rapport de monitoring ===\"\n    echo \"Heure : $(date '+%Y-%m-%d %H:%M:%S')\"\n    echo \"Hôte : $HOSTNAME\"\n    echo \"\"\n    \n    for check in \"${!CHECK_RESULTS[@]}\"; do\n        IFS='|' read -r code duration output <<< \"${CHECK_RESULTS[$check]}\"\n        local status\n        [ $code -eq 0 ] && status=\"OK\" || status=\"FAIL\"\n        printf \"[%-4s] %-30s %5dms\\n\" \"$status\" \"$check\" \"$duration\"\n    done\n    \n    if [ ${#ALERTS[@]} -gt 0 ]; then\n        echo \"\"\n        echo \"=== Alertes ===\"\n        printf '%s\\n' \"${ALERTS[@]}\"\n    fi\n}\n\n# Checks\nrun_check \"disk_root\"    \"df / | awk 'NR==2 {exit ($5+0 > 85)}'\"\nrun_check \"memory\"       \"free | awk '/Mem:/ {exit ($3/$2*100 > 90)}'\"\nrun_check \"internet\"     \"curl -sf --connect-timeout 5 https://google.com > /dev/null\"\n\ngenerate_report\n```"
+    },
+    {
+      "title": "Alertes et escalade",
+      "content": "```bash\n#!/bin/bash\n# Système d'alertes avec déduplication et escalade\n\nALERT_STATE_DIR=\"/tmp/monitor_state\"\nmkdir -p \"$ALERT_STATE_DIR\"\n\n# Envoyer une alerte (déduplication par cooldown)\nsend_alert() {\n    local name=$1 msg=$2 severity=${3:-WARNING}\n    local cooldown=${4:-300}  # 5 min par défaut\n    local state_file=\"$ALERT_STATE_DIR/${name}.last_alert\"\n    local now\n    now=$(date +%s)\n    \n    if [ -f \"$state_file\" ]; then\n        local last_alert\n        last_alert=$(cat \"$state_file\")\n        if [ $((now - last_alert)) -lt $cooldown ]; then\n            return 0  # cooldown actif, ne pas ré-alerter\n        fi\n    fi\n    \n    echo \"$now\" > \"$state_file\"\n    \n    local msg_full=\"[$severity] $(date '+%H:%M:%S') $name: $msg\"\n    echo \"$msg_full\" | tee -a /var/log/alerts.log\n    \n    # Envoyer selon la sévérité\n    case $severity in\n        CRITICAL) send_sms \"$msg_full\" ;;\n        WARNING)  send_email \"$msg_full\" ;;\n    esac\n}\n\n# Réinitialiser l'état d'une alerte (service rétabli)\nclear_alert() {\n    local name=$1\n    rm -f \"$ALERT_STATE_DIR/${name}.last_alert\"\n    echo \"[RESOLVED] $(date '+%H:%M:%S') $name rétabli\"\n}\n\nsend_email() { echo \"[EMAIL] $1\"; }  # stub\nsend_sms()   { echo \"[SMS] $1\"; }    # stub\n\n# Exemple\nsend_alert \"disk_full\" \"Disque / à 92%\" WARNING 60\nsend_alert \"disk_full\" \"Disque / à 92%\" WARNING 60  # ignoré (cooldown)\nsend_alert \"db_down\"   \"PostgreSQL injoignable\" CRITICAL\nclear_alert \"disk_full\"\n```"
+    },
+    {
+      "title": "Métriques et séries temporelles",
+      "content": "```bash\n#!/bin/bash\n# Collecte de métriques au format Prometheus\n\nMETRICS_FILE=\"/tmp/metrics.prom\"\n\ncollect_metrics() {\n    {\n    # CPU\n    local cpu\n    cpu=$(top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | tr -d '%us,')\n    echo \"# HELP system_cpu_usage_percent CPU usage\"\n    echo \"# TYPE system_cpu_usage_percent gauge\"\n    echo \"system_cpu_usage_percent $cpu\"\n    \n    # Memory\n    local mem_total mem_free mem_used mem_pct\n    read mem_total mem_free <<< $(free -k | awk '/Mem:/ {print $2, $4}')\n    mem_used=$((mem_total - mem_free))\n    mem_pct=$(echo \"scale=2; $mem_used / $mem_total * 100\" | bc)\n    echo \"# HELP system_memory_usage_percent Memory usage\"\n    echo \"system_memory_usage_percent $mem_pct\"\n    \n    # Disque\n    df -k | awk 'NR>1 && /^\\/dev/ {\n        pct=$5+0\n        mount=$6\n        printf \"system_disk_usage_percent{mount=\\\"%s\\\"} %d\\n\", mount, pct\n    }'\n    \n    echo \"# HELP system_timestamp Unix timestamp\"\n    echo \"system_timestamp $(date +%s)\"\n    } > \"$METRICS_FILE\"\n}\n\ncollect_metrics\ncat \"$METRICS_FILE\"\n```"
+    },
+    {
+      "title": "Haute disponibilité — failover",
+      "content": "```bash\n#!/bin/bash\n# Failover automatique entre serveurs\n\nPRIMARY=\"srv-primary\"\nSECONDARY=\"srv-secondary\"\nVIP=\"192.168.1.100\"  # IP virtuelle\nSTATE_FILE=\"/tmp/active_server\"\n\ncheck_server() {\n    local host=$1\n    curl -sf --connect-timeout 3 --max-time 5 \\\n        \"http://$host/health\" >/dev/null 2>&1\n}\n\nswitch_to() {\n    local server=$1\n    echo \"Basculement vers $server\"\n    echo \"$server\" > \"$STATE_FILE\"\n    # Mettre à jour le DNS ou le loadbalancer\n    # update_dns \"$VIP\" \"$server\"\n    # nginx -s reload\n    echo \"[$(date)] Basculement vers $server\" >> /var/log/failover.log\n}\n\nmonitor_loop() {\n    local current\n    current=$(cat \"$STATE_FILE\" 2>/dev/null || echo \"$PRIMARY\")\n    local failures=0\n    \n    while true; do\n        if ! check_server \"$current\"; then\n            ((failures++))\n            echo \"$current injoignable ($failures tentatives)\"\n            \n            if [ $failures -ge 3 ]; then\n                local next\n                next=$([ \"$current\" = \"$PRIMARY\" ] && echo \"$SECONDARY\" || echo \"$PRIMARY\")\n                if check_server \"$next\"; then\n                    switch_to \"$next\"\n                    current=\"$next\"\n                    failures=0\n                fi\n            fi\n        else\n            failures=0\n        fi\n        sleep 10\n    done\n}\n```"
+    },
+    {
+      "title": "SRE — Service Level Indicators",
+      "content": "```bash\n#!/bin/bash\n# Calcul des SLIs et SLOs\n\n# Objectifs\nSLO_AVAILABILITY=99.9   # %\nSLO_LATENCY_MS=200      # ms au 99ème percentile\n\n# Simuler des mesures\nmeasure_sli() {\n    local endpoint=$1\n    local start end http_code latency\n    \n    start=$(date +%s%N)\n    http_code=$(curl -sf -w \"%{http_code}\" -o /dev/null \\\n        --connect-timeout 5 --max-time 10 \"$endpoint\")\n    end=$(date +%s%N)\n    latency=$(( (end - start) / 1000000 ))\n    \n    echo \"$http_code $latency\"\n}\n\n# Calcul du taux de succès sur N mesures\ncalculate_availability() {\n    local endpoint=$1 n=${2:-10}\n    local success=0\n    local latencies=()\n    \n    for i in $(seq 1 $n); do\n        read -r code latency <<< $(measure_sli \"$endpoint\")\n        [ \"$code\" -eq 200 ] && ((success++))\n        latencies+=(\"$latency\")\n    done\n    \n    local avail\n    avail=$(echo \"scale=2; $success / $n * 100\" | bc)\n    \n    # P99 latency (approximation)\n    local p99_idx=$(( n * 99 / 100 ))\n    local sorted=($(printf '%s\\n' \"${latencies[@]}\" | sort -n))\n    local p99=${sorted[$p99_idx]}\n    \n    echo \"Disponibilité : ${avail}% (SLO: ${SLO_AVAILABILITY}%)\"\n    echo \"Latence P99 : ${p99}ms (SLO: ${SLO_LATENCY_MS}ms)\"\n    \n    # Error budget\n    local budget\n    budget=$(echo \"scale=4; ($avail - $SLO_AVAILABILITY) / (100 - $SLO_AVAILABILITY) * 100\" | bc)\n    echo \"Error budget restant : ${budget}%\"\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m2-1",
+      "order": 1,
+      "title": "Check de service avec retry",
+      "instructions": "Créez un système de check qui :\n1. Teste une URL avec `curl`\n2. Retente 3 fois avec 1s d'intervalle\n3. Enregistre le résultat dans un fichier d'état\n4. Affiche `OK` ou `FAIL` avec le nombre de tentatives\n\nTestez avec `https://jsonplaceholder.typicode.com/todos/1`.\n\nRésultat attendu :\n```\n[OK] après 1 tentative(s)\n```",
+      "expectedOutput": "[OK]",
+      "validationType": "contains",
+      "correction": "check_with_retry() {\n    local url=$1 max_retries=${2:-3}\n    local attempt=0\n    \n    while [ $attempt -lt $max_retries ]; do\n        ((attempt++))\n        if curl -sf --connect-timeout 5 \"$url\" > /dev/null 2>&1; then\n            echo \"[OK] après $attempt tentative(s)\"\n            return 0\n        fi\n        [ $attempt -lt $max_retries ] && sleep 1\n    done\n    \n    echo \"[FAIL] après $attempt tentative(s)\"\n    return 1\n}\n\ncheck_with_retry \"https://jsonplaceholder.typicode.com/todos/1\"",
+      "explanation": "Le pattern retry est fondamental en SRE. `--connect-timeout 5` limite le temps de connexion. La boucle s'arrête dès le succès (`return 0`). `sleep 1` entre les tentatives évite de surcharger le service. En production, utilisez un backoff exponentiel : `sleep $((2 ** attempt))` pour 1s, 2s, 4s, 8s..."
+    },
+    {
+      "id": "ex-bash-l5-m2-2",
+      "order": 2,
+      "title": "Collecte de métriques",
+      "instructions": "Créez un script qui collecte 3 métriques système et les affiche au format `métrique=valeur` :\n- Utilisation CPU\n- Utilisation mémoire (%)\n- Nombre de processus\n\nRésultat attendu :\n```\ncpu=X.X\nmemoire=XX\nprocessus=XXX\n```",
+      "expectedOutput": "processus=",
+      "validationType": "contains",
+      "correction": "cpu=$(top -bn1 2>/dev/null | grep 'Cpu(s)' | awk '{print $2}' | tr -d '%us,' | head -1)\n[ -z \"$cpu\" ] && cpu=$(vmstat 1 1 | awk 'NR==3 {print 100-$15}')\n\nmemoire=$(free 2>/dev/null | awk '/Mem:/ { printf \"%d\", $3/$2*100 }')\n\nprocessus=$(ps aux --no-headers 2>/dev/null | wc -l || ps aux | tail -n +2 | wc -l)\n\necho \"cpu=${cpu:-0}\"\necho \"memoire=${memoire:-0}\"\necho \"processus=$processus\"",
+      "explanation": "La collecte de métriques doit être robuste face aux différences de format entre distributions Linux. `top -bn1` donne un snapshot. `free | awk '/Mem:/'` calcule le pourcentage de mémoire utilisée. `ps aux | wc -l` compte les processus. Ces métriques sont les SLIs (Service Level Indicators) de base pour tout système."
+    },
+    {
+      "id": "ex-bash-l5-m2-3",
+      "order": 3,
+      "title": "Déduplication d'alertes",
+      "instructions": "Implémentez un système d'alerte avec cooldown : la même alerte ne doit pas être envoyée plus d'une fois par minute.\n\nEnvoyez 3 fois la même alerte et vérifiez que seule la 1ère passe.\n\nRésultat attendu :\n```\n[ALERTE] disk_full : Disque à 92%\nAlerte ignorée (cooldown actif)\nAlerte ignorée (cooldown actif)\n```",
+      "expectedOutput": "cooldown actif",
+      "validationType": "contains",
+      "correction": "ALERT_DIR=\"/tmp/alert_state_$$\"\nmkdir -p \"$ALERT_DIR\"\ntrap 'rm -rf \"$ALERT_DIR\"' EXIT\n\nsend_alert() {\n    local name=$1 msg=$2 cooldown=${3:-60}\n    local state_file=\"$ALERT_DIR/${name}.ts\"\n    local now\n    now=$(date +%s)\n    \n    if [ -f \"$state_file\" ]; then\n        local last\n        last=$(cat \"$state_file\")\n        if [ $((now - last)) -lt $cooldown ]; then\n            echo \"Alerte ignorée (cooldown actif)\"\n            return 0\n        fi\n    fi\n    \n    echo \"$now\" > \"$state_file\"\n    echo \"[ALERTE] $name : $msg\"\n}\n\nsend_alert \"disk_full\" \"Disque à 92%\"\nsend_alert \"disk_full\" \"Disque à 92%\"\nsend_alert \"disk_full\" \"Disque à 92%\"",
+      "explanation": "Le cooldown (ou debounce) évite la tempête d'alertes (alert storm) : quand un problème génère des centaines d'alertes identiques en quelques secondes. Le fichier d'état stocke le timestamp de la dernière alerte. `$$` dans le nom du dossier garantit l'isolation entre processus simultanés. En production, Redis ou une DB sont préférés pour le partage d'état."
+    }
+  ]
+}

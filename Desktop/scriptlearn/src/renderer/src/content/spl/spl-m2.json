@@ -1,0 +1,74 @@
+{
+  "id": "spl-m2",
+  "title": "Filtrage et transformation SPL",
+  "level": 8,
+  "lang": "spl",
+  "order": 2,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Filtrer avec where et search",
+      "content": "Deux méthodes pour filtrer les résultats :\n\n**`where`** — évaluation d'expressions booléennes :\n```spl\nindex=security\n| where EventCode=4625 OR EventCode=4648\n| where user!=\"SYSTEM\"\n```\n\n**`search`** — recherche textuelle dans la pipeline :\n```spl\nindex=main\n| search \"failed\" OR \"error\"\n| search host=web*\n```\n\n**Recherche dans la base** (plus rapide) :\n```spl\nindex=security EventCode=4625 host=DC01\n```\nFiltrer dès la recherche de base est toujours plus performant que filtrer après."
+    },
+    {
+      "title": "Créer des champs avec eval",
+      "content": "`eval` crée ou modifie des champs avec des expressions :\n\n```spl\n| eval statut = if(status==200, \"OK\", \"Erreur\")\n| eval taille_ko = bytes / 1024\n| eval full_name = first_name.\" \".last_name\n| eval heure = strftime(_time, \"%H:%M:%S\")\n```\n\nFonctions `eval` courantes :\n- `if(cond, vrai, faux)` — condition\n- `case(c1,v1, c2,v2, ...)` — switch\n- `len(s)` — longueur de chaîne\n- `lower(s)` / `upper(s)` — casse\n- `strftime(_time, format)` — formater une date\n- `mvcount(champ)` — nb de valeurs multiples"
+    },
+    {
+      "title": "Extraire avec rex",
+      "content": "`rex` extrait des champs via des **expressions régulières** :\n\n```spl\n| rex field=_raw \"(?P<ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"\n| rex field=message \"user=(?P<username>[^ ]+)\"\n```\n\nSplunk utilise la syntaxe de groupes nommés Python : `(?P<nom>pattern)`.\n\nLe champ extrait est ajouté aux résultats comme un champ normal, utilisable dans `where`, `eval`, `stats`, etc.\n\n**`rex mode=sed`** pour remplacer :\n```spl\n| rex mode=sed field=email \"s/@.*$/@[MASQUÉ]/\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-m2-1",
+      "order": 1,
+      "title": "Filtrer les échecs d'authentification",
+      "instructions": "Recherchez dans `index=security` les événements Windows d'**échec de connexion** (EventCode `4625`).",
+      "requiredKeywords": ["index=security", "eventcode=4625"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625",
+      "explanation": "Filtrer dans la recherche de base (avant le premier `|`) est optimal — Splunk utilise ses index pour ne lire que les événements correspondants."
+    },
+    {
+      "id": "ex-spl-m2-2",
+      "order": 2,
+      "title": "Filtre avec where et exclusion",
+      "instructions": "Depuis `index=security EventCode=4625`, excluez les événements où l'utilisateur (`user`) est `\"SYSTEM\"` avec `where`.",
+      "requiredKeywords": ["index=security", "eventcode=4625", "where", "user", "system"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625\n| where user!=\"SYSTEM\"",
+      "explanation": "`where` filtre après la recherche de base. Utile pour des conditions plus complexes que ce qu'on peut mettre en base, comme des comparaisons ou des exclusions."
+    },
+    {
+      "id": "ex-spl-m2-3",
+      "order": 3,
+      "title": "Créer un champ calculé avec eval",
+      "instructions": "Depuis `index=web`, créez un champ `statut_http` : `\"succès\"` si `status < 400`, sinon `\"erreur\"`.\n\nAffichez `host`, `status` et `statut_http`.",
+      "requiredKeywords": ["index=web", "eval", "statut_http", "if", "status", "table"],
+      "validationType": "keywords",
+      "correction": "index=web\n| eval statut_http = if(status < 400, \"succès\", \"erreur\")\n| table host, status, statut_http",
+      "explanation": "`eval` avec `if(condition, vrai, faux)` permet de classifier des données. Le champ créé peut être utilisé dans toutes les commandes suivantes de la pipeline."
+    },
+    {
+      "id": "ex-spl-m2-4",
+      "order": 4,
+      "title": "Extraire une IP avec rex",
+      "instructions": "Depuis `index=firewall`, extrayez les adresses IP source dans un champ `ip_source` depuis le champ `_raw`.\n\nPattern : `src=(?P<ip_source>[\\d.]+)`",
+      "requiredKeywords": ["index=firewall", "rex", "(?p<ip_source>", "src="],
+      "validationType": "keywords",
+      "correction": "index=firewall\n| rex field=_raw \"src=(?P<ip_source>[\\d.]+)\"",
+      "explanation": "`rex` avec `(?P<nom>pattern)` extrait le groupe nommé dans un nouveau champ. `_raw` est l'événement brut non parsé — utile quand le parsing automatique n'a pas extrait le champ voulu."
+    },
+    {
+      "id": "ex-spl-m2-5",
+      "order": 5,
+      "title": "Recherche textuelle dans la pipeline",
+      "instructions": "Depuis `index=main`, trouvez tous les événements contenant le mot `\"timeout\"` ou `\"connexion refusée\"` avec la commande `search`.",
+      "requiredKeywords": ["index=main", "search", "timeout"],
+      "validationType": "keywords",
+      "correction": "index=main\n| search \"timeout\" OR \"connexion refusée\"",
+      "explanation": "`search` dans la pipeline filtre les résultats déjà récupérés. Moins performant que le filtrage en base mais plus flexible pour des recherches dans des champs non indexés."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m2",
+  "title": "Traitement de fichiers et logs texte",
+  "lang": "python",
+  "level": 2,
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Lire de gros fichiers efficacement",
+      "content": "Les fichiers de logs peuvent peser des gigaoctets. Lisez-les ligne par ligne :\n\n```python\ndef compter_erreurs(chemin):\n    \"\"\"Compte les lignes d'erreur dans un log.\"\"\"\n    total = 0\n    erreurs = 0\n    \n    with open(chemin, \"r\", errors=\"ignore\") as f:\n        for ligne in f:  # Itérateur : n'charge pas tout en RAM\n            total += 1\n            if \"error\" in ligne.lower() or \"failed\" in ligne.lower():\n                erreurs += 1\n    \n    return total, erreurs\n\ntotal, err = compter_erreurs(r\"C:\\Windows\\System32\\drivers\\etc\\hosts\")\nprint(f\"Total: {total} lignes, Erreurs: {err}\")\n```"
+    },
+    {
+      "section": "Parser des logs structurés en texte",
+      "content": "```python\nimport re\nfrom collections import defaultdict\n\ndef parser_log_apache(chemin):\n    \"\"\"\n    Parse les logs Apache Combined Log Format :\n    IP - - [timestamp] \"METHOD /path HTTP/1.1\" code size\n    \"\"\"\n    pattern = re.compile(\n        r'(\\S+).*?\\[(.*?)\\].*?\"(\\w+) (\\S+) HTTP.*?\" (\\d+) (\\d+)'\n    )\n    resultats = []\n    \n    try:\n        with open(chemin, \"r\", errors=\"ignore\") as f:\n            for ligne in f:\n                m = pattern.search(ligne)\n                if m:\n                    resultats.append({\n                        \"ip\": m.group(1),\n                        \"timestamp\": m.group(2),\n                        \"methode\": m.group(3),\n                        \"chemin\": m.group(4),\n                        \"code\": int(m.group(5)),\n                        \"taille\": int(m.group(6))\n                    })\n    except FileNotFoundError:\n        pass\n    \n    return resultats\n```"
+    },
+    {
+      "section": "Analyser les logs Windows (format texte)",
+      "content": "```python\nimport re\nfrom collections import Counter\n\n# Format d'un log Windows exporté en texte\n# Date/Time,EventID,Source,Message\ndef analyser_event_log_csv(lignes):\n    comptes_event_ids = Counter()\n    echecs_login = []\n    \n    for ligne in lignes:\n        # EventID 4625 = échec d'authentification Windows\n        if \"4625\" in ligne:\n            ip_match = re.search(r\"(\\d+\\.\\d+\\.\\d+\\.\\d+)\", ligne)\n            if ip_match:\n                echecs_login.append(ip_match.group(1))\n        \n        # Compter les EventIDs\n        id_match = re.search(r\",(\\d{4}),\", ligne)\n        if id_match:\n            comptes_event_ids[id_match.group(1)] += 1\n    \n    return comptes_event_ids, echecs_login\n\n# Test avec données simulées\nlignes_test = [\n    \"2024-01-15,4625,Security,Echec login depuis 10.0.0.5\",\n    \"2024-01-15,4624,Security,Login réussi\",\n    \"2024-01-15,4625,Security,Echec login depuis 185.220.101.3\",\n]\ncounts, echecs = analyser_event_log_csv(lignes_test)\nprint(f\"EventID 4625 : {counts['4625']}\")\nprint(f\"Attaquants : {echecs}\")\n```"
+    },
+    {
+      "section": "Filtre et tri des résultats",
+      "content": "```python\nfrom collections import Counter\nimport re\n\n# Simuler un extrait de log auth.log\nlogs = [\n    \"Jan 15 10:00:01 server sshd: Failed password for root from 185.220.101.3 port 45100\",\n    \"Jan 15 10:00:02 server sshd: Failed password for root from 185.220.101.3 port 45101\",\n    \"Jan 15 10:00:03 server sshd: Failed password for admin from 194.165.16.11 port 51200\",\n    \"Jan 15 10:00:04 server sshd: Accepted password for user1 from 192.168.1.5 port 52000\",\n    \"Jan 15 10:00:05 server sshd: Failed password for root from 185.220.101.3 port 45102\",\n]\n\n# Extraire les IPs des échecs\nechecs_ips = []\nfor log in logs:\n    if \"Failed password\" in log:\n        m = re.search(r\"from (\\d+\\.\\d+\\.\\d+\\.\\d+)\", log)\n        if m:\n            echecs_ips.append(m.group(1))\n\n# Trouver les brute-forcers (>= 3 tentatives)\ncompteur = Counter(echecs_ips)\nattaquants = {ip: n for ip, n in compteur.items() if n >= 2}\nprint(\"Brute force détecté :\")\nfor ip, n in sorted(attaquants.items(), key=lambda x: -x[1]):\n    print(f\"  {ip}: {n} tentatives\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m2-ex1",
+      "title": "Compter les lignes contenant 'error'",
+      "description": "Lire une liste de logs et compter les erreurs (insensible à la casse)",
+      "instructions": "Soit :\n```python\nlogs = [\n    \"INFO: Service démarré\",\n    \"ERROR: Connexion refusée\",\n    \"WARNING: Tentative suspecte\",\n    \"error: timeout\",\n    \"INFO: OK\"\n]\n```\n\nComptez les lignes contenant `\"error\"` (insensible à la casse) :\n```\nErreurs : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Erreurs : 2",
+      "correction": "logs = [\n    \"INFO: Service démarré\",\n    \"ERROR: Connexion refusée\",\n    \"WARNING: Tentative suspecte\",\n    \"error: timeout\",\n    \"INFO: OK\"\n]\nerreurs = [l for l in logs if \"error\" in l.lower()]\nprint(f\"Erreurs : {len(erreurs)}\")",
+      "explanation": "`.lower()` convertit en minuscules avant la comparaison, rendant la recherche insensible à la casse. C'est essentiel pour les logs dont le format peut varier."
+    },
+    {
+      "id": "py-l2-m2-ex2",
+      "title": "Extraire IP et code HTTP",
+      "description": "Parser des logs Apache simplifiés",
+      "instructions": "Soit :\n```python\nlogs = [\n    '10.0.0.5 GET /login 200',\n    '185.220.101.3 GET /admin 403',\n    '10.0.0.1 POST /api 200',\n    '194.165.16.11 GET /admin 403',\n]\n```\n\nAffichez les IPs qui ont reçu un code `403` :\n```\nAccès refusés : ['185.220.101.3', '194.165.16.11']\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "185.220.101.3",
+      "correction": "import re\nlogs = [\n    '10.0.0.5 GET /login 200',\n    '185.220.101.3 GET /admin 403',\n    '10.0.0.1 POST /api 200',\n    '194.165.16.11 GET /admin 403',\n]\nrefusees = []\nfor log in logs:\n    m = re.match(r\"(\\S+).*403\", log)\n    if m:\n        refusees.append(m.group(1))\nprint(f\"Accès refusés : {refusees}\")",
+      "explanation": "`re.match()` correspond en début de ligne. Le `.*403` vérifie que la ligne contient 403. `group(1)` récupère l'IP capturée."
+    },
+    {
+      "id": "py-l2-m2-ex3",
+      "title": "Top IPs d'un log",
+      "description": "Trouver l'IP la plus fréquente dans des logs",
+      "instructions": "Soit :\n```python\nlogs = [\n    \"10.0.0.5 login\", \"185.220.101.3 login\",\n    \"10.0.0.5 login\", \"10.0.0.5 login\",\n    \"185.220.101.3 login\", \"10.0.0.1 login\"\n]\n```\n\nAffichez l'IP la plus fréquente et son nombre d'occurrences :\n```\nTop IP: 10.0.0.5 (3 fois)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Top IP: 10.0.0.5 (3 fois)",
+      "correction": "from collections import Counter\nimport re\nlogs = [\n    \"10.0.0.5 login\", \"185.220.101.3 login\",\n    \"10.0.0.5 login\", \"10.0.0.5 login\",\n    \"185.220.101.3 login\", \"10.0.0.1 login\"\n]\nips = [re.match(r\"(\\S+)\", l).group(1) for l in logs]\nc = Counter(ips)\ntop_ip, count = c.most_common(1)[0]\nprint(f\"Top IP: {top_ip} ({count} fois)\")",
+      "explanation": "`Counter.most_common(1)` renvoie une liste avec le seul élément le plus fréquent. `[0]` extrait ce tuple `(ip, count)` qu'on décompacte."
+    }
+  ]
+}

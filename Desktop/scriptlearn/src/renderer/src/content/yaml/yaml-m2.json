@@ -1,0 +1,74 @@
+{
+  "id": "yaml-m2",
+  "title": "Listes et structures imbriquées",
+  "level": 8,
+  "lang": "yaml",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Listes",
+      "content": "Les listes YAML utilisent le tiret `-` suivi d'un espace :\n\n```yaml\nlangages:\n  - Python\n  - Bash\n  - Go\n\n# Style inline (flow)\ntags: [web, api, v2]\n```\n\n**Listes de mappings** (objets dans une liste) :\n```yaml\nservices:\n  - name: web\n    port: 80\n  - name: db\n    port: 5432\n```\n\nChaque `- ` introduit un élément de liste. L'indentation des champs d'un même élément doit être cohérente."
+    },
+    {
+      "title": "Mappings imbriqués",
+      "content": "Les dictionnaires s'imbriquent par indentation :\n\n```yaml\nserver:\n  host: localhost\n  port: 8080\n  tls:\n    enabled: true\n    cert: /etc/ssl/cert.pem\n    key: /etc/ssl/key.pem\n\ndatabase:\n  host: db.internal\n  port: 5432\n  credentials:\n    user: admin\n    password: secret\n```\n\nRègle : **2 espaces** par niveau d'indentation (convention la plus répandue)."
+    },
+    {
+      "title": "Mappings inline (flow style)",
+      "content": "YAML supporte un style **flow** (compact) pour les petites structures :\n\n```yaml\n# Style bloc (recommandé pour la lisibilité)\nenvironnement:\n  NODE_ENV: production\n  PORT: 3000\n\n# Style flow (compact)\nenvironnement: {NODE_ENV: production, PORT: 3000}\n```\n\nLes deux sont équivalents. Le style bloc est préférable dans les fichiers de configuration pour la lisibilité et les diffs Git."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-m2-1",
+      "order": 1,
+      "title": "Créer une liste simple",
+      "instructions": "Définissez un champ `dependencies` contenant une liste de 3 éléments : `nginx`, `postgresql`, `redis`.",
+      "requiredKeywords": ["dependencies:", "- nginx", "- postgresql", "- redis"],
+      "validationType": "keywords",
+      "correction": "dependencies:\n  - nginx\n  - postgresql\n  - redis",
+      "explanation": "Chaque élément de liste est précédé de `- ` (tiret + espace) et indenté sous la clé parent. L'indentation crée la relation parent-enfant."
+    },
+    {
+      "id": "ex-yaml-m2-2",
+      "order": 2,
+      "title": "Structure imbriquée (serveur)",
+      "instructions": "Créez un mapping `server` avec deux sous-champs :\n- `host: api.example.com`\n- `port: 443`",
+      "requiredKeywords": ["server:", "host:", "api.example.com", "port:", "443"],
+      "validationType": "keywords",
+      "correction": "server:\n  host: api.example.com\n  port: 443",
+      "explanation": "L'imbrication se fait uniquement par indentation. `host` et `port` sont des champs de `server` car ils sont indentés sous lui."
+    },
+    {
+      "id": "ex-yaml-m2-3",
+      "order": 3,
+      "title": "Liste de mappings",
+      "instructions": "Définissez une liste `users` avec deux utilisateurs, chacun ayant `name` et `role` :\n- Alice, admin\n- Bob, viewer",
+      "requiredKeywords": ["users:", "- name: alice", "role: admin", "- name: bob", "role: viewer"],
+      "validationType": "keywords",
+      "correction": "users:\n  - name: Alice\n    role: admin\n  - name: Bob\n    role: viewer",
+      "explanation": "Chaque `- ` crée un objet dans la liste. Les champs de cet objet sont indentés au même niveau (alignés sous le tiret)."
+    },
+    {
+      "id": "ex-yaml-m2-4",
+      "order": 4,
+      "title": "Imbrication à 3 niveaux",
+      "instructions": "Créez cette structure :\n```\napp:\n  database:\n    host: db.local\n    port: 5432\n```",
+      "requiredKeywords": ["app:", "database:", "host: db.local", "port: 5432"],
+      "validationType": "keywords",
+      "correction": "app:\n  database:\n    host: db.local\n    port: 5432",
+      "explanation": "Chaque niveau d'imbrication ajoute 2 espaces. `app` contient `database`, qui contient `host` et `port`. Pas de tabulations, uniquement des espaces."
+    },
+    {
+      "id": "ex-yaml-m2-5",
+      "order": 5,
+      "title": "Mélange liste et mapping",
+      "instructions": "Définissez une liste `volumes` avec deux entrées, chacune ayant `source` et `target` :\n- source: `./data`, target: `/data`\n- source: `./logs`, target: `/var/log`",
+      "requiredKeywords": ["volumes:", "source: ./data", "target: /data", "source: ./logs", "target: /var/log"],
+      "validationType": "keywords",
+      "correction": "volumes:\n  - source: ./data\n    target: /data\n  - source: ./logs\n    target: /var/log",
+      "explanation": "Pattern très courant dans Docker Compose. Chaque volume est un objet dans la liste `volumes`, avec `source` (chemin hôte) et `target` (chemin dans le container)."
+    }
+  ]
+}

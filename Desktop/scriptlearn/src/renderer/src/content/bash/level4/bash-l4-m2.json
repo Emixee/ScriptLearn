@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m2",
+  "title": "Sécurité et cryptographie",
+  "level": 4,
+  "lang": "bash",
+  "order": 2,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Hachage et vérification d'intégrité",
+      "content": "```bash\n# Calculer des hachages\necho -n \"hello\" | md5sum           # 5d41402abc4b2a76b9719d911017c592\necho -n \"hello\" | sha256sum        # 2cf24dba...\necho -n \"hello\" | sha512sum\n\n# Hacher un fichier\nmd5sum fichier.txt\nsha256sum fichier.txt\n\n# Vérifier l'intégrité d'un téléchargement\ncurl -O https://example.com/archive.tar.gz\ncurl -O https://example.com/archive.tar.gz.sha256\nsha256sum -c archive.tar.gz.sha256\n# archive.tar.gz: OK\n\n# Calculer et stocker un hash\nhash=$(sha256sum fichier.txt | awk '{print $1}')\necho \"$hash\" > fichier.txt.sha256\n\n# Vérifier si un fichier a changé\nancien_hash=$(cat fichier.txt.sha256)\nnouveau_hash=$(sha256sum fichier.txt | awk '{print $1}')\nif [ \"$ancien_hash\" != \"$nouveau_hash\" ]; then\n    echo \"Fichier modifié !\"\nfi\n```"
+    },
+    {
+      "title": "Chiffrement avec openssl",
+      "content": "```bash\n# Générer une clé aléatoire\nopenssl rand -hex 32          # 32 bytes en hex\nopenssl rand -base64 24       # 24 bytes en base64\n\n# Chiffrer un fichier (AES-256-CBC)\nopenssl enc -aes-256-cbc -pbkdf2 \\\n    -in secret.txt \\\n    -out secret.txt.enc \\\n    -pass pass:motdepasse\n\n# Déchiffrer\nopenssl enc -aes-256-cbc -pbkdf2 -d \\\n    -in secret.txt.enc \\\n    -out secret_decrypted.txt \\\n    -pass pass:motdepasse\n\n# Clés RSA\nopenssl genrsa -out privkey.pem 4096\nopenssl rsa -in privkey.pem -pubout -out pubkey.pem\n\n# Signer un fichier\nopenssl dgst -sha256 -sign privkey.pem -out fichier.sig fichier.txt\n\n# Vérifier la signature\nopenssl dgst -sha256 -verify pubkey.pem -signature fichier.sig fichier.txt\n\n# Encoder/décoder base64\necho \"secret\" | base64           # c2VjcmV0Cg==\necho \"c2VjcmV0Cg==\" | base64 -d  # secret\n```"
+    },
+    {
+      "title": "Gestion sécurisée des mots de passe",
+      "content": "```bash\n# Ne JAMAIS stocker les mots de passe en clair !\n\n# Utiliser un secret manager (exemple : pass)\nPASSWORD=$(pass mon-service/production)\n\n# Variables d'environnement depuis un vault\nexport DB_PASSWORD=$(vault kv get -field=password secret/db)\n\n# Lecture sécurisée depuis l'utilisateur\nread -s -p \"Mot de passe : \" password\necho  # retour à la ligne\n\n# Générer un mot de passe fort\ngenerate_password() {\n    local length=${1:-20}\n    tr -dc 'A-Za-z0-9!@#$%^&*' < /dev/urandom | head -c \"$length\"; echo\n}\n\nnew_pass=$(generate_password 24)\necho \"Mot de passe généré\"\n\n# Éviter de passer les mots de passe en argument de ligne de commande\n# (ils apparaissent dans ps aux !)\n# MAUVAIS :\nmysql -u root -pmotdepasse  # visible dans ps\n# BON :\nexport MYSQL_PWD=\"$password\"\nmysql -u root\n\n# Nettoyer les variables sensibles\nunset password MYSQL_PWD\n```"
+    },
+    {
+      "title": "Audit et surveillance",
+      "content": "```bash\n#!/bin/bash\n# Audit de sécurité basique\n\necho \"=== Audit de sécurité ===\"\n\n# Fichiers SUID (dangereux si mal configurés)\necho \"\\n--- Fichiers SUID ---\"\nfind / -perm -4000 -type f 2>/dev/null | head -20\n\n# Ports en écoute\necho \"\\n--- Ports ouverts ---\"\nss -tuln | grep LISTEN\n\n# Utilisateurs avec UID 0 (root)\necho \"\\n--- Utilisateurs root ---\"\nawk -F: '$3 == 0 { print $1 }' /etc/passwd\n\n# Connexions SSH récentes\necho \"\\n--- Connexions SSH récentes ---\"\ngrep 'Accepted\\|Failed' /var/log/auth.log 2>/dev/null | tail -20\n\n# Crontabs systèmes\necho \"\\n--- Crontabs système ---\"\nfor f in /etc/cron* /var/spool/cron/*; do\n    [ -f \"$f\" ] && echo \"$f:\"; cat \"$f\" 2>/dev/null\ndone\n\n# Résumé\necho \"\\nAudit terminé : $(date)\"\n```"
+    },
+    {
+      "title": "Variables d'environnement et secrets",
+      "content": "```bash\n# Pattern .env avec validation\nload_secrets() {\n    local env_file=\"${1:-.env}\"\n    \n    [ -f \"$env_file\" ] || { echo \"Fichier $env_file manquant\" >&2; return 1; }\n    \n    # Vérifier les permissions (doit être 600 ou 400)\n    local perms\n    perms=$(stat -c \"%a\" \"$env_file\" 2>/dev/null || stat -f \"%OLp\" \"$env_file\")\n    if [[ ! $perms =~ ^[46]00$ ]]; then\n        echo \"ATTENTION : $env_file devrait être en mode 600\" >&2\n    fi\n    \n    # Charger les variables\n    set -a  # auto-export\n    # shellcheck disable=SC1090\n    source \"$env_file\"\n    set +a\n}\n\n# Masquer les secrets dans les logs\nmask_secret() {\n    local val=$1\n    local len=${#val}\n    local visible=4\n    [ $len -le $visible ] && echo \"****\" && return\n    echo \"${val:0:$visible}$(printf '*%.0s' $(seq 1 $((len-visible))))\"\n}\n\nDB_PASSWORD=\"super_secret_123\"\necho \"DB_PASSWORD: $(mask_secret \"$DB_PASSWORD\")\"  # DB_P*************\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m2-1",
+      "order": 1,
+      "title": "Vérification d'intégrité",
+      "instructions": "Créez un fichier `data.txt`, calculez son SHA256 et stockez-le. Modifiez le fichier et vérifiez si le hash a changé.\n\nRésultat attendu :\n```\nHash original : abc...\nFichier modifié !\n```",
+      "expectedOutput": "Fichier modifié",
+      "validationType": "contains",
+      "correction": "echo \"données originales\" > data.txt\nhash_original=$(sha256sum data.txt | awk '{print $1}')\necho \"Hash original : $hash_original\"\n\necho \"données modifiées\" > data.txt\nhash_nouveau=$(sha256sum data.txt | awk '{print $1}')\n\nif [ \"$hash_original\" != \"$hash_nouveau\" ]; then\n    echo \"Fichier modifié !\"\nfi\n\nrm data.txt",
+      "explanation": "`sha256sum` calcule le hash SHA-256 et affiche `hash  fichier`. `awk '{print $1}'` extrait seulement le hash. Comparer deux hashes est plus fiable que comparer des dates ou des tailles — c'est le principe de vérification d'intégrité utilisé par les package managers (apt, npm, etc.)."
+    },
+    {
+      "id": "ex-bash-l4-m2-2",
+      "order": 2,
+      "title": "Générateur de mot de passe",
+      "instructions": "Créez une fonction `generer_mdp` qui génère un mot de passe aléatoire de la longueur passée en paramètre (défaut: 16). Utilisez `/dev/urandom` et `tr`.\n\nRésultat attendu :\n```\nMot de passe (16) : XkP2...  \n```\n(chaîne aléatoire de 16 caractères)",
+      "expectedOutput": "Mot de passe",
+      "validationType": "contains",
+      "correction": "generer_mdp() {\n    local longueur=${1:-16}\n    local mdp\n    mdp=$(tr -dc 'A-Za-z0-9!@#$%^&*' < /dev/urandom | head -c \"$longueur\")\n    echo \"Mot de passe ($longueur) : $mdp\"\n}\n\ngenerer_mdp 16",
+      "explanation": "`/dev/urandom` est une source de nombres pseudo-aléatoires cryptographiquement sûre (CSPRNG). `tr -dc 'A-Za-z0-9!@#$%^&*'` supprime (`-d`) tous les caractères sauf (`-c` complement) la liste spécifiée. `head -c $longueur` prend les N premiers octets du flux. Le résultat est imprévisible et sûr."
+    },
+    {
+      "id": "ex-bash-l4-m2-3",
+      "order": 3,
+      "title": "Encodage base64",
+      "instructions": "Encodez la chaîne `\"utilisateur:motdepasse\"` en base64, puis décodez-la et vérifiez qu'on retrouve bien l'original.\n\nRésultat attendu :\n```\nEncodé : dXRpbGlzYXRldXI6bW90ZGVwYXNzZQ==\nDécodé : utilisateur:motdepasse\n```",
+      "expectedOutput": "utilisateur:motdepasse",
+      "validationType": "contains",
+      "correction": "original=\"utilisateur:motdepasse\"\nencode=$(echo -n \"$original\" | base64)\necho \"Encodé : $encode\"\ndecode=$(echo \"$encode\" | base64 -d)\necho \"Décodé : $decode\"",
+      "explanation": "`echo -n` supprime le retour à la ligne final (important pour base64). `base64` encode en base64 standard. `base64 -d` décode. Le base64 est utilisé pour le header HTTP Authorization (`Authorization: Basic dXRpbGlzYXRldXI6bW90ZGVwYXNzZQ==`). Sur macOS, la syntaxe est `base64 -D` (majuscule) pour décoder."
+    }
+  ]
+}

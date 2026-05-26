@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m4",
+  "title": "WMI et CIM",
+  "level": 3,
+  "lang": "powershell",
+  "order": 4,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Introduction à CIM/WMI",
+      "content": "WMI (Windows Management Instrumentation) et son successeur CIM permettent d'interroger le système Windows en profondeur :\n\n```powershell\n# CIM (recommandé, moderne)\nGet-CimInstance -ClassName Win32_OperatingSystem\nGet-CimInstance -ClassName Win32_ComputerSystem\nGet-CimInstance -ClassName Win32_Processor\n\n# WMI (ancien, encore supporté)\nGet-WmiObject -Class Win32_OperatingSystem\n\n# Lister toutes les classes disponibles\nGet-CimClass | Where-Object CimClassName -like \"Win32_*\" | Select-Object CimClassName\n\n# Informations système essentielles\n$os = Get-CimInstance Win32_OperatingSystem\n$os.Caption          # \"Microsoft Windows 11 Pro\"\n$os.Version          # \"10.0.22621\"\n$os.TotalVisibleMemorySize  # RAM totale (KB)\n$os.FreePhysicalMemory      # RAM libre (KB)\n\n$cs = Get-CimInstance Win32_ComputerSystem\n$cs.Name             # nom de la machine\n$cs.Manufacturer     # Dell, HP, etc.\n$cs.Model            # modèle\n```"
+    },
+    {
+      "title": "Classes CIM courantes",
+      "content": "```powershell\n# CPU\n$cpu = Get-CimInstance Win32_Processor\n$cpu.Name            # \"Intel Core i7-12700\"\n$cpu.NumberOfCores   # 12\n$cpu.MaxClockSpeed   # MHz\n$cpu.LoadPercentage  # % utilisation\n\n# Disques\nGet-CimInstance Win32_LogicalDisk | \n    Where-Object DriveType -eq 3 |    # 3 = disque local\n    Select-Object DeviceID, \n        @{N='Total_Go'; E={[math]::Round($_.Size/1GB,1)}},\n        @{N='Libre_Go'; E={[math]::Round($_.FreeSpace/1GB,1)}},\n        @{N='Usage%'; E={[math]::Round(($_.Size-$_.FreeSpace)/$_.Size*100,1)}}\n\n# Services\nGet-CimInstance Win32_Service | \n    Where-Object State -eq 'Running' | \n    Select-Object Name, DisplayName | \n    Sort-Object Name\n\n# Programmes installés\nGet-CimInstance Win32_Product | Select-Object Name, Version, Vendor\n# (lent — préférer le registre)\n\n# Réseau\nGet-CimInstance Win32_NetworkAdapter | Where-Object NetEnabled -eq $true\nGet-CimInstance Win32_NetworkAdapterConfiguration | Where-Object IPEnabled\n```"
+    },
+    {
+      "title": "Requêtes WQL",
+      "content": "WQL (WMI Query Language) est un sous-ensemble de SQL pour WMI :\n\n```powershell\n# Syntaxe : SELECT champs FROM classe WHERE condition\n\n# Services en cours d'exécution\nGet-CimInstance -Query \"SELECT Name, State FROM Win32_Service WHERE State = 'Running'\"\n\n# Processus dépassant 100 Mo de RAM\nGet-CimInstance -Query \"SELECT Name, WorkingSetSize FROM Win32_Process WHERE WorkingSetSize > 104857600\"\n\n# Disque avec moins de 10 Go libres\nGet-CimInstance -Query \"SELECT DeviceID, FreeSpace FROM Win32_LogicalDisk WHERE DriveType=3 AND FreeSpace < 10737418240\"\n\n# Infos sur un utilisateur\nGet-CimInstance -Query \"SELECT * FROM Win32_UserAccount WHERE Name = '$env:USERNAME'\"\n\n# Chaîner avec le pipeline\nGet-CimInstance -Query \"SELECT Name, CPU FROM Win32_Process\" |\n    Where-Object CPU -gt 5 |\n    Sort-Object CPU -Descending |\n    Select-Object -First 5\n```"
+    },
+    {
+      "title": "Événements et abonnements",
+      "content": "```powershell\n# Lire l'Event Log (méthode traditionnelle)\nGet-EventLog -LogName System -Newest 10\nGet-EventLog -LogName Application -EntryType Error -Newest 20\n\n# Avec Get-WinEvent (plus puissant)\nGet-WinEvent -LogName System -MaxEvents 10\nGet-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4624           # connexion réussie\n    StartTime = (Get-Date).AddHours(-1)\n}\n\n# Rechercher des événements\nGet-WinEvent -LogName Application | \n    Where-Object { $_.LevelDisplayName -eq 'Error' -and $_.TimeCreated -gt (Get-Date).AddDays(-1) } |\n    Select-Object TimeCreated, ProviderName, Message | \n    Format-Table -AutoSize\n\n# Lister tous les logs disponibles\nGet-WinEvent -ListLog * | Where-Object RecordCount -gt 0 | Sort-Object RecordCount -Descending\n```"
+    },
+    {
+      "title": "Rapport système complet",
+      "content": "```powershell\nfunction Get-SystemReport {\n    $os   = Get-CimInstance Win32_OperatingSystem\n    $cpu  = Get-CimInstance Win32_Processor | Select-Object -First 1\n    $ram  = [math]::Round($os.TotalVisibleMemorySize/1MB, 1)\n    $free = [math]::Round($os.FreePhysicalMemory/1MB, 1)\n    $pct  = [math]::Round(($ram - $free) / $ram * 100, 1)\n    \n    $disques = Get-CimInstance Win32_LogicalDisk -Filter \"DriveType=3\" |\n        Select-Object DeviceID,\n            @{N='Total_Go'; E={[math]::Round($_.Size/1GB,1)}},\n            @{N='Libre_Go'; E={[math]::Round($_.FreeSpace/1GB,1)}}\n    \n    [PSCustomObject]@{\n        Ordinateur  = $env:COMPUTERNAME\n        OS          = $os.Caption\n        CPU         = $cpu.Name\n        'RAM_Go'    = $ram\n        'RAM_Libre' = $free\n        'RAM_%'     = $pct\n        Disques     = $disques\n    }\n}\n\n$report = Get-SystemReport\nWrite-Host \"=== Rapport Système ===\"\nWrite-Host \"PC      : $($report.Ordinateur)\"\nWrite-Host \"OS      : $($report.OS)\"\nWrite-Host \"RAM     : $($report.'RAM_%')% utilisée ($($report.'RAM_Go') Go total)\"\n$report.Disques | Format-Table\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m4-1",
+      "order": 1,
+      "title": "Informations OS",
+      "instructions": "Utilisez `Get-CimInstance Win32_OperatingSystem` pour afficher le nom de l'OS et sa version.\n\nRésultat attendu :\n```\nOS : Microsoft Windows 11 ...\nVersion : 10.0...\n```",
+      "expectedOutput": "Version",
+      "validationType": "contains",
+      "correction": "$os = Get-CimInstance Win32_OperatingSystem\nWrite-Host \"OS : $($os.Caption)\"\nWrite-Host \"Version : $($os.Version)\"",
+      "explanation": "`Get-CimInstance Win32_OperatingSystem` interroge la couche WMI pour obtenir les informations sur le système d'exploitation. `Caption` contient le nom complet (ex: \"Microsoft Windows 11 Pro\"), `Version` la version numérique du kernel (ex: \"10.0.22621\"). CIM est préféré à WMI car il utilise WSMAN (HTTP) plutôt que DCOM."
+    },
+    {
+      "id": "ex-ps-l3-m4-2",
+      "order": 2,
+      "title": "Espace disque",
+      "instructions": "Affichez l'espace total et libre de tous les disques locaux (DriveType=3) en Go.\n\nRésultat attendu :\n```\nLecteur  Total_Go  Libre_Go\n-------  --------  --------\nC:         xxx.x     xxx.x\n```",
+      "expectedOutput": "Libre_Go",
+      "validationType": "contains",
+      "correction": "Get-CimInstance Win32_LogicalDisk -Filter \"DriveType=3\" |\n    Select-Object DeviceID,\n        @{N='Total_Go'; E={[math]::Round($_.Size/1GB,1)}},\n        @{N='Libre_Go'; E={[math]::Round($_.FreeSpace/1GB,1)}} |\n    Format-Table -AutoSize",
+      "explanation": "`-Filter \"DriveType=3\"` filtre côté WMI (plus efficace que `Where-Object`). `DriveType=3` correspond aux disques fixes locaux (2=amovible, 4=réseau, 5=CD). `$_.Size/1GB` divise par 1073741824 — en PowerShell, `1GB` est une constante littérale."
+    },
+    {
+      "id": "ex-ps-l3-m4-3",
+      "order": 3,
+      "title": "Événements système récents",
+      "instructions": "Récupérez les 5 dernières erreurs dans le journal `Application` avec `Get-WinEvent` et affichez l'heure et le fournisseur.\n\nRésultat attendu :\n```\nTimeCreated          ProviderName\n-----------          ------------\n...                  ...\n```",
+      "expectedOutput": "ProviderName",
+      "validationType": "contains",
+      "correction": "Get-WinEvent -FilterHashtable @{ LogName='Application'; Level=2 } -MaxEvents 5 -ErrorAction SilentlyContinue |\n    Select-Object TimeCreated, ProviderName |\n    Format-Table -AutoSize",
+      "explanation": "`-FilterHashtable` est plus efficace que `Where-Object` car le filtrage se fait au niveau du fournisseur d'événements avant le chargement en mémoire. `Level=2` correspond aux erreurs (1=critique, 2=erreur, 3=avertissement, 4=info). `-MaxEvents 5` limite le nombre de résultats retournés."
+    }
+  ]
+}

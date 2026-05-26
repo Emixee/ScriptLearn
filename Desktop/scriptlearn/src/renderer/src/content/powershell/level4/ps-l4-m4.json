@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m4",
+  "title": "Tests avec Pester",
+  "level": 4,
+  "lang": "powershell",
+  "order": 4,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Introduction à Pester",
+      "content": "Pester est le framework de test officiel pour PowerShell :\n\n```powershell\n# Installer Pester\nInstall-Module Pester -Force -Scope CurrentUser\n\n# Structure d'un test Pester\nDescribe \"MaFonction\" {\n    Context \"cas normaux\" {\n        It \"retourne la somme\" {\n            # Arrange\n            $a = 3; $b = 4\n            \n            # Act\n            $result = $a + $b\n            \n            # Assert\n            $result | Should -Be 7\n        }\n        \n        It \"retourne le bon type\" {\n            (2 + 2) | Should -BeOfType [int]\n        }\n    }\n    \n    Context \"cas d'erreur\" {\n        It \"throw sur division par zéro\" {\n            { 1/0 } | Should -Throw\n        }\n    }\n}\n```"
+    },
+    {
+      "title": "Assertions Should",
+      "content": "```powershell\n# Égalité\n$val | Should -Be 42\n$val | Should -Not -Be 0\n\n# Comparaisons\n5 | Should -BeGreaterThan 3\n5 | Should -BeLessOrEqual 5\n\n# Chaînes\n\"hello world\" | Should -Match \"world\"\n\"hello\" | Should -BeLike \"hel*\"\n\"Hello\" | Should -BeExactly \"Hello\"    # sensible à la casse\n\n# Nullité et vide\n$null | Should -BeNullOrEmpty\n\"\" | Should -BeNullOrEmpty\n@() | Should -BeNullOrEmpty\n$null | Should -Not -BeNullOrEmpty   # échoue\n\n# Tableaux\n@(1,2,3) | Should -Contain 2\n@(1,2,3) | Should -HaveCount 3\n\n# Fichiers\n\"C:\\Windows\" | Should -Exist\n\"C:\\inexistant\" | Should -Not -Exist\n\n# Exceptions\n{ throw \"erreur\" } | Should -Throw -ExpectedMessage \"erreur\"\n{ Get-Item nonexistant } | Should -Throw\n```"
+    },
+    {
+      "title": "Mocks",
+      "content": "```powershell\n# Mock : remplacer une commande par un faux\nDescribe \"Get-UserInfo\" {\n    BeforeAll {\n        function Get-UserInfo {\n            param($name)\n            $user = Get-ADUser -Identity $name  # cmd réelle\n            return $user.Department\n        }\n    }\n    \n    It \"retourne le département\" {\n        # Remplacer Get-ADUser par un faux\n        Mock Get-ADUser {\n            return [PSCustomObject]@{ Department = 'IT' }\n        }\n        \n        $result = Get-UserInfo -name \"alice\"\n        $result | Should -Be 'IT'\n        \n        # Vérifier que le mock a été appelé\n        Assert-MockCalled Get-ADUser -Times 1\n        Assert-MockCalled Get-ADUser -ParameterFilter { $Identity -eq 'alice' }\n    }\n}\n\n# Mock avec conditions\nMock Invoke-RestMethod {\n    return @{ status = 'ok'; data = @() }\n} -ParameterFilter { $Uri -match '/api/users' }\n```"
+    },
+    {
+      "title": "BeforeAll, AfterAll, Setup",
+      "content": "```powershell\nDescribe \"Gestion fichiers\" {\n    BeforeAll {\n        # Exécuté une fois avant tous les tests\n        $testDir = Join-Path $TestDrive \"tests\"\n        New-Item -ItemType Directory -Path $testDir\n    }\n    \n    AfterAll {\n        # Exécuté une fois après tous les tests\n        Remove-Item $testDir -Recurse -Force -ErrorAction SilentlyContinue\n    }\n    \n    BeforeEach {\n        # Exécuté avant CHAQUE test\n        $testFile = Join-Path $testDir \"test.txt\"\n        Set-Content $testFile \"contenu initial\"\n    }\n    \n    AfterEach {\n        # Nettoyage après chaque test\n        Remove-Item $testFile -ErrorAction SilentlyContinue\n    }\n    \n    It \"lit le contenu\" {\n        $content = Get-Content $testFile\n        $content | Should -Be \"contenu initial\"\n    }\n    \n    It \"modifie le contenu\" {\n        Set-Content $testFile \"nouveau contenu\"\n        Get-Content $testFile | Should -Be \"nouveau contenu\"\n    }\n}\n```\n\n**`$TestDrive`** : dossier temporaire géré par Pester, nettoyé automatiquement."
+    },
+    {
+      "title": "Lancer et organiser les tests",
+      "content": "```powershell\n# Convention : fichier de test = MaFonction.Tests.ps1\n\n# Lancer tous les tests\nInvoke-Pester\n\n# Lancer des tests spécifiques\nInvoke-Pester -Path .\\tests\\\nInvoke-Pester -Path .\\MaFonction.Tests.ps1\n\n# Avec rapport de couverture\n$config = New-PesterConfiguration\n$config.Run.Path = '.\\src'\n$config.CodeCoverage.Enabled = $true\n$config.CodeCoverage.Path = '.\\src\\*.ps1'\n$config.Output.Verbosity = 'Detailed'\nInvoke-Pester -Configuration $config\n\n# CI : sortir avec le bon code\n$results = Invoke-Pester -PassThru\nif ($results.FailedCount -gt 0) {\n    exit 1\n}\n\n# Filtrer par tag\nIt \"opération lente\" -Tag 'Integration' {\n    ...\n}\nInvoke-Pester -Tag 'Unit'            # seulement les tests unitaires\nInvoke-Pester -ExcludeTag 'Slow'     # exclure les tests lents\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m4-1",
+      "order": 1,
+      "title": "Premier test Pester",
+      "instructions": "Écrivez un test Pester qui vérifie :\n1. Que `2 + 2` vaut 4\n2. Que `\"hello\"` correspond au motif `\"hel*\"`\n3. Que `@(1,2,3)` contient 3 éléments\n\nRésultat attendu :\n```\nPassed: 3, Failed: 0\n```",
+      "expectedOutput": "Passed: 3",
+      "validationType": "contains",
+      "correction": "Describe \"Tests de base\" {\n    It \"addition\" {\n        (2 + 2) | Should -Be 4\n    }\n    It \"pattern matching\" {\n        \"hello\" | Should -BeLike \"hel*\"\n    }\n    It \"tableau count\" {\n        @(1,2,3) | Should -HaveCount 3\n    }\n}\n\n$result = Invoke-Pester -PassThru -Output None\nWrite-Host \"Passed: $($result.PassedCount), Failed: $($result.FailedCount)\"",
+      "explanation": "`Describe` groupe les tests. `It` définit un cas de test unitaire. `Should` est l'assertion : `-Be` pour l'égalité stricte, `-BeLike` pour les wildcards, `-HaveCount` pour les tableaux. `Invoke-Pester -PassThru` retourne l'objet résultat pour accéder aux compteurs. `-Output None` supprime l'affichage détaillé."
+    },
+    {
+      "id": "ex-ps-l4-m4-2",
+      "order": 2,
+      "title": "Tester une fonction",
+      "instructions": "Créez une fonction `Get-Factorielle`, puis écrivez des tests Pester pour vérifier :\n- `Get-Factorielle 0` = 1\n- `Get-Factorielle 5` = 120\n- `Get-Factorielle 1` = 1\n\nRésultat attendu :\n```\nPassed: 3, Failed: 0\n```",
+      "expectedOutput": "Passed: 3",
+      "validationType": "contains",
+      "correction": "function Get-Factorielle {\n    param([int]$n)\n    if ($n -le 1) { return 1 }\n    return $n * (Get-Factorielle ($n - 1))\n}\n\nDescribe \"Get-Factorielle\" {\n    It \"factorielle de 0\" {\n        Get-Factorielle 0 | Should -Be 1\n    }\n    It \"factorielle de 5\" {\n        Get-Factorielle 5 | Should -Be 120\n    }\n    It \"factorielle de 1\" {\n        Get-Factorielle 1 | Should -Be 1\n    }\n}\n\n$result = Invoke-Pester -PassThru -Output None\nWrite-Host \"Passed: $($result.PassedCount), Failed: $($result.FailedCount)\"",
+      "explanation": "Ce pattern TDD : définir d'abord les tests, puis implémenter. `Describe` porte le nom de la fonction testée. Chaque `It` teste un cas précis avec une description claire. La récursivité dans `Get-Factorielle` s'arrête à `n <= 1`. Pester isole chaque `It` : une erreur dans un test n'affecte pas les autres."
+    },
+    {
+      "id": "ex-ps-l4-m4-3",
+      "order": 3,
+      "title": "Test d'exception",
+      "instructions": "Créez une fonction `Diviser` qui lance une exception si le diviseur est 0. Testez que :\n- `Diviser 10 2` retourne 5\n- `Diviser 10 0` lève une exception contenant `zéro`\n\nRésultat attendu :\n```\nPassed: 2, Failed: 0\n```",
+      "expectedOutput": "Passed: 2",
+      "validationType": "contains",
+      "correction": "function Diviser {\n    param([double]$a, [double]$b)\n    if ($b -eq 0) { throw \"Division par zéro impossible\" }\n    return $a / $b\n}\n\nDescribe \"Diviser\" {\n    It \"division normale\" {\n        Diviser 10 2 | Should -Be 5\n    }\n    It \"division par zéro throw\" {\n        { Diviser 10 0 } | Should -Throw -ExpectedMessage \"zéro\"\n    }\n}\n\n$result = Invoke-Pester -PassThru -Output None\nWrite-Host \"Passed: $($result.PassedCount), Failed: $($result.FailedCount)\"",
+      "explanation": "`{ ... } | Should -Throw` vérifie qu'un scriptblock lève une exception. `-ExpectedMessage \"zéro\"` vérifie que le message d'erreur contient \"zéro\". Les accolades `{}` sont essentielles : elles empêchent l'évaluation immédiate et permettent à Pester de capturer l'exception. Sans les accolades, l'exception serait levée avant que Pester puisse la capturer."
+    }
+  ]
+}

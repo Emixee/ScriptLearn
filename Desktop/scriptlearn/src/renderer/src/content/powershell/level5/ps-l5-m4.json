@@ -1,0 +1,62 @@
+{
+  "id": "ps-l5-m4",
+  "title": "Extensibilité du pipeline",
+  "level": 5,
+  "lang": "powershell",
+  "order": 4,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Cmdlets binaires en C#",
+      "content": "```csharp\n// Exemple de cmdlet C# compilée dans PowerShell\nusing System.Management.Automation;\n\n[Cmdlet(VerbsCommon.Get, \"Hello\")]\n[OutputType(typeof(string))]\npublic class GetHelloCmdlet : Cmdlet {\n    [Parameter(Mandatory = true, ValueFromPipeline = true)]\n    public string Name { get; set; }\n    \n    [Parameter]\n    public int Times { get; set; } = 1;\n    \n    protected override void ProcessRecord() {\n        for (int i = 0; i < Times; i++) {\n            WriteObject($\"Hello, {Name}!\");\n        }\n    }\n}\n```\n\n```powershell\n# Compiler et charger la cmdlet\nAdd-Type -TypeDefinition @'\n[Cmdlet(VerbsCommon.Get, \"Hello\")]\npublic class GetHelloCmdlet : PSCmdlet {\n    [Parameter(Mandatory=true, ValueFromPipeline=true)]\n    public string Name { get; set; }\n    protected override void ProcessRecord() {\n        WriteObject($\"Hello, {Name}!\");\n    }\n}\n'@ -ReferencedAssemblies System.Management.Automation\n\n# Importer comme cmdlet\n$session = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()\n$session.Commands.Add([System.Management.Automation.Runspaces.SessionStateCmdletEntry]::new('Get-Hello', [GetHelloCmdlet], $null))\n```"
+    },
+    {
+      "title": "Types output et format",
+      "content": "```powershell\n# Déclarer des types de sortie pour l'aide\nfunction Get-PersonInfo {\n    [OutputType([PSCustomObject])]\n    param([string]$Name)\n    \n    [PSCustomObject]@{\n        PSTypeName = 'PersonInfo'  # type nominal\n        Name  = $Name\n        Upper = $Name.ToUpper()\n    }\n}\n\n# Format personnalisé via Update-TypeData\nUpdate-TypeData -TypeName 'PersonInfo' -MemberType ScriptProperty `\n    -MemberName 'Initiales' `\n    -Value { $this.Name -replace '[^A-Z]', '' }\n\n# Fichier de format (.ps1xml)\n$formatXml = @'\n<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<Configuration>\n    <ViewDefinitions>\n        <View>\n            <Name>PersonInfo</Name>\n            <ViewSelectedBy><TypeName>PersonInfo</TypeName></ViewSelectedBy>\n            <TableControl>\n                <TableHeaders>\n                    <TableColumnHeader><Label>Nom</Label></TableColumnHeader>\n                    <TableColumnHeader><Label>Majuscules</Label></TableColumnHeader>\n                </TableHeaders>\n                <TableRowEntries><TableRowEntry><TableColumnItems>\n                    <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>\n                    <TableColumnItem><PropertyName>Upper</PropertyName></TableColumnItem>\n                </TableColumnItems></TableRowEntry></TableRowEntries>\n            </TableControl>\n        </View>\n    </ViewDefinitions>\n</Configuration>\n'@\n$formatXml | Set-Content PersonInfo.format.ps1xml\nUpdate-FormatData -PrependPath PersonInfo.format.ps1xml\n```"
+    },
+    {
+      "title": "Type extensions dynamiques",
+      "content": "```powershell\n# Ajouter des méthodes à des types existants\nUpdate-TypeData -TypeName 'System.String' `\n    -MemberType ScriptMethod `\n    -MemberName 'Tronquer' `\n    -Value { param($n=20) if($this.Length -le $n){$this}else{\"$($this.Substring(0,$n))...\"} }\n\n\"Bonjour le monde en PowerShell\".Tronquer()     # Bonjour le monde en Pow...\n\"Bonjour\".Tronquer(100)                          # Bonjour\n\n# Propriété calculée\nUpdate-TypeData -TypeName 'System.IO.FileInfo' `\n    -MemberType ScriptProperty `\n    -MemberName 'SizeMo' `\n    -Value { [math]::Round($this.Length / 1MB, 2) }\n\nGet-Item 'C:\\Windows\\System32\\ntdll.dll' | Select-Object Name, SizeMo\n\n# Ajouter un alias de méthode\nUpdate-TypeData -TypeName 'System.Collections.ArrayList' `\n    -MemberType ScriptMethod `\n    -MemberName 'Peek' `\n    -Value { $this[-1] }\n\n# Étendre PSCustomObject\nUpdate-TypeData -TypeName 'MyApp.Config' `\n    -MemberType ScriptMethod `\n    -MemberName 'Valider' `\n    -Value { $this.Port -gt 0 -and $this.Port -lt 65536 }\n```"
+    },
+    {
+      "title": "Transformations et completions",
+      "content": "```powershell\n# ArgumentCompleter — auto-complétion des paramètres\nfunction Set-AppEnv {\n    param(\n        [ArgumentCompleter({\n            param($cmd, $param, $word, $ast, $bound)\n            @('dev','staging','prod','test') | Where-Object { $_ -like \"$word*\" }\n        })]\n        [string]$Environment\n    )\n    Write-Host \"Env : $Environment\"\n}\n# Appuyer Tab après Set-AppEnv -Environment donne dev, staging, prod, test\n\n# Register-ArgumentCompleter (global)\nRegister-ArgumentCompleter -CommandName 'Deploy-App' -ParameterName 'Region' -ScriptBlock {\n    @('eu-west-1','us-east-1','ap-southeast-1') | Where-Object { $_ -like \"$wordToComplete*\" }\n}\n\n# [TransformAttribute] — transformation de paramètre\nclass PathTransform : System.Management.Automation.ArgumentTransformationAttribute {\n    [object] Transform([System.Management.Automation.EngineIntrinsics]$context, [object]$input) {\n        if ($input -is [string]) {\n            return [System.IO.Path]::GetFullPath($input)\n        }\n        return $input\n    }\n}\n\nfunction Read-Config {\n    param(\n        [PathTransform()]\n        [string]$Path\n    )\n    Write-Host \"Chemin absolu : $Path\"\n}\n```"
+    },
+    {
+      "title": "Pipeline avancé — begin/process/end",
+      "content": "```powershell\nfunction Measure-Pipeline {\n    [CmdletBinding()]\n    param(\n        [Parameter(ValueFromPipeline = $true)]\n        [object]$InputObject,\n        \n        [scriptblock]$Transform = { $_ }\n    )\n    \n    begin {\n        $count = 0\n        $sum   = 0\n        $start = [datetime]::UtcNow\n        Write-Verbose \"Démarrage du pipeline\"\n    }\n    \n    process {\n        $count++\n        $transformed = $InputObject | ForEach-Object $Transform\n        $sum += $transformed\n        $transformed  # émettre dans le pipeline\n    }\n    \n    end {\n        $elapsed = ([datetime]::UtcNow - $start).TotalMilliseconds\n        Write-Verbose \"$count objets traités en $($elapsed)ms\"\n        \n        # Émettre des stats en verbose seulement\n        if ($count -gt 0) {\n            Write-Verbose \"Somme: $sum  Moy: $([math]::Round($sum/$count,2))\"\n        }\n    }\n}\n\n1..10 | Measure-Pipeline -Transform { $_ * $_ } -Verbose\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l5-m4-1",
+      "order": 1,
+      "title": "Extension de type",
+      "instructions": "Ajoutez une méthode `Capitalize` au type `[System.String]` via `Update-TypeData` qui met en majuscule la première lettre.\n\nRésultat attendu :\n```\nhello → Hello\nbonjour monde → Bonjour monde\n```",
+      "expectedOutput": "Bonjour monde",
+      "validationType": "contains",
+      "correction": "Update-TypeData -TypeName 'System.String' `\n    -MemberType ScriptMethod `\n    -MemberName 'Capitalize' `\n    -Value { \n        if ($this.Length -eq 0) { return $this }\n        $this[0].ToString().ToUpper() + $this.Substring(1)\n    } `\n    -Force\n\nWrite-Host \"hello → $('hello'.Capitalize())\"\nWrite-Host \"bonjour monde → $('bonjour monde'.Capitalize())\"",
+      "explanation": "`Update-TypeData` étend un type .NET existant sans le sous-classer. `ScriptMethod` ajoute une méthode appelée avec `()`. `$this` référence l'objet courant (comme en C#). `-Force` est nécessaire si le membre existe déjà. Cette extension est disponible pour tous les objets string dans la session courante — un peu comme les extension methods C#."
+    },
+    {
+      "id": "ex-ps-l5-m4-2",
+      "order": 2,
+      "title": "Cmdlet avec begin/process/end",
+      "instructions": "Créez une fonction `Select-Top` compatible pipeline qui passe les N premiers objets et affiche en `Verbose` le nombre total d'objets vus.\n\nRésultat attendu :\n```\n1\n2\n3\nVERBOSE: 10 objets reçus, 3 passés\n```",
+      "expectedOutput": "VERBOSE: 10 objets",
+      "validationType": "contains",
+      "correction": "function Select-Top {\n    [CmdletBinding()]\n    param(\n        [Parameter(ValueFromPipeline=$true)]\n        [object]$InputObject,\n        [int]$N = 5\n    )\n    begin   { $total = 0; $passed = 0 }\n    process {\n        $total++\n        if ($passed -lt $N) {\n            $passed++\n            $InputObject\n        }\n    }\n    end     { Write-Verbose \"$total objets reçus, $passed passés\" }\n}\n\n1..10 | Select-Top -N 3 -Verbose",
+      "explanation": "`begin` s'exécute avant le premier objet du pipeline — initialisation des variables. `process` s'exécute pour chaque objet — la logique principale. `end` s'exécute après le dernier objet — résumé et nettoyage. Émettre `$InputObject` dans `process` le passe au cmdlet suivant dans le pipeline. `Write-Verbose` n'affiche que si `-Verbose` est passé."
+    },
+    {
+      "id": "ex-ps-l5-m4-3",
+      "order": 3,
+      "title": "OutputType et PSTypeName",
+      "instructions": "Créez une fonction `Get-Produit` qui retourne un objet avec `PSTypeName = 'Produit'`. Ajoutez une propriété calculée `PrixTTC` (prix × 1.2) via `Update-TypeData`.\n\nRésultat attendu :\n```\nNom    Prix  PrixTTC\n---    ----  -------\nPomme  1.5      1.8\n```",
+      "expectedOutput": "PrixTTC",
+      "validationType": "contains",
+      "correction": "Update-TypeData -TypeName 'Produit' `\n    -MemberType ScriptProperty `\n    -MemberName 'PrixTTC' `\n    -Value { [math]::Round($this.Prix * 1.2, 2) } `\n    -Force\n\nfunction Get-Produit {\n    param([string]$Nom, [double]$Prix)\n    [PSCustomObject]@{\n        PSTypeName = 'Produit'\n        Nom        = $Nom\n        Prix       = $Prix\n    }\n}\n\nGet-Produit -Nom 'Pomme' -Prix 1.5 | Format-Table Nom, Prix, PrixTTC",
+      "explanation": "`PSTypeName` dans un `@{}` donne un nom de type nominal à l'objet sans classe formelle. Ce nom est utilisé par le système de types PS pour les extensions (`Update-TypeData`), les formats (`.format.ps1xml`), et `$obj.PSTypeNames`. Les propriétés calculées `ScriptProperty` sont évaluées à la demande, pas stockées — parfait pour les dérivées comme `PrixTTC`."
+    }
+  ]
+}

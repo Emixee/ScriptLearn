@@ -1,0 +1,58 @@
+{
+  "id": "py-l1-m6",
+  "title": "Lecture et écriture de fichiers",
+  "lang": "python",
+  "level": 1,
+  "order": 6,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Lire un fichier texte",
+      "content": "La lecture de fichiers est la base de l'analyse de logs :\n\n```python\n# Méthode recommandée : with (ferme automatiquement le fichier)\nwith open(\"/var/log/auth.log\", \"r\") as f:\n    contenu = f.read()  # Tout le fichier en une chaîne\n\n# Ligne par ligne (économise la mémoire pour les gros fichiers)\nwith open(\"/var/log/auth.log\", \"r\") as f:\n    for ligne in f:\n        ligne = ligne.strip()  # Supprimer \\n\n        if \"Failed password\" in ligne:\n            print(ligne)\n\n# Toutes les lignes dans une liste\nwith open(\"/var/log/auth.log\", \"r\") as f:\n    lignes = f.readlines()\nprint(f\"Total : {len(lignes)} lignes\")\n```\n\n> Sur Windows, les logs sont souvent en `C:\\Windows\\System32\\winevt\\Logs\\`"
+    },
+    {
+      "section": "Gérer les erreurs de lecture",
+      "content": "```python\nimport os\n\ndef lire_log(chemin):\n    if not os.path.exists(chemin):\n        print(f\"Fichier introuvable : {chemin}\")\n        return []\n    try:\n        with open(chemin, \"r\", encoding=\"utf-8\", errors=\"ignore\") as f:\n            return f.readlines()\n    except PermissionError:\n        print(f\"Permission refusée : {chemin}\")\n        return []\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n        return []\n\nlignes = lire_log(r\"C:\\Windows\\System32\\drivers\\etc\\hosts\")\nprint(f\"{len(lignes)} lignes lues\")\n```\n\n`encoding=\"utf-8\", errors=\"ignore\"` évite les erreurs sur les fichiers avec des caractères spéciaux."
+    },
+    {
+      "section": "Écrire dans un fichier",
+      "content": "```python\nfrom datetime import datetime\n\nts = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n\n# Écrire (écrase le fichier existant)\nwith open(\"alertes.txt\", \"w\") as f:\n    f.write(f\"{ts} [CRITIQUE] IP malveillante détectée\\n\")\n    f.write(f\"{ts} [HAUTE] Brute force sur SSH\\n\")\n\n# Ajouter à un fichier existant (append)\nwith open(\"alertes.txt\", \"a\") as f:\n    f.write(f\"{ts} [MOYENNE] Scan de ports\\n\")\n\n# Écrire une liste de lignes\niocsauve = [\"185.220.101.3\", \"194.165.16.11\"]\nwith open(\"ioc_list.txt\", \"w\") as f:\n    f.writelines([ip + \"\\n\" for ip in iocsauve])\n```"
+    },
+    {
+      "section": "Analyser un fichier de log (exemple complet)",
+      "content": "```python\nimport re\nfrom collections import Counter\n\ndef analyser_auth_log(chemin):\n    \"\"\"Analyse les tentatives SSH échouées dans auth.log.\"\"\"\n    echecs = []\n    pattern = r\"Failed password.*from (\\d+\\.\\d+\\.\\d+\\.\\d+)\"\n    \n    try:\n        with open(chemin, \"r\", errors=\"ignore\") as f:\n            for ligne in f:\n                match = re.search(pattern, ligne)\n                if match:\n                    echecs.append(match.group(1))\n    except FileNotFoundError:\n        print(f\"Fichier non trouvé : {chemin}\")\n        return\n    \n    if not echecs:\n        print(\"Aucun échec SSH trouvé\")\n        return\n    \n    compteur = Counter(echecs)\n    print(f\"Tentatives SSH échouées : {len(echecs)}\")\n    print(\"Top 5 attaquants :\")\n    for ip, n in compteur.most_common(5):\n        print(f\"  {ip}: {n} tentatives\")\n\nanalyser_auth_log(\"/var/log/auth.log\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m6-ex1",
+      "title": "Écrire un rapport d'alerte",
+      "description": "Écrire des alertes dans un fichier texte",
+      "instructions": "Écrivez ces deux lignes dans un fichier `rapport.txt` :\n```\nALERTE: Connexion suspecte\nSOURCE: 185.220.101.3\n```\nPuis lisez le fichier et affichez son contenu avec `print()`.\n\nRésultat attendu (contient) :\n```\nALERTE: Connexion suspecte\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALERTE: Connexion suspecte",
+      "correction": "with open(\"rapport.txt\", \"w\") as f:\n    f.write(\"ALERTE: Connexion suspecte\\n\")\n    f.write(\"SOURCE: 185.220.101.3\\n\")\n\nwith open(\"rapport.txt\", \"r\") as f:\n    print(f.read())",
+      "explanation": "Le mode `\"w\"` crée ou écrase le fichier. `\"r\"` le lit. Le contexte `with` garantit que le fichier est fermé même en cas d'erreur."
+    },
+    {
+      "id": "py-l1-m6-ex2",
+      "title": "Compter les lignes d'un fichier",
+      "description": "Lire le fichier hosts et compter les lignes non vides",
+      "instructions": "Lisez le fichier `C:\\Windows\\System32\\drivers\\etc\\hosts` (ou `/etc/hosts` sur Linux).\n\nAffichez le nombre de lignes non vides et non commentées (qui ne commencent pas par `#`) :\n```\nEntrées hosts : X\n```\n(X dépend de votre système)",
+      "validationType": "output_contains",
+      "expectedOutput": "Entrées hosts :",
+      "correction": "import os\nchemin = r\"C:\\Windows\\System32\\drivers\\etc\\hosts\" if os.name == \"nt\" else \"/etc/hosts\"\ntry:\n    with open(chemin, \"r\", errors=\"ignore\") as f:\n        lignes = [l.strip() for l in f if l.strip() and not l.startswith(\"#\")]\n    print(f\"Entrées hosts : {len(lignes)}\")\nexcept Exception as e:\n    print(f\"Erreur : {e}\")",
+      "explanation": "La list comprehension filtre les lignes vides (`l.strip()` est falsy si vide) et les commentaires. `os.name == 'nt'` détecte Windows."
+    },
+    {
+      "id": "py-l1-m6-ex3",
+      "title": "Sauvegarder des IOC",
+      "description": "Écrire une liste d'IOC dans un fichier et la relire",
+      "instructions": "Écrivez cette liste d'IPs dans `ioc.txt` (une par ligne) :\n```python\nips = [\"185.220.101.3\", \"194.165.16.11\", \"45.142.212.100\"]\n```\nRelisez le fichier et affichez :\n```\nIOC chargés : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IOC chargés : 3",
+      "correction": "ips = [\"185.220.101.3\", \"194.165.16.11\", \"45.142.212.100\"]\nwith open(\"ioc.txt\", \"w\") as f:\n    for ip in ips:\n        f.write(ip + \"\\n\")\n\nwith open(\"ioc.txt\", \"r\") as f:\n    chargés = [l.strip() for l in f if l.strip()]\nprint(f\"IOC chargés : {len(chargés)}\")",
+      "explanation": "Ce pattern (écrire une liste, relire, filtrer les lignes vides) est la base de toute gestion de listes d'IOC en Python."
+    }
+  ]
+}

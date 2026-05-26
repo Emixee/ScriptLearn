@@ -1,0 +1,72 @@
+{
+  "id": "bash-l2-m1",
+  "title": "Conditions avancées",
+  "level": 2,
+  "lang": "bash",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Les opérateurs de test",
+      "content": "La commande `[ ]` (ou `test`) évalue une condition et retourne 0 (vrai) ou 1 (faux).\n\n**Tests sur les chaînes :**\n| Expression | Signification |\n|---|---|\n| `[ -z \"$var\" ]` | Chaîne vide |\n| `[ -n \"$var\" ]` | Chaîne non vide |\n| `[ \"$a\" = \"$b\" ]` | Égalité |\n| `[ \"$a\" != \"$b\" ]` | Différence |\n\n**Tests sur les nombres :**\n| Expression | Signification |\n|---|---|\n| `[ $a -eq $b ]` | Égal |\n| `[ $a -ne $b ]` | Différent |\n| `[ $a -lt $b ]` | Inférieur |\n| `[ $a -gt $b ]` | Supérieur |\n| `[ $a -le $b ]` | Inférieur ou égal |\n| `[ $a -ge $b ]` | Supérieur ou égal |\n\n> **Note :** Préférez `[[ ]]` (double crochets) dans les scripts Bash modernes : moins de surprises avec les espaces et les variables vides."
+    },
+    {
+      "title": "if / elif / else",
+      "content": "La structure conditionnelle complète :\n\n```bash\nnote=15\n\nif [ $note -ge 16 ]; then\n    echo \"Très bien\"\nelif [ $note -ge 12 ]; then\n    echo \"Bien\"\nelif [ $note -ge 10 ]; then\n    echo \"Passable\"\nelse\n    echo \"Insuffisant\"\nfi\n```\n\n**Règles importantes :**\n- `then` doit être sur la même ligne que `if` (séparé par `;`) ou sur la ligne suivante\n- Chaque `if` se ferme avec `fi` (if à l'envers)\n- `elif` = « else if » (autant qu'on veut)\n- L'`else` est optionnel"
+    },
+    {
+      "title": "Opérateurs logiques",
+      "content": "**Dans `[[ ]]` :**\n```bash\nage=25\nville=\"Paris\"\n\n# ET logique\nif [[ $age -ge 18 && $ville == \"Paris\" ]]; then\n    echo \"Adulte parisien\"\nfi\n\n# OU logique\nif [[ $age -lt 12 || $age -gt 65 ]]; then\n    echo \"Tarif réduit\"\nfi\n\n# Négation\nif [[ ! -f \"config.txt\" ]]; then\n    echo \"Fichier manquant\"\nfi\n```\n\n**En dehors des tests :**\n```bash\n# && : exécuter si la commande précédente a réussi\nmkdir dossier && echo \"Dossier créé avec succès\"\n\n# || : exécuter si la commande précédente a échoué\ncd /inexistant || echo \"Impossible d'y aller\"\n```"
+    },
+    {
+      "title": "La structure case",
+      "content": "`case` remplace avantageusement une longue chaîne d'`if/elif` quand on teste une valeur contre plusieurs possibilités :\n\n```bash\njour=$(date +%A)\n\ncase \"$jour\" in\n    lundi|mardi|mercredi|jeudi|vendredi)\n        echo \"Jour ouvré\"\n        ;;\n    samedi|dimanche)\n        echo \"Week-end !\"\n        ;;\n    *)\n        echo \"Jour inconnu\"\n        ;;\nesac\n```\n\n**Syntaxe :**\n- Chaque motif se termine par `)`\n- Les actions se terminent par `;;`\n- `*` est le motif par défaut (comme `default` en C)\n- `|` sépare plusieurs motifs (OU)\n- `case` se ferme avec `esac` (case à l'envers)"
+    },
+    {
+      "title": "Tests de fichiers avancés",
+      "content": "```bash\nfichier=\"donnees.csv\"\n\n# Chaîne de tests\nif [[ -f \"$fichier\" && -r \"$fichier\" && -s \"$fichier\" ]]; then\n    echo \"Fichier lisible et non vide\"\nfi\n\n# Comparer deux fichiers\nif [ \"fichier1.txt\" -nt \"fichier2.txt\" ]; then\n    echo \"fichier1 est plus récent\"\nfi\n```\n\n**Tests utiles :**\n| Test | Signification |\n|------|---------------|\n| `-nt file` | Plus récent que (newer than) |\n| `-ot file` | Plus ancien que (older than) |\n| `-ef file` | Même fichier (même inode) |\n| `-L file` | Est un lien symbolique |\n\n**Combinaison avec substitution de commande :**\n```bash\nnb=$(ls *.txt 2>/dev/null | wc -l)\nif [ \"$nb\" -gt 0 ]; then\n    echo \"$nb fichier(s) .txt trouvé(s)\"\nfi\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m1-1",
+      "order": 1,
+      "title": "Classifier un nombre",
+      "instructions": "Créez un script qui affecte `n=7` et affiche :\n- `Positif` si le nombre est > 0\n- `Négatif` si < 0\n- `Zéro` si = 0\n\nRésultat attendu pour n=7 :\n```\nPositif\n```",
+      "expectedOutput": "Positif",
+      "validationType": "contains",
+      "correction": "n=7\nif [ $n -gt 0 ]; then\n    echo \"Positif\"\nelif [ $n -lt 0 ]; then\n    echo \"Négatif\"\nelse\n    echo \"Zéro\"\nfi",
+      "explanation": "`-gt` (greater than) teste si un nombre est strictement supérieur. Les opérateurs numériques Bash sont toujours en lettres (`-gt`, `-lt`, `-eq`...) et non des symboles (`>`, `<`) car ceux-ci servent aux redirections."
+    },
+    {
+      "id": "ex-bash-l2-m1-2",
+      "order": 2,
+      "title": "Note scolaire avec elif",
+      "instructions": "Créez un script avec `note=14` et affichez la mention correspondante :\n- ≥ 16 → `Très bien`\n- ≥ 14 → `Bien`\n- ≥ 12 → `Assez bien`\n- ≥ 10 → `Passable`\n- < 10 → `Insuffisant`\n\nRésultat attendu :\n```\nBien\n```",
+      "expectedOutput": "Bien",
+      "validationType": "contains",
+      "correction": "note=14\nif [ $note -ge 16 ]; then\n    echo \"Très bien\"\nelif [ $note -ge 14 ]; then\n    echo \"Bien\"\nelif [ $note -ge 12 ]; then\n    echo \"Assez bien\"\nelif [ $note -ge 10 ]; then\n    echo \"Passable\"\nelse\n    echo \"Insuffisant\"\nfi",
+      "explanation": "`-ge` (greater or equal) teste ≥. L'ordre des `elif` est crucial : on va du plus élevé au plus bas, car Bash s'arrête à la première condition vraie. Si on mettait `note -ge 10` en premier, toutes les notes ≥ 10 seraient « Passable »."
+    },
+    {
+      "id": "ex-bash-l2-m1-3",
+      "order": 3,
+      "title": "Jour de la semaine avec case",
+      "instructions": "Créez un script avec `jour=\"samedi\"` et utilisez `case` pour afficher :\n- `Jour ouvré` pour les jours de semaine\n- `Week-end !` pour samedi et dimanche\n\nRésultat attendu :\n```\nWeek-end !\n```",
+      "expectedOutput": "Week-end",
+      "validationType": "contains",
+      "correction": "jour=\"samedi\"\n\ncase \"$jour\" in\n    lundi|mardi|mercredi|jeudi|vendredi)\n        echo \"Jour ouvré\"\n        ;;\n    samedi|dimanche)\n        echo \"Week-end !\"\n        ;;\nesac",
+      "explanation": "`case` est idéal pour tester une variable contre plusieurs valeurs littérales. Le `|` entre les motifs signifie OU. Le `;;` termine chaque branche (oubli fréquent !). `esac` (case à l'envers) ferme le bloc."
+    },
+    {
+      "id": "ex-bash-l2-m1-4",
+      "order": 4,
+      "title": "Test fichier et chaîne combinés",
+      "instructions": "Créez un script qui :\n1. Définit `chemin=\"$HOME/scriptlearn\"`\n2. Vérifie si ce chemin **existe** ET **est un dossier** avec `[[ ... && ... ]]`\n3. Affiche `Dossier scriptlearn trouvé.` si oui\n4. Affiche `Dossier absent.` si non\n\nRésultat attendu (si ~/scriptlearn existe) :\n```\nDossier scriptlearn trouvé.\n```",
+      "expectedOutput": "scriptlearn",
+      "validationType": "contains",
+      "correction": "chemin=\"$HOME/scriptlearn\"\n\nif [[ -e \"$chemin\" && -d \"$chemin\" ]]; then\n    echo \"Dossier scriptlearn trouvé.\"\nelse\n    echo \"Dossier absent.\"\nfi",
+      "explanation": "`[[ ]]` (double crochets) est une syntaxe Bash étendue plus robuste que `[ ]`. Elle permet d'utiliser `&&` et `||` directement à l'intérieur, d'utiliser `==` pour les comparaisons de chaînes, et gère mieux les variables avec espaces."
+    }
+  ]
+}

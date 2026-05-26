@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m1",
+  "title": "Analyse des journaux d'événements Windows",
+  "lang": "powershell",
+  "level": 6,
+  "order": 1,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Windows Event Logs — sources clés SOC",
+      "content": "Les journaux d'événements Windows sont la principale source de détection en environnement Microsoft. Les EventIDs les plus importants pour un SOC :\n\n| EventID | Canal | Description SOC |\n|---------|-------|------------------|\n| 4624 | Security | Connexion réussie |\n| 4625 | Security | Échec de connexion |\n| 4648 | Security | Connexion avec credentials explicites |\n| 4720 | Security | Création de compte |\n| 4732 | Security | Ajout au groupe Administrateurs |\n| 4688 | Security | Création de processus |\n| 7045 | System | Nouveau service installé |\n| 1102 | Security | Logs d'audit effacés |\n\n```powershell\n# Lire les 10 derniers événements Security\nGet-EventLog -LogName Security -Newest 10 | Format-Table TimeGenerated, EventID, Message -Wrap\n\n# Via Get-WinEvent (plus puissant)\nGet-WinEvent -LogName Security -MaxEvents 10 | Select-Object TimeCreated, Id, Message\n\n# Canaux disponibles\nGet-WinEvent -ListLog * | Where-Object { $_.RecordCount -gt 0 } | Sort-Object RecordCount -Descending | Select-Object -First 10\n```"
+    },
+    {
+      "section": "Détecter les échecs de connexion (4625)",
+      "content": "```powershell\n# Détecter les tentatives de brute force — EventID 4625\n$fails = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4625\n    StartTime = (Get-Date).AddHours(-24)\n} -ErrorAction SilentlyContinue\n\nif ($fails) {\n    Write-Host \"Échecs de connexion (24h) : $($fails.Count)\"\n    \n    # Extraire les IPs et compter\n    $parIP = $fails | ForEach-Object {\n        if ($_.Message -match 'Source Network Address:\\s+(\\S+)') {\n            $Matches[1]\n        }\n    } | Where-Object { $_ -and $_ -ne '-' } |\n      Group-Object | Sort-Object Count -Descending\n    \n    Write-Host \"`nTop IPs (tentatives échouées) :\"\n    $parIP | Select-Object -First 10 | ForEach-Object {\n        $flag = if ($_.Count -ge 10) { ' [BRUTE FORCE]' } else { '' }\n        Write-Host \"  $($_.Name) : $($_.Count)$flag\"\n    }\n} else {\n    Write-Host \"Aucun échec de connexion dans les 24 dernières heures\"\n}\n```"
+    },
+    {
+      "section": "Créations de comptes et élévations (4720, 4732)",
+      "content": "```powershell\n# Détecter créations de comptes et modifications de groupes sensibles\n$debut = (Get-Date).AddDays(-7)\n\n# Comptes créés\n$comptesCreés = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4720\n    StartTime = $debut\n} -ErrorAction SilentlyContinue\n\nWrite-Host \"Comptes créés (7j) : $($comptesCreés.Count)\"\n$comptesCreés | ForEach-Object {\n    if ($_.Message -match 'Account Name:\\s+(\\S+)\\s') {\n        Write-Host \"  + $($Matches[1]) — $($_.TimeCreated.ToString('yyyy-MM-dd HH:mm'))\"\n    }\n}\n\n# Ajouts aux groupes Administrateurs (4732)\n$ajoutsAdmin = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4732\n    StartTime = $debut\n} -ErrorAction SilentlyContinue\n\nWrite-Host \"`nAjouts groupe Admin (7j) : $($ajoutsAdmin.Count)\"\nif ($ajoutsAdmin) {\n    $ajoutsAdmin | ForEach-Object {\n        Write-Host \"  [ALERTE] $($_.TimeCreated) — $($_.Message.Substring(0,[Math]::Min(200,$_.Message.Length)))\"\n    }\n}\n\n# Logs d'audit effacés (1102) — très suspect\n$logsEffaces = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 1102\n    StartTime = $debut\n} -ErrorAction SilentlyContinue\n\nif ($logsEffaces) {\n    Write-Host \"`n[CRITIQUE] Logs d'audit effacés : $($logsEffaces.Count) fois !\"\n}\n```"
+    },
+    {
+      "section": "Création de processus suspects (4688)",
+      "content": "```powershell\n# Nécessite : Audit Process Creation activé dans la GPO\n# Computer Config > Windows Settings > Security Settings > Advanced Audit Policy\n\n$processsuspectes = @(\n    'powershell.exe', 'cmd.exe', 'wscript.exe', 'cscript.exe',\n    'mshta.exe', 'rundll32.exe', 'regsvr32.exe', 'certutil.exe',\n    'bitsadmin.exe', 'msiexec.exe', 'psexec.exe', 'wmic.exe'\n)\n\n$debut = (Get-Date).AddHours(-4)\n\nGet-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4688\n    StartTime = $debut\n} -ErrorAction SilentlyContinue | ForEach-Object {\n    $msg = $_.Message\n    foreach ($proc in $processsuspectes) {\n        if ($msg -match [regex]::Escape($proc)) {\n            # Extraire les infos\n            $newProcess = if ($msg -match 'New Process Name:\\s+(.+)\\r') { $Matches[1].Trim() } else { '?' }\n            $creator   = if ($msg -match 'Creator Process Name:\\s+(.+)\\r') { $Matches[1].Trim() } else { '?' }\n            $user      = if ($msg -match 'Account Name:\\s+(\\S+)') { $Matches[1] } else { '?' }\n            \n            Write-Host \"[$($_.TimeCreated.ToString('HH:mm:ss'))] $user : $creator → $newProcess\"\n            break\n        }\n    }\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m1-ex1",
+      "title": "Compter les événements de sécurité",
+      "description": "Utiliser Get-WinEvent pour analyser les logs de sécurité",
+      "instructions": "Comptez les événements dans le journal `Security` des dernières 24 heures et affichez :\n```\nÉvénements Security (24h) : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Événements Security (24h) :",
+      "correction": "$count = (Get-WinEvent -FilterHashtable @{LogName='Security'; StartTime=(Get-Date).AddHours(-24)} -ErrorAction SilentlyContinue).Count\nWrite-Host \"Événements Security (24h) : $count\"",
+      "explanation": "`FilterHashtable` est bien plus rapide que de filtrer après coup avec `Where-Object` — il passe le filtre directement au service d'événements. `-ErrorAction SilentlyContinue` évite l'erreur si aucun événement n'est trouvé."
+    },
+    {
+      "id": "ps-l6-m1-ex2",
+      "title": "Chercher les connexions réussies récentes",
+      "description": "Identifier les EventID 4624 des dernières heures",
+      "instructions": "Comptez les connexions réussies (EventID 4624) dans la dernière heure et affichez :\n```\nConnexions réussies (1h) : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Connexions réussies (1h) :",
+      "correction": "$count = (Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4624; StartTime=(Get-Date).AddHours(-1)} -ErrorAction SilentlyContinue).Count\nWrite-Host \"Connexions réussies (1h) : $count\"",
+      "explanation": "EventID 4624 est le plus fréquent dans les logs Security Windows. En production, on filtre par LogonType (2=interactif, 3=réseau, 10=remote interactive) pour distinguer les connexions normales des connexions suspectes."
+    },
+    {
+      "id": "ps-l6-m1-ex3",
+      "title": "Détecter les logs effacés",
+      "description": "Chercher l'EventID 1102 indiquant un effacement de logs",
+      "instructions": "Vérifiez si l'EventID 1102 (logs d'audit effacés) est présent dans les 7 derniers jours. Affichez :\n```\nLogs effacés : X fois\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Logs effacés :",
+      "correction": "$count = (Get-WinEvent -FilterHashtable @{LogName='Security'; Id=1102; StartTime=(Get-Date).AddDays(-7)} -ErrorAction SilentlyContinue).Count\nWrite-Host \"Logs effacés : $count fois\"",
+      "explanation": "EventID 1102 est un IOC critique : un attaquant efface les logs pour couvrir ses traces. Ce seul événement justifie une investigation immédiate. EventID 104 (System log cleared) est son équivalent dans le canal System."
+    }
+  ]
+}

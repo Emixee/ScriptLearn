@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m3",
+  "title": "Forensics Windows — artefacts et timeline",
+  "lang": "powershell",
+  "level": 6,
+  "order": 3,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Artefacts forensics Windows",
+      "content": "Les artefacts Windows permettent de reconstituer les actions d'un attaquant longtemps après l'incident.\n\n**Artefacts clés** :\n- **Event Logs** — Security, System, Application, PowerShell/Operational\n- **Prefetch** — `C:\\Windows\\Prefetch\\*.pf` — programmes exécutés\n- **Registry** — Run keys, Services, MRU\n- **LNK files** — raccourcis récents\n- **Amcache** — historique des exécutions\n- **Jump Lists** — fichiers récemment ouverts par application\n- **$MFT** — Master File Table NTFS (tous les fichiers jamais créés)\n\n```powershell\n# ─── Programmes récemment exécutés (Prefetch) ───\nGet-ChildItem 'C:\\Windows\\Prefetch\\*.pf' -ErrorAction SilentlyContinue |\n    Sort-Object LastWriteTime -Descending |\n    Select-Object -First 20 Name, LastWriteTime |\n    Format-Table -AutoSize\n\n# ─── Fichiers temporaires suspects ───\nGet-ChildItem $env:TEMP -Recurse -ErrorAction SilentlyContinue |\n    Where-Object { $_.LastWriteTime -gt (Get-Date).AddHours(-24) } |\n    Select-Object FullName, Length, LastWriteTime\n```"
+    },
+    {
+      "section": "Registre Windows — clés de persistance",
+      "content": "```powershell\n# Audit des mécanismes de persistance dans le registre\n\nfunction Audit-Persistance {\n    Write-Host \"=== Audit persistance registre ===\"\n    \n    # ─── Run Keys (démarrage automatique) ───\n    $runKeys = @(\n        'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',\n        'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce',\n        'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',\n        'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'\n    )\n    \n    Write-Host \"`n[Run Keys]\"\n    foreach ($key in $runKeys) {\n        try {\n            $values = Get-ItemProperty $key -ErrorAction Stop\n            $values.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object {\n                Write-Host \"  [$key]\"\n                Write-Host \"    $($_.Name) = $($_.Value)\"\n                # Flags suspects\n                if ($_.Value -match 'powershell|cmd|wscript|mshta|regsvr32') {\n                    Write-Host \"    [SUSPECT] Exécutable connu LOLBin\"\n                }\n            }\n        } catch { }\n    }\n    \n    # ─── Services Windows (mécanisme de persistance courant) ───\n    Write-Host \"`n[Services récents]\"\n    Get-WinEvent -FilterHashtable @{LogName='System'; Id=7045; StartTime=(Get-Date).AddDays(-30)} `\n        -ErrorAction SilentlyContinue | ForEach-Object {\n        Write-Host \"  $($_.TimeCreated) : $($_.Message.Substring(0,[Math]::Min(150,$_.Message.Length)))\"\n    }\n}\n\nAudit-Persistance\n```"
+    },
+    {
+      "section": "Analyse de la mémoire processus",
+      "content": "```powershell\n# Analyse des processus en mémoire — techniques LOLBins et injections\n\nfunction Analyze-ProcessesSuspects {\n    Write-Host \"=== Analyse processus suspects ===\"\n    \n    # Processus PowerShell encodés\n    Write-Host \"`n[PowerShell avec encoding]\"\n    Get-Process powershell, pwsh -ErrorAction SilentlyContinue | ForEach-Object {\n        try {\n            $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId=$($_.Id)\").CommandLine\n            if ($cmdLine -match '-enc|-EncodedCommand|-e ') {\n                Write-Host \"  [SUSPECT] PID $($_.Id) : $cmdLine\"\n            } else {\n                Write-Host \"  PID $($_.Id) : $($cmdLine.Substring(0,[Math]::Min(100,$cmdLine.Length)))\"\n            }\n        } catch { }\n    }\n    \n    # Processus sans signature numérique\n    Write-Host \"`n[Processus non signés dans System32]\"\n    Get-Process | Where-Object { $_.Path -like '*System32*' } | ForEach-Object {\n        $sig = Get-AuthenticodeSignature $_.Path -ErrorAction SilentlyContinue\n        if ($sig -and $sig.Status -ne 'Valid') {\n            Write-Host \"  [NON SIGNÉ] $($_.Name) ($($_.Path))\"\n        }\n    }\n    \n    # Processus parents-enfants suspects\n    Write-Host \"`n[Parents suspects]\"\n    $parentsSuspects = @('winword.exe', 'excel.exe', 'outlook.exe', 'chrome.exe', 'firefox.exe')\n    Get-WmiObject Win32_Process | ForEach-Object {\n        $parentPID = $_.ParentProcessId\n        $parent = Get-Process -Id $parentPID -ErrorAction SilentlyContinue\n        if ($parent -and ($parentsSuspects -contains $parent.Name.ToLower())) {\n            if ($_.Name -match 'cmd|powershell|wscript') {\n                Write-Host \"  [INJECTION] $($parent.Name) → $($_.Name) (PID $($_.ProcessId))\"\n            }\n        }\n    }\n}\n\nAnalyze-ProcessesSuspects\n```"
+    },
+    {
+      "section": "Timeline et rapport forensics",
+      "content": "```powershell\n# Génération d'une timeline forensics Windows\n\nfunction New-TimelineForensics {\n    param(\n        [int]$DerniersJours = 1,\n        [string]$Sortie = \"$env:TEMP\\timeline_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv\"\n    )\n    \n    $timeline = [System.Collections.Generic.List[PSObject]]::new()\n    $debut = (Get-Date).AddDays(-$DerniersJours)\n    \n    # Événements Security clés\n    $idsImportants = @(4624, 4625, 4720, 4732, 4688, 4698, 1102)\n    \n    Get-WinEvent -FilterHashtable @{\n        LogName   = 'Security'\n        Id        = $idsImportants\n        StartTime = $debut\n    } -ErrorAction SilentlyContinue | ForEach-Object {\n        $timeline.Add([PSCustomObject]@{\n            Timestamp = $_.TimeCreated\n            Source    = 'Security'\n            EventID   = $_.Id\n            Resume    = $_.Message.Substring(0, [Math]::Min(120, $_.Message.Length))\n        })\n    }\n    \n    # Fichiers Prefetch récents\n    Get-ChildItem 'C:\\Windows\\Prefetch\\*.pf' -ErrorAction SilentlyContinue |\n        Where-Object { $_.LastWriteTime -gt $debut } | ForEach-Object {\n        $timeline.Add([PSCustomObject]@{\n            Timestamp = $_.LastWriteTime\n            Source    = 'Prefetch'\n            EventID   = 0\n            Resume    = \"Exécuté : $($_.BaseName -replace '-[A-F0-9]+$','')\"\n        })\n    }\n    \n    $triée = $timeline | Sort-Object Timestamp\n    $triée | Export-Csv $Sortie -NoTypeInformation -Encoding UTF8\n    \n    Write-Host \"Timeline créée : $Sortie ($($timeline.Count) événements)\"\n    $triée | Select-Object -Last 10 | Format-Table -AutoSize\n}\n\nNew-TimelineForensics -DerniersJours 1\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m3-ex1",
+      "title": "Lister les programmes Prefetch récents",
+      "description": "Identifier les exécutables récemment lancés via le Prefetch",
+      "instructions": "Listez les 5 fichiers `.pf` les plus récents dans `C:\\Windows\\Prefetch` et affichez leur nombre :\n```\nPrefetch récents : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Prefetch récents :",
+      "correction": "$count = (Get-ChildItem 'C:\\Windows\\Prefetch\\*.pf' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 5).Count\nWrite-Host \"Prefetch récents : $count\"",
+      "explanation": "Le Prefetch Windows enregistre les 30 premières secondes d'exécution d'un programme. Même après suppression de l'exécutable, le fichier .pf prouve qu'il a tourné. Outil forensics fondamental pour reconstituer les exécutions malveillantes."
+    },
+    {
+      "id": "ps-l6-m3-ex2",
+      "title": "Lire une clé Run du registre",
+      "description": "Auditer les programmes au démarrage automatique",
+      "instructions": "Lisez les valeurs de la clé `HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` et affichez leur nombre :\n```\nProgrammes au démarrage : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Programmes au démarrage :",
+      "correction": "$vals = Get-ItemProperty 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -ErrorAction SilentlyContinue\n$count = ($vals.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' }).Count\nWrite-Host \"Programmes au démarrage : $count\"",
+      "explanation": "`PSObject.Properties` expose toutes les propriétés d'un objet. Les propriétés PowerShell internes commencent par `PS` — on les filtre avec `Name -notlike 'PS*'`. Les Run Keys sont le mécanisme de persistance le plus utilisé par les malwares."
+    },
+    {
+      "id": "ps-l6-m3-ex3",
+      "title": "Lister les processus PowerShell actifs",
+      "description": "Identifier les sessions PowerShell en cours d'exécution",
+      "instructions": "Listez les processus `powershell` et `pwsh` actifs et affichez leur nombre :\n```\nProcessus PowerShell actifs : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Processus PowerShell actifs :",
+      "correction": "$count = (Get-Process -Name powershell, pwsh -ErrorAction SilentlyContinue).Count\nWrite-Host \"Processus PowerShell actifs : $count\"",
+      "explanation": "Plusieurs instances PowerShell inattendues peuvent indiquer une attaque. En investigation, on inspecte leur ligne de commande complète avec `Get-WmiObject Win32_Process` pour détecter les `-EncodedCommand` ou les stagers Cobalt Strike."
+    }
+  ]
+}

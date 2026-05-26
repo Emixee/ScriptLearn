@@ -1,0 +1,62 @@
+{
+  "id": "ps-l5-m1",
+  "title": "Réflexion et métaprogrammation",
+  "level": 5,
+  "lang": "powershell",
+  "order": 1,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "title": "Réflexion .NET",
+      "content": "```powershell\n# Inspecter un type\n$type = [System.String]\n$type.GetMethods() | Select-Object Name | Sort-Object Name -Unique | Select-Object -First 20\n$type.GetProperties() | Select-Object Name, PropertyType\n\n# Instancier dynamiquement\n$typeName = \"System.Collections.Generic.List`1[[System.Int32]]\"\n$listType = [Type]::GetType($typeName)\n$list = [Activator]::CreateInstance($listType)\n$list.Add(42)\n\n# Accéder aux membres via réflexion\n$obj = \"Hello World\"\n$method = $obj.GetType().GetMethod('ToUpper')\n$method.Invoke($obj, $null)  # HELLO WORLD\n\n# Propriété non-publique\n$type = [System.Text.StringBuilder]\n$field = $type.GetField('_chunkChars', \n    [System.Reflection.BindingFlags]::NonPublic -bor \n    [System.Reflection.BindingFlags]::Instance)\n\n# Créer un type dynamiquement\n$code = @\"\npublic class Point {\n    public int X { get; set; }\n    public int Y { get; set; }\n    public override string ToString() => $\"({X}, {Y})\";\n}\n\"@\nAdd-Type -TypeDefinition $code\n$p = [Point]::new()\n$p.X = 3; $p.Y = 4\nWrite-Host $p  # (3, 4)\n```"
+    },
+    {
+      "title": "Add-Type et compilation C#",
+      "content": "```powershell\n# Compiling du C# pour étendre PowerShell\nAdd-Type -TypeDefinition @'\nusing System;\nusing System.Runtime.InteropServices;\n\npublic class NativeMethods {\n    [DllImport(\"kernel32.dll\")]\n    public static extern IntPtr GetConsoleWindow();\n    \n    [DllImport(\"user32.dll\")]\n    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);\n    \n    public static void HideConsole() {\n        IntPtr hwnd = GetConsoleWindow();\n        ShowWindow(hwnd, 0);\n    }\n}\n'@\n\n# Classe utilitaire .NET\nAdd-Type -TypeDefinition @'\nusing System;\nusing System.Security.Cryptography;\nusing System.Text;\n\npublic class CryptoHelper {\n    public static string HashSHA256(string input) {\n        using var sha = SHA256.Create();\n        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));\n        return BitConverter.ToString(bytes).Replace(\"-\", \"\").ToLower();\n    }\n    \n    public static string GenerateToken(int length = 32) {\n        var bytes = new byte[length];\n        RandomNumberGenerator.Fill(bytes);\n        return Convert.ToBase64String(bytes);\n    }\n}\n'@\n\n[CryptoHelper]::HashSHA256(\"hello\")   # hash SHA-256\n[CryptoHelper]::GenerateToken()        # token aléatoire\n```"
+    },
+    {
+      "title": "ScriptBlocks avancés",
+      "content": "```powershell\n# ScriptBlocks comme first-class citizens\n$multiplier = { param($n, $factor) $n * $factor }\n& $multiplier 5 3   # 15\n\n# Currying via closures\nfunction Make-Multiplier {\n    param($factor)\n    return { param($n) $n * $factor }.GetNewClosure()\n}\n\n$double  = Make-Multiplier 2\n$triple  = Make-Multiplier 3\n& $double 5   # 10\n& $triple 5   # 15\n\n# Pipeline de transformations\n$pipeline = @(\n    { $_ * 2 },\n    { $_ + 1 },\n    { [math]::Pow($_, 2) }\n)\n\n$value = 3\nforeach ($step in $pipeline) {\n    $value = $value | ForEach-Object $step\n}\nWrite-Host $value  # ((3*2)+1)^2 = 49\n\n# Mémoïsation\nfunction Memoize {\n    param([scriptblock]$Fn)\n    $cache = @{}\n    return {\n        param($key)\n        if (-not $cache.ContainsKey($key)) {\n            $cache[$key] = & $Fn $key\n        }\n        $cache[$key]\n    }.GetNewClosure()\n}\n```"
+    },
+    {
+      "title": "Providers et drives",
+      "content": "```powershell\n# Les providers exposent des \"drives\" PS\nGet-PSProvider  # FileSystem, Registry, Alias, Function, Variable, Env...\nGet-PSDrive\n\n# Naviguer dans le registre comme un filesystem\nSet-Location HKLM:\\SOFTWARE\\Microsoft\nGet-ChildItem\nGet-Item HKLM:\\SOFTWARE\\Microsoft\\Windows\n\n# Lire/écrire le registre\nGet-ItemProperty -Path HKLM:\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\nSet-ItemProperty -Path HKCU:\\Software\\MyApp -Name Version -Value \"1.0\"\nNew-Item -Path HKCU:\\Software\\MyApp -Force\nNew-ItemProperty -Path HKCU:\\Software\\MyApp -Name LastRun -Value (Get-Date).ToString()\n\n# Créer un provider personnalisé\n# (avancé - nécessite C# ou script provider framework)\n\n# PSDrive personnalisé\nNew-PSDrive -Name Scripts -PSProvider FileSystem -Root C:\\Scripts -Scope Global\nGet-ChildItem Scripts:\\\nSet-Location Scripts:\\\n```"
+    },
+    {
+      "title": "Proxy de commandes",
+      "content": "```powershell\n# Proxy (wrapper) d'une cmdlet existante\nfunction Write-Host {\n    [CmdletBinding()]\n    param(\n        [Parameter(ValueFromPipeline=$true)]\n        [object]$Object,\n        [ConsoleColor]$ForegroundColor,\n        [switch]$NoNewLine\n    )\n    \n    # Journaliser chaque appel\n    $msg = $Object | Out-String\n    \"[LOG] $msg\" | Add-Content -Path C:\\Logs\\console.log\n    \n    # Appeler l'original\n    $PSBoundParameters['Object'] = \"[$(Get-Date '+%H:%M:%S')] $Object\"\n    Microsoft.PowerShell.Utility\\Write-Host @PSBoundParameters\n}\n\n# Utiliser Get-Command -CommandType Function pour voir le proxy\nGet-Command Write-Host\n\n# Proxy dynamique via ProxyCommand\n$metadata = [System.Management.Automation.CommandMetaData](\n    Get-Command Get-ChildItem)\n$proxy = [System.Management.Automation.ProxyCommand]::Create($metadata)\n\n# Implémenter une cmdlet C#\n# [Cmdlet(VerbsCommon.Get, \"MyData\")]\n# public class GetMyDataCmdlet : Cmdlet { ... }\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l5-m1-1",
+      "order": 1,
+      "title": "Introspection de types",
+      "instructions": "Utilisez la réflexion pour lister toutes les méthodes statiques publiques de `[System.Math]`.\n\nRésultat attendu :\n```\nAbs\nAcos\nAcosh\n...\n```\n(au moins 10 méthodes)",
+      "expectedOutput": "Sqrt",
+      "validationType": "contains",
+      "correction": "[System.Math].GetMethods() |\n    Where-Object { $_.IsStatic -and $_.IsPublic } |\n    Select-Object -ExpandProperty Name |\n    Sort-Object -Unique",
+      "explanation": "`GetMethods()` retourne tous les objets `MethodInfo`. `.IsStatic` filtre les méthodes de classe (pas d'instance). `.IsPublic` filtre les méthodes accessibles. `Select-Object -ExpandProperty Name` extrait les noms. La réflexion est utile pour explorer des assemblies .NET inconnues, générer de la documentation, ou appeler des méthodes dont le nom est calculé dynamiquement."
+    },
+    {
+      "id": "ex-ps-l5-m1-2",
+      "order": 2,
+      "title": "Compilation C# dynamique",
+      "instructions": "Compilez une classe C# avec `Add-Type` qui a une méthode statique `Somme([int[]])` retournant la somme d'un tableau d'entiers. Testez avec `@(1,2,3,4,5)`.\n\nRésultat attendu :\n```\nSomme : 15\n```",
+      "expectedOutput": "Somme : 15",
+      "validationType": "contains",
+      "correction": "Add-Type -TypeDefinition @'\nusing System.Linq;\npublic class Calculateur {\n    public static int Somme(int[] nums) {\n        return nums.Sum();\n    }\n}\n'@\n\n$result = [Calculateur]::Somme(@(1,2,3,4,5))\nWrite-Host \"Somme : $result\"",
+      "explanation": "`Add-Type -TypeDefinition` compile du C# inline dans la session PowerShell. Le code est compilé par le compilateur Roslyn embarqué dans .NET. `using System.Linq` donne accès à `.Sum()`. La classe compilée est disponible immédiatement comme n'importe quelle classe .NET. Utile pour les opérations hautes performances qui seraient lentes en PS pur."
+    },
+    {
+      "id": "ex-ps-l5-m1-3",
+      "order": 3,
+      "title": "Closure en PowerShell",
+      "instructions": "Créez une fonction `Make-Counter` qui retourne un scriptblock incrémentant un compteur. Chaque appel doit retourner la valeur suivante.\n\nRésultat attendu :\n```\n1\n2\n3\n```",
+      "expectedOutput": "3",
+      "validationType": "contains",
+      "correction": "function Make-Counter {\n    $count = 0\n    return { $script:count++; $count }.GetNewClosure()\n}\n\n$counter = Make-Counter\n& $counter  # 1\n& $counter  # 2\n& $counter  # 3",
+      "explanation": "`.GetNewClosure()` crée une fermeture (closure) : le scriptblock capture le scope de `Make-Counter` et conserve la référence à `$count`. Chaque appel avec `&` incrémente la même variable. Sans `.GetNewClosure()`, le scriptblock s'exécuterait dans le scope appelant, pas dans celui où il a été créé. C'est le mécanisme de closure standard en PowerShell."
+    }
+  ]
+}

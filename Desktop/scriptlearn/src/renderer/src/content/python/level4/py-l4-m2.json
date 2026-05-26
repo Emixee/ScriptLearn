@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m2",
+  "title": "Corrélation d'événements et détection",
+  "lang": "python",
+  "level": 4,
+  "order": 2,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Principe de la corrélation d'événements",
+      "content": "La corrélation consiste à **relier des événements isolés** pour détecter une attaque complexe. Exemple : un seul scan de port n'est pas une attaque, mais scan + tentative brute force + connexion réussie = compromission probable.\n\n```python\nfrom collections import defaultdict\nfrom datetime import datetime, timedelta\n\n# Événements typiques à corréler\nEVENEMENTS = [\n    {\"ts\": \"2024-01-15 10:00:00\", \"ip\": \"185.220.101.3\", \"type\": \"port_scan\",     \"details\": \"22,80,443,3389\"},\n    {\"ts\": \"2024-01-15 10:01:00\", \"ip\": \"185.220.101.3\", \"type\": \"ssh_fail\",       \"details\": \"root\"},\n    {\"ts\": \"2024-01-15 10:01:05\", \"ip\": \"185.220.101.3\", \"type\": \"ssh_fail\",       \"details\": \"admin\"},\n    {\"ts\": \"2024-01-15 10:01:10\", \"ip\": \"185.220.101.3\", \"type\": \"ssh_fail\",       \"details\": \"root\"},\n    {\"ts\": \"2024-01-15 10:02:00\", \"ip\": \"185.220.101.3\", \"type\": \"ssh_success\",    \"details\": \"www-data\"},\n    {\"ts\": \"2024-01-15 10:03:00\", \"ip\": \"185.220.101.3\", \"type\": \"file_download\",  \"details\": \"malware.sh\"},\n]\n```"
+    },
+    {
+      "section": "Règles de corrélation simples",
+      "content": "```python\nfrom collections import defaultdict\nfrom datetime import datetime\n\ndef appliquer_regles(evenements):\n    \"\"\"Applique des règles de corrélation et génère des alertes.\"\"\"\n    alertes = []\n    \n    # Index par IP et type\n    par_ip = defaultdict(lambda: defaultdict(list))\n    for evt in evenements:\n        par_ip[evt[\"ip\"]][evt[\"type\"]].append(evt)\n    \n    for ip, types in par_ip.items():\n        # Règle 1 : Brute Force SSH (>= 3 échecs)\n        echecs = types.get(\"ssh_fail\", [])\n        if len(echecs) >= 3:\n            alertes.append({\n                \"ip\": ip, \"regle\": \"BRUTE_FORCE_SSH\",\n                \"severite\": \"HAUTE\",\n                \"details\": f\"{len(echecs)} tentatives échouées\"\n            })\n        \n        # Règle 2 : Scan + Connexion réussie = Intrusion probable\n        if types.get(\"port_scan\") and types.get(\"ssh_success\"):\n            alertes.append({\n                \"ip\": ip, \"regle\": \"POSSIBLE_INTRUSION\",\n                \"severite\": \"CRITIQUE\",\n                \"details\": \"Scan de ports suivi d'une connexion réussie\"\n            })\n        \n        # Règle 3 : Connexion + Téléchargement de fichier\n        if types.get(\"ssh_success\") and types.get(\"file_download\"):\n            fichiers = [e[\"details\"] for e in types[\"file_download\"]]\n            alertes.append({\n                \"ip\": ip, \"regle\": \"POST_EXPLOITATION\",\n                \"severite\": \"CRITIQUE\",\n                \"details\": f\"Fichiers téléchargés : {fichiers}\"\n            })\n    \n    return alertes\n\nalerts = appliquer_regles(EVENEMENTS)\nfor a in alerts:\n    print(f\"[{a['severite']}] {a['regle']} depuis {a['ip']}: {a['details']}\")\n```"
+    },
+    {
+      "section": "Détection par fenêtre temporelle",
+      "content": "```python\nfrom datetime import datetime, timedelta\nfrom collections import defaultdict\n\ndef detecter_brute_force_temporel(evenements, seuil=5, fenetre_sec=60):\n    \"\"\"\n    Détecte les brute force dans une fenêtre temporelle glissante.\n    Plus précis que le simple comptage.\n    \"\"\"\n    fmt = \"%Y-%m-%d %H:%M:%S\"\n    alertes = []\n    \n    # Regrouper par IP\n    echecs_par_ip = defaultdict(list)\n    for evt in evenements:\n        if evt[\"type\"] == \"ssh_fail\":\n            ts = datetime.strptime(evt[\"ts\"], fmt)\n            echecs_par_ip[evt[\"ip\"]].append(ts)\n    \n    for ip, timestamps in echecs_par_ip.items():\n        timestamps.sort()\n        # Fenêtre glissante\n        for i, ts in enumerate(timestamps):\n            fenetre_fin = ts + timedelta(seconds=fenetre_sec)\n            dans_fenetre = [t for t in timestamps[i:] if t <= fenetre_fin]\n            if len(dans_fenetre) >= seuil:\n                alertes.append({\n                    \"ip\": ip,\n                    \"regle\": \"BRUTE_FORCE_TEMPOREL\",\n                    \"debut\": ts.isoformat(),\n                    \"tentatives\": len(dans_fenetre)\n                })\n                break  # Une alerte par IP suffit\n    \n    return alertes\n\nalerts = detecter_brute_force_temporel(EVENEMENTS, seuil=3, fenetre_sec=120)\nfor a in alerts:\n    print(f\"Brute force depuis {a['ip']} : {a['tentatives']} tentatives dès {a['debut']}\")\n```"
+    },
+    {
+      "section": "Scoring des menaces",
+      "content": "```python\nPOIDDS_SEVERITE = {\n    \"port_scan\":    2,\n    \"ssh_fail\":     3,\n    \"ssh_success\":  5,\n    \"file_download\": 8,\n    \"privilege_esc\": 10,\n    \"data_exfil\":   10\n}\n\ndef calculer_score_menace(ip, evenements):\n    \"\"\"Calcule un score de risque pour une IP basé sur ses activités.\"\"\"\n    score = 0\n    activites = []\n    \n    for evt in evenements:\n        if evt[\"ip\"] == ip:\n            poids = POIDDS_SEVERITE.get(evt[\"type\"], 1)\n            score += poids\n            activites.append(evt[\"type\"])\n    \n    niveau = (\n        \"CRITIQUE\" if score >= 20 else\n        \"HAUTE\"    if score >= 10 else\n        \"MOYENNE\"  if score >= 5  else\n        \"FAIBLE\"\n    )\n    \n    return {\"ip\": ip, \"score\": score, \"niveau\": niveau, \"activites\": list(set(activites))}\n\nip_test = \"185.220.101.3\"\nresultat = calculer_score_menace(ip_test, EVENEMENTS)\nprint(f\"{ip_test}: Score={resultat['score']} [{resultat['niveau']}]\")\nprint(f\"Activités: {', '.join(resultat['activites'])}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m2-ex1",
+      "title": "Regrouper les événements par IP",
+      "description": "Utiliser defaultdict pour regrouper des événements par IP source",
+      "instructions": "Soit :\n```python\nevts = [\n    {\"ip\": \"10.0.0.1\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"10.0.0.1\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"success\"}\n]\n```\nAffichez le nombre d'événements par IP :\n```\n10.0.0.1 : 2 événements\n185.220.101.3 : 2 événements\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "10.0.0.1 : 2 événements",
+      "correction": "from collections import defaultdict\nevts = [\n    {\"ip\": \"10.0.0.1\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"10.0.0.1\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"success\"}\n]\npar_ip = defaultdict(list)\nfor e in evts:\n    par_ip[e[\"ip\"]].append(e)\nfor ip, liste in par_ip.items():\n    print(f\"{ip} : {len(liste)} événements\")",
+      "explanation": "`defaultdict(list)` crée automatiquement une liste vide pour toute nouvelle clé. C'est la base du regroupement d'événements pour la corrélation."
+    },
+    {
+      "id": "py-l4-m2-ex2",
+      "title": "Détecter une succession suspecte",
+      "description": "Détecter la présence d'un échec suivi d'un succès pour la même IP",
+      "instructions": "Soit :\n```python\nevts = [\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"success\"},\n    {\"ip\": \"10.0.0.1\", \"type\": \"success\"},\n]\n```\nDétectez les IPs avec **à la fois** des `fail` et un `success`, et affichez :\n```\nIntrusion possible : 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Intrusion possible : 185.220.101.3",
+      "correction": "from collections import defaultdict\nevts = [\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"fail\"},\n    {\"ip\": \"185.220.101.3\", \"type\": \"success\"},\n    {\"ip\": \"10.0.0.1\", \"type\": \"success\"},\n]\npar_ip = defaultdict(set)\nfor e in evts:\n    par_ip[e[\"ip\"]].add(e[\"type\"])\nfor ip, types in par_ip.items():\n    if \"fail\" in types and \"success\" in types:\n        print(f\"Intrusion possible : {ip}\")",
+      "explanation": "Un `set` stocke uniquement des valeurs uniques — parfait pour vérifier la présence de types d'événements. La corrélation fail → success est la règle de base de détection d'accès après brute force."
+    },
+    {
+      "id": "py-l4-m2-ex3",
+      "title": "Calculer un score de risque",
+      "description": "Scorer une IP selon ses activités avec un dictionnaire de poids",
+      "instructions": "Soit :\n```python\npoids = {\"scan\": 2, \"fail\": 3, \"success\": 5, \"download\": 8}\nactivites = [\"scan\", \"fail\", \"fail\", \"fail\", \"success\", \"download\"]\n```\nCalculez le score total et affichez :\n```\nScore : 31\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Score : 31",
+      "correction": "poids = {\"scan\": 2, \"fail\": 3, \"success\": 5, \"download\": 8}\nactivites = [\"scan\", \"fail\", \"fail\", \"fail\", \"success\", \"download\"]\nscore = sum(poids.get(a, 1) for a in activites)\nprint(f\"Score : {score}\")",
+      "explanation": "`poids.get(a, 1)` utilise 1 comme valeur par défaut si l'activité n'est pas dans le dictionnaire. Le scoring basé sur des poids est la base des systèmes SIEM comme Splunk Risk-Based Alerting."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "ps-l2-m6",
+  "title": "Fonctions avancées",
+  "level": 2,
+  "lang": "powershell",
+  "order": 6,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Paramètres typés et obligatoires",
+      "content": "```powershell\nfunction Saluer {\n    param(\n        [Parameter(Mandatory = $true)]\n        [string]$Prenom,\n\n        [Parameter(Mandatory = $false)]\n        [string]$Titre = \"M./Mme\",\n\n        [int]$Age = 0\n    )\n\n    $msg = \"Bonjour, $Titre $Prenom\"\n    if ($Age -gt 0) { $msg += \" ($Age ans)\" }\n    Write-Host $msg\n}\n\n# Appels\nSaluer -Prenom \"Alice\"\nSaluer -Prenom \"Bob\" -Titre \"Dr\" -Age 45\nSaluer \"Charlie\"  # positional\n```\n\n**Attributs de paramètre utiles :**\n```powershell\n[Parameter(Mandatory, HelpMessage=\"Chemin du fichier\")]\n[ValidateNotNullOrEmpty()]\n[ValidateSet(\"INFO\",\"WARN\",\"ERROR\")]  # valeurs autorisées\n[ValidateRange(1, 100)]               # plage numérique\n[ValidatePattern(\"^\\d{5}$\")]          # regex\n```"
+    },
+    {
+      "title": "CmdletBinding et pipeline",
+      "content": "`[CmdletBinding()]` transforme une fonction en cmdlet avancée :\n\n```powershell\nfunction Get-Carre {\n    [CmdletBinding()]\n    param(\n        [Parameter(ValueFromPipeline = $true)]\n        [int[]]$Nombres\n    )\n    process {\n        foreach ($n in $Nombres) {\n            [PSCustomObject]@{\n                Nombre = $n\n                Carre  = $n * $n\n            }\n        }\n    }\n}\n\n# Utilisation normale\nGet-Carre -Nombres 3, 4, 5\n\n# Via pipeline\n1..5 | Get-Carre\n\n# Avec -Verbose activé\n1..3 | Get-Carre -Verbose\n```\n\n**Blocs d'une fonction CmdletBinding :**\n- `begin` — exécuté une fois avant le pipeline\n- `process` — exécuté pour chaque objet du pipeline\n- `end` — exécuté une fois après le pipeline"
+    },
+    {
+      "title": "Retourner des valeurs",
+      "content": "```powershell\n# return retourne la valeur ET sort de la fonction\nfunction Maximum {\n    param([int]$a, [int]$b)\n    if ($a -ge $b) { return $a }\n    return $b\n}\n\n$max = Maximum 15 8\nWrite-Host \"Max : $max\"  # 15\n\n# Toute expression non-capturée est retournée\nfunction Calculs {\n    10 + 5      # retourné : 15\n    \"texte\"     # retourné : \"texte\"\n    return 42   # retourné : 42, et sort de la fonction\n    \"jamais\"    # jamais retourné\n}\n\n$resultats = Calculs\n$resultats  # 15, texte, 42 (tableau de 3 valeurs !)\n\n# Pour une seule valeur, capturez explicitement\n$unique = (Calculs)[2]   # 42\n```\n\n> **Piège :** En PowerShell, toute expression non capturée par une variable est **automatiquement retournée** par la fonction — pas seulement `return`."
+    },
+    {
+      "title": "Portée des variables",
+      "content": "```powershell\n$global = \"je suis global\"\n\nfunction Tester {\n    # Accès en lecture (sans préfixe)\n    Write-Host \"Vu depuis la fonction : $global\"\n\n    # Modification locale (ne change pas le global)\n    $global = \"modifié localement\"  # crée une var locale\n    Write-Host \"Local : $global\"\n}\n\nTester\nWrite-Host \"Après appel : $global\"  # inchangé !\n\n# Pour vraiment modifier le global\nfunction ModifierGlobal {\n    $global:global = \"vraiment modifié\"\n    $script:autreVar = \"scope script\"\n}\n\n# Portées PowerShell :\n# $local: (défaut)  — visible dans la fonction courante\n# $script: — visible dans tout le script\n# $global: — visible partout (session PS)\n# $private: — non héritable par les fonctions imbriquées\n```"
+    },
+    {
+      "title": "Modules et dot sourcing",
+      "content": "**Dot sourcing** — importer des fonctions depuis un fichier :\n```powershell\n# Fichier : C:\\Scripts\\utils.ps1\nfunction Write-Log { ... }\nfunction Get-TimeStamp { Get-Date -Format 'yyyy-MM-dd HH:mm:ss' }\n\n# Importer dans un autre script\n. C:\\Scripts\\utils.ps1          # le point charge les fonctions\n$horodatage = Get-TimeStamp    # maintenant disponible\n```\n\n**Modules PowerShell (.psm1) :**\n```powershell\n# MonModule.psm1\nfunction Invoke-Sauvegarde { ... }\nfunction Get-Statut { ... }\nExport-ModuleMember -Function 'Invoke-Sauvegarde', 'Get-Statut'\n\n# Utilisation\nImport-Module .\\MonModule.psm1\nInvoke-Sauvegarde\nGet-Statut\n\n# Lister les modules installés\nGet-Module -ListAvailable\n\n# Installer un module depuis la galerie\nInstall-Module -Name PSScriptAnalyzer -Scope CurrentUser\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m6-1",
+      "order": 1,
+      "title": "Paramètres obligatoires et optionnels",
+      "instructions": "Créez une fonction `New-Profil` avec :\n- `$Nom` (obligatoire)\n- `$Age` (optionnel, défaut 0)\n- `$Ville` (optionnel, défaut \"Non renseignée\")\n\nAffichez une fiche récapitulative et testez-la avec et sans les optionnels.\n\nRésultat attendu :\n```\nNom : Alice | Age : 25 | Ville : Lyon\nNom : Bob | Age : 0 | Ville : Non renseignée\n```",
+      "expectedOutput": "Non renseignée",
+      "validationType": "contains",
+      "correction": "function New-Profil {\n    param(\n        [Parameter(Mandatory)][string]$Nom,\n        [int]$Age = 0,\n        [string]$Ville = \"Non renseignée\"\n    )\n    Write-Host \"Nom : $Nom | Age : $Age | Ville : $Ville\"\n}\n\nNew-Profil -Nom \"Alice\" -Age 25 -Ville \"Lyon\"\nNew-Profil -Nom \"Bob\"",
+      "explanation": "`[Parameter(Mandatory)]` (sans `= $true`) suffit pour rendre un paramètre obligatoire depuis PS3. Si on appelle la fonction sans `-Nom`, PowerShell demande interactivement la valeur. Les paramètres avec valeur par défaut sont automatiquement optionnels."
+    },
+    {
+      "id": "ex-ps-l2-m6-2",
+      "order": 2,
+      "title": "Fonction compatible pipeline",
+      "instructions": "Créez une fonction `ConvertTo-Celsius` qui convertit des températures Fahrenheit en Celsius via le pipeline.\n\nFormule : `C = (F - 32) × 5/9`\n\nRésultat attendu :\n```\nF=32 → C=0\nF=212 → C=100\nF=98.6 → C=37\n```",
+      "expectedOutput": "C=100",
+      "validationType": "contains",
+      "correction": "function ConvertTo-Celsius {\n    [CmdletBinding()]\n    param(\n        [Parameter(ValueFromPipeline)]\n        [double]$Fahrenheit\n    )\n    process {\n        $celsius = [math]::Round(($Fahrenheit - 32) * 5/9, 1)\n        Write-Host \"F=$Fahrenheit → C=$celsius\"\n    }\n}\n\n@(32, 212, 98.6) | ConvertTo-Celsius",
+      "explanation": "`[Parameter(ValueFromPipeline)]` permet à la fonction de recevoir des valeurs depuis `|`. Le bloc `process {}` est exécuté **pour chaque objet** du pipeline (contrairement à `begin` et `end`). Sans bloc `process`, toute la collection est passée d'un coup dans `$Fahrenheit`."
+    },
+    {
+      "id": "ex-ps-l2-m6-3",
+      "order": 3,
+      "title": "Validation des paramètres",
+      "instructions": "Créez une fonction `Get-Note` avec :\n- `$Note` validée avec `[ValidateRange(0, 20)]`\n- Affiche la mention correspondante\n\nTestez avec 15 (doit afficher la mention) et 25 (doit provoquer une erreur de validation).\n\nRésultat attendu pour `Get-Note 15` :\n```\nBien\n```",
+      "expectedOutput": "Bien",
+      "validationType": "contains",
+      "correction": "function Get-Note {\n    param(\n        [ValidateRange(0, 20)]\n        [int]$Note\n    )\n    switch ($Note) {\n        { $_ -ge 16 } { \"Très bien\"; break }\n        { $_ -ge 14 } { \"Bien\"; break }\n        { $_ -ge 12 } { \"Assez bien\"; break }\n        { $_ -ge 10 } { \"Passable\"; break }\n        default        { \"Insuffisant\" }\n    }\n}\n\nGet-Note -Note 15",
+      "explanation": "`[ValidateRange(0, 20)]` est validé **avant** l'exécution de la fonction. Si la valeur est hors plage, PowerShell génère une erreur avec un message clair sans que vous ayez à écrire de validation manuelle. C'est la philosophie PowerShell : déclarer les contraintes plutôt que les coder."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l6-m2",
+  "title": "DFIR — Digital Forensics et Incident Response",
+  "lang": "python",
+  "level": 6,
+  "order": 2,
+  "estimatedMinutes": 75,
+  "course": [
+    {
+      "section": "Acquisition et préservation des preuves",
+      "content": "En DFIR, la **chaîne de custody** est fondamentale : chaque preuve doit être acquise, hashée et documentée avant toute analyse. Python permet d'automatiser ce processus.\n\n```python\nimport hashlib\nimport os\nimport json\nfrom datetime import datetime\nfrom pathlib import Path\n\nclass PreuveForensique:\n    \"\"\"Représente une preuve numérique avec sa chaîne de custody.\"\"\"\n    \n    def __init__(self, chemin, collecteur=\"analyste\"):\n        self.chemin = Path(chemin)\n        self.collecteur = collecteur\n        self.timestamp_acquisition = datetime.now().isoformat()\n        self.metadata = {}\n        self.hashes = {}\n        self._acquérir()\n    \n    def _acquérir(self):\n        \"\"\"Calcule les hashes et collecte les métadonnées.\"\"\"\n        if not self.chemin.exists():\n            raise FileNotFoundError(f\"{self.chemin} introuvable\")\n        \n        stat = self.chemin.stat()\n        self.metadata = {\n            'taille': stat.st_size,\n            'mtime': datetime.fromtimestamp(stat.st_mtime).isoformat(),\n            'ctime': datetime.fromtimestamp(stat.st_ctime).isoformat(),\n        }\n        \n        # Calcul des hashes\n        md5 = hashlib.md5()\n        sha256 = hashlib.sha256()\n        with open(self.chemin, 'rb') as f:\n            for chunk in iter(lambda: f.read(65536), b''):\n                md5.update(chunk)\n                sha256.update(chunk)\n        \n        self.hashes = {\n            'md5':    md5.hexdigest(),\n            'sha256': sha256.hexdigest()\n        }\n    \n    def to_dict(self):\n        return {\n            'fichier': str(self.chemin),\n            'collecteur': self.collecteur,\n            'acquisition': self.timestamp_acquisition,\n            'metadata': self.metadata,\n            'hashes': self.hashes\n        }\n    \n    def verifier_integrite(self):\n        \"\"\"Recalcule le hash pour vérifier que la preuve n'a pas changé.\"\"\"\n        sha256 = hashlib.sha256()\n        with open(self.chemin, 'rb') as f:\n            for chunk in iter(lambda: f.read(65536), b''):\n                sha256.update(chunk)\n        actuel = sha256.hexdigest()\n        return actuel == self.hashes['sha256'], actuel\n\n# Test\nwith open('/tmp/preuve_test.txt', 'w') as f:\n    f.write('Contenu preuve forensique')\n\npreuve = PreuveForensique('/tmp/preuve_test.txt', 'analyste_soc')\nprint(json.dumps(preuve.to_dict(), indent=2))\n\nintact, hash_actuel = preuve.verifier_integrite()\nprint(f\"\\nIntégrité : {'OK' if intact else 'COMPROMIS'}\")\n```"
+    },
+    {
+      "section": "Analyse de la timeline NTFS/ext4",
+      "content": "```python\nimport os\nfrom pathlib import Path\nfrom datetime import datetime\n\ndef construire_timeline(répertoire, jours=1):\n    \"\"\"\n    Construit une timeline des activités fichiers sur N jours.\n    Utilise les timestamps MAC (Modify, Access, Change).\n    \"\"\"\n    seuil = datetime.now().timestamp() - (jours * 86400)\n    événements = []\n    \n    try:\n        for chemin in Path(répertoire).rglob('*'):\n            try:\n                stat = chemin.stat()\n                # Filtrer par événements récents\n                if max(stat.st_mtime, stat.st_ctime) > seuil:\n                    événements.append({\n                        'fichier': str(chemin),\n                        'taille': stat.st_size if chemin.is_file() else 0,\n                        'mtime': datetime.fromtimestamp(stat.st_mtime).isoformat(),\n                        'ctime': datetime.fromtimestamp(stat.st_ctime).isoformat(),\n                        'type': 'F' if chemin.is_file() else 'D'\n                    })\n            except (PermissionError, OSError):\n                continue\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n    \n    # Trier par date de modification\n    événements.sort(key=lambda x: x['mtime'], reverse=True)\n    return événements\n\ndef afficher_timeline(événements, max_items=20):\n    print(f\"=== Timeline ({len(événements)} événements) ===\")\n    for evt in événements[:max_items]:\n        print(f\"  [{evt['type']}] {evt['mtime'][:19]} {evt['fichier'][:60]}\")\n\n# Construire timeline sur /tmp\ntimeline = construire_timeline('/tmp', jours=1)\nafficher_timeline(timeline)\n```"
+    },
+    {
+      "section": "Analyse de la mémoire — strings et patterns",
+      "content": "```python\nimport re\nimport struct\n\ndef analyser_dump_memoire(data):\n    \"\"\"\n    Analyse un dump mémoire (ou tout fichier binaire) pour extraire\n    des IOC et artefacts forensics.\n    \"\"\"\n    résultats = {}\n    \n    # ─── Strings ASCII lisibles ───\n    strings = re.findall(rb'[\\x20-\\x7e]{6,}', data)\n    résultats['strings_count'] = len(strings)\n    \n    # ─── IPs IPv4 ───\n    ip_pattern = re.compile(\n        rb'\\b((?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}'\n        rb'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b'\n    )\n    résultats['ips'] = list({m.group().decode() for m in ip_pattern.finditer(data)})\n    \n    # ─── URLs ───\n    url_pattern = re.compile(rb'https?://[\\w\\-./%?=&]{8,}', re.I)\n    résultats['urls'] = [m.group().decode('latin-1') for m in url_pattern.finditer(data)]\n    \n    # ─── Emails ───\n    email_pattern = re.compile(rb'[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}', re.I)\n    résultats['emails'] = [m.group().decode('latin-1') for m in email_pattern.finditer(data)]\n    \n    # ─── Windows registry paths ───\n    reg_pattern = re.compile(rb'HKEY_[A-Z_]+\\\\[\\w\\\\]+', re.I)\n    résultats['registry_paths'] = [m.group().decode('latin-1') for m in reg_pattern.finditer(data)]\n    \n    # ─── Hashes (MD5/SHA256) ───\n    md5_pattern = re.compile(rb'[0-9a-fA-F]{32}')\n    résultats['potential_hashes'] = [m.group().decode() for m in md5_pattern.finditer(data)][:5]\n    \n    return résultats\n\n# Simulation dump mémoire\ndump = (\n    b\"GET /shell.php HTTP/1.1\\r\\nHost: 185.220.101.3\\r\\n\" +\n    b\"http://malware.xyz/beacon?id=abc123\\x00\" +\n    b\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\evil\\\\persistence\\x00\" +\n    b\"admin@company.com\\x00\" +\n    b\"d41d8cd98f00b204e9800998ecf8427e\"\n)\n\nrésultats = analyser_dump_memoire(dump)\nfor clé, val in résultats.items():\n    if val:\n        print(f\"{clé}: {val}\")\n```"
+    },
+    {
+      "section": "Rapport DFIR automatisé",
+      "content": "```python\nimport json\nfrom datetime import datetime\n\ndef generer_rapport_dfir(incident_id, preuves, timeline, iocs):\n    \"\"\"Génère un rapport DFIR complet.\"\"\"\n    \n    rapport = {\n        'type': 'DFIR Report',\n        'incident_id': incident_id,\n        'generated_at': datetime.now().isoformat(),\n        'summary': {\n            'preuves_collectees': len(preuves),\n            'evenements_timeline': len(timeline),\n            'iocs_identifies': sum(len(v) for v in iocs.values() if isinstance(v, list)),\n        },\n        'chain_of_custody': [p.to_dict() for p in preuves],\n        'timeline': timeline[:20],\n        'iocs': iocs,\n        'recommendations': [\n            \"Isoler les systèmes compromis\",\n            \"Changer tous les mots de passe\",\n            \"Analyser les logs des 30 derniers jours\",\n            \"Soumettre les hashes à VirusTotal\",\n            \"Notifier les parties prenantes\"\n        ]\n    }\n    \n    # Sauvegarder\n    chemin = f\"/tmp/dfir_{incident_id}.json\"\n    with open(chemin, 'w', encoding='utf-8') as f:\n        json.dump(rapport, f, indent=2, default=str)\n    \n    print(f\"=== Rapport DFIR : {incident_id} ===\")\n    print(f\"Preuves : {rapport['summary']['preuves_collectees']}\")\n    print(f\"Événements : {rapport['summary']['evenements_timeline']}\")\n    print(f\"IOC identifiés : {rapport['summary']['iocs_identifies']}\")\n    print(f\"Sauvegardé : {chemin}\")\n    return rapport\n\n# Test\nrapport = generer_rapport_dfir(\n    'INC-2024-001',\n    preuves=[preuve],\n    timeline=timeline[:5],\n    iocs=résultats\n)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l6-m2-ex1",
+      "title": "Calculer le hash SHA256 d'une preuve",
+      "description": "Générer et vérifier le hash d'un fichier de preuve forensique",
+      "instructions": "Créez un fichier `/tmp/evidence.txt` avec `preuve forensique`, calculez son SHA256, et vérifiez-le en le recalculant :\n```\nIntégrité : OK\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Intégrité : OK",
+      "correction": "import hashlib\nwith open('/tmp/evidence.txt', 'w') as f:\n    f.write('preuve forensique')\ndef sha256_file(path):\n    h = hashlib.sha256()\n    with open(path, 'rb') as f:\n        h.update(f.read())\n    return h.hexdigest()\nhash1 = sha256_file('/tmp/evidence.txt')\nhash2 = sha256_file('/tmp/evidence.txt')\nprint(f\"Intégrité : {'OK' if hash1 == hash2 else 'COMPROMIS'}\")",
+      "explanation": "La vérification d'intégrité par hash est obligatoire en forensics légale. Si le hash de la preuve change entre l'acquisition et l'analyse, la preuve est irrecevable en justice. C'est pourquoi on calcule le hash immédiatement après l'acquisition."
+    },
+    {
+      "id": "py-l6-m2-ex2",
+      "title": "Extraire les URLs d'un dump",
+      "description": "Analyser un bloc de données pour y trouver des URLs suspectes",
+      "instructions": "Soit :\n```python\nimport re\ndump = b\"System boot OK\\x00http://185.220.101.3/beacon\\x00normal traffic\"\n```\nExtrayez les URLs et affichez leur nombre :\n```\nURLs trouvées : 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "URLs trouvées : 1",
+      "correction": "import re\ndump = b\"System boot OK\\x00http://185.220.101.3/beacon\\x00normal traffic\"\nurls = re.findall(rb'https?://[\\w\\-./%?=&]{4,}', dump, re.I)\nprint(f\"URLs trouvées : {len(urls)}\")",
+      "explanation": "L'extraction d'URLs depuis des dumps mémoire révèle les serveurs C2 contactés par un malware. Les outils comme Volatility automatisent cette analyse sur des dumps RAM complets, mais Python permet de créer ses propres extracteurs ciblés."
+    },
+    {
+      "id": "py-l6-m2-ex3",
+      "title": "Lister les fichiers modifiés récemment",
+      "description": "Construire une timeline des modifications de fichiers",
+      "instructions": "Listez les fichiers dans `/tmp` modifiés dans les dernières 60 secondes et affichez leur nombre :\n```\nFichiers récents : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Fichiers récents :",
+      "correction": "import os\nfrom pathlib import Path\nfrom datetime import datetime\nseuil = datetime.now().timestamp() - 60\nrecents = [f for f in Path('/tmp').iterdir() if f.is_file() and f.stat().st_mtime > seuil]\nprint(f\"Fichiers récents : {len(recents)}\")",
+      "explanation": "`Path.iterdir()` liste le contenu d'un répertoire. `stat().st_mtime` est le timestamp UNIX de dernière modification. Comparer à `datetime.now().timestamp() - N` permet de filtrer par fenêtre temporelle sans calculs complexes."
+    }
+  ]
+}

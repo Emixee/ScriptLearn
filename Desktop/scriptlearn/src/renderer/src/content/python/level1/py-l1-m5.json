@@ -1,0 +1,58 @@
+{
+  "id": "py-l1-m5",
+  "title": "Listes et dictionnaires",
+  "lang": "python",
+  "level": 1,
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "section": "Listes — collections ordonnées",
+      "content": "Les listes Python sont idéales pour stocker des IOC, des alertes, des IPs :\n\n```python\n# Créer une liste d'IOC\nioc_ips = [\"185.220.101.3\", \"194.165.16.11\", \"45.142.212.100\"]\nioc_hashes = []\n\n# Ajouter des éléments\nioc_ips.append(\"5.196.35.138\")\nioc_hashes.extend([\"abc123\", \"def456\"])\n\n# Accéder aux éléments\nprint(ioc_ips[0])    # 185.220.101.3\nprint(ioc_ips[-1])   # dernier\nprint(len(ioc_ips))  # nombre d'éléments\n\n# Tester la présence\nip_test = \"185.220.101.3\"\nif ip_test in ioc_ips:\n    print(f\"{ip_test} est dans la liste IOC !\")\n\n# Supprimer\nioc_ips.remove(\"194.165.16.11\")\n\n# Trier\nioc_ips.sort()\nprint(ioc_ips)\n```"
+    },
+    {
+      "section": "Dictionnaires — données structurées",
+      "content": "Les dictionnaires (clé → valeur) représentent des alertes ou des entités :\n\n```python\nalerte = {\n    \"id\": \"ALT-2024-001\",\n    \"ip_source\": \"185.220.101.3\",\n    \"ip_dest\": \"10.0.0.5\",\n    \"port\": 4444,\n    \"protocole\": \"TCP\",\n    \"severite\": \"CRITIQUE\",\n    \"tags\": [\"c2\", \"metasploit\"]\n}\n\n# Accéder à une valeur\nprint(alerte[\"severite\"])         # CRITIQUE\nprint(alerte.get(\"pays\", \"N/A\"))  # N/A (valeur par défaut)\n\n# Modifier\nalerte[\"severite\"] = \"HAUTE\"\nalerte[\"tags\"].append(\"brute_force\")\n\n# Itérer\nfor cle, valeur in alerte.items():\n    print(f\"{cle}: {valeur}\")\n\n# Vérifier la présence d'une clé\nif \"ip_source\" in alerte:\n    print(f\"Source : {alerte['ip_source']}\")\n```"
+    },
+    {
+      "section": "Sets — ensembles uniques",
+      "content": "Les sets sont parfaits pour dédupliquer des IPs ou des domaines :\n\n```python\n# Logs avec IPs répétées\nips_logs = [\"10.0.0.1\", \"8.8.8.8\", \"10.0.0.1\", \"10.0.0.5\", \"8.8.8.8\"]\n\n# Dédupliquer\nips_uniques = set(ips_logs)\nprint(ips_uniques)   # {'10.0.0.1', '8.8.8.8', '10.0.0.5'}\nprint(len(ips_uniques))  # 3\n\n# Intersection avec des IOC connus\nioc_connus = {\"8.8.8.8\", \"185.220.101.3\", \"1.1.1.1\"}\nmenaces = ips_uniques & ioc_connus\nprint(f\"IPs malveillantes détectées : {menaces}\")  # {'8.8.8.8'}\n\n# Union\ntous_les_ioc = ioc_connus | {\"5.196.35.138\"}\n```"
+    },
+    {
+      "section": "Comptage avec collections.Counter",
+      "content": "```python\nfrom collections import Counter\n\n# Analyser la fréquence des IPs dans les logs\nips = [\"10.0.0.1\", \"8.8.8.8\", \"10.0.0.1\", \"10.0.0.1\", \"185.220.101.3\", \"8.8.8.8\"]\n\ncompteur = Counter(ips)\nprint(compteur)\n# Counter({'10.0.0.1': 3, '8.8.8.8': 2, '185.220.101.3': 1})\n\n# Top 3 des IPs les plus fréquentes\nfor ip, count in compteur.most_common(3):\n    print(f\"{ip}: {count} connexions\")\n\n# Utile pour détecter les scanners (haute fréquence)\nSEUIL_SCAN = 2\nscanners = [ip for ip, n in compteur.items() if n >= SEUIL_SCAN]\nprint(f\"Scanners potentiels : {scanners}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m5-ex1",
+      "title": "Liste blanche et liste noire",
+      "description": "Filtrer les IPs suspectes en les comparant à une liste blanche",
+      "instructions": "Soit :\n```python\nconnexions = [\"192.168.1.1\", \"8.8.8.8\", \"185.220.101.3\", \"10.0.0.1\", \"45.142.212.100\"]\nliste_blanche = [\"192.168.1.1\", \"10.0.0.1\", \"8.8.8.8\"]\n```\n\nAffichez le nombre d'IPs **non** dans la liste blanche :\n```\nIPs suspectes : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs suspectes : 2",
+      "correction": "connexions = [\"192.168.1.1\", \"8.8.8.8\", \"185.220.101.3\", \"10.0.0.1\", \"45.142.212.100\"]\nliste_blanche = [\"192.168.1.1\", \"10.0.0.1\", \"8.8.8.8\"]\nsuspectes = [ip for ip in connexions if ip not in liste_blanche]\nprint(f\"IPs suspectes : {len(suspectes)}\")",
+      "explanation": "La list comprehension avec `if ip not in liste_blanche` filtre efficacement. Pour de meilleures performances avec de grandes listes, convertir `liste_blanche` en `set`."
+    },
+    {
+      "id": "py-l1-m5-ex2",
+      "title": "Créer une alerte structurée",
+      "description": "Construire et accéder à un dictionnaire d'alerte",
+      "instructions": "Créez un dictionnaire `alerte` avec les clés `ip`, `port` et `niveau`, valeurs `\"10.0.0.99\"`, `4444`, `\"CRITIQUE\"`. Affichez :\n```\n[CRITIQUE] 10.0.0.99:4444\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "[CRITIQUE] 10.0.0.99:4444",
+      "correction": "alerte = {\"ip\": \"10.0.0.99\", \"port\": 4444, \"niveau\": \"CRITIQUE\"}\nprint(f\"[{alerte['niveau']}] {alerte['ip']}:{alerte['port']}\")",
+      "explanation": "Les dictionnaires stockent des données structurées accessibles par clé. Dans une f-string, utilisez des guillemets simples pour les clés à l'intérieur des accolades."
+    },
+    {
+      "id": "py-l1-m5-ex3",
+      "title": "Dédupliquer des IPs",
+      "description": "Utiliser un set pour obtenir des IPs uniques",
+      "instructions": "Soit `logs_ips = [\"10.0.0.1\", \"8.8.8.8\", \"10.0.0.1\", \"1.1.1.1\", \"8.8.8.8\", \"10.0.0.1\"]`\n\nAffichez le nombre d'IPs **uniques** :\n```\nIPs uniques : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs uniques : 3",
+      "correction": "logs_ips = [\"10.0.0.1\", \"8.8.8.8\", \"10.0.0.1\", \"1.1.1.1\", \"8.8.8.8\", \"10.0.0.1\"]\nprint(f\"IPs uniques : {len(set(logs_ips))}\")",
+      "explanation": "`set()` élimine les doublons automatiquement. Convertir une liste en set est la façon la plus simple et rapide de dédupliquer en Python."
+    }
+  ]
+}

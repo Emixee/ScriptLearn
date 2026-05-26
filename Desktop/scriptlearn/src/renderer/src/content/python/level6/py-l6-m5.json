@@ -1,0 +1,58 @@
+{
+  "id": "py-l6-m5",
+  "title": "SOAR — Orchestration et automatisation",
+  "lang": "python",
+  "level": 6,
+  "order": 5,
+  "estimatedMinutes": 75,
+  "course": [
+    {
+      "section": "Architecture SOAR en Python",
+      "content": "Un SOAR (Security Orchestration, Automation and Response) orchestre des outils de sécurité pour répondre automatiquement aux incidents. Python est le langage natif de la plupart des plateformes SOAR (Splunk SOAR, Palo Alto XSOAR).\n\n```python\nfrom typing import Dict, Any, Callable, List, Optional\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nimport json\n\n@dataclass\nclass Action:\n    \"\"\"Une action exécutable dans un playbook SOAR.\"\"\"\n    nom: str\n    type: str          # enrichment | containment | notification | investigation\n    fonction: Callable\n    obligatoire: bool = True\n    timeout_sec: int = 30\n    \n@dataclass  \nclass CasSOAR:\n    \"\"\"Un cas d'incident dans le SOAR.\"\"\"\n    id: str\n    type_alerte: str\n    severite: str\n    artefacts: Dict[str, Any] = field(default_factory=dict)\n    contexte: Dict[str, Any] = field(default_factory=dict)\n    actions_log: List[Dict] = field(default_factory=list)\n    statut: str = 'NOUVEAU'   # NOUVEAU | EN_COURS | RÉSOLU | ESCALADÉ\n    created: str = field(default_factory=lambda: datetime.now().isoformat())\n    \n    def log_action(self, action, résultat, succès=True):\n        self.actions_log.append({\n            'timestamp': datetime.now().isoformat(),\n            'action': action,\n            'résultat': résultat,\n            'succès': succès\n        })\n\nprint(\"Framework SOAR initialisé\")\n```"
+    },
+    {
+      "section": "Actions SOAR — enrichissement et containment",
+      "content": "```python\nimport urllib.request\nimport socket\n\n# ─── Actions d'enrichissement ───\n\ndef action_geoip(cas: CasSOAR) -> bool:\n    \"\"\"Géolocalise l'IP du cas.\"\"\"\n    ip = cas.artefacts.get('ip')\n    if not ip:\n        return False\n    \n    try:\n        url = f'http://ip-api.com/json/{ip}?fields=country,city,isp,proxy,hosting'\n        with urllib.request.urlopen(url, timeout=5) as r:\n            geo = json.loads(r.read())\n            cas.contexte['geo'] = geo\n            cas.log_action('geoip', f\"{geo.get('country','?')}/{geo.get('city','?')}\")\n            return True\n    except Exception as e:\n        # Simulation si pas de réseau\n        cas.contexte['geo'] = {'country': 'RU', 'isp': 'Sim', 'proxy': True}\n        cas.log_action('geoip', 'Simulation: RU/SimCity')\n        return True\n\ndef action_dns_reverse(cas: CasSOAR) -> bool:\n    \"\"\"Résolution DNS inverse.\"\"\"\n    ip = cas.artefacts.get('ip')\n    if not ip:\n        return False\n    try:\n        hostname = socket.gethostbyaddr(ip)[0]\n    except socket.herror:\n        hostname = 'N/A'\n    cas.contexte['hostname'] = hostname\n    cas.log_action('dns_reverse', hostname)\n    return True\n\ndef action_tip_lookup(cas: CasSOAR, ioc_db: dict) -> bool:\n    \"\"\"Vérifie l'IP contre la base TIP locale.\"\"\"\n    ip = cas.artefacts.get('ip')\n    if not ip:\n        return False\n    ioc = ioc_db.get(ip)\n    cas.contexte['tip_match'] = ioc\n    cas.contexte['tip_score'] = ioc.get('score', 0) if ioc else 0\n    cas.log_action('tip_lookup', f\"score={cas.contexte['tip_score']}\")\n    return True\n\n# ─── Actions de containment ───\n\ndef action_bloquer_ip_simulation(cas: CasSOAR) -> bool:\n    \"\"\"Simule le blocage d'une IP.\"\"\"\n    ip = cas.artefacts.get('ip')\n    if not ip:\n        return False\n    cas.contexte['ip_bloquée'] = True\n    cas.log_action('blocage_ip', f\"IP {ip} bloquée (simulation)\")\n    print(f\"  [ACTION] IP {ip} bloquée dans le firewall (simulation)\")\n    return True\n\ndef action_notifier_slack(cas: CasSOAR, webhook: str = None) -> bool:\n    \"\"\"Simule la notification Slack.\"\"\"\n    msg = f\"🚨 [{cas.severite}] {cas.type_alerte} — {cas.artefacts.get('ip','?')}\"\n    cas.log_action('notif_slack', f\"Envoyé : {msg}\")\n    print(f\"  [ACTION] Slack notifié : {msg}\")\n    return True\n\nprint(\"Actions SOAR définies\")\n```"
+    },
+    {
+      "section": "Moteur de playbook SOAR",
+      "content": "```python\nclass PlaybookSOAR:\n    \"\"\"Moteur d'exécution de playbooks SOAR.\"\"\"\n    \n    def __init__(self, nom: str):\n        self.nom = nom\n        self.étapes: List[Action] = []\n    \n    def ajouter_étape(self, action: Action):\n        self.étapes.append(action)\n        return self  # Chainable\n    \n    def exécuter(self, cas: CasSOAR) -> bool:\n        print(f\"\\n=== Playbook : {self.nom} ===\")\n        print(f\"Cas : {cas.id} | {cas.type_alerte} | {cas.severite}\")\n        print(f\"Artefacts : {cas.artefacts}\")\n        print(\"-\" * 50)\n        \n        cas.statut = 'EN_COURS'\n        étapes_ok = 0\n        \n        for étape in self.étapes:\n            print(f\"[{étape.type.upper()}] {étape.nom}...\")\n            try:\n                succès = étape.fonction(cas)\n                étapes_ok += 1 if succès else 0\n                print(f\"  → {'OK' if succès else 'SKIPPED'}\")\n                \n                if not succès and étape.obligatoire:\n                    cas.statut = 'ESCALADÉ'\n                    print(f\"  *** Étape obligatoire échouée — escalade ***\")\n                    return False\n            except Exception as e:\n                print(f\"  → ERREUR : {e}\")\n                if étape.obligatoire:\n                    cas.statut = 'ESCALADÉ'\n                    return False\n        \n        cas.statut = 'RÉSOLU'\n        print(\"-\" * 50)\n        print(f\"Playbook terminé : {étapes_ok}/{len(self.étapes)} étapes OK\")\n        return True\n\n# Construire et exécuter un playbook\nIOC_DB = {'185.220.101.3': {'score': 95, 'tags': ['tor', 'c2']}}\n\nplaybook_brute_force = PlaybookSOAR('Réponse Brute Force SSH')\nplaybook_brute_force.ajouter_étape(Action('Géolocalisation', 'enrichment',\n    lambda c: action_geoip(c)))\nplaybook_brute_force.ajouter_étape(Action('DNS Reverse', 'enrichment',\n    lambda c: action_dns_reverse(c)))\nplaybook_brute_force.ajouter_étape(Action('TIP Lookup', 'enrichment',\n    lambda c: action_tip_lookup(c, IOC_DB)))\nplaybook_brute_force.ajouter_étape(Action('Blocage IP', 'containment',\n    lambda c: action_bloquer_ip_simulation(c) if c.contexte.get('tip_score', 0) >= 70 else True,\n    obligatoire=False))\nplaybook_brute_force.ajouter_étape(Action('Notification', 'notification',\n    lambda c: action_notifier_slack(c)))\n\ncas = CasSOAR(\n    id='SOAR-001',\n    type_alerte='BRUTE_FORCE_SSH',\n    severite='HAUTE',\n    artefacts={'ip': '185.220.101.3', 'tentatives': 7}\n)\n\nplaybook_brute_force.exécuter(cas)\n```"
+    },
+    {
+      "section": "Rapport et métriques SOAR",
+      "content": "```python\ndef generer_rapport_soar(cas: CasSOAR):\n    \"\"\"Génère le rapport final du cas SOAR.\"\"\"\n    \n    geo = cas.contexte.get('geo', {})\n    tip = cas.contexte.get('tip_match', {})\n    \n    print(f\"\\n{'='*60}\")\n    print(f\" RAPPORT SOAR — {cas.id}\")\n    print('='*60)\n    print(f\" Type     : {cas.type_alerte}\")\n    print(f\" Sévérité : {cas.severite}\")\n    print(f\" Statut   : {cas.statut}\")\n    print(f\" IP       : {cas.artefacts.get('ip')}\")\n    print(f\" Pays     : {geo.get('country', 'N/A')}\")\n    print(f\" ISP      : {geo.get('isp', 'N/A')}\")\n    print(f\" Proxy    : {geo.get('proxy', False)}\")\n    print(f\" TIP score: {cas.contexte.get('tip_score', 0)}\")\n    if tip:\n        print(f\" Tags IOC : {tip.get('tags', [])}\")\n    print(f\" IP bloquée: {cas.contexte.get('ip_bloquée', False)}\")\n    print()\n    print(f\" Actions exécutées : {len(cas.actions_log)}\")\n    for action in cas.actions_log:\n        statut = '✓' if action['succès'] else '✗'\n        print(f\"   {statut} {action['action']}: {action['résultat']}\")\n    print('='*60)\n    \n    # MTTR\n    from datetime import datetime\n    created = datetime.fromisoformat(cas.created)\n    mttr = (datetime.now() - created).seconds\n    print(f\" MTTR : {mttr}s\")\n    print(f\" Recommandation : {'Bloquer et monitorer' if cas.contexte.get('ip_bloquée') else 'Surveiller'}\")\n\ngenerer_rapport_soar(cas)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l6-m5-ex1",
+      "title": "Créer et logger une action SOAR",
+      "description": "Implémenter le logging des actions d'un cas SOAR",
+      "instructions": "Créez un dictionnaire `cas` avec une liste `actions_log`. Simulez l'ajout d'une action `geoip` avec résultat `FR/Paris` et affichez le nombre d'actions loguées :\n```\nActions loguées : 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Actions loguées : 1",
+      "correction": "from datetime import datetime\ncas = {\"id\": \"SOAR-001\", \"actions_log\": []}\ncas[\"actions_log\"].append({\n    \"timestamp\": datetime.now().isoformat(),\n    \"action\": \"geoip\",\n    \"résultat\": \"FR/Paris\",\n    \"succès\": True\n})\nprint(f\"Actions loguées : {len(cas['actions_log'])}\")",
+      "explanation": "Le logging de chaque action est fondamental en SOAR pour l'audit et le debugging. Dans Splunk SOAR ou XSOAR, chaque action génère automatiquement des artefacts de preuve attachés au cas — on peut rejouer et auditer chaque décision prise automatiquement."
+    },
+    {
+      "id": "py-l6-m5-ex2",
+      "title": "Décider du containment selon le score TIP",
+      "description": "Conditionner une action selon le contexte enrichi",
+      "instructions": "Soit :\n```python\ncas = {\"ip\": \"185.220.101.3\", \"tip_score\": 95}\n```\nSi le score TIP est >= 80, simulez le blocage et affichez :\n```\nConfinement : IP 185.220.101.3 bloquée\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Confinement : IP 185.220.101.3 bloquée",
+      "correction": "cas = {\"ip\": \"185.220.101.3\", \"tip_score\": 95}\nif cas[\"tip_score\"] >= 80:\n    print(f\"Confinement : IP {cas['ip']} bloquée\")\nelse:\n    print(f\"Confinement : non requis pour {cas['ip']}\")",
+      "explanation": "La décision conditionnelle basée sur le contexte enrichi est le cœur du SOAR. Au lieu de bloquer toutes les IPs, on ne bloque que celles dont le score dépasse un seuil — réduisant les faux positifs qui interrompent des services légitimes."
+    },
+    {
+      "id": "py-l6-m5-ex3",
+      "title": "Calculer le MTTR d'un incident",
+      "description": "Mesurer le temps de réponse à un incident",
+      "instructions": "Calculez le temps écoulé entre `debut` et `fin` et affichez si c'est sous 5 minutes :\n```python\nfrom datetime import datetime, timedelta\ndebut = datetime.now() - timedelta(seconds=180)\nfin = datetime.now()\n```\n```\nMTTR : 180s — Objectif atteint : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Objectif atteint : True",
+      "correction": "from datetime import datetime, timedelta\ndebut = datetime.now() - timedelta(seconds=180)\nfin = datetime.now()\nmttr = (fin - debut).seconds\nobjectif = mttr <= 300  # 5 minutes\nprint(f\"MTTR : {mttr}s — Objectif atteint : {objectif}\")",
+      "explanation": "Le MTTR (Mean Time To Respond) est la métrique clé d'un SOAR. L'automatisation vise un MTTR sous 5 minutes pour les incidents critiques, contre parfois des heures pour une réponse manuelle. `timedelta.seconds` donne les secondes totales pour des durées < 24h."
+    }
+  ]
+}

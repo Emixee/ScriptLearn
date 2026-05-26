@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m2",
+  "title": "Gestion des processus",
+  "level": 3,
+  "lang": "powershell",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Get-Process et informations",
+      "content": "```powershell\n# Lister les processus\nGet-Process\nGet-Process -Name \"chrome\"      # par nom\nGet-Process -Id 1234            # par PID\n\n# Propriétés d'un processus\n$p = Get-Process -Name \"powershell\" | Select-Object -First 1\n$p.Id              # PID\n$p.Name            # nom\n$p.CPU             # temps CPU (secondes)\n$p.WorkingSet      # mémoire RAM (bytes)\n$p.StartTime       # date/heure de démarrage\n$p.MainWindowTitle # titre de la fenêtre\n\n# Top 5 par consommation mémoire\nGet-Process | Sort-Object WorkingSet -Descending | \n    Select-Object -First 5 |\n    Select-Object Name, @{N='RAM_Mo'; E={[math]::Round($_.WorkingSet/1MB,1)}}\n\n# Chercher des processus\nGet-Process | Where-Object { $_.CPU -gt 10 }\nGet-Process | Where-Object { $_.Name -like \"*host*\" }\n```"
+    },
+    {
+      "title": "Démarrer et arrêter des processus",
+      "content": "```powershell\n# Démarrer un processus\nStart-Process \"notepad\"\nStart-Process \"notepad\" -ArgumentList \"C:\\fichier.txt\"\nStart-Process \"cmd\" -ArgumentList \"/c dir C:\\\" -Wait   # attendre la fin\nStart-Process \"script.ps1\" -Verb RunAs  # avec élévation de droits\n\n# Démarrer et capturer la sortie\n$result = Start-Process powershell -ArgumentList \"-Command Get-Date\" `\n    -Wait -PassThru\n$result.ExitCode   # code de sortie\n\n# Arrêter un processus\nStop-Process -Name \"notepad\"\nStop-Process -Id 1234\nStop-Process -Name \"chrome\" -Force  # force si résistant\n\n# Arrêter tous les processus correspondants\nGet-Process -Name \"chrome\" | Stop-Process\n\n# Attendre qu'un processus se termine\n$p = Start-Process \"sleep\" -ArgumentList \"5\" -PassThru\n$p.WaitForExit()    # bloque jusqu'à la fin\n$p.WaitForExit(3000) # timeout 3s, renvoie $false si timeout\n```"
+    },
+    {
+      "title": "Jobs PowerShell",
+      "content": "Les jobs permettent l'exécution en arrière-plan :\n\n```powershell\n# Démarrer un job\n$job = Start-Job -ScriptBlock {\n    Start-Sleep 2\n    \"Résultat du job\"\n}\n\n# Lister les jobs\nGet-Job\nGet-Job -State Running\n\n# Attendre et récupérer les résultats\nWait-Job $job           # attendre la fin\nReceive-Job $job        # obtenir le résultat\n\n# Pipeline\n$job = Start-Job { 1..5 | ForEach-Object { $_ * $_ } }\nWait-Job $job | Receive-Job\n# 1 4 9 16 25\n\n# Passer des paramètres\n$job = Start-Job -ScriptBlock { param($n) $n * 2 } -ArgumentList 21\nWait-Job $job | Receive-Job   # 42\n\n# Nettoyage\nGet-Job | Remove-Job   # supprimer tous les jobs\n\n# Job avec -AsJob (sur certaines cmdlets)\nInvoke-Command -ComputerName srv1,srv2 -ScriptBlock { Get-EventLog -Newest 10 System } -AsJob\n```"
+    },
+    {
+      "title": "Runspaces — parallélisme avancé",
+      "content": "Pour un parallélisme haute performance :\n\n```powershell\n# ForEach-Object -Parallel (PS 7+)\n1..5 | ForEach-Object -Parallel {\n    \"Traitement : $_\"\n    Start-Sleep 1\n} -ThrottleLimit 3   # max 3 en parallèle\n\n# Avec variable externe ($using:)\n$prefix = \"Item\"\n1..5 | ForEach-Object -Parallel {\n    \"$using:prefix $_\"   # $using: pour accéder aux vars externes\n} -ThrottleLimit 2\n\n# Mesurer le temps\n$chrono = [System.Diagnostics.Stopwatch]::StartNew()\n1..10 | ForEach-Object -Parallel {\n    Start-Sleep -Milliseconds 500\n} -ThrottleLimit 5\n$chrono.Stop()\nWrite-Host \"Durée : $($chrono.Elapsed.TotalSeconds)s\"\n\n# Runspace pool (PS 5+, plus de contrôle)\n$pool = [runspacefactory]::CreateRunspacePool(1, 5)\n$pool.Open()\n```"
+    },
+    {
+      "title": "Surveillance des processus",
+      "content": "```powershell\n# Surveiller un processus et alerter\nfunction Watch-Process {\n    param(\n        [string]$ProcessName,\n        [int]$SeuilMo = 500,\n        [int]$Secondes = 10\n    )\n    \n    1..$Secondes | ForEach-Object {\n        $p = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue\n        if ($null -eq $p) {\n            Write-Warning \"Processus $ProcessName introuvable\"\n            return\n        }\n        \n        $ramMo = [math]::Round($p.WorkingSet / 1MB, 1)\n        $cpu = [math]::Round($p.CPU, 1)\n        \n        if ($ramMo -gt $SeuilMo) {\n            Write-Host \"[ALERTE] RAM : ${ramMo}Mo\" -ForegroundColor Red\n        } else {\n            Write-Host \"[OK] $ProcessName — RAM: ${ramMo}Mo CPU: ${cpu}s\"\n        }\n        Start-Sleep 1\n    }\n}\n\n# Utilisation\nWatch-Process -ProcessName \"powershell\" -SeuilMo 200 -Secondes 3\n\n# Événements de processus avec WMI\nRegister-WmiEvent -Query \"SELECT * FROM Win32_ProcessStartTrace\" `\n    -SourceIdentifier \"NouveauProcessus\" `\n    -Action { Write-Host \"Nouveau: $($event.SourceEventArgs.NewEvent.ProcessName)\" }\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m2-1",
+      "order": 1,
+      "title": "Top processus mémoire",
+      "instructions": "Affichez les 3 processus qui consomment le plus de mémoire RAM, avec leur nom et leur consommation en Mo.\n\nRésultat attendu :\n```\nNom              RAM_Mo\n---              ------\n...                ...\n```",
+      "expectedOutput": "RAM_Mo",
+      "validationType": "contains",
+      "correction": "Get-Process | Sort-Object WorkingSet -Descending | Select-Object -First 3 |\n    Select-Object Name, @{N='RAM_Mo'; E={[math]::Round($_.WorkingSet/1MB,1)}} |\n    Format-Table",
+      "explanation": "`Sort-Object WorkingSet -Descending` trie par mémoire (en bytes) décroissant. `@{N='RAM_Mo'; E={...}}` est une propriété calculée : `N` est le nom de la colonne, `E` est l'expression. `$_.WorkingSet/1MB` divise par 1 048 576 pour convertir en mégaoctets."
+    },
+    {
+      "id": "ex-ps-l3-m2-2",
+      "order": 2,
+      "title": "Job en arrière-plan",
+      "instructions": "Démarrez un job qui calcule la somme des carrés de 1 à 10 (`1..10 | ForEach-Object { $_ * $_ } | Measure-Object -Sum`). Attendez sa fin et affichez le résultat.\n\nRésultat attendu :\n```\nSomme des carrés : 385\n```",
+      "expectedOutput": "385",
+      "validationType": "contains",
+      "correction": "$job = Start-Job -ScriptBlock {\n    1..10 | ForEach-Object { $_ * $_ } | Measure-Object -Sum | Select-Object -ExpandProperty Sum\n}\n$resultat = Wait-Job $job | Receive-Job\nWrite-Host \"Somme des carrés : $resultat\"\nRemove-Job $job",
+      "explanation": "`Start-Job` exécute le scriptblock dans un processus séparé. `Wait-Job` bloque jusqu'à sa fin. `Receive-Job` récupère la sortie. `Select-Object -ExpandProperty Sum` extrait la valeur numérique de l'objet retourné par `Measure-Object`. Toujours `Remove-Job` après pour libérer les ressources."
+    },
+    {
+      "id": "ex-ps-l3-m2-3",
+      "order": 3,
+      "title": "Parallélisme avec ForEach-Object -Parallel",
+      "instructions": "Utilisez `ForEach-Object -Parallel` (PS 7+) pour traiter les nombres 1 à 5 en parallèle. Chaque nombre doit attendre `($_ * 100)ms` puis retourner `\"Item $_ terminé\"`.\n\nLimitez à 3 threads simultanés.\n\nRésultat attendu (ordre variable) :\n```\nItem 1 terminé\nItem 2 terminé\n...\n```",
+      "expectedOutput": "terminé",
+      "validationType": "contains",
+      "correction": "1..5 | ForEach-Object -Parallel {\n    Start-Sleep -Milliseconds ($_ * 100)\n    \"Item $_ terminé\"\n} -ThrottleLimit 3",
+      "explanation": "`ForEach-Object -Parallel` exécute chaque itération dans un runspace séparé. `-ThrottleLimit 3` limite à 3 runspaces simultanés. Contrairement aux jobs, les runspaces partagent le même processus. L'ordre de sortie peut différer de l'ordre d'entrée car les itérations finissent à des moments différents."
+    }
+  ]
+}

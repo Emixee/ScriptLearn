@@ -1,0 +1,72 @@
+{
+  "id": "bash-l2-m4",
+  "title": "Traitement de texte",
+  "level": 2,
+  "lang": "bash",
+  "order": 4,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "grep avancé",
+      "content": "`grep` cherche des motifs dans du texte. Ses options les plus utiles :\n\n```bash\n# Options essentielles\ngrep -i \"motif\"     fichier   # insensible à la casse\ngrep -n \"motif\"     fichier   # avec numéros de ligne\ngrep -v \"motif\"     fichier   # inverser (lignes ne contenant PAS)\ngrep -c \"motif\"     fichier   # compter les correspondances\ngrep -l \"motif\"     *.txt     # noms des fichiers seulement\ngrep -r \"motif\"     dossier/  # récursif\ngrep -E \"regex\"     fichier   # regex étendue (ERE)\ngrep -o \"motif\"     fichier   # afficher seulement la partie trouvée\n\n# Exemples pratiques\ngrep -E \"^[0-9]+\" fichier.txt           # lignes commençant par un chiffre\ngrep -E \"\\.(jpg|png|gif)$\" liste.txt   # fichiers image\ngrep -v \"^#\" config.txt | grep -v \"^$\" # sans commentaires ni lignes vides\n```"
+    },
+    {
+      "title": "sed — éditeur de flux",
+      "content": "`sed` (Stream EDitor) transforme du texte ligne par ligne :\n\n```bash\n# Substitution : s/ancien/nouveau/\necho \"Bonjour Alice\" | sed 's/Alice/Bob/'\n# → Bonjour Bob\n\n# Substitution globale (flag g)\necho \"aaa bbb aaa\" | sed 's/aaa/xxx/g'\n# → xxx bbb xxx\n\n# Insensible à la casse (flag i)\necho \"Hello WORLD\" | sed 's/world/Monde/i'\n\n# Supprimer les lignes vides\nsed '/^$/d' fichier.txt\n\n# Supprimer les commentaires\nsed 's/#.*//' fichier.txt\n\n# Afficher seulement certaines lignes\nsed -n '5,10p' fichier.txt   # lignes 5 à 10\nsed -n '/début/,/fin/p' fichier.txt  # entre deux motifs\n\n# Modifier un fichier en place (-i)\nsed -i 's/ancienne_valeur/nouvelle_valeur/g' config.txt\n```"
+    },
+    {
+      "title": "awk — traitement par colonnes",
+      "content": "`awk` traite le texte structuré en colonnes (séparateur par défaut : espaces) :\n\n```bash\n# Afficher la 1ère et 3ème colonne\necho \"Alice 30 Paris\" | awk '{print $1, $3}'\n# → Alice Paris\n\n# Avec séparateur personnalisé (-F)\necho \"user:password:1000:/home/user\" | awk -F: '{print $1, $3}'\n# → user 1000\n\n# Calculer une somme\ncat notes.txt | awk '{somme += $1} END {print \"Total :\", somme}'\n\n# Filtrer les lignes\nawk '$3 > 50' donnees.txt        # lignes où la 3ème colonne > 50\nawk 'NR > 1' fichier.txt         # sauter la première ligne (en-tête)\nawk '/motif/ {print $1}' fich    # imprimer $1 des lignes avec \"motif\"\n\n# Variables intégrées\n# NR = numéro de ligne, NF = nombre de champs, FS = séparateur\nawk '{print NR\": \"$0}' fichier.txt  # numéroter les lignes\n```"
+    },
+    {
+      "title": "cut et tr",
+      "content": "**`cut`** — extraire des colonnes :\n```bash\n# Extraire par position de caractère\necho \"Bonjour\" | cut -c1-3    # Bon\n\n# Extraire par champ (délimiteur)\necho \"Alice:30:Paris\" | cut -d: -f1,3   # Alice:Paris\necho \"Alice:30:Paris\" | cut -d: -f2     # 30\n\n# Exemple pratique : extraire le nom d'utilisateur\ncat /etc/passwd | cut -d: -f1   # liste des utilisateurs\n```\n\n**`tr`** — remplacer ou supprimer des caractères :\n```bash\n# Remplacer des caractères\necho \"bonjour\" | tr 'a-z' 'A-Z'     # BONJOUR (majuscules)\necho \"HELLO\" | tr 'A-Z' 'a-z'       # hello (minuscules)\n\n# Supprimer des caractères (-d)\necho \"Bon123jour\" | tr -d '0-9'     # Bonjour\necho \"a b  c\" | tr -s ' '           # a b c (squeeze : espaces multiples → 1)\n\n# Supprimer les sauts de ligne\ncat fichier.txt | tr -d '\\n'\n```"
+    },
+    {
+      "title": "Pipelines de traitement",
+      "content": "La puissance de Bash vient du chaînage de ces outils :\n\n```bash\n# Extraire les adresses IP d'un log\ngrep -E -o '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' acces.log | sort -u\n\n# Top 5 des IPs qui se connectent le plus\nawk '{print $1}' acces.log | sort | uniq -c | sort -rn | head -5\n\n# Chercher et remplacer dans plusieurs fichiers\ngrep -rl \"ancien_texte\" . | while read f; do\n    sed -i 's/ancien_texte/nouveau_texte/g' \"$f\"\ndone\n\n# Compter les mots uniques dans un fichier\ncat texte.txt | tr ' ' '\\n' | sort | uniq -c | sort -rn | head -10\n\n# Extraire la 2ème colonne d'un CSV\ncut -d',' -f2 data.csv | tail -n +2  # sauter l'en-tête\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m4-1",
+      "order": 1,
+      "title": "Filtrer avec grep",
+      "instructions": "Créez un fichier `~/scriptlearn/animaux.txt` avec ce contenu :\n```\nchat\nchien\nchauve-souris\ncheval\nlapin\n```\n\nPuis affichez seulement les lignes commençant par `ch`.",
+      "expectedOutput": "cheval",
+      "validationType": "contains",
+      "correction": "printf 'chat\\nchien\\nchauve-souris\\ncheval\\nlapin\\n' > ~/scriptlearn/animaux.txt\ngrep '^ch' ~/scriptlearn/animaux.txt",
+      "explanation": "`^ch` est une regex basique : `^` ancre au début de la ligne, `ch` est la chaîne littérale à trouver. Sans `^`, grep trouverait aussi des lignes contenant `ch` en milieu de ligne."
+    },
+    {
+      "id": "ex-bash-l2-m4-2",
+      "order": 2,
+      "title": "Substitution avec sed",
+      "instructions": "Créez une chaîne `phrase=\"Le scripting Bash est difficile\"` et utilisez `sed` pour remplacer `difficile` par `facile`.\n\nRésultat attendu :\n```\nLe scripting Bash est facile\n```",
+      "expectedOutput": "facile",
+      "validationType": "contains",
+      "correction": "phrase=\"Le scripting Bash est difficile\"\necho \"$phrase\" | sed 's/difficile/facile/'",
+      "explanation": "`sed 's/ancien/nouveau/'` effectue une substitution. Le format est `s/motif/remplacement/flags`. Par défaut, seule la première occurrence de chaque ligne est remplacée. Ajoutez `g` pour toutes : `'s/mot/autre/g'`."
+    },
+    {
+      "id": "ex-bash-l2-m4-3",
+      "order": 3,
+      "title": "Extraire avec awk",
+      "instructions": "Créez la chaîne `ligne=\"Alice,30,Développeuse,Paris\"` et utilisez `awk` avec le séparateur `,` pour afficher le prénom et la ville :\n\nRésultat attendu :\n```\nAlice Paris\n```",
+      "expectedOutput": "Alice Paris",
+      "validationType": "contains",
+      "correction": "ligne=\"Alice,30,Développeuse,Paris\"\necho \"$ligne\" | awk -F',' '{print $1, $4}'",
+      "explanation": "`-F','` définit la virgule comme séparateur de champs. `$1` est le 1er champ (Alice), `$4` le 4ème (Paris). `awk` indexe ses champs à partir de 1 (pas 0). `$0` représente la ligne entière."
+    },
+    {
+      "id": "ex-bash-l2-m4-4",
+      "order": 4,
+      "title": "Pipeline complet",
+      "instructions": "Créez un tableau de chaînes `mots=(\"Bash\" \"Python\" \"bash\" \"BASH\" \"powershell\")` et affichez les lignes contenant `bash` (insensible à la casse), converties en majuscules.\n\nRésultat attendu :\n```\nBASH\nBASH\nBASH\n```",
+      "expectedOutput": "BASH",
+      "validationType": "contains",
+      "correction": "mots=(\"Bash\" \"Python\" \"bash\" \"BASH\" \"powershell\")\nprintf '%s\\n' \"${mots[@]}\" | grep -i 'bash' | tr 'a-z' 'A-Z'",
+      "explanation": "`printf '%s\\n'` affiche chaque élément du tableau sur une ligne séparée. `grep -i 'bash'` filtre les lignes contenant bash (insensible à la casse). `tr 'a-z' 'A-Z'` convertit en majuscules. Trois outils chaînés avec `|` en une seule commande."
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "ps-l2-m4",
+  "title": "Pipeline et filtrage",
+  "level": 2,
+  "lang": "powershell",
+  "order": 4,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Le pipeline PowerShell",
+      "content": "Le pipeline `|` passe des **objets** (pas du texte) d'une cmdlet à la suivante :\n\n```powershell\n# Obtenir les 5 processus qui utilisent le plus de CPU\nGet-Process | Sort-Object CPU -Descending | Select-Object -First 5\n\n# Chaîner plusieurs opérations\nGet-ChildItem C:\\Windows -Filter *.dll |\n    Where-Object { $_.Length -gt 1MB } |\n    Sort-Object Length -Descending |\n    Select-Object Name, Length |\n    Format-Table\n```\n\n**La variable `$_` ou `$PSItem`** représente l'objet courant dans le pipeline :\n```powershell\n1..5 | ForEach-Object { $_ * $_ }  # 1 4 9 16 25\n\nGet-Service | Where-Object { $_.Status -eq 'Running' } | \n    ForEach-Object { Write-Host \"Service actif : $($_.DisplayName)\" }\n```"
+    },
+    {
+      "title": "Where-Object — filtrer",
+      "content": "`Where-Object` (alias `where` ou `?`) filtre les objets selon une condition :\n\n```powershell\n# Syntaxe complète\nGet-Process | Where-Object { $_.CPU -gt 10 }\n\n# Syntaxe simplifiée (PS 3+)\nGet-Process | Where-Object CPU -gt 10\nGet-Process | Where-Object Name -like \"chrome*\"\n\n# Combiner des conditions\nGet-Process | Where-Object { $_.CPU -gt 5 -and $_.WorkingSet -gt 100MB }\n\n# Avec comparaison de chaînes\nGet-ChildItem | Where-Object { $_.Name -match \"\\d{4}\" }  # noms avec 4 chiffres\n\n# Alias\nGet-Process | ? { $_.Handles -gt 1000 }  # ? = alias Where-Object\n```"
+    },
+    {
+      "title": "Select-Object — projeter",
+      "content": "`Select-Object` (alias `select`) choisit des propriétés ou limite le nombre d'éléments :\n\n```powershell\n# Sélectionner des propriétés\nGet-Process | Select-Object Name, CPU, WorkingSet\n\n# Renommer une propriété\nGet-Process | Select-Object Name, @{N='CPU_sec'; E={[math]::Round($_.CPU,1)}}\n\n# Propriété calculée (hashtable avec N=Nom, E=Expression)\nGet-ChildItem | Select-Object Name, @{N='Ko'; E={[math]::Round($_.Length/1KB,1)}}\n\n# Limiter\nGet-Process | Select-Object -First 10    # 10 premiers\nGet-Process | Select-Object -Last 5      # 5 derniers\nGet-Process | Select-Object -Skip 5      # tout sauf les 5 premiers\n\n# Sélectionner des objets uniques\n@(1,2,2,3,3,3) | Select-Object -Unique  # 1 2 3\n```"
+    },
+    {
+      "title": "Sort-Object et Group-Object",
+      "content": "**`Sort-Object` — trier :**\n```powershell\n# Tri simple\n@(\"Banane\", \"Pomme\", \"Abricot\") | Sort-Object   # Abricot Banane Pomme\n\n# Tri numérique\n@(10, 2, 30, 5) | Sort-Object    # 2 5 10 30\n\n# Tri décroissant\nGet-Process | Sort-Object CPU -Descending\n\n# Tri sur plusieurs propriétés\nGet-ChildItem | Sort-Object -Property Length, Name\n\n# Stable sort (preserves les égalités)\nGet-Process | Sort-Object Name -Stable\n```\n\n**`Group-Object` — regrouper :**\n```powershell\n# Compter les processus par priorité\nGet-Process | Group-Object PriorityClass\n\n# Grouper les fichiers par extension\nGet-ChildItem C:\\Windows | Group-Object Extension |\n    Sort-Object Count -Descending | Select-Object -First 5\n\n# Créer un dictionnaire par clé\n$groupes = Get-Service | Group-Object Status -AsHashTable\n$groupes['Running'] | Select-Object Name\n```"
+    },
+    {
+      "title": "Measure-Object et autres cmdlets d'agrégation",
+      "content": "```powershell\n# Statistiques\n1..100 | Measure-Object -Sum -Average -Minimum -Maximum\n\nGet-ChildItem C:\\Windows -Recurse -File |\n    Measure-Object -Property Length -Sum |\n    Select-Object @{N='TotalMo'; E={[math]::Round($_.Sum/1MB,1)}}\n\n# Compter\nGet-Process | Measure-Object           # Compte les processus\n(Get-Process).Count                    # Identique\n\n# Tee-Object — distribuer vers fichier ET pipeline\nGet-Process | Tee-Object -FilePath processus.txt | Select-Object -First 5\n\n# Out-GridView — afficher dans une grille (Windows uniquement)\nGet-Process | Select-Object Name, CPU | Out-GridView -Title \"Processus\"\n\n# Export/Import\nGet-Process | Select-Object Name, CPU | Export-Csv -Path proc.csv -NoTypeInformation\n$data = Import-Csv proc.csv\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m4-1",
+      "order": 1,
+      "title": "Filtrer les services actifs",
+      "instructions": "Utilisez `Get-Service` filtré par `Where-Object` pour afficher les 5 premiers services dont le statut est `Running`.\n\nRésultat attendu :\n```\nStatus   Name\n------   ----\nRunning  ...\n```",
+      "expectedOutput": "Running",
+      "validationType": "contains",
+      "correction": "Get-Service | Where-Object { $_.Status -eq 'Running' } | Select-Object -First 5 | Format-Table Status, Name",
+      "explanation": "`Get-Service` retourne des objets `ServiceController` avec les propriétés `Status`, `Name`, `DisplayName`. `Where-Object { $_.Status -eq 'Running' }` garde seulement les services actifs. `Select-Object -First 5` limite à 5. Tout est pipeliné — aucun tableau temporaire nécessaire."
+    },
+    {
+      "id": "ex-ps-l2-m4-2",
+      "order": 2,
+      "title": "Statistiques sur un tableau",
+      "instructions": "Créez `$temperatures = @(22, 18, 35, 12, 28, 30)` et utilisez `Measure-Object` pour afficher la température minimale, maximale et moyenne.\n\nRésultat attendu :\n```\nMin : 12 Max : 35 Moy : 24,17\n```\n(les valeurs exactes dépendent de vos données)",
+      "expectedOutput": "Max : 35",
+      "validationType": "contains",
+      "correction": "$temperatures = @(22, 18, 35, 12, 28, 30)\n$stats = $temperatures | Measure-Object -Minimum -Maximum -Average\nWrite-Host \"Min : $($stats.Minimum) Max : $($stats.Maximum) Moy : $([math]::Round($stats.Average,2))\"",
+      "explanation": "`Measure-Object` accepte `-Minimum`, `-Maximum`, `-Average`, `-Sum` et `-StandardDeviation`. `[math]::Round(valeur, décimales)` arrondit le résultat. La classe `[math]` expose des méthodes statiques .NET directement en PowerShell."
+    },
+    {
+      "id": "ex-ps-l2-m4-3",
+      "order": 3,
+      "title": "Grouper des fichiers",
+      "instructions": "Listez les fichiers de `C:\\Windows` (sans récursion) et groupez-les par extension. Affichez les 3 extensions les plus fréquentes.\n\nRésultat attendu :\n```\nCount Name\n----- ----\n  ... .xxx\n```",
+      "expectedOutput": "Count",
+      "validationType": "contains",
+      "correction": "Get-ChildItem C:\\Windows -File | Group-Object Extension | Sort-Object Count -Descending | Select-Object -First 3 | Format-Table Count, Name",
+      "explanation": "`Group-Object Extension` regroupe les fichiers par extension et compte les occurrences. Le résultat contient les propriétés `Name` (la valeur groupée = l'extension) et `Count` (le nombre). `Sort-Object Count -Descending` met les plus fréquentes en premier."
+    },
+    {
+      "id": "ex-ps-l2-m4-4",
+      "order": 4,
+      "title": "Pipeline complet",
+      "instructions": "Créez un pipeline qui :\n1. Prend les nombres 1 à 20\n2. Filtre les multiples de 3\n3. Calcule leur carré\n4. Affiche le résultat\n\nRésultat attendu :\n```\n9\n36\n81\n144\n225\n324\n361\n```\n(3²=9, 6²=36, 9²=81...)",
+      "expectedOutput": "81",
+      "validationType": "contains",
+      "correction": "1..20 | Where-Object { $_ % 3 -eq 0 } | ForEach-Object { $_ * $_ }",
+      "explanation": "`1..20` génère une séquence de 1 à 20. `Where-Object { $_ % 3 -eq 0 }` garde les multiples de 3 (reste de division = 0). `ForEach-Object { $_ * $_ }` calcule le carré. En 3 cmdlets chaînées, on effectue une opération en 3 étapes sans variable temporaire."
+    }
+  ]
+}

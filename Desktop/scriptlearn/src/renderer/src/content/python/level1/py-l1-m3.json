@@ -1,0 +1,58 @@
+{
+  "id": "py-l1-m3",
+  "title": "Conditions et boucles",
+  "lang": "python",
+  "level": 1,
+  "order": 3,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "section": "Conditions if/elif/else",
+      "content": "Les conditions permettent de prendre des décisions selon les données d'une alerte :\n\n```python\nport = 4444\n\nif port == 22:\n    print(\"SSH détecté\")\nelif port == 4444:\n    print(\"Port Metasploit ! Alerte haute\")\nelif port in [80, 443, 8080, 8443]:\n    print(\"Trafic web\")\nelse:\n    print(f\"Port inconnu : {port}\")\n```\n\nOpérateurs de comparaison : `==`, `!=`, `<`, `>`, `<=`, `>=`\nOpérateurs logiques : `and`, `or`, `not`\n\n```python\nip = \"10.0.0.5\"\nscore = 9.2\n\nif score >= 8.0 and not ip.startswith(\"192.168.\"):\n    print(\"Alerte critique : IP externe malveillante\")\n```"
+    },
+    {
+      "section": "Boucle for — itérer sur des listes",
+      "content": "La boucle `for` est essentielle pour parcourir des listes d'IPs, d'alertes ou de logs :\n\n```python\nips_suspectes = [\"185.220.101.3\", \"194.165.16.11\", \"10.0.0.5\"]\n\nfor ip in ips_suspectes:\n    print(f\"Analyse de {ip}\")\n\n# Avec index\nfor i, ip in enumerate(ips_suspectes):\n    print(f\"{i+1}. {ip}\")\n\n# range() pour les répétitions\nfor tentative in range(5):\n    print(f\"Tentative {tentative + 1}/5\")\n```\n\n`range(n)` génère les entiers de 0 à n-1."
+    },
+    {
+      "section": "Boucle while — attendre une condition",
+      "content": "```python\nimport time\n\ncompteur_echecs = 0\nseuil_alerte = 3\n\n# Simuler des tentatives de connexion\ntentatives = [False, False, False, True]  # 3 échecs puis succès\n\nfor connexion in tentatives:\n    if not connexion:\n        compteur_echecs += 1\n        print(f\"Échec #{compteur_echecs}\")\n        if compteur_echecs >= seuil_alerte:\n            print(\"ALERTE : Brute force détecté !\")\n            break\n    else:\n        print(\"Connexion réussie\")\n        compteur_echecs = 0\n```\n\n`break` stoppe la boucle. `continue` passe à l'itération suivante."
+    },
+    {
+      "section": "List comprehensions",
+      "content": "Syntaxe concise pour créer des listes filtrées, très utilisée en SOC :\n\n```python\nports = [21, 22, 80, 443, 3389, 4444, 8080]\n\n# Filtrer les ports suspects\nports_suspects = [p for p in ports if p in [4444, 1337, 31337, 6667]]\nprint(ports_suspects)  # [4444]\n\n# Transformer\nports_str = [str(p) for p in ports]\nprint(ports_str)  # ['21', '22', ...]\n\n# IPs en dehors du réseau local\nips = [\"192.168.1.1\", \"10.0.0.5\", \"185.220.101.3\", \"172.16.0.1\"]\nexternes = [ip for ip in ips if not (ip.startswith(\"192.168.\") or ip.startswith(\"10.\") or ip.startswith(\"172.\"))]\nprint(externes)  # ['185.220.101.3']\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m3-ex1",
+      "title": "Classifier un score de risque",
+      "description": "Afficher le niveau d'alerte selon un score numérique",
+      "instructions": "Soit `score = 7.5`. Affichez le niveau :\n- score >= 9 → `Critique`\n- score >= 7 → `Élevé`\n- score >= 4 → `Moyen`\n- sinon → `Faible`\n\nRésultat attendu :\n```\nNiveau : Élevé\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Niveau : Élevé",
+      "correction": "score = 7.5\nif score >= 9:\n    print(\"Niveau : Critique\")\nelif score >= 7:\n    print(\"Niveau : Élevé\")\nelif score >= 4:\n    print(\"Niveau : Moyen\")\nelse:\n    print(\"Niveau : Faible\")",
+      "explanation": "Les conditions `elif` (else if) permettent de tester plusieurs cas. Python évalue de haut en bas et s'arrête au premier `True`."
+    },
+    {
+      "id": "py-l1-m3-ex2",
+      "title": "Parcourir une liste d'IPs",
+      "description": "Itérer sur des IPs et compter les IPs externes",
+      "instructions": "Soit `ips = [\"192.168.1.1\", \"8.8.8.8\", \"10.0.0.1\", \"185.220.101.3\", \"172.16.0.5\"]`\n\nAffichez le nombre d'IPs **non** privées (qui ne commencent pas par `192.168.`, `10.` ou `172.`) :\n```\nIPs externes : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IPs externes : 2",
+      "correction": "ips = [\"192.168.1.1\", \"8.8.8.8\", \"10.0.0.1\", \"185.220.101.3\", \"172.16.0.5\"]\nexternes = [ip for ip in ips if not (ip.startswith(\"192.168.\") or ip.startswith(\"10.\") or ip.startswith(\"172.\"))]\nprint(f\"IPs externes : {len(externes)}\")",
+      "explanation": "La list comprehension avec condition `if not (...)` filtre les IPs privées. `len()` compte les éléments restants."
+    },
+    {
+      "id": "py-l1-m3-ex3",
+      "title": "Détecter du brute force",
+      "description": "Compter les échecs de connexion et déclencher une alerte",
+      "instructions": "Soit `events = [\"FAIL\", \"FAIL\", \"FAIL\", \"FAIL\", \"SUCCESS\"]`\n\nComptez les `\"FAIL\"` consécutifs. Si le compteur atteint 3, affichez `ALERTE BRUTE FORCE` et arrêtez le traitement avec `break`.\n\nRésultat attendu :\n```\nALERTE BRUTE FORCE\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALERTE BRUTE FORCE",
+      "correction": "events = [\"FAIL\", \"FAIL\", \"FAIL\", \"FAIL\", \"SUCCESS\"]\ncompteur = 0\nfor evt in events:\n    if evt == \"FAIL\":\n        compteur += 1\n        if compteur >= 3:\n            print(\"ALERTE BRUTE FORCE\")\n            break\n    else:\n        compteur = 0",
+      "explanation": "`break` interrompt la boucle dès que la condition d'alerte est atteinte. Le compteur se remet à 0 en cas de succès pour ne détecter que les échecs consécutifs."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l6-m1",
+  "title": "Analyse de malware — techniques statiques avancées",
+  "lang": "python",
+  "level": 6,
+  "order": 1,
+  "estimatedMinutes": 75,
+  "course": [
+    {
+      "section": "Analyse de PE Windows en Python",
+      "content": "L'analyse statique avancée des fichiers PE (Portable Executable) permet de comprendre la structure d'un malware sans l'exécuter. Python + la librairie `pefile` (ou parsing manuel) permet une analyse complète.\n\n```python\nimport struct\nimport os\n\n# Structure PE minimale (parsing manuel sans librairie)\nclass PEAnalyzer:\n    \"\"\"Analyseur PE minimaliste — parsing des headers principaux.\"\"\"\n    \n    DOS_MAGIC = b'MZ'\n    PE_SIGNATURE = b'PE\\x00\\x00'\n    \n    def __init__(self, chemin):\n        self.chemin = chemin\n        self.data = b''\n        self.valide = False\n        self._charger()\n    \n    def _charger(self):\n        try:\n            with open(self.chemin, 'rb') as f:\n                self.data = f.read()\n            self.valide = (\n                self.data[:2] == self.DOS_MAGIC and\n                len(self.data) > 0x40\n            )\n        except Exception as e:\n            print(f\"Erreur chargement : {e}\")\n    \n    def get_pe_offset(self):\n        \"\"\"Offset vers le header PE (e_lfanew à 0x3C).\"\"\"\n        if not self.valide:\n            return None\n        return struct.unpack('<I', self.data[0x3C:0x40])[0]\n    \n    def get_machine_type(self):\n        \"\"\"Type de machine (x86/x64).\"\"\"\n        offset = self.get_pe_offset()\n        if offset is None:\n            return 'Unknown'\n        machine = struct.unpack('<H', self.data[offset+4:offset+6])[0]\n        return {\n            0x014c: 'x86 (32-bit)',\n            0x8664: 'x64 (64-bit)',\n            0xAA64: 'ARM64',\n        }.get(machine, f'Unknown (0x{machine:04X})')\n    \n    def get_compile_time(self):\n        \"\"\"Timestamp de compilation (peut être falsifié).\"\"\"\n        from datetime import datetime\n        offset = self.get_pe_offset()\n        if offset is None:\n            return None\n        ts = struct.unpack('<I', self.data[offset+8:offset+12])[0]\n        try:\n            return datetime.fromtimestamp(ts).isoformat()\n        except:\n            return f\"0x{ts:08X}\"\n\n# Test avec un fichier simulé\npe_data = b'MZ' + b'\\x00' * 0x3A + b'\\x40\\x00\\x00\\x00' + b'\\x00' * 0x40\npe_data += b'PE\\x00\\x00' + b'\\x64\\x86' + b'\\x00' * 2  # x64\npe_data += b'\\x78\\x56\\x34\\x12' + b'\\x00' * 100  # compile time\n\nwith open('/tmp/test.exe', 'wb') as f:\n    f.write(pe_data)\n\npe = PEAnalyzer('/tmp/test.exe')\nprint(f\"Valide : {pe.valide}\")\nprint(f\"Machine : {pe.get_machine_type()}\")\n```"
+    },
+    {
+      "section": "Import Analysis et détection de capabilities",
+      "content": "```python\nimport re\n\n# Imports Windows suspects — indiquent les capacités du malware\nIMPORTS_SUSPECTS = {\n    \"VirtualAlloc\": \"Allocation mémoire (injection/shellcode)\",\n    \"VirtualProtect\": \"Modification permissions mémoire\",\n    \"WriteProcessMemory\": \"Écriture dans processus tiers (injection)\",\n    \"CreateRemoteThread\": \"Création thread distant (injection)\",\n    \"OpenProcess\": \"Accès à un processus tiers\",\n    \"SetWindowsHookEx\": \"Keylogger/hook d'entrée\",\n    \"RegSetValueEx\": \"Modification registre (persistance)\",\n    \"CreateService\": \"Création de service (persistance)\",\n    \"InternetOpen\": \"Connexion réseau (C2)\",\n    \"URLDownloadToFile\": \"Téléchargement de fichier\",\n    \"ShellExecute\": \"Exécution de commande\",\n    \"CryptEncrypt\": \"Chiffrement (ransomware possible)\",\n    \"FindFirstFile\": \"Énumération fichiers (ransomware/exfil)\",\n}\n\ndef analyser_imports_strings(data):\n    \"\"\"Détecte les imports suspects dans les strings d'un binaire.\"\"\"\n    capabilities = []\n    data_str = data.decode('latin-1', errors='replace')\n    \n    for api, description in IMPORTS_SUSPECTS.items():\n        if api.lower() in data_str.lower():\n            capabilities.append({\"api\": api, \"description\": description})\n    \n    return capabilities\n\n# Simulation binaire avec imports\nbinaire_simule = (b\"MZ\" + b\"\\x00\" * 58 +\n    b\"VirtualAlloc\\x00WriteProcessMemory\\x00CreateRemoteThread\\x00\" +\n    b\"RegSetValueEx\\x00InternetOpen\\x00CryptEncrypt\\x00\")\n\ncaps = analyser_imports_strings(binaire_simule)\nprint(f\"Capabilities détectées : {len(caps)}\")\nfor cap in caps:\n    print(f\"  {cap['api']:25} → {cap['description']}\")\n\n# Scoring des capabilities\nSCORES_CAP = {\n    \"WriteProcessMemory\": 25, \"CreateRemoteThread\": 25,\n    \"CryptEncrypt\": 20, \"InternetOpen\": 15, \"VirtualAlloc\": 10,\n}\nscore = sum(SCORES_CAP.get(c['api'], 5) for c in caps)\nprint(f\"Score malveillance : {score}/100\")\n```"
+    },
+    {
+      "section": "Détection de packers et d'obfuscation",
+      "content": "```python\nimport math\nfrom collections import Counter\n\ndef detecter_packer(data):\n    \"\"\"\n    Détecte la présence d'un packer (UPX, etc.) ou d'un payload chiffré.\n    Indicateurs : haute entropie, noms de sections suspects, peu d'imports.\n    \"\"\"\n    indicateurs = []\n    \n    # 1. Entropie globale\n    def entropie(d):\n        if not d:\n            return 0\n        cpt = Counter(d)\n        total = len(d)\n        return -sum((c/total)*math.log2(c/total) for c in cpt.values())\n    \n    h = entropie(data)\n    if h > 7.2:\n        indicateurs.append(f\"Entropie élevée ({h:.2f}/8.0) — probable packer/chiffrement\")\n    elif h > 6.5:\n        indicateurs.append(f\"Entropie modérée ({h:.2f}/8.0)\")\n    \n    # 2. Strings de packer connus\n    packers = [b'UPX0', b'UPX1', b'UPX!', b'.aspack', b'Themida', b'VMProtect']\n    for packer in packers:\n        if packer in data:\n            indicateurs.append(f\"Packer détecté : {packer.decode('latin-1')}\")\n    \n    # 3. Peu de strings lisibles (indicateur d'obfuscation)\n    strings_ascii = re.findall(rb'[\\x20-\\x7e]{6,}', data)\n    ratio = len(strings_ascii) / max(len(data) // 100, 1)\n    if ratio < 0.5:\n        indicateurs.append(f\"Peu de strings lisibles ({len(strings_ascii)}) — possible obfuscation\")\n    \n    return indicateurs\n\n# Test avec données simulées\ndonnees_upx = b'MZ' + b'\\x00'*58 + b'UPX0' + b'\\x00'*20 + b'UPX1' + bytes(range(256))*4\nindicateurs = detecter_packer(donnees_upx)\nprint(\"Indicateurs packer :\")\nfor ind in indicateurs:\n    print(f\"  → {ind}\")\n```"
+    },
+    {
+      "section": "Rapport d'analyse malware",
+      "content": "```python\nimport json\nimport hashlib\nfrom datetime import datetime\n\ndef rapport_malware(chemin, data):\n    \"\"\"Génère un rapport d'analyse malware complet.\"\"\"\n    \n    # Hashes\n    hashes = {\n        'md5':    hashlib.md5(data).hexdigest(),\n        'sha1':   hashlib.sha1(data).hexdigest(),\n        'sha256': hashlib.sha256(data).hexdigest(),\n    }\n    \n    # Capabilities et indicateurs\n    caps = analyser_imports_strings(data)\n    indicators = detecter_packer(data)\n    \n    # Score global\n    score_caps = sum(SCORES_CAP.get(c['api'], 5) for c in caps)\n    score_pack = len([i for i in indicators if 'Packer' in i or 'Entropie élevée' in i]) * 15\n    score_total = min(score_caps + score_pack, 100)\n    \n    verdict = (\n        'MALVEILLANT' if score_total >= 60 else\n        'SUSPECT'     if score_total >= 30 else\n        'BÉNIN'\n    )\n    \n    rapport = {\n        'fichier': chemin,\n        'taille': len(data),\n        'hashes': hashes,\n        'verdict': verdict,\n        'score': score_total,\n        'capabilities': caps,\n        'indicateurs_packer': indicators,\n        'timestamp': datetime.now().isoformat()\n    }\n    \n    print(f\"\\n=== Rapport Malware ===\")\n    print(f\"Fichier  : {chemin}\")\n    print(f\"SHA256   : {hashes['sha256'][:32]}...\")\n    print(f\"Verdict  : {verdict} (score={score_total}/100)\")\n    print(f\"APIs     : {len(caps)}\")\n    print(f\"Indicateurs : {len(indicators)}\")\n    \n    return rapport\n\nrapport_malware('/tmp/test.exe', binaire_simule)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l6-m1-ex1",
+      "title": "Détecter des APIs suspectes dans un binaire",
+      "description": "Analyser les chaînes d'un binaire pour y trouver des imports dangereux",
+      "instructions": "Soit :\n```python\ndata = b\"VirtualAlloc\\x00CreateRemoteThread\\x00notepad.exe\\x00\"\nsuspects = [\"VirtualAlloc\", \"CreateRemoteThread\", \"WriteProcessMemory\"]\n```\nComptez les APIs suspectes présentes et affichez :\n```\nAPIs suspectes : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "APIs suspectes : 2",
+      "correction": "data = b\"VirtualAlloc\\x00CreateRemoteThread\\x00notepad.exe\\x00\"\nsuspects = [\"VirtualAlloc\", \"CreateRemoteThread\", \"WriteProcessMemory\"]\ncount = sum(1 for api in suspects if api.encode() in data)\nprint(f\"APIs suspectes : {count}\")",
+      "explanation": "`api.encode()` convertit la string en bytes pour la recherche dans des données binaires. L'analyse des imports API est la première étape de l'analyse statique — elle révèle les intentions du malware (injection, keylogger, C2, ransomware)."
+    },
+    {
+      "id": "py-l6-m1-ex2",
+      "title": "Calculer les hashes d'un fichier",
+      "description": "Générer MD5, SHA1 et SHA256 pour identifier un malware",
+      "instructions": "Calculez le hash SHA256 de la donnée `b\"malware payload\"` et affichez :\n```\nSHA256 : [hash]\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "SHA256 :",
+      "correction": "import hashlib\ndata = b\"malware payload\"\nh = hashlib.sha256(data).hexdigest()\nprint(f\"SHA256 : {h}\")",
+      "explanation": "Les hashes sont les IOC les plus précis pour les fichiers. Un SHA256 identifie un fichier de manière quasi-unique et peut être recherché dans VirusTotal, Malware Bazaar, ou votre SIEM. `hashlib` supporte MD5, SHA1, SHA256, SHA512 nativement."
+    },
+    {
+      "id": "py-l6-m1-ex3",
+      "title": "Scorer un binaire selon ses capabilities",
+      "description": "Calculer un score de malveillance basé sur les APIs détectées",
+      "instructions": "Soit :\n```python\ncaps_trouvees = [\"VirtualAlloc\", \"CreateRemoteThread\", \"InternetOpen\"]\nscores = {\"VirtualAlloc\": 10, \"CreateRemoteThread\": 25, \"InternetOpen\": 15}\n```\nCalculez le score total et affichez :\n```\nScore malveillance : 50\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Score malveillance : 50",
+      "correction": "caps_trouvees = [\"VirtualAlloc\", \"CreateRemoteThread\", \"InternetOpen\"]\nscores = {\"VirtualAlloc\": 10, \"CreateRemoteThread\": 25, \"InternetOpen\": 15}\nscore = sum(scores.get(c, 5) for c in caps_trouvees)\nprint(f\"Score malveillance : {score}\")",
+      "explanation": "Le scoring basé sur les capabilities est la base du classement automatique de malwares. Les sandboxes commerciales (Cuckoo, Joe Sandbox) utilisent des approches similaires mais avec des centaines de signaux comportementaux."
+    }
+  ]
+}

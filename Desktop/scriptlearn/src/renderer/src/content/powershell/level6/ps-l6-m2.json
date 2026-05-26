@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m2",
+  "title": "Threat Hunting Active Directory",
+  "lang": "powershell",
+  "level": 6,
+  "order": 2,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Active Directory comme surface d'attaque",
+      "content": "Active Directory est la cible principale des attaquants dans les environnements Windows. Les techniques courantes :\n\n- **Pass-the-Hash / Pass-the-Ticket** : réutilisation de hashes NTLM ou tickets Kerberos\n- **Kerberoasting** : demander des tickets de service et cracker offline\n- **DCSync** : récupérer les hashes de tous les comptes AD\n- **BloodHound paths** : chemins d'escalade de privilèges\n- **Golden/Silver Tickets** : forger des tickets Kerberos\n\n```powershell\n# Vérifier si le module AD est disponible\nif (Get-Module -ListAvailable -Name ActiveDirectory) {\n    Import-Module ActiveDirectory\n    Write-Host \"Module AD chargé\"\n} else {\n    Write-Host \"Module AD non disponible (RSAT requis)\"\n    Write-Host \"Install-WindowsFeature RSAT-AD-PowerShell\"\n}\n\n# Informations de base sur le domaine\ntry {\n    $domain = Get-ADDomain\n    Write-Host \"Domaine : $($domain.DNSRoot)\"\n    Write-Host \"DC(s) : $($domain.PDCEmulator)\"\n} catch {\n    Write-Host \"Non joint à un domaine AD\"\n}\n```"
+    },
+    {
+      "section": "Hunt — Comptes à privilèges suspects",
+      "content": "```powershell\n# Analyser les comptes Domain Admin et Enterprise Admin\n\nfunction Get-ComptesSuspects {\n    try {\n        # Membres des groupes sensibles\n        $groupesSensibles = @(\n            'Domain Admins', 'Enterprise Admins', \n            'Schema Admins', 'Administrators'\n        )\n        \n        foreach ($groupe in $groupesSensibles) {\n            try {\n                $membres = Get-ADGroupMember -Identity $groupe -Recursive -ErrorAction Stop\n                Write-Host \"[$groupe] : $($membres.Count) membre(s)\"\n                $membres | ForEach-Object {\n                    $user = Get-ADUser $_.SamAccountName -Properties LastLogonDate, PasswordLastSet, Enabled -ErrorAction SilentlyContinue\n                    if ($user) {\n                        $flag = if (-not $user.Enabled) { ' [DÉSACTIVÉ]' }\n                                elseif ($user.PasswordLastSet -lt (Get-Date).AddDays(-90)) { ' [MOT DE PASSE ANCIEN]' }\n                                else { '' }\n                        Write-Host \"  - $($user.SamAccountName) | LastLogon: $($user.LastLogonDate)$flag\"\n                    }\n                }\n            } catch {\n                Write-Host \"[$groupe] : Non accessible\"\n            }\n        }\n    } catch {\n        Write-Host \"Erreur : $_\"\n    }\n}\n\nGet-ComptesSuspects\n\n# Comptes avec LastLogon > 90 jours mais encore actifs (potentiels comptes fantômes)\ntry {\n    $inactifs = Get-ADUser -Filter {Enabled -eq $true -and LastLogonDate -lt ((Get-Date).AddDays(-90))} `\n        -Properties LastLogonDate | Select-Object SamAccountName, LastLogonDate\n    Write-Host \"`nComptes inactifs (>90j) mais actifs : $($inactifs.Count)\"\n} catch {\n    Write-Host \"(Module AD requis pour cette analyse)\"\n}\n```"
+    },
+    {
+      "section": "Hunt — Kerberoasting et AS-REP Roasting",
+      "content": "```powershell\n# Détecter les comptes vulnérables au Kerberoasting\n# (ServicePrincipalName défini + compte utilisateur)\n\nfunction Find-KerberoastableAccounts {\n    try {\n        $comptes = Get-ADUser -Filter {ServicePrincipalName -ne \"$null\" -and Enabled -eq $true} `\n            -Properties ServicePrincipalName, PasswordLastSet, Description\n        \n        Write-Host \"Comptes Kerberoastable : $($comptes.Count)\"\n        $comptes | ForEach-Object {\n            $ancienMDP = ($_.PasswordLastSet -lt (Get-Date).AddDays(-180))\n            $flag = if ($ancienMDP) { ' [MDP ANCIEN - PRIORITAIRE]' } else { '' }\n            Write-Host \"  $($_.SamAccountName) | SPN: $($_.ServicePrincipalName -join ',')$flag\"\n        }\n    } catch {\n        Write-Host \"(Module AD requis)\"\n    }\n}\n\n# Détecter les comptes AS-REP Roastable\n# (DoesNotRequirePreAuth = True → hash récupérable sans authentification)\nfunction Find-ASREPRoastableAccounts {\n    try {\n        $comptes = Get-ADUser -Filter {DoesNotRequirePreAuth -eq $true -and Enabled -eq $true}\n        Write-Host \"`nComptes AS-REP Roastable : $($comptes.Count)\"\n        if ($comptes.Count -gt 0) {\n            Write-Host \"[CRITIQUE] Ces comptes peuvent être attaqués sans credentials !\"\n            $comptes | ForEach-Object { Write-Host \"  $($_.SamAccountName)\" }\n        }\n    } catch {\n        Write-Host \"(Module AD requis)\"\n    }\n}\n\nFind-KerberoastableAccounts\nFind-ASREPRoastableAccounts\n```"
+    },
+    {
+      "section": "Hunt — Mouvement latéral et logs Kerberos",
+      "content": "```powershell\n# Détecter les patterns de mouvement latéral via les logs\n\n$debut = (Get-Date).AddHours(-4)\n\n# EventID 4769 : Ticket de service Kerberos demandé (Kerberoasting)\n$tickets = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4769\n    StartTime = $debut\n} -ErrorAction SilentlyContinue\n\nif ($tickets) {\n    Write-Host \"Tickets Kerberos service demandés (4h) : $($tickets.Count)\"\n    \n    # Comptes demandant beaucoup de tickets (IOC Kerberoasting)\n    $parCompte = $tickets | ForEach-Object {\n        if ($_.Message -match 'Account Name:\\s+(\\S+)@') { $Matches[1] }\n    } | Group-Object | Sort-Object Count -Descending\n    \n    $parCompte | Select-Object -First 5 | ForEach-Object {\n        $flag = if ($_.Count -gt 20) { ' [KERBEROASTING PROBABLE]' } else { '' }\n        Write-Host \"  $($_.Name) : $($_.Count) ticket(s)$flag\"\n    }\n}\n\n# EventID 4648 : Logon with explicit credentials (Pass-the-Hash)\n$explicit = Get-WinEvent -FilterHashtable @{\n    LogName   = 'Security'\n    Id        = 4648\n    StartTime = $debut\n} -ErrorAction SilentlyContinue\n\nWrite-Host \"`nConnexions credentials explicites (4648) : $(($explicit).Count)\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m2-ex1",
+      "title": "Lister les membres d'un groupe local",
+      "description": "Identifier les membres du groupe Administrators local",
+      "instructions": "Listez les membres du groupe local `Administrators` et affichez leur nombre :\n```\nAdministrateurs locaux : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Administrateurs locaux :",
+      "correction": "$count = (Get-LocalGroupMember -Group 'Administrators' -ErrorAction SilentlyContinue).Count\nWrite-Host \"Administrateurs locaux : $count\"",
+      "explanation": "`Get-LocalGroupMember` est disponible sans module AD. En threat hunting, les administrateurs locaux inattendus sont un IOC de persistance — les attaquants ajoutent souvent leur compte pour maintenir l'accès."
+    },
+    {
+      "id": "ps-l6-m2-ex2",
+      "title": "Chercher les EventID 4648 récents",
+      "description": "Détecter les connexions avec credentials explicites",
+      "instructions": "Comptez les EventID 4648 (connexion avec credentials explicites) dans les dernières 4 heures :\n```\nConnexions credentials explicites : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Connexions credentials explicites :",
+      "correction": "$count = (Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4648; StartTime=(Get-Date).AddHours(-4)} -ErrorAction SilentlyContinue).Count\nWrite-Host \"Connexions credentials explicites : $count\"",
+      "explanation": "EventID 4648 est généré quand un processus utilise des credentials différents de ceux de la session courante (runas, PsExec, etc.). Un volume élevé est un indicateur de Pass-the-Hash ou de mouvement latéral."
+    },
+    {
+      "id": "ps-l6-m2-ex3",
+      "title": "Lister les comptes locaux activés",
+      "description": "Auditer les comptes locaux actifs sur la machine",
+      "instructions": "Listez les comptes locaux activés (`Enabled -eq $true`) et affichez leur nombre :\n```\nComptes locaux actifs : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Comptes locaux actifs :",
+      "correction": "$count = (Get-LocalUser | Where-Object { $_.Enabled }).Count\nWrite-Host \"Comptes locaux actifs : $count\"",
+      "explanation": "`Get-LocalUser` liste tous les comptes locaux. Les comptes inattendus (surtout avec des noms génériques) sont des IOC de backdoor. En incident response, on compare cette liste à une baseline connue."
+    }
+  ]
+}

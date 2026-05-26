@@ -1,0 +1,58 @@
+{
+  "id": "py-l5-m5",
+  "title": "Plateforme de Threat Intelligence",
+  "lang": "python",
+  "level": 5,
+  "order": 5,
+  "estimatedMinutes": 70,
+  "course": [
+    {
+      "section": "Architecture d'une TIP (Threat Intelligence Platform)",
+      "content": "Une TIP agrège, normalise et partage des renseignements sur les menaces. Les sources incluent :\n\n- **OSINT** : VirusTotal, AlienVault OTX, Shodan, AbuseIPDB\n- **Feeds commerciaux** : CrowdStrike, Recorded Future\n- **Communautaires** : MISP, OpenCTI\n- **Internes** : logs SIEM, incidents passés\n\nLe format standard d'échange est **STIX 2.1** (Structured Threat Information eXpression).\n\n```python\nfrom datetime import datetime\nfrom collections import defaultdict\nimport json\nimport hashlib\n\n# Représentation simplifiée d'un objet STIX-like\nclass IOCRecord:\n    def __init__(self, valeur, type_ioc, source, tags=None, score=0):\n        self.id = hashlib.md5(valeur.encode()).hexdigest()[:16]\n        self.valeur = valeur\n        self.type = type_ioc      # ip | domain | hash | url | email\n        self.source = source\n        self.tags = tags or []\n        self.score = score        # 0-100\n        self.created = datetime.now().isoformat()\n        self.seen_count = 1\n    \n    def to_dict(self):\n        return vars(self)\n    \n    def __repr__(self):\n        return f\"IOC({self.type}:{self.valeur} score={self.score})\"\n```"
+    },
+    {
+      "section": "Ingestion et déduplication multi-sources",
+      "content": "```python\nclass ThreatIntelPlatform:\n    \"\"\"Plateforme de Threat Intelligence locale.\"\"\"\n    \n    def __init__(self):\n        self.iocs = {}         # valeur -> IOCRecord\n        self.sources = set()\n        self.stats = defaultdict(int)\n    \n    def ingerer(self, valeur, type_ioc, source, tags=None, score=0):\n        \"\"\"Ajoute ou met à jour un IOC.\"\"\"\n        self.sources.add(source)\n        \n        if valeur in self.iocs:\n            # Mise à jour : fusion des tags, max score, incrément compteur\n            existing = self.iocs[valeur]\n            existing.tags = list(set(existing.tags + (tags or [])))\n            existing.score = max(existing.score, score)\n            existing.seen_count += 1\n            self.stats[\"mises_a_jour\"] += 1\n        else:\n            self.iocs[valeur] = IOCRecord(valeur, type_ioc, source, tags, score)\n            self.stats[\"nouveaux\"] += 1\n        \n        self.stats[\"total\"] = len(self.iocs)\n    \n    def ingerer_batch(self, liste_iocs):\n        \"\"\"Ingère une liste d'IOC depuis un feed.\"\"\"\n        for ioc in liste_iocs:\n            self.ingerer(\n                ioc[\"valeur\"], ioc[\"type\"], ioc[\"source\"],\n                ioc.get(\"tags\"), ioc.get(\"score\", 0)\n            )\n        print(f\"Ingestion terminée : {self.stats}\")\n    \n    def rechercher(self, valeur):\n        return self.iocs.get(valeur)\n    \n    def top_menaces(self, n=5):\n        \"\"\"Retourne les IOC avec les scores les plus élevés.\"\"\"\n        return sorted(self.iocs.values(), key=lambda x: x.score, reverse=True)[:n]\n    \n    def exporter_json(self, chemin):\n        data = {\"metadata\": {\"total\": len(self.iocs), \"sources\": list(self.sources)},\n                \"iocs\": [ioc.to_dict() for ioc in self.iocs.values()]}\n        with open(chemin, \"w\") as f:\n            json.dump(data, f, indent=2)\n        print(f\"Export : {len(self.iocs)} IOC → {chemin}\")\n\n# Test\ntip = ThreatIntelPlatform()\nfeed_otx = [\n    {\"valeur\": \"185.220.101.3\", \"type\": \"ip\",     \"source\": \"OTX\",    \"tags\": [\"tor\"],      \"score\": 85},\n    {\"valeur\": \"malware.xyz\",   \"type\": \"domain\", \"source\": \"OTX\",    \"tags\": [\"c2\"],       \"score\": 90},\n    {\"valeur\": \"194.165.16.11\", \"type\": \"ip\",     \"source\": \"abuse\",  \"tags\": [\"scanner\"],  \"score\": 70},\n]\nfeed_vt = [\n    {\"valeur\": \"185.220.101.3\", \"type\": \"ip\",     \"source\": \"VT\",     \"tags\": [\"malware\"],  \"score\": 92},\n]\n\ntip.ingerer_batch(feed_otx)\ntip.ingerer_batch(feed_vt)\n\nprint(\"\\nTop menaces :\")\nfor ioc in tip.top_menaces(3):\n    print(f\"  {ioc}  tags={ioc.tags}\")\n```"
+    },
+    {
+      "section": "Corrélation avec les événements internes",
+      "content": "```python\ndef corréler_tip_evenements(tip, evenements):\n    \"\"\"\n    Corrèle des événements de logs avec la TIP.\n    Retourne les événements qui impliquent des IOC connus.\n    \"\"\"\n    hits = []\n    \n    for evt in evenements:\n        # Recherche par IP\n        for champ in [\"src_ip\", \"dst_ip\", \"ip\"]:\n            ip = evt.get(champ)\n            if ip:\n                ioc = tip.rechercher(ip)\n                if ioc:\n                    hits.append({\n                        \"evenement\": evt,\n                        \"ioc\": ioc.to_dict(),\n                        \"champ\": champ,\n                        \"score\": ioc.score\n                    })\n        # Recherche par domaine\n        domaine = evt.get(\"domain\") or evt.get(\"dns_query\")\n        if domaine:\n            ioc = tip.rechercher(domaine)\n            if ioc:\n                hits.append({\n                    \"evenement\": evt,\n                    \"ioc\": ioc.to_dict(),\n                    \"champ\": \"domain\",\n                    \"score\": ioc.score\n                })\n    \n    return sorted(hits, key=lambda x: x[\"score\"], reverse=True)\n\n# Simulation\nevts_logs = [\n    {\"ts\": \"10:00\", \"src_ip\": \"10.0.0.5\",    \"dst_ip\": \"185.220.101.3\", \"port\": 443},\n    {\"ts\": \"10:05\", \"src_ip\": \"10.0.0.10\",   \"dns_query\": \"malware.xyz\"},\n    {\"ts\": \"10:10\", \"src_ip\": \"192.168.1.1\",  \"dst_ip\": \"8.8.8.8\", \"port\": 53},\n]\n\nhits = corréler_tip_evenements(tip, evts_logs)\nprint(f\"\\nCorrélations TIP : {len(hits)} hit(s)\")\nfor h in hits:\n    print(f\"  [{h['score']}] {h['champ']}={h['ioc']['valeur']} à {h['evenement']['ts']}\")\n```"
+    },
+    {
+      "section": "Export STIX-like et partage",
+      "content": "```python\nimport json\nfrom datetime import datetime\n\ndef exporter_stix_simplifie(tip):\n    \"\"\"\n    Export au format STIX 2.1 simplifié.\n    STIX est le standard OASIS pour partager la CTI.\n    \"\"\"\n    bundle = {\n        \"type\": \"bundle\",\n        \"id\": f\"bundle--{datetime.now().strftime('%Y%m%d%H%M%S')}\",\n        \"spec_version\": \"2.1\",\n        \"objects\": []\n    }\n    \n    for ioc in tip.iocs.values():\n        # Mapper les types vers les types STIX\n        type_stix = {\n            \"ip\":     \"ipv4-addr\",\n            \"domain\": \"domain-name\",\n            \"hash\":   \"file\",\n            \"url\":    \"url\",\n        }.get(ioc.type, \"indicator\")\n        \n        obj = {\n            \"type\": type_stix,\n            \"id\": f\"{type_stix}--{ioc.id}\",\n            \"spec_version\": \"2.1\",\n            \"value\": ioc.valeur,\n            \"created\": ioc.created,\n            \"labels\": ioc.tags,\n            \"x_score\": ioc.score,\n            \"x_source\": ioc.source\n        }\n        bundle[\"objects\"].append(obj)\n    \n    return bundle\n\nbundle = exporter_stix_simplifie(tip)\nprint(f\"Bundle STIX : {len(bundle['objects'])} objets\")\nprint(json.dumps(bundle['objects'][0], indent=2))\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l5-m5-ex1",
+      "title": "Ajouter un IOC à une TIP",
+      "description": "Implémenter l'ajout d'un IOC dans une base de threat intelligence",
+      "instructions": "Créez un dictionnaire `tip` et ajoutez un IOC :\n```python\ntip = {}\nioc = {\"type\": \"ip\", \"score\": 95, \"tags\": [\"tor\"]}\n```\nAjoutez-le avec la clé `\"185.220.101.3\"` et affichez :\n```\nIOC enregistré : 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IOC enregistré : 185.220.101.3",
+      "correction": "tip = {}\nioc = {\"type\": \"ip\", \"score\": 95, \"tags\": [\"tor\"]}\ntip[\"185.220.101.3\"] = ioc\nprint(f\"IOC enregistré : 185.220.101.3\")",
+      "explanation": "Une TIP locale peut simplement être un dictionnaire Python. Pour des millions d'IOC, on utilise Redis (structure de hash) ou PostgreSQL. La clé est toujours la valeur de l'IOC (IP, hash, domaine) pour des lookups O(1)."
+    },
+    {
+      "id": "py-l5-m5-ex2",
+      "title": "Fusionner les tags de deux sources",
+      "description": "Dédupliquer les tags lors de la mise à jour d'un IOC",
+      "instructions": "Soit un IOC existant et une mise à jour depuis une nouvelle source :\n```python\nexistant = {\"score\": 85, \"tags\": [\"tor\", \"c2\"]}\nnouveau  = {\"score\": 92, \"tags\": [\"malware\", \"tor\"]}\n```\nFusionnez en prenant le score max et les tags uniques. Affichez :\n```\nScore final : 92\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Score final : 92",
+      "correction": "existant = {\"score\": 85, \"tags\": [\"tor\", \"c2\"]}\nnouveau  = {\"score\": 92, \"tags\": [\"malware\", \"tor\"]}\nexistant[\"score\"] = max(existant[\"score\"], nouveau[\"score\"])\nexistant[\"tags\"] = list(set(existant[\"tags\"] + nouveau[\"tags\"]))\nprint(f\"Score final : {existant['score']}\")",
+      "explanation": "`max()` prend le score le plus pessimiste (le plus élevé). `set()` déduplique les tags. Cette logique de fusion évite de diminuer la fiabilité d'un IOC quand plusieurs sources le confirment."
+    },
+    {
+      "id": "py-l5-m5-ex3",
+      "title": "Trouver les IOC à score critique",
+      "description": "Filtrer les IOC les plus dangereux d'une base",
+      "instructions": "Soit :\n```python\niocs = [\n    {\"valeur\": \"185.220.101.3\", \"score\": 95},\n    {\"valeur\": \"8.8.8.8\",        \"score\": 0},\n    {\"valeur\": \"malware.xyz\",    \"score\": 88},\n]\n```\nAffichez le nombre d'IOC avec score >= 80 :\n```\nIOC critiques : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IOC critiques : 2",
+      "correction": "iocs = [\n    {\"valeur\": \"185.220.101.3\", \"score\": 95},\n    {\"valeur\": \"8.8.8.8\",        \"score\": 0},\n    {\"valeur\": \"malware.xyz\",    \"score\": 88},\n]\ncritiques = [i for i in iocs if i[\"score\"] >= 80]\nprint(f\"IOC critiques : {len(critiques)}\")",
+      "explanation": "Le seuil 80 est conventionnel dans la threat intelligence. Les IOC > 80 déclenchent des actions automatiques (blocage), ceux entre 50-80 génèrent des alertes, et en dessous c'est de l'observation."
+    }
+  ]
+}

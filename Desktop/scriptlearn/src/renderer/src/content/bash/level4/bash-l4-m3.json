@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m3",
+  "title": "Performance et optimisation",
+  "level": 4,
+  "lang": "bash",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Mesurer les performances",
+      "content": "```bash\n# time : mesure le temps d'exécution\ntime sleep 1\n# real 0m1.001s  — temps réel (horloge murale)\n# user 0m0.000s  — temps CPU utilisateur\n# sys  0m0.001s  — temps CPU noyau\n\n# SECONDS : temps écoulé depuis le démarrage du script\nSTART=$SECONDS\ndormir_longtemps\necho \"Durée : $((SECONDS - START))s\"\n\n# Benchmark précis avec date\nstart=$(date +%s%N)   # nanosecondes\noperation\nend=$(date +%s%N)\necho \"Durée : $(( (end-start) / 1000000 ))ms\"\n\n# Profiler avec strace (Linux)\nstrace -c commande    # statistiques des appels système\n\n# Comparer deux approches\necho \"Approche 1 :\" && time methode_1\necho \"Approche 2 :\" && time methode_2\n\n# Benchmark en boucle\nhyperfine 'commande1' 'commande2'  # outil externe excellent\n```"
+    },
+    {
+      "title": "Optimisations courantes",
+      "content": "```bash\n# LENT : appel de sous-shell à chaque itération\nfor i in $(seq 1 1000); do\n    result=$(echo $i | tr '[:lower:]' '[:upper:]')  # sous-shell !\ndone\n\n# RAPIDE : opérations internes bash (pas de fork)\nfor i in $(seq 1 1000); do\n    result=${i^^}  # majuscules en bash 4+\ndone\n\n# LENT : appel awk pour chaque ligne\nwhile read -r line; do\n    echo \"$line\" | awk '{print $1}'\ndone < fichier.txt\n\n# RAPIDE : traiter tout le fichier en une fois\nawk '{print $1}' fichier.txt\n\n# LENT : cat inutile (useless use of cat)\ncat fichier.txt | grep pattern\n\n# RAPIDE : grep direct\ngrep pattern fichier.txt\n\n# LENT : multiple passes\ngrep pattern fichier | wc -l\n\n# RAPIDE : un seul pass\ngrep -c pattern fichier\n\n# Préférer les builtins\n# ${#var} > $(echo -n $var | wc -c)\n# ${var/ancien/nouveau} > $(echo $var | sed 's/...')\n```"
+    },
+    {
+      "title": "Traitement parallèle",
+      "content": "```bash\n# Parallélisme simple avec &\nprocess_item() {\n    local item=$1\n    # traitement long...\n    sleep 1\n    echo \"Traité : $item\"\n}\n\n# Lancer tous les jobs en parallèle\nfor item in a b c d e; do\n    process_item \"$item\" &\ndone\nwait  # attendre tous\n\n# Limiter le parallélisme (sémaphore simple)\nMAX_JOBS=4\njobs_en_cours=0\n\nfor item in $(seq 1 20); do\n    process_item \"$item\" &\n    ((jobs_en_cours++))\n    \n    if [ $jobs_en_cours -ge $MAX_JOBS ]; then\n        wait -n 2>/dev/null || wait  # attendre qu'un job finisse\n        ((jobs_en_cours--))\n    fi\ndone\nwait\n\n# xargs parallèle\nseq 1 20 | xargs -P 4 -I{} bash -c 'echo \"Item {}\"; sleep 0.1'\n\n# GNU parallel (si installé)\nseq 1 20 | parallel -j4 'echo \"Item {}\"; sleep 0.1'\n```"
+    },
+    {
+      "title": "Optimisation des I/O",
+      "content": "```bash\n# Lire efficacement les fichiers\n\n# LENT : appel à cat inutile\nwhile read -r line; do\n    ...\ndone < <(cat fichier.txt)\n\n# RAPIDE : redirection directe\nwhile IFS= read -r line; do\n    ...\ndone < fichier.txt\n\n# Buffering de la sortie\n# Par défaut, stdout est bufferisé (sauf TTY)\n# Forcer le flush :\nstdbuf -oL commande   # line-buffered\nstdbuf -o0 commande   # unbuffered\n\n# Traiter de gros fichiers par chunks\nsplit -l 10000 grand_fichier.txt chunk_  # diviser en chunks de 10000 lignes\nfor chunk in chunk_*; do\n    process \"$chunk\" &\ndone\nwait\nrm chunk_*\n\n# Compresser à la volée dans les pipes\ntar czf - source/ | ssh user@host 'cat > backup.tar.gz'\n\n# Lire depuis stdin efficacement\nawk '{ ... }' /dev/stdin\n\n# Éviter les accès disque répétés (cache en mémoire)\ndata=$(cat fichier.txt)   # charger une fois\necho \"$data\" | grep ...\necho \"$data\" | awk ...\n```"
+    },
+    {
+      "title": "Gestion de la mémoire",
+      "content": "```bash\n# Tableaux vs chaînes\n\n# RISQUÉ : stocker une grosse liste dans une chaîne\nliste=$(find /var/log -name '*.log')  # peut être très gros\n\n# MIEUX : traiter ligne par ligne\nwhile IFS= read -r fichier; do\n    traiter \"$fichier\"\ndone < <(find /var/log -name '*.log')\n\n# Limiter la mémoire utilisée\n# ulimit : limites de ressources pour le shell courant\nulimit -v 1048576   # max 1 Go de mémoire virtuelle\nulimit -t 60        # max 60s de CPU\n\n# Surveiller la consommation mémoire d'un processus\nwatch_memory() {\n    local pid=$1\n    while kill -0 \"$pid\" 2>/dev/null; do\n        local mem\n        mem=$(ps -o rss= -p \"$pid\" 2>/dev/null || echo 0)\n        echo \"$(date +%H:%M:%S) RSS: ${mem}KB\"\n        sleep 1\n    done\n}\n\n# Nettoyer les variables qui ne servent plus\nunset ma_grosse_variable\n\n# Utiliser mkfifo pour les pipes nommés (stream sans fichier)\nmkfifo /tmp/mypipe\nproduce_data > /tmp/mypipe &\nconsume_data < /tmp/mypipe\nrm /tmp/mypipe\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m3-1",
+      "order": 1,
+      "title": "Comparer des approches",
+      "instructions": "Mesurez le temps de deux approches pour convertir 100 nombres en chaîne :\n1. Avec `echo $i | tr` (sous-shell)\n2. Avec `${i}` (interne bash)\n\nAffichez les durées en millisecondes.\n\nRésultat attendu :\n```\nApproche 1 (sous-shell) : X ms\nApproche 2 (interne) : Y ms\n```",
+      "expectedOutput": "interne",
+      "validationType": "contains",
+      "correction": "start=$(date +%s%N)\nfor i in $(seq 1 100); do\n    result=$(echo $i | tr '0-9' '0-9')\ndone\nend=$(date +%s%N)\necho \"Approche 1 (sous-shell) : $(( (end-start)/1000000 )) ms\"\n\nstart=$(date +%s%N)\nfor i in $(seq 1 100); do\n    result=\"${i}\"\ndone\nend=$(date +%s%N)\necho \"Approche 2 (interne) : $(( (end-start)/1000000 )) ms\"",
+      "explanation": "Chaque `$()` crée un sous-shell (fork + exec), ce qui coûte plusieurs millisecondes de surcharge système. Sur 100 itérations, la différence est mesurable. Les opérations de manipulation de chaînes intégrées à bash (`${var//...}`, `${#var}`, etc.) évitent ce coût car elles s'exécutent dans le processus courant."
+    },
+    {
+      "id": "ex-bash-l4-m3-2",
+      "order": 2,
+      "title": "Traitement parallèle avec wait",
+      "instructions": "Lancez 5 tâches en parallèle qui affichent chacune `Tâche N terminée` après `0.1s`. Attendez toutes avec `wait`.\n\nRésultat attendu (ordre variable) :\n```\nTâche 1 terminée\nTâche 2 terminée\n...\nToutes les tâches sont terminées\n```",
+      "expectedOutput": "Toutes les tâches sont terminées",
+      "validationType": "contains",
+      "correction": "for n in 1 2 3 4 5; do\n    (sleep 0.1; echo \"Tâche $n terminée\") &\ndone\nwait\necho \"Toutes les tâches sont terminées\"",
+      "explanation": "`(sleep 0.1; echo ...)` crée un sous-shell pour chaque tâche. `&` le lance en arrière-plan. `wait` sans argument attend **tous** les processus enfants. L'ordre d'affichage est non-déterministe car les 5 tâches s'exécutent simultanément. Pour un parallélisme limité, utilisez `wait -n` (bash 4.3+) pour attendre le premier qui termine."
+    },
+    {
+      "id": "ex-bash-l4-m3-3",
+      "order": 3,
+      "title": "Optimisation de lecture fichier",
+      "instructions": "Créez un fichier avec 10 lignes (`seq 1 10`), lisez-le avec `while IFS= read -r line` et affichez chaque ligne précédée de `Ligne : `.\n\nRésultat attendu :\n```\nLigne : 1\nLigne : 2\n...\n```",
+      "expectedOutput": "Ligne : 5",
+      "validationType": "contains",
+      "correction": "seq 1 10 > /tmp/test_read.txt\n\nwhile IFS= read -r line; do\n    echo \"Ligne : $line\"\ndone < /tmp/test_read.txt\n\nrm /tmp/test_read.txt",
+      "explanation": "`IFS=` (vide) préserve les espaces en début et fin de ligne qui seraient sinon supprimés par le word splitting. `-r` (raw) empêche l'interprétation des backslashes. La redirection `< fichier` est plus efficace que `cat fichier | while read` car elle évite de créer un pipe (et donc un sous-shell pour la boucle)."
+    }
+  ]
+}

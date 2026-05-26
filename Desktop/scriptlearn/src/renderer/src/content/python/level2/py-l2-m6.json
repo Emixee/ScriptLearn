@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m6",
+  "title": "Manipulation du système (os, subprocess)",
+  "lang": "python",
+  "level": 2,
+  "order": 6,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Module os — interaction système",
+      "content": "```python\nimport os\n\n# Informations système\nprint(os.name)           # 'nt' (Windows) ou 'posix' (Linux/Mac)\nprint(os.getcwd())       # Répertoire courant\nprint(os.getenv(\"PATH\")) # Variable d'environnement\n\n# Manipulation de fichiers/dossiers\nos.makedirs(\"logs/2024/janvier\", exist_ok=True)  # Créer récursivement\nos.rename(\"ancien.txt\", \"nouveau.txt\")\n\n# Lister les fichiers de logs\nfor fichier in os.listdir(\".\"):\n    if fichier.endswith(\".log\"):\n        chemin = os.path.join(\".\", fichier)\n        taille = os.path.getsize(chemin)\n        print(f\"{fichier}: {taille} octets\")\n\n# Parcourir récursivement\nfor racine, dossiers, fichiers in os.walk(\"/var/log\"):\n    for f in fichiers:\n        chemin = os.path.join(racine, f)\n        print(chemin)\n```"
+    },
+    {
+      "section": "Module subprocess — exécuter des commandes",
+      "content": "```python\nimport subprocess\n\n# Exécuter une commande et capturer le résultat\nrésultat = subprocess.run(\n    [\"ipconfig\"] if os.name == \"nt\" else [\"ip\", \"addr\"],\n    capture_output=True,\n    text=True,\n    timeout=10\n)\nprint(résultat.stdout[:500])   # Limiter l'affichage\n\n# Ping (test de connectivité)\ndef ping(ip, count=1):\n    cmd = [\"ping\", \"-n\", str(count), ip] if os.name == \"nt\" \\\n          else [\"ping\", \"-c\", str(count), ip]\n    result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)\n    return result.returncode == 0\n\nprint(ping(\"8.8.8.8\"))  # True si joignable\n\n# Récupérer les connexions réseau actives\ndef connexions_actives():\n    cmd = [\"netstat\", \"-n\"] if os.name == \"nt\" else [\"ss\", \"-tn\"]\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    return result.stdout\n\nprint(connexions_actives()[:300])\n```"
+    },
+    {
+      "section": "Collecte d'informations système",
+      "content": "```python\nimport subprocess\nimport os\nimport json\nfrom datetime import datetime\n\ndef collecter_info_systeme():\n    \"\"\"Collecte les informations système pour le triage d'incident.\"\"\"\n    infos = {\"timestamp\": datetime.now().isoformat()}\n    \n    # Hostname\n    r = subprocess.run([\"hostname\"], capture_output=True, text=True)\n    infos[\"hostname\"] = r.stdout.strip()\n    \n    # Processus suspects (recherche de cmd/powershell inhabituels)\n    if os.name == \"nt\":\n        r = subprocess.run([\"tasklist\"], capture_output=True, text=True)\n        lignes = r.stdout.splitlines()\n        suspects = [l for l in lignes if any(p in l.lower() for p in [\"cmd\", \"powershell\", \"wscript\", \"cscript\"])]\n        infos[\"processus_suspects\"] = suspects\n    \n    return infos\n\ninfo = collecter_info_systeme()\nprint(json.dumps(info, indent=2, ensure_ascii=False))\n```"
+    },
+    {
+      "section": "Gestion des chemins avec pathlib",
+      "content": "```python\nfrom pathlib import Path\nimport os\n\n# pathlib : interface moderne pour les chemins\nlogs_dir = Path(\"C:/Windows/System32/winevt/Logs\") if os.name == \"nt\" else Path(\"/var/log\")\n\n# Vérifier existence\nif logs_dir.exists():\n    # Lister les fichiers .log ou .evtx\n    for f in logs_dir.glob(\"*.evtx\"):\n        print(f\"{f.name}: {f.stat().st_size / 1024:.1f} KB\")\n\n# Construire des chemins de manière portable\nrapport = Path(\".\") / \"rapports\" / \"alerte_2024.json\"\nrapport.parent.mkdir(parents=True, exist_ok=True)\nrapport.write_text('{\"status\": \"ok\"}')\nprint(f\"Rapport créé : {rapport}\")\nprint(f\"Nom : {rapport.name}\")\nprint(f\"Parent : {rapport.parent}\")\nprint(f\"Extension : {rapport.suffix}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m6-ex1",
+      "title": "Lister les fichiers .log",
+      "description": "Utiliser os.listdir pour trouver les fichiers de log dans le répertoire courant",
+      "instructions": "Créez d'abord 2 fichiers fictifs avec l'extension `.log` :\n```python\nopen(\"systeme.log\", \"w\").close()\nopen(\"reseau.log\", \"w\").close()\n```\nPuis listez tous les fichiers `.log` du répertoire courant et affichez leur nombre :\n```\nFichiers log : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Fichiers log : 2",
+      "correction": "import os\nopen(\"systeme.log\", \"w\").close()\nopen(\"reseau.log\", \"w\").close()\nlogs = [f for f in os.listdir(\".\") if f.endswith(\".log\")]\nprint(f\"Fichiers log : {len(logs)}\")",
+      "explanation": "`os.listdir('.')` liste le répertoire courant. La list comprehension filtre avec `.endswith()`. `open(...).close()` crée un fichier vide."
+    },
+    {
+      "id": "py-l2-m6-ex2",
+      "title": "Obtenir le hostname",
+      "description": "Utiliser subprocess pour récupérer le nom d'hôte",
+      "instructions": "Utilisez `subprocess.run` pour exécuter la commande `hostname` et affichez :\n```\nHôte : <nom_de_votre_machine>\n```\n(Le nom exact dépend de votre machine — vérifiez que `Hôte :` est affiché.)",
+      "validationType": "output_contains",
+      "expectedOutput": "Hôte :",
+      "correction": "import subprocess\nr = subprocess.run([\"hostname\"], capture_output=True, text=True)\nprint(f\"Hôte : {r.stdout.strip()}\")",
+      "explanation": "`capture_output=True` capture stdout et stderr. `text=True` décode automatiquement en chaîne UTF-8. `.strip()` supprime les sauts de ligne."
+    },
+    {
+      "id": "py-l2-m6-ex3",
+      "title": "Créer une structure de dossiers de rapport",
+      "description": "Utiliser pathlib pour créer une arborescence de rapport SOC",
+      "instructions": "Créez le dossier `rapports/2024/` avec `Path.mkdir(parents=True, exist_ok=True)`. Vérifiez qu'il existe avec `.exists()` et affichez :\n```\nDossier créé : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Dossier créé : True",
+      "correction": "from pathlib import Path\ndossier = Path(\"rapports/2024\")\ndossier.mkdir(parents=True, exist_ok=True)\nprint(f\"Dossier créé : {dossier.exists()}\")",
+      "explanation": "`parents=True` crée tous les dossiers intermédiaires. `exist_ok=True` ne lève pas d'erreur si le dossier existe déjà. `pathlib.Path` est plus portable que `os.makedirs`."
+    }
+  ]
+}

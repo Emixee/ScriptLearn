@@ -1,0 +1,72 @@
+{
+  "id": "ps-l1-m1",
+  "title": "Découvrir PowerShell",
+  "level": 1,
+  "lang": "powershell",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce que PowerShell ?",
+      "content": "PowerShell est un **environnement de scripting** développé par Microsoft. Contrairement à l'ancien invite de commandes (CMD), PowerShell est conçu pour l'**administration système** et l'**automatisation** de tâches.\n\nPowerShell manipule des **objets** (et non de simples textes), ce qui le rend bien plus puissant pour traiter des données.\n\nIl existe deux versions :\n- **Windows PowerShell** (5.1) — pré-installé sur Windows, limité à Windows\n- **PowerShell 7+** (Core) — multiplateforme, open-source, à installer séparément\n\nDans ce cours, nous utilisons **Windows PowerShell 5.1**, disponible sur tout Windows 10/11."
+    },
+    {
+      "title": "La structure des commandes : Verbe-Nom",
+      "content": "Toutes les commandes PowerShell (appelées **cmdlets**) suivent la même convention :\n\n```\nVerbe-Nom\n```\n\nExemples :\n- `Get-Help` → **Obtenir** de l'aide\n- `Get-Command` → **Obtenir** la liste des commandes\n- `Write-Host` → **Écrire** dans la console\n- `Set-Location` → **Définir** l'emplacement courant\n\nCette logique rend PowerShell **très lisible** : on comprend ce que fait une commande rien qu'en lisant son nom."
+    },
+    {
+      "title": "Trouver de l'aide : Get-Help",
+      "content": "`Get-Help` est votre meilleur ami en PowerShell. Il affiche la documentation de n'importe quelle commande.\n\n```powershell\nGet-Help Write-Host\nGet-Help Write-Host -Examples\nGet-Help Write-Host -Full\n```\n\nL'option `-Examples` est particulièrement utile pour voir des cas d'usage concrets."
+    },
+    {
+      "title": "Découvrir les commandes : Get-Command",
+      "content": "`Get-Command` liste toutes les commandes disponibles. Vous pouvez filtrer par nom ou verbe :\n\n```powershell\nGet-Command\nGet-Command Get-*\nGet-Command -Verb Write\nGet-Command -Noun Host\n```\n\nSi vous cherchez comment faire quelque chose mais ne connaissez pas le nom exact, `Get-Command` est le bon point de départ."
+    },
+    {
+      "title": "Les alias : commandes abrégées",
+      "content": "PowerShell propose des **alias** pour raccourcir les commandes courantes. Ils viennent souvent de CMD ou de Linux :\n\n| Alias | Cmdlet complète |\n|-------|----------------|\n| `ls` | `Get-ChildItem` |\n| `cd` | `Set-Location` |\n| `pwd` | `Get-Location` |\n| `cls` | `Clear-Host` |\n| `echo` | `Write-Output` |\n\nPour voir tous les alias : `Get-Alias`\nPour voir l'alias d'une commande : `Get-Alias -Definition Get-ChildItem`\n\n> **Bonne pratique :** Utilisez les alias dans la console pour aller vite, mais dans vos scripts, préférez les noms complets pour la lisibilité."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m1-1",
+      "order": 1,
+      "title": "Premier message dans la console",
+      "instructions": "Utilisez `Write-Host` pour afficher exactement le message suivant :\n\n```\nBonjour PowerShell !\n```\n\n**Syntaxe :** `Write-Host \"votre texte\"`",
+      "expectedOutput": "Bonjour PowerShell !",
+      "validationType": "contains",
+      "correction": "Write-Host \"Bonjour PowerShell !\"",
+      "explanation": "`Write-Host` affiche du texte directement dans la console. Les guillemets `\"\"` délimitent la chaîne de caractères. La casse (majuscules/minuscules) et la ponctuation doivent être exactes."
+    },
+    {
+      "id": "ex-ps-l1-m1-2",
+      "order": 2,
+      "title": "Trouver la commande pour lister les fichiers",
+      "instructions": "Utilisez `Get-Command` pour trouver toutes les commandes dont le **verbe** est `Get` et le **nom** contient `Child`.\n\n```powershell\nGet-Command -Verb ??? -Noun ???*\n```\n\nRéparez les `???` avec les bons arguments.",
+      "expectedOutput": "Get-ChildItem",
+      "validationType": "contains",
+      "correction": "Get-Command -Verb Get -Noun Child*",
+      "explanation": "`Get-Command -Verb Get -Noun Child*` filtre les cmdlets dont le verbe est `Get` et dont le nom commence par `Child`. Le caractère `*` est un joker qui signifie « n'importe quelle suite de caractères »."
+    },
+    {
+      "id": "ex-ps-l1-m1-3",
+      "order": 3,
+      "title": "Obtenir des exemples d'utilisation",
+      "instructions": "Affichez les **exemples d'utilisation** de la commande `Get-ChildItem` grâce à `Get-Help`.\n\nIndice : `Get-Help` possède un paramètre `-Examples`.",
+      "expectedOutput": "EXEMPLES",
+      "validationType": "contains",
+      "correction": "Get-Help Get-ChildItem -Examples",
+      "explanation": "`Get-Help NomDeLaCommande -Examples` affiche uniquement la section Exemples de la documentation. C'est le moyen le plus rapide d'apprendre à utiliser une nouvelle commande."
+    },
+    {
+      "id": "ex-ps-l1-m1-4",
+      "order": 4,
+      "title": "Trouver l'alias de Write-Host",
+      "instructions": "Trouvez les alias qui pointent vers `Write-Host` en utilisant `Get-Alias`.\n\nIndice : le paramètre `-Definition` permet de chercher par nom de cmdlet.",
+      "expectedOutput": "Write-Host",
+      "validationType": "contains",
+      "correction": "Get-Alias -Definition Write-Host",
+      "explanation": "`Get-Alias -Definition Write-Host` liste tous les alias qui sont des raccourcis vers `Write-Host`. Vous découvrirez que `echo` et `write` sont tous les deux des alias de `Write-Output`, pas de `Write-Host` — une subtilité importante !"
+    }
+  ]
+}

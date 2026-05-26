@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m5",
+  "title": "Automatisation de réponse à incident (IR)",
+  "lang": "bash",
+  "level": 6,
+  "order": 5,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Principes de réponse à incident automatisée",
+      "content": "La réponse à incident (IR) automatisée réduit le **Mean Time to Respond (MTTR)**. En Bash, on peut automatiser :\n\n1. **Containment** : isoler la machine, bloquer une IP\n2. **Eradication** : tuer un processus, supprimer un fichier malveillant\n3. **Evidence collection** : capturer l'état avant modification\n4. **Notification** : alerter l'équipe via email/Slack\n5. **Documentation** : loguer toutes les actions\n\n```bash\n#!/bin/bash\n# Fonctions utilitaires IR\n\n# Log toutes les actions avec timestamp\nIR_LOG=\"/tmp/ir_$(date +%Y%m%d_%H%M%S).log\"\n\nir_log() {\n    local msg=\"[$(date '+%Y-%m-%d %H:%M:%S')] $*\"\n    echo \"$msg\" | tee -a \"$IR_LOG\"\n}\n\nir_log \"=== Début de la réponse à incident ===\"\nir_log \"Analyste : ${SUDO_USER:-$(whoami)}\"\nir_log \"Système : $(hostname) | OS : $(uname -r)\"\n```"
+    },
+    {
+      "section": "Containment — blocage d'une IP suspecte",
+      "content": "```bash\n#!/bin/bash\n# Containment : bloquer une IP via iptables\n\nbloquer_ip() {\n    local ip=\"$1\"\n    local raison=\"${2:-Blocage automatique SOC}\"\n    \n    # Validation de l'IP\n    if ! echo \"$ip\" | grep -qE '^[0-9]{1,3}(\\.[0-9]{1,3}){3}$'; then\n        ir_log \"ERREUR : IP invalide : $ip\"\n        return 1\n    fi\n    \n    # Ne pas bloquer les IPs internes\n    if echo \"$ip\" | grep -qE '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)'; then\n        ir_log \"AVERTISSEMENT : IP interne non bloquée : $ip\"\n        return 1\n    fi\n    \n    ir_log \"Blocage IP : $ip — $raison\"\n    \n    # Bloquer en entrée ET en sortie\n    iptables -I INPUT  -s \"$ip\" -j DROP -m comment --comment \"SOC_BLOCK\"\n    iptables -I OUTPUT -d \"$ip\" -j DROP -m comment --comment \"SOC_BLOCK\"\n    \n    ir_log \"Règles iptables ajoutées pour $ip\"\n    \n    # Supprimer les connexions existantes\n    conntrack -D --src \"$ip\" 2>/dev/null && \\\n        ir_log \"Connexions existantes supprimées pour $ip\"\n    \n    return 0\n}\n\ndebloquer_ip() {\n    local ip=\"$1\"\n    iptables -D INPUT  -s \"$ip\" -j DROP -m comment --comment \"SOC_BLOCK\" 2>/dev/null\n    iptables -D OUTPUT -d \"$ip\" -j DROP -m comment --comment \"SOC_BLOCK\" 2>/dev/null\n    ir_log \"Déblocage IP : $ip\"\n}\n\nlister_blocages() {\n    echo \"=== IPs bloquées par le SOC ===\"\n    iptables -L INPUT -n --line-numbers \\\n      | grep 'SOC_BLOCK' | awk '{print $4, $NF}'\n}\n\n# Test en mode simulation\necho \"[SIMULATION] Blocage de 185.220.101.3\"\nbloquer_ip \"185.220.101.3\" \"Brute force SSH — 7 tentatives\"\n```"
+    },
+    {
+      "section": "Isolation d'une machine compromise",
+      "content": "```bash\n#!/bin/bash\n# Isolation réseau d'une machine compromise\n# Usage : ./isoler.sh [--dry-run]\n\nDRY_RUN=false\n[[ \"$1\" == \"--dry-run\" ]] && DRY_RUN=true\n\nexec_ou_simule() {\n    if $DRY_RUN; then\n        echo \"[DRY-RUN] $*\"\n    else\n        eval \"$@\"\n    fi\n}\n\nisoler_machine() {\n    ir_log \"=== ISOLATION RÉSEAU DÉMARRÉE ===\"\n    \n    # Sauvegarder les règles actuelles\n    iptables-save > \"/tmp/iptables_backup_$(date +%Y%m%d_%H%M%S).rules\"\n    ir_log \"Backup iptables sauvegardé\"\n    \n    # Autoriser uniquement le SOC (remplacer par l'IP du SOC)\n    SOC_IP=\"${SOC_IP:-10.0.0.100}\"\n    \n    exec_ou_simule iptables -F              # Vider toutes les règles\n    exec_ou_simule iptables -P INPUT DROP   # Politique par défaut : DROP\n    exec_ou_simule iptables -P OUTPUT DROP\n    exec_ou_simule iptables -P FORWARD DROP\n    \n    # Autoriser loopback\n    exec_ou_simule iptables -A INPUT  -i lo -j ACCEPT\n    exec_ou_simule iptables -A OUTPUT -o lo -j ACCEPT\n    \n    # Autoriser uniquement le SOC\n    exec_ou_simule iptables -A INPUT  -s \"$SOC_IP\" -j ACCEPT\n    exec_ou_simule iptables -A OUTPUT -d \"$SOC_IP\" -j ACCEPT\n    \n    ir_log \"Machine isolée. Seul $SOC_IP autorisé.\"\n    ir_log \"Pour restaurer : iptables-restore < /tmp/iptables_backup_*.rules\"\n}\n\nisoler_machine\n```"
+    },
+    {
+      "section": "Collecte d'artefacts et notification",
+      "content": "```bash\n#!/bin/bash\n# Notification d'incident via webhook (Slack/Teams)\n\nnotifier_slack() {\n    local webhook_url=\"$1\"\n    local message=\"$2\"\n    local severite=\"${3:-INFO}\"\n    \n    # Emoji selon sévérité\n    local emoji\n    case \"$severite\" in\n        CRITIQUE) emoji=\":rotating_light:\" ;;\n        HAUTE)    emoji=\":warning:\" ;;\n        *)        emoji=\":information_source:\" ;;\n    esac\n    \n    local payload=\"{\\\"text\\\": \\\"$emoji *[$severite]* $message\\\"}\"\n    \n    if [[ -n \"$webhook_url\" ]]; then\n        curl -s -X POST -H 'Content-type: application/json' \\\n            --data \"$payload\" \"$webhook_url\" > /dev/null\n        ir_log \"Notification envoyée : $message\"\n    else\n        ir_log \"[SIMULATION] Notification : $emoji [$severite] $message\"\n    fi\n}\n\ncollecte_complete() {\n    local incident_id=\"INC-$(date +%Y%m%d-%H%M%S)\"\n    local dir=\"/tmp/incident_${incident_id}\"\n    mkdir -p \"$dir\"\n    \n    ir_log \"Collecte artefacts : $incident_id\"\n    \n    # Données volatiles\n    date > \"$dir/timestamp.txt\"\n    ps auxww > \"$dir/processes.txt\"\n    ss -tnp > \"$dir/netstat.txt\"\n    w > \"$dir/users.txt\"\n    last -n 100 > \"$dir/last.txt\"\n    \n    # Logs récents\n    tail -1000 /var/log/auth.log > \"$dir/auth.log\" 2>/dev/null\n    journalctl -n 1000 --no-pager > \"$dir/journal.txt\" 2>/dev/null\n    \n    # Archive\n    tar czf \"/tmp/${incident_id}.tar.gz\" -C /tmp \"incident_${incident_id}/\"\n    rm -rf \"$dir\"\n    \n    ir_log \"Archive créée : /tmp/${incident_id}.tar.gz\"\n    notifier_slack \"\" \"Incident $incident_id — collecte terminée sur $(hostname)\" \"HAUTE\"\n    echo \"$incident_id\"\n}\n\ncollecte_complete\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m5-ex1",
+      "title": "Logger une action IR avec timestamp",
+      "description": "Créer une fonction de logging pour la réponse à incident",
+      "instructions": "Créez une fonction `ir_log` qui préfixe chaque message avec l'horodatage ISO et écrit dans `/tmp/ir_test.log`. Loguez `Blocage IP 185.220.101.3` et affichez le contenu du log :\n```\n[2024-...] Blocage IP 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Blocage IP 185.220.101.3",
+      "correction": "ir_log() {\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $*\" | tee -a /tmp/ir_test.log\n}\nir_log \"Blocage IP 185.220.101.3\"\ncat /tmp/ir_test.log",
+      "explanation": "`tee -a` écrit sur stdout ET ajoute au fichier simultanément. Chaque action IR doit être loguée pour les rapports d'incident, les audits légaux et les post-mortems."
+    },
+    {
+      "id": "bash-l6-m5-ex2",
+      "title": "Valider une adresse IP",
+      "description": "Vérifier qu'une valeur est une adresse IPv4 valide avant de bloquer",
+      "instructions": "Vérifiez si la valeur `185.220.101.3` est une IPv4 valide avec une regex. Affichez :\n```\nIP valide : 185.220.101.3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "IP valide : 185.220.101.3",
+      "correction": "ip=\"185.220.101.3\"\nif echo \"$ip\" | grep -qE '^[0-9]{1,3}(\\.[0-9]{1,3}){3}$'; then\n    echo \"IP valide : $ip\"\nelse\n    echo \"IP invalide : $ip\"\nfi",
+      "explanation": "Valider les entrées avant de modifier des règles iptables est critique — une IP malformée ou une IP interne bloquée par accident peut couper l'accès au serveur. Cette validation est la première ligne de défense des scripts IR."
+    },
+    {
+      "id": "bash-l6-m5-ex3",
+      "title": "Créer une archive d'artefacts",
+      "description": "Collecter et archiver des données de triage",
+      "instructions": "Créez un dossier `/tmp/ir_test_collect/`, écrivez `$(hostname)` dans `hostname.txt`, archivez-le en `.tar.gz`, et affichez :\n```\nArchive créée : ir_test_collect.tar.gz\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Archive créée : ir_test_collect.tar.gz",
+      "correction": "mkdir -p /tmp/ir_test_collect\nhostname > /tmp/ir_test_collect/hostname.txt\ntar czf /tmp/ir_test_collect.tar.gz -C /tmp ir_test_collect/\necho \"Archive créée : ir_test_collect.tar.gz\"",
+      "explanation": "`tar czf` : `c` crée, `z` compresse gzip, `f` spécifie le fichier. `-C /tmp` change de répertoire avant d'archiver pour éviter les chemins absolus dans l'archive. Les archives permettent de transporter les preuves sans les modifier."
+    }
+  ]
+}

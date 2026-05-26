@@ -1,0 +1,62 @@
+{
+  "id": "ps-l1-m6",
+  "title": "Structure d'un script",
+  "level": 1,
+  "lang": "powershell",
+  "order": 6,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Anatomie d'un bon script",
+      "content": "Un script PowerShell bien structuré se compose de plusieurs parties :\n\n```powershell\n#Requires -Version 5.1\n\n<#\n.SYNOPSIS\n    Description courte du script.\n.DESCRIPTION\n    Description détaillée.\n.PARAMETER Prenom\n    Prénom de l'utilisateur.\n.EXAMPLE\n    .\\script.ps1 -Prenom Alice\n#>\n\nparam(\n    [Parameter(Mandatory)]\n    [string]$Prenom\n)\n\n# === VARIABLES GLOBALES ===\n$Version = \"1.0\"\n\n# === FONCTIONS ===\nfunction Dire-Bonjour {\n    param([string]$Nom)\n    Write-Host \"Bonjour, $Nom !\"\n}\n\n# === CODE PRINCIPAL ===\nDire-Bonjour -Nom $Prenom\n```"
+    },
+    {
+      "title": "Les commentaires",
+      "content": "Les commentaires documentent le code sans être exécutés.\n\n**Commentaire sur une ligne :**\n```powershell\n# Ceci est un commentaire\n$x = 42  # commentaire en fin de ligne\n```\n\n**Commentaire sur plusieurs lignes :**\n```powershell\n<#\nCe bloc de commentaire\npeut s'étendre sur\nplusieurs lignes.\n#>\n```\n\n**Bonne pratique :** Commentez le **POURQUOI**, pas le QUOI. Le code lui-même montre ce qu'il fait ; les commentaires expliquent les décisions.\n\n```powershell\n# ❌ Mauvais commentaire (évident)\n$age = $age + 1  # on ajoute 1 à l'âge\n\n# ✅ Bon commentaire (explique pourquoi)\n$age = $age + 1  # l'anniversaire n'est compté qu'après minuit\n```"
+    },
+    {
+      "title": "Séparer le code en fonctions",
+      "content": "Une **fonction** regroupe un bloc de code réutilisable.\n\n```powershell\nfunction Calculer-Carre {\n    param([double]$Nombre)\n    return $Nombre * $Nombre\n}\n\n# Appel de la fonction\n$resultat = Calculer-Carre -Nombre 5\nWrite-Host \"5² = $resultat\"   # Affiche : 5² = 25\n```\n\nConventions de nommage PowerShell :\n- Fonctions : `Verbe-Nom` (ex: `Get-Config`, `Test-Connexion`)\n- Variables : `$NomEnCamelCase` ou `$nom_en_snake_case`\n- Constantes : `$MAJUSCULES`\n\n> Définissez toujours les fonctions **avant** de les appeler."
+    },
+    {
+      "title": "Gestion basique des erreurs",
+      "content": "En PowerShell, les erreurs peuvent être **terminantes** (arrêtent le script) ou **non terminantes** (affichent un message mais continuent).\n\nPour rendre une erreur terminante et la gérer :\n```powershell\ntry {\n    Get-Content \"fichier_inexistant.txt\" -ErrorAction Stop\n    Write-Host \"Fichier lu avec succès.\"\n}\ncatch {\n    Write-Host \"Erreur : $($_.Exception.Message)\" -ForegroundColor Red\n}\nfinally {\n    Write-Host \"Bloc finally : toujours exécuté.\"\n}\n```\n\n`-ErrorAction Stop` force PowerShell à traiter l'erreur comme terminante, ce qui déclenche le `catch`."
+    },
+    {
+      "title": "Exemple complet : script de bienvenue",
+      "content": "Voici un script complet illustrant tous les concepts du Niveau 1 :\n\n```powershell\n# bienvenue.ps1 — Script de bienvenue personnalisé\nparam(\n    [string]$Prenom = \"Apprenant\",\n    [string]$DossierTravail = \"C:\\Temp\\ScriptLearn\"\n)\n\n# Créer le dossier de travail s'il n'existe pas\nif (-not (Test-Path $DossierTravail)) {\n    New-Item -ItemType Directory -Path $DossierTravail -Force | Out-Null\n    Write-Host \"Dossier $DossierTravail créé.\" -ForegroundColor Green\n}\n\n# Afficher le message de bienvenue\n$date = Get-Date -Format \"dddd dd MMMM yyyy\"\nWrite-Host \"Bonjour $Prenom !\" -ForegroundColor Cyan\nWrite-Host \"Nous sommes le $date.\"\nWrite-Host \"Votre dossier de travail : $DossierTravail\"\n\n# Sauvegarder une trace\n$log = \"$DossierTravail\\journal.txt\"\nAdd-Content -Path $log -Value \"[$(Get-Date)] Connexion de $Prenom\"\nWrite-Host \"Session enregistrée dans $log\" -ForegroundColor DarkGray\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m6-1",
+      "order": 1,
+      "title": "Écrire une fonction simple",
+      "instructions": "Écrivez une fonction `Afficher-Carre` qui prend un nombre en paramètre et affiche son carré.\n\nExemple d'appel et résultat :\n```powershell\nAfficher-Carre -Nombre 7\n# Affiche : Le carré de 7 est 49\n```",
+      "expectedOutput": "49",
+      "validationType": "contains",
+      "correction": "function Afficher-Carre {\n    param([double]$Nombre)\n    $carre = $Nombre * $Nombre\n    Write-Host \"Le carré de $Nombre est $carre\"\n}\n\nAfficher-Carre -Nombre 7",
+      "explanation": "La fonction `Afficher-Carre` reçoit `$Nombre` comme paramètre, calcule son carré (`$Nombre * $Nombre`) et affiche le résultat. Le `param()` bloc déclare les paramètres. Après la définition, on appelle la fonction avec `-Nombre 7`."
+    },
+    {
+      "id": "ex-ps-l1-m6-2",
+      "order": 2,
+      "title": "Ajouter la gestion d'erreur",
+      "instructions": "Écrivez un bloc `try/catch` qui tente de lire un fichier **qui n'existe pas** (`C:\\inexistant.txt`) et affiche un message d'erreur personnalisé si le fichier est introuvable.\n\nRésultat attendu :\n```\nErreur : fichier introuvable.\n```",
+      "expectedOutput": "Erreur",
+      "validationType": "contains",
+      "correction": "try {\n    Get-Content \"C:\\inexistant.txt\" -ErrorAction Stop\n} catch {\n    Write-Host \"Erreur : fichier introuvable.\" -ForegroundColor Red\n}",
+      "explanation": "`-ErrorAction Stop` est indispensable : sans lui, `Get-Content` produit une erreur non terminante qui n'est pas interceptée par le `catch`. Le bloc `catch` récupère l'erreur et affiche votre message personnalisé."
+    },
+    {
+      "id": "ex-ps-l1-m6-3",
+      "order": 3,
+      "title": "Script de bilan de session",
+      "instructions": "Écrivez un script qui :\n1. Crée le dossier `C:\\Temp\\ScriptLearn` s'il n'existe pas\n2. Affiche `Dossier prêt.` en vert\n3. Ajoute une ligne dans `C:\\Temp\\ScriptLearn\\journal.txt` avec la date et l'heure actuelles\n4. Affiche `Session enregistrée.`\n\nRésultat attendu :\n```\nDossier prêt.\nSession enregistrée.\n```",
+      "expectedOutput": "Session enregistrée",
+      "validationType": "contains",
+      "correction": "$dossier = \"C:\\Temp\\ScriptLearn\"\n\nif (-not (Test-Path $dossier)) {\n    New-Item -ItemType Directory -Path $dossier -Force | Out-Null\n}\nWrite-Host \"Dossier prêt.\" -ForegroundColor Green\n\n$timestamp = Get-Date -Format \"yyyy-MM-dd HH:mm:ss\"\nAdd-Content -Path \"$dossier\\journal.txt\" -Value \"[$timestamp] Session\"\nWrite-Host \"Session enregistrée.\"",
+      "explanation": "`-not (Test-Path $dossier)` vérifie que le dossier N'existe PAS. `| Out-Null` supprime l'affichage du résultat de `New-Item` (propre). `Add-Content` ajoute une ligne sans écraser le journal existant."
+    }
+  ]
+}

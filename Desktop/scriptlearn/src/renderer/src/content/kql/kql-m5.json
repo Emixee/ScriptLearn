@@ -1,0 +1,55 @@
+{
+  "id": "kql-m5",
+  "title": "Requêtes complexes et optimisation",
+  "lang": "kql",
+  "level": 7,
+  "order": 5,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Fonctions avancées — mv-expand, bag, array",
+      "content": "**KQL permet de manipuler des structures de données complexes comme les tableaux et bags JSON :**\n\n```kql\n// ─── dynamic() : type tableau/dictionnaire ───\nlet Ports = dynamic([22, 443, 80, 3389, 8080]);\nNetworkCommunicationEvents\n| where RemotePort in (Ports)\n\n// ─── mv-expand : exploser un tableau en lignes ───\n// Utile pour les alertes avec plusieurs entités\nSecurityAlert\n| where TimeGenerated > ago(24h)\n| where AlertName has \"Brute Force\"\n| mv-expand Entities\n| where Entities.Type == \"ip\"\n| extend IPEntity = tostring(Entities.Address)\n| project TimeGenerated, AlertName, IPEntity, Severity\n\n// ─── bag_keys() / bag_values() ───\n// Inspecter les propriétés dynamiques\nAuditLogs\n| where TimeGenerated > ago(1h)\n| extend Props = AdditionalDetails\n| where isnotempty(Props)\n| extend PropKeys = bag_keys(Props)\n| where PropKeys has \"UserAgent\"\n| extend UA = tostring(Props.UserAgent)\n\n// ─── array_length() / array_index_of() ───\nSecurityAlert\n| extend EntityCount = array_length(Entities)\n| where EntityCount > 2  // Alertes avec plusieurs entités impliquées\n\n// ─── make_bag() : agréger en dictionnaire ───\nSecurityEvent\n| where EventID == 4625\n| summarize IPBag = make_bag_if(pack('count', 1), isnotempty(IpAddress))\n    by Account\n```"
+    },
+    {
+      "section": "Workspaces multiples et unions",
+      "content": "```kql\n// ─── union de tables du même workspace ───\nunion SecurityEvent, Syslog, CommonSecurityLog\n| where TimeGenerated > ago(1h)\n| summarize Count=count() by Type\n| sort by Count desc\n\n// ─── Cross-workspace queries ───\n// Requêtes sur plusieurs workspaces Sentinel\nunion\n    workspace(\"workspace-prod\").SecurityEvent,\n    workspace(\"workspace-dev\").SecurityEvent\n| where TimeGenerated > ago(1h)\n| where EventID == 4625\n| summarize Count=count() by IpAddress, workspace=...\n\n// ─── External data : IOC depuis URL ou blob ───\n// Charger des IOC depuis une source externe\nlet ExternalIOCs = externaldata(IP:string, Threat:string)\n    [@\"https://raw.githubusercontent.com/example/ioc-feed/main/ips.csv\"]\n    with (format=\"csv\", ignoreFirstRecord=true);\n\nSigninLogs\n| join kind=inner ExternalIOCs on $left.IPAddress == $right.IP\n| project TimeGenerated, UserPrincipalName, IPAddress, Threat\n\n// ─── materialize() : mettre en cache une sous-requête ───\n// Évite d'évaluer la même requête deux fois\nlet CachedFails = materialize(\n    SecurityEvent\n    | where TimeGenerated > ago(1h)\n    | where EventID == 4625\n    | project TimeGenerated, IpAddress, Account\n);\n\nCachedFails\n| summarize FailCount=count() by IpAddress\n| join kind=inner (\n    CachedFails\n    | summarize Accounts=make_set(Account) by IpAddress\n) on IpAddress\n| sort by FailCount desc\n```"
+    },
+    {
+      "section": "Optimisation des requêtes KQL",
+      "content": "**En production, les requêtes KQL doivent être optimisées pour ne pas surcharger le workspace :**\n\n```kql\n// ─── RÈGLES D'OPTIMISATION ───\n\n// 1. Filtrer tôt par TimeGenerated (utilise l'index)\n// BON :\nSecurityEvent\n| where TimeGenerated > ago(1h)  // ← Premier filtre\n| where EventID == 4625\n\n// MAUVAIS :\nSecurityEvent\n| where EventID == 4625\n| where TimeGenerated > ago(1h)  // ← Trop tard, scanne toute la table\n\n// 2. Filtrer par table avant de joindre\n// BON :\nlet Fails = SecurityEvent\n    | where TimeGenerated > ago(1h)  // Filtrer d'abord\n    | where EventID == 4625\n    | summarize Count=count() by IpAddress;  // Réduire ensuite\n\n// 3. has vs contains : has est plus rapide (index inversé)\n// BON :\nSyslog | where SyslogMessage has \"Failed\"\n// MOINS BON :\nSyslog | where SyslogMessage contains \"Failed\"\n\n// 4. project tôt pour réduire les colonnes\nSecurityEvent\n| where TimeGenerated > ago(1h)\n| where EventID == 4625\n| project TimeGenerated, IpAddress, Account  // ← Réduire avant summarize\n| summarize Count=count() by IpAddress\n\n// 5. take vs limit : identiques, prendre les résultats tôt\nSecurityEvent\n| where EventID == 4625\n| take 1000  // Pas besoin de trier 10 millions de lignes\n\n// 6. Éviter les fonctions dans where quand possible\n// MAUVAIS : evaluate une fonction sur chaque ligne\n// SecurityEvent | where strlen(Account) > 20\n// BON : si possible, reformuler\n// SecurityEvent | where Account matches regex @\".{21,}\"\n```"
+    },
+    {
+      "section": "Fonctions scalar avancées",
+      "content": "```kql\n// ─── Fonctions mathématiques ───\nSecurityEvent\n| where EventID == 4625\n| summarize FailCount=count() by IpAddress\n| extend \n    LogCount = log10(FailCount),\n    Sqrt = sqrt(FailCount),\n    Rounded = round(FailCount / 10.0, 0) * 10  // Arrondir à la dizaine\n\n// ─── Fonctions de chaînes utiles ───\nSecurityEvent\n| extend \n    AccountLower = tolower(Account),\n    AccountUpper = toupper(Account),\n    AccountLen   = strlen(Account),\n    AccountTrim  = trim(\" \", Account),\n    AccountReplace = replace_string(Account, \"DOMAIN\\\\\\\\\", \"\")\n\n// ─── Fonctions d'IP ───\nSecurityEvent\n| where EventID == 4625\n| extend \n    IsPrivate = ipv4_is_private(IpAddress),\n    InRange   = ipv4_is_in_range(IpAddress, \"10.0.0.0/8\")\n| where not(IsPrivate)  // Garder seulement les IPs publiques\n\n// ─── geo_info_from_ip_address() ───\n// Géolocalisation intégrée Sentinel\nSigninLogs\n| where TimeGenerated > ago(1h)\n| extend GeoInfo = geo_info_from_ip_address(IPAddress)\n| extend Country = tostring(GeoInfo.country)\n| where Country !in (\"France\", \"Belgium\", \"Switzerland\")\n| project TimeGenerated, UserPrincipalName, IPAddress, Country\n\n// ─── Fonctions de hashing ───\n// Pour anonymiser ou créer des clés de déduplication\nSecurityEvent\n| extend AccountHash = hash_sha256(Account)\n| project TimeGenerated, AccountHash, EventID\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "kql-m5-ex1",
+      "title": "Baseline comportementale avec deux let",
+      "instructions": "Créez une baseline du nombre de connexions réussies (EventID 4624) par compte sur les **7 derniers jours** (excluant aujourd'hui), puis détectez les comptes dont l'activité **d'aujourd'hui** dépasse 2x leur moyenne.\n\nUtilisez **deux `let` statements** :\n- `let baseline = ...` (7j → 1j avant)\n- `let today = ...` (dernières 24h)\n\nJoignez-les sur `Account` et filtrez `TodayCount > AvgDaily * 2`.",
+      "requiredTable": "SecurityEvent",
+      "requiredKeywords": ["let baseline", "let today", "eventid == 4624", "join", "* 2"],
+      "correction": "let baseline = SecurityEvent\n| where TimeGenerated between(ago(7d) .. ago(1d))\n| where EventID == 4624\n| summarize AvgDaily = count() / 6.0 by Account;\nlet today = SecurityEvent\n| where TimeGenerated > ago(1d)\n| where EventID == 4624\n| summarize TodayCount = count() by Account;\ntoday\n| join kind=inner baseline on Account\n| where TodayCount > AvgDaily * 2\n| project Account, TodayCount, AvgDaily\n| sort by TodayCount desc",
+      "explanation": "La détection basée sur la **déviation comportementale** (UEBA) est plus robuste que les seuils fixes : un compte qui se connecte habituellement 10x/jour et qui soudain fait 100 connexions est suspect, même si 100 n'est pas un seuil absolu dangereux."
+    },
+    {
+      "id": "kql-m5-ex2",
+      "title": "Optimisation — projection précoce",
+      "instructions": "**Optimisez** cette requête inefficace en ajoutant un `project` juste après les filtres `where`, pour ne garder que les colonnes nécessaires (`TimeGenerated`, `IpAddress`, `Account`, `EventID`) avant le `summarize` :\n\n```kql\nSecurityEvent\n| where EventID == 4625\n| where TimeGenerated > ago(24h)\n| summarize Count = count(), FirstSeen = min(TimeGenerated) by IpAddress, Account\n| where Count > 5\n| sort by Count desc\n```",
+      "requiredTable": "SecurityEvent",
+      "requiredKeywords": ["eventid == 4625", "project timegenerated, ipaddress, account", "summarize", "count > 5"],
+      "correction": "SecurityEvent\n| where EventID == 4625\n| where TimeGenerated > ago(24h)\n| project TimeGenerated, IpAddress, Account, EventID\n| summarize Count = count(), FirstSeen = min(TimeGenerated) by IpAddress, Account\n| where Count > 5\n| sort by Count desc",
+      "explanation": "`project` appliqué tôt réduit la quantité de données transportées entre les opérateurs. Sur des tables de milliards de lignes comme dans Sentinel, passer de 50 colonnes à 4 colonnes dès le début peut diviser le temps d'exécution par 3 à 5x."
+    },
+    {
+      "id": "kql-m5-ex3",
+      "title": "dcount — Impossible Travel simplifié",
+      "instructions": "Détectez les utilisateurs se connectant depuis **plusieurs pays en 1 heure** (Impossible Travel) avec `SigninLogs`.\n\nGroupez par `UserPrincipalName` et par `bin(TimeGenerated, 1h)`, comptez le nombre de pays distincts avec `dcount(Location)`, et alertez quand `dcount > 1`.",
+      "requiredTable": "SigninLogs",
+      "requiredKeywords": ["resulttype == 0", "bin(timegenerated, 1h)", "dcount(location)", "> 1"],
+      "correction": "SigninLogs\n| where TimeGenerated > ago(24h)\n| where ResultType == 0\n| summarize Countries = dcount(Location), CountryList = make_set(Location) by UserPrincipalName, bin(TimeGenerated, 1h)\n| where Countries > 1\n| sort by TimeGenerated desc",
+      "explanation": "`dcount()` (distinct count) compte les valeurs uniques — plus efficace que `make_set()` + `array_length()` pour la détection. L'**Impossible Travel** est une technique UEBA très efficace pour détecter les comptes compromis utilisés depuis un VPN ou un pays étranger."
+    }
+  ]
+}

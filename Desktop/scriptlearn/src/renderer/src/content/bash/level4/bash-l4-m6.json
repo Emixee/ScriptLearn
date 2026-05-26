@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m6",
+  "title": "Scripts système avancés",
+  "level": 4,
+  "lang": "bash",
+  "order": 6,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Init scripts et services systemd",
+      "content": "```bash\n# Créer un service systemd\ncat > /etc/systemd/system/mon-app.service << 'EOF'\n[Unit]\nDescription=Mon Application\nAfter=network.target\nRequires=network.target\n\n[Service]\nType=simple\nUser=appuser\nGroup=appuser\nWorkingDirectory=/var/www/mon-app\nExecStart=/usr/bin/node /var/www/mon-app/server.js\nExecReload=/bin/kill -HUP $MAINPID\nRestart=on-failure\nRestartSec=5s\nEnvironment=NODE_ENV=production\nEnvironmentFile=/etc/mon-app/config.env\n\n[Install]\nWantedBy=multi-user.target\nEOF\n\nsystemctl daemon-reload\nsystemctl enable mon-app\nsystemctl start mon-app\nsystemctl status mon-app\n\n# Logs du service\njournalctl -u mon-app -f\njournalctl -u mon-app --since \"1 hour ago\"\n```"
+    },
+    {
+      "title": "Provisionnement système",
+      "content": "```bash\n#!/bin/bash\n# Script de provisionnement (idempotent)\n\nset -euo pipefail\n\nINSTALLED_MARKER=\"/etc/.provisioned\"\n\nif [ -f \"$INSTALLED_MARKER\" ]; then\n    echo \"Déjà provisionné ($(cat $INSTALLED_MARKER))\"\n    exit 0\nfi\n\necho \"Début du provisionnement...\"\n\n# Mise à jour du système\napt-get update -qq\napt-get upgrade -y -q\n\n# Installation des paquets\nPACKAGES=(curl wget git vim htop jq)\napt-get install -y -q \"${PACKAGES[@]}\"\n\n# Création d'un utilisateur applicatif\nuseradd -r -s /bin/false -m -d /var/app appuser || true\n\n# Configuration du firewall\nufw --force enable\nufw allow 22/tcp   # SSH\nufw allow 80/tcp   # HTTP\nufw allow 443/tcp  # HTTPS\n\n# Marquer comme provisionné\ndate '+%Y-%m-%d %H:%M:%S' > \"$INSTALLED_MARKER\"\necho \"Provisionnement terminé\"\n```"
+    },
+    {
+      "title": "Monitoring avancé",
+      "content": "```bash\n#!/bin/bash\n# Démon de monitoring\n\nCHECK_INTERVAL=30  # secondes\nALERT_EMAIL=\"admin@example.com\"\nLOG=\"/var/log/monitor.log\"\n\nlog() { echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $*\" >> \"$LOG\"; }\n\nalert() {\n    local msg=$1\n    log \"ALERTE : $msg\"\n    # Envoyer un email ou notification Slack\n    # echo \"$msg\" | mail -s \"[ALERTE] $HOSTNAME\" \"$ALERT_EMAIL\"\n    echo \"[ALERTE] $msg\"\n}\n\ncheck_disk() {\n    while IFS= read -r line; do\n        local usage mount\n        usage=$(echo \"$line\" | awk '{print $5}' | tr -d '%')\n        mount=$(echo \"$line\" | awk '{print $6}')\n        [ \"$usage\" -ge 85 ] && alert \"Disque $mount : ${usage}%\"\n    done < <(df -h | grep '^/dev/')\n}\n\ncheck_memory() {\n    local used_pct\n    used_pct=$(free | awk '/Mem:/ { printf \"%d\", $3/$2*100 }')\n    [ \"$used_pct\" -ge 90 ] && alert \"Mémoire : ${used_pct}%\"\n}\n\ncheck_services() {\n    for svc in nginx postgresql redis; do\n        systemctl is-active --quiet \"$svc\" || alert \"Service $svc arrêté !\"\n    done\n}\n\n# Boucle principale\nwhile true; do\n    check_disk\n    check_memory\n    check_services\n    sleep $CHECK_INTERVAL\ndone\n```"
+    },
+    {
+      "title": "Gestion de configuration (ansible-like)",
+      "content": "```bash\n#!/bin/bash\n# Gestionnaire de configuration déclaratif\n\n# Assurer qu'un fichier a un contenu exact\nensure_file() {\n    local path=$1 content=$2 owner=${3:-root:root} mode=${4:-644}\n    \n    local tmp\n    tmp=$(mktemp)\n    echo \"$content\" > \"$tmp\"\n    \n    if ! cmp -s \"$tmp\" \"$path\"; then\n        install -m \"$mode\" -o \"${owner%%:*}\" -g \"${owner##*:}\" \"$tmp\" \"$path\"\n        echo \"MODIFIÉ : $path\"\n    else\n        echo \"INCHANGÉ : $path\"\n    fi\n    rm \"$tmp\"\n}\n\n# Assurer qu'une ligne est présente dans un fichier\nensure_line() {\n    local file=$1 line=$2\n    grep -qF \"$line\" \"$file\" || echo \"$line\" >> \"$file\"\n}\n\n# Assurer qu'un paquet est installé\nensure_package() {\n    local pkg=$1\n    dpkg -l \"$pkg\" &>/dev/null || apt-get install -y -q \"$pkg\"\n    echo \"Package $pkg : OK\"\n}\n\n# Assurer qu'un service est actif\nensure_service() {\n    local svc=$1\n    systemctl is-enabled \"$svc\" || systemctl enable \"$svc\"\n    systemctl is-active  \"$svc\" || systemctl start  \"$svc\"\n    echo \"Service $svc : actif\"\n}\n\n# Déclarations\nensure_line /etc/sysctl.conf \"net.ipv4.ip_forward=1\"\nensure_file /etc/app/config.json '{\"port\":3000}' www-data:www-data 644\n```"
+    },
+    {
+      "title": "Backup et restauration",
+      "content": "```bash\n#!/bin/bash\n# Système de backup complet avec rotation\n\nset -euo pipefail\n\nSOURCE=\"/var/data\"\nBACKUP_BASE=\"/backups\"\nRETENTION_DAYS=30\nTIMESTAMP=$(date +%Y%m%d_%H%M%S)\nBACKUP_DIR=\"$BACKUP_BASE/$TIMESTAMP\"\n\nlog() { echo \"[$(date +%H:%M:%S)] $*\"; }\n\n# Sauvegarde incrémentale avec rsync\nbackup_rsync() {\n    local latest=\"$BACKUP_BASE/latest\"\n    \n    mkdir -p \"$BACKUP_DIR\"\n    \n    if [ -d \"$latest\" ]; then\n        # Incrémental : copie uniquement les fichiers modifiés\n        rsync -a --delete --link-dest=\"$latest\" \"$SOURCE/\" \"$BACKUP_DIR/\"\n        log \"Backup incrémental créé : $BACKUP_DIR\"\n    else\n        # Premier backup : complet\n        rsync -a \"$SOURCE/\" \"$BACKUP_DIR/\"\n        log \"Backup complet créé : $BACKUP_DIR\"\n    fi\n    \n    # Mettre à jour le lien 'latest'\n    ln -sfn \"$BACKUP_DIR\" \"$latest\"\n}\n\n# Rotation : supprimer les vieux backups\nrotate_backups() {\n    find \"$BACKUP_BASE\" -maxdepth 1 -type d \\\n        -name '[0-9]*' \\\n        -mtime +\"$RETENTION_DAYS\" \\\n        -exec rm -rf {} \\;\n    log \"Rotation effectuée (> $RETENTION_DAYS jours supprimés)\"\n}\n\nbackup_rsync\nrotate_backups\nlog \"Backup terminé\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m6-1",
+      "order": 1,
+      "title": "Provisionnement idempotent",
+      "instructions": "Créez un script de provisionnement qui :\n1. Vérifie si `/tmp/provisioned.marker` existe\n2. Si oui, affiche `Déjà provisionné` et sort\n3. Sinon, crée le marker et affiche `Provisionnement terminé`\n\nLancez le script deux fois — la 2ème doit afficher `Déjà provisionné`.\n\nRésultat attendu (2ème exécution) :\n```\nDéjà provisionné\n```",
+      "expectedOutput": "Déjà provisionné",
+      "validationType": "contains",
+      "correction": "MARKER=\"/tmp/provisioned.marker\"\n\nif [ -f \"$MARKER\" ]; then\n    echo \"Déjà provisionné\"\n    exit 0\nfi\n\necho \"Provisionnement en cours...\"\ndate '+%Y-%m-%d %H:%M:%S' > \"$MARKER\"\necho \"Provisionnement terminé\"\n\n# Deuxième appel\nbash \"$0\"",
+      "explanation": "L'idempotence est un principe clé du provisionnement : exécuter un script plusieurs fois produit le même état final. Le fichier marker permet de détecter si le script a déjà été exécuté. Ansible, Terraform, et d'autres outils IaC utilisent ce même principe pour rendre les opérations sûres à re-exécuter."
+    },
+    {
+      "id": "ex-bash-l4-m6-2",
+      "order": 2,
+      "title": "Rotation de logs",
+      "instructions": "Créez un script qui :\n1. Simule 5 fichiers de log datés : `app_20240101.log` à `app_20240105.log`\n2. Supprime les fichiers de plus de 3 jours (simulés par l'ordre)\n3. Affiche les fichiers restants\n\nRésultat attendu :\n```\nFichiers conservés :\napp_20240103.log\napp_20240104.log\napp_20240105.log\n```",
+      "expectedOutput": "Fichiers conservés",
+      "validationType": "contains",
+      "correction": "# Créer les fichiers de log simulés\nfor i in 01 02 03 04 05; do\n    touch \"/tmp/app_202401$i.log\"\ndone\n\n# Supprimer les anciens (garder les 3 plus récents)\nls /tmp/app_2024*.log | sort | head -n -3 | xargs rm -f\n\necho \"Fichiers conservés :\"\nls /tmp/app_2024*.log | xargs -I{} basename {}\n\n# Nettoyage\nrm -f /tmp/app_2024*.log",
+      "explanation": "`ls ... | sort` trie alphabétiquement (les dates YYYYMMDD se trient bien ainsi). `head -n -3` prend tout sauf les 3 dernières lignes (les 3 plus récents). `xargs rm -f` supprime les fichiers listés. En production, `find -mtime +3 -delete` est plus fiable car il utilise les vraies dates de modification."
+    },
+    {
+      "id": "ex-bash-l4-m6-3",
+      "order": 3,
+      "title": "Script de backup avec tar",
+      "instructions": "Créez un script qui :\n1. Crée un dossier `/tmp/source_backup/` avec 3 fichiers\n2. Crée une archive `backup_YYYYMMDD.tar.gz`\n3. Affiche la taille de l'archive\n4. Vérifie l'intégrité avec `tar -tzf`\n\nRésultat attendu :\n```\nArchive : backup_....tar.gz (... Ko)\nIntégrité : OK\n```",
+      "expectedOutput": "Intégrité : OK",
+      "validationType": "contains",
+      "correction": "# Créer la source\nmkdir -p /tmp/source_backup\necho \"fichier1\" > /tmp/source_backup/f1.txt\necho \"fichier2\" > /tmp/source_backup/f2.txt\necho \"fichier3\" > /tmp/source_backup/f3.txt\n\n# Créer l'archive\narchive=\"/tmp/backup_$(date +%Y%m%d).tar.gz\"\ntar czf \"$archive\" -C /tmp source_backup/\n\n# Taille\nsize=$(du -k \"$archive\" | awk '{print $1}')\necho \"Archive : $(basename $archive) ($size Ko)\"\n\n# Vérification intégrité\nif tar -tzf \"$archive\" > /dev/null 2>&1; then\n    echo \"Intégrité : OK\"\nelse\n    echo \"Intégrité : CORROMPUE\" >&2\nfi\n\n# Nettoyage\nrm -rf /tmp/source_backup \"$archive\"",
+      "explanation": "`tar czf archive.tar.gz -C /chemin/ dossier/` : `c` crée, `z` compresse avec gzip, `f` spécifie le fichier. `-C /chemin/` change le répertoire courant pour tar, ce qui évite d'inclure le chemin absolu dans l'archive. `tar -tzf archive.tar.gz` liste le contenu pour vérifier l'intégrité sans décompresser."
+    }
+  ]
+}

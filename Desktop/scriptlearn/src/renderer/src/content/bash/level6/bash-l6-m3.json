@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m3",
+  "title": "Détection d'anomalies système",
+  "lang": "bash",
+  "level": 6,
+  "order": 3,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Processus et activités suspectes",
+      "content": "Un attaquant laisse des traces dans les processus. Bash permet de détecter des comportements anormaux sans agent EDR.\n\n```bash\n# ─── Processus avec connexions réseau ───\nps aux | grep -E 'nc |ncat |netcat |socat '\n\n# ─── Processus en écoute (parents inhabituels) ───\nss -tnlp | awk '{print $6}' | grep -v '\"' | sort -u\n\n# ─── Processus avec noms suspects ───\nps aux | awk '{print $11}' | grep -E 'kworker[0-9]|\\[.*\\]' | head -20\n\n# ─── Processus cachés (diff entre /proc et ps) ───\nfor pid in /proc/[0-9]*/; do\n    pid_num=${pid//[^0-9]/}\n    if ! ps -p \"$pid_num\" > /dev/null 2>&1; then\n        echo \"PID caché possible : $pid_num\"\n    fi\ndone\n\n# ─── Fichiers récemment modifiés dans /tmp ───\nfind /tmp /var/tmp -mmin -60 -type f 2>/dev/null | head -20\n```"
+    },
+    {
+      "section": "Persistance et modifications système",
+      "content": "```bash\n#!/bin/bash\n# Audit des mécanismes de persistance\n\necho \"=== Audit persistance ===\"\n\n# Crontabs utilisateurs\necho \"[Crontabs]\"\nfor user in $(cut -d: -f1 /etc/passwd); do\n    cron=$(crontab -u \"$user\" -l 2>/dev/null | grep -v '^#' | grep -v '^$')\n    if [[ -n \"$cron\" ]]; then\n        echo \"  $user : $cron\"\n    fi\ndone\ncrontab -l 2>/dev/null\nls /etc/cron.d/ /etc/cron.daily/ /etc/cron.hourly/ 2>/dev/null\n\n# Services systemd suspects\necho \"\"\necho \"[Services systemd récents]\"\nfind /etc/systemd/system /lib/systemd/system -name '*.service' \\\n  -newer /etc/passwd -mtime -30 2>/dev/null | head -10\n\n# Fichiers SUID/SGID\necho \"\"\necho \"[Fichiers SUID suspects]\"\nfind / -perm /4000 -type f 2>/dev/null \\\n  | grep -v -E '^/(bin|usr/bin|usr/sbin|sbin)/' | head -10\n\n# Clés SSH autorisées\necho \"\"\necho \"[Clés SSH autorisées]\"\nfor home in /root /home/*; do\n    auth_keys=\"$home/.ssh/authorized_keys\"\n    if [[ -f \"$auth_keys\" ]]; then\n        count=$(wc -l < \"$auth_keys\")\n        echo \"  $auth_keys : $count clé(s)\"\n    fi\ndone\n```"
+    },
+    {
+      "section": "Intégrité des fichiers critiques",
+      "content": "```bash\n#!/bin/bash\n# Vérification d'intégrité des fichiers système\n\nFICHIERS_CRITIQUES=(\n    \"/etc/passwd\"\n    \"/etc/shadow\"\n    \"/etc/sudoers\"\n    \"/etc/hosts\"\n    \"/etc/crontab\"\n    \"/bin/bash\"\n    \"/bin/sh\"\n    \"/usr/bin/sudo\"\n)\n\nBASELINE=\"/tmp/baseline_hashes.txt\"\n\ncreate_baseline() {\n    echo \"Création de la baseline...\"\n    rm -f \"$BASELINE\"\n    for f in \"${FICHIERS_CRITIQUES[@]}\"; do\n        if [[ -f \"$f\" ]]; then\n            sha256sum \"$f\" >> \"$BASELINE\"\n        fi\n    done\n    echo \"Baseline créée : $(wc -l < $BASELINE) fichiers\"\n}\n\nverifier_integrite() {\n    if [[ ! -f \"$BASELINE\" ]]; then\n        echo \"Baseline introuvable. Lancez d'abord avec 'baseline'\"\n        exit 1\n    fi\n    echo \"=== Vérification intégrité ===\"\n    alertes=0\n    while read hash fichier; do\n        if [[ -f \"$fichier\" ]]; then\n            hash_actuel=$(sha256sum \"$fichier\" | awk '{print $1}')\n            if [[ \"$hash\" != \"$hash_actuel\" ]]; then\n                echo \"[MODIFIE] $fichier\"\n                ((alertes++))\n            else\n                echo \"[OK]      $fichier\"\n            fi\n        else\n            echo \"[MANQUANT] $fichier\"\n            ((alertes++))\n        fi\n    done < \"$BASELINE\"\n    echo \"\"\n    echo \"Alertes intégrité : $alertes\"\n}\n\ncase \"${1:-verif}\" in\n    baseline) create_baseline ;;\n    verif)    verifier_integrite ;;\nesac\n```"
+    },
+    {
+      "section": "Collecte rapide de preuves (triage)",
+      "content": "```bash\n#!/bin/bash\n# Triage d'incident — collecte des données volatiles\n\nOUTPUT_DIR=\"/tmp/triage_$(date +%Y%m%d_%H%M%S)\"\nmkdir -p \"$OUTPUT_DIR\"\n\necho \"=== Triage d'incident : $(hostname) ===\"\necho \"Sortie : $OUTPUT_DIR\"\n\n# 1. Métadonnées système\ndate > \"$OUTPUT_DIR/timestamp.txt\"\nhostname >> \"$OUTPUT_DIR/timestamp.txt\"\nuname -a >> \"$OUTPUT_DIR/timestamp.txt\"\n\n# 2. Processus actifs\nps auxww > \"$OUTPUT_DIR/processus.txt\"\n\n# 3. Connexions réseau\nss -tnp > \"$OUTPUT_DIR/connexions.txt\"\nss -tlnp >> \"$OUTPUT_DIR/connexions.txt\"\n\n# 4. Utilisateurs connectés\nw > \"$OUTPUT_DIR/users.txt\"\nlast -n 50 >> \"$OUTPUT_DIR/users.txt\"\n\n# 5. Logs récents (dernière heure)\njournalctl -n 500 --no-pager > \"$OUTPUT_DIR/journal.txt\" 2>/dev/null ||\n    tail -500 /var/log/syslog > \"$OUTPUT_DIR/journal.txt\" 2>/dev/null\n\n# 6. Fichiers récents dans /tmp\nfind /tmp /var/tmp -mmin -120 -type f > \"$OUTPUT_DIR/tmp_recent.txt\" 2>/dev/null\n\n# Rapport\necho \"\"\nls -la \"$OUTPUT_DIR\"\necho \"\"\necho \"Triage terminé. Archivage...\"\ntar czf \"${OUTPUT_DIR}.tar.gz\" -C /tmp \"$(basename $OUTPUT_DIR)\" 2>/dev/null\necho \"Archive : ${OUTPUT_DIR}.tar.gz\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m3-ex1",
+      "title": "Lister les fichiers récents dans /tmp",
+      "description": "Détecter des fichiers suspects récemment créés",
+      "instructions": "Listez les fichiers créés dans `/tmp` au cours des 60 dernières minutes. Affichez leur nombre :\n```\nFichiers récents dans /tmp : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Fichiers récents dans /tmp :",
+      "correction": "count=$(find /tmp -mmin -60 -type f 2>/dev/null | wc -l)\necho \"Fichiers récents dans /tmp : $count\"",
+      "explanation": "`find -mmin -60` trouve les fichiers modifiés il y a moins de 60 minutes. `/tmp` est souvent utilisé par les malwares pour déposer leurs payloads car il est toujours accessible en écriture."
+    },
+    {
+      "id": "bash-l6-m3-ex2",
+      "title": "Calculer le hash d'un fichier",
+      "description": "Créer une baseline d'intégrité avec sha256sum",
+      "instructions": "Créez un fichier `test_integrite.txt` avec le contenu `test`, calculez son hash SHA256, et affichez :\n```\nHash : [hash sha256]\n```\n(Le hash doit commencer par le sha256 de \"test\\n\")",
+      "validationType": "output_contains",
+      "expectedOutput": "Hash :",
+      "correction": "echo 'test' > test_integrite.txt\nhash=$(sha256sum test_integrite.txt | awk '{print $1}')\necho \"Hash : $hash\"",
+      "explanation": "`sha256sum` calcule le hash SHA-256 et affiche `hash  fichier`. `awk '{print $1}'` extrait uniquement le hash. En forensics, les hashes permettent de vérifier l'intégrité des preuves et de comparer avec des bases comme VirusTotal."
+    },
+    {
+      "id": "bash-l6-m3-ex3",
+      "title": "Lister les fichiers SUID",
+      "description": "Identifier les fichiers avec le bit SUID défini",
+      "instructions": "Listez les fichiers avec le bit SUID dans `/usr/bin` et affichez le nombre trouvé :\n```\nFichiers SUID dans /usr/bin : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Fichiers SUID dans /usr/bin :",
+      "correction": "count=$(find /usr/bin -perm /4000 -type f 2>/dev/null | wc -l)\necho \"Fichiers SUID dans /usr/bin : $count\"",
+      "explanation": "`-perm /4000` correspond au bit SUID (Set User ID). Un fichier SUID s'exécute avec les droits de son propriétaire (souvent root), même si lancé par un autre user. C'est un mécanisme courant d'escalade de privilèges."
+    }
+  ]
+}

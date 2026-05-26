@@ -1,0 +1,74 @@
+{
+  "id": "git-m3",
+  "title": "Dépôts distants et collaboration",
+  "level": 8,
+  "lang": "git",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Les dépôts distants (remotes)",
+      "content": "Un **remote** est un dépôt hébergé sur un serveur (GitHub, GitLab…). Il permet de synchroniser son travail et de collaborer.\n\n```bash\n# Voir les remotes configurés\ngit remote -v\n\n# Ajouter un remote\ngit remote add origin https://github.com/user/repo.git\n\n# Cloner un dépôt existant (remote + copie locale)\ngit clone https://github.com/user/repo.git\n```\n\nPar convention, le remote principal s'appelle `origin`."
+    },
+    {
+      "title": "Synchroniser avec push et pull",
+      "content": "```bash\n# Envoyer les commits vers le remote\ngit push origin main\n\n# Première fois : créer le suivi (tracking)\ngit push -u origin main\n# Ensuite : juste git push\n\n# Récupérer et fusionner les commits distants\ngit pull\n\n# Récupérer sans fusionner (inspecter d'abord)\ngit fetch origin\ngit diff main origin/main\ngit merge origin/main\n```"
+    },
+    {
+      "title": "Workflow collaboratif",
+      "content": "Workflow typique en équipe :\n\n```bash\n# 1. Mettre à jour main\ngit switch main\ngit pull\n\n# 2. Créer une branche de feature\ngit switch -c feature/ma-fonction\n\n# 3. Travailler, commiter\ngit add .\ngit commit -m \"feat: ajout de la fonction X\"\n\n# 4. Pousser et créer une Pull Request\ngit push -u origin feature/ma-fonction\n# → ouvrir une PR sur GitHub\n\n# 5. Après merge de la PR\ngit switch main && git pull\ngit branch -d feature/ma-fonction\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-m3-1",
+      "order": 1,
+      "title": "Cloner un dépôt",
+      "instructions": "Quelle commande permet de **cloner** un dépôt distant depuis `https://github.com/user/projet.git` ?",
+      "requiredKeywords": ["git clone", "https://github.com/user/projet.git"],
+      "validationType": "keywords",
+      "correction": "git clone https://github.com/user/projet.git",
+      "explanation": "`git clone URL` télécharge le dépôt complet (historique inclus) et configure automatiquement `origin` comme remote. Le dossier créé porte le nom du dépôt."
+    },
+    {
+      "id": "ex-git-m3-2",
+      "order": 2,
+      "title": "Pousser en créant le tracking",
+      "instructions": "Poussez la branche courante `feature/api` vers `origin` en créant le **suivi automatique**.",
+      "requiredKeywords": ["git push", "-u", "origin", "feature/api"],
+      "validationType": "keywords",
+      "correction": "git push -u origin feature/api",
+      "explanation": "`-u` (--set-upstream) lie la branche locale à la branche distante. Après cette commande, un simple `git push` ou `git pull` sans arguments suffira."
+    },
+    {
+      "id": "ex-git-m3-3",
+      "order": 3,
+      "title": "Récupérer les mises à jour",
+      "instructions": "Récupérez **sans fusionner** les derniers changements du remote, puis affichez la différence avec `main` local.",
+      "requiredKeywords": ["git fetch", "git diff", "origin/main"],
+      "validationType": "keywords",
+      "correction": "git fetch origin && git diff main origin/main",
+      "explanation": "`git fetch` télécharge les commits sans les appliquer. `git diff main origin/main` permet d'inspecter avant de fusionner avec `git merge origin/main`. Plus sûr que `git pull` en équipe."
+    },
+    {
+      "id": "ex-git-m3-4",
+      "order": 4,
+      "title": "Voir les remotes configurés",
+      "instructions": "Affichez tous les **remotes** du dépôt avec leurs URLs.",
+      "requiredKeywords": ["git remote", "-v"],
+      "validationType": "keywords",
+      "correction": "git remote -v",
+      "explanation": "`git remote -v` (verbose) affiche les URLs de fetch et push pour chaque remote. Utile pour vérifier qu'on pousse au bon endroit."
+    },
+    {
+      "id": "ex-git-m3-5",
+      "order": 5,
+      "title": "Supprimer une branche distante",
+      "instructions": "Supprimez la branche `feature/old-api` **sur le remote** (origin).",
+      "requiredKeywords": ["git push", "origin", "--delete", "feature/old-api"],
+      "validationType": "keywords",
+      "correction": "git push origin --delete feature/old-api",
+      "explanation": "`--delete` supprime la branche côté remote. La branche locale reste intacte. Alternative (ancienne syntaxe) : `git push origin :feature/old-api` (avec deux points)."
+    }
+  ]
+}

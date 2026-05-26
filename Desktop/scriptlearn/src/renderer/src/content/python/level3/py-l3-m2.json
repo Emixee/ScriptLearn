@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m2",
+  "title": "Parsing de logs Windows (Event XML/CSV)",
+  "lang": "python",
+  "level": 3,
+  "order": 2,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Event IDs Windows critiques pour le SOC",
+      "content": "Les journaux Windows contiennent des Event IDs standardisés. Les plus importants :\n\n| Event ID | Description | Catégorie |\n|----------|------------|----------|\n| **4624** | Connexion réussie | Auth |\n| **4625** | Connexion échouée | Auth |\n| **4648** | Connexion avec credentials explicites | Auth |\n| **4672** | Connexion avec privilèges admin | Auth |\n| **4698** | Tâche planifiée créée | Persistence |\n| **4720** | Compte utilisateur créé | Account |\n| **4732** | Ajout au groupe Administrateurs | Account |\n| **7045** | Nouveau service installé | Persistence |\n| **1102** | Journal d'audit effacé | Defense Evasion |\n\nExporter : `wevtutil qe Security /f:CSV > events.csv`"
+    },
+    {
+      "section": "Parser des exports CSV d'Event Logs",
+      "content": "```python\nimport csv\nimport re\nfrom collections import Counter\nfrom io import StringIO\n\n# Format d'export wevtutil CSV\ncsv_exemple = \"\"\"Level,Date and Time,Source,Event ID,Task Category,Details\nInformation,1/15/2024 10:23:45 AM,Microsoft-Windows-Security-Auditing,4624,Logon,Account: DOMAINE\\\\admin IP: 192.168.1.5\nWarning,1/15/2024 10:24:01 AM,Microsoft-Windows-Security-Auditing,4625,Logon,Account: Administrator IP: 185.220.101.3\nInformation,1/15/2024 10:24:02 AM,Microsoft-Windows-Security-Auditing,4625,Logon,Account: admin IP: 185.220.101.3\nWarning,1/15/2024 10:25:00 AM,Microsoft-Windows-Security-Auditing,4720,User Account Management,New user: backdoor\n\"\"\"\n\ndef analyser_events_csv(csv_content):\n    reader = csv.DictReader(StringIO(csv_content))\n    stats = Counter()\n    alertes = []\n    \n    for row in reader:\n        eid = row.get(\"Event ID\", \"\")\n        stats[eid] += 1\n        \n        # Événements critiques\n        if eid in [\"4625\", \"4720\", \"1102\", \"4698\", \"7045\"]:\n            alertes.append({\n                \"event_id\": eid,\n                \"timestamp\": row.get(\"Date and Time\"),\n                \"details\": row.get(\"Details\", \"\")\n            })\n    \n    return stats, alertes\n\nstats, alertes = analyser_events_csv(csv_exemple)\nprint(\"Statistiques:\")\nfor eid, n in stats.most_common():\n    print(f\"  EventID {eid}: {n}\")\nprint(f\"\\nAlertes ({len(alertes)}):\")\nfor a in alertes:\n    print(f\"  [{a['event_id']}] {a['details']}\")\n```"
+    },
+    {
+      "section": "Parser des exports XML d'Event Logs",
+      "content": "```python\nimport xml.etree.ElementTree as ET\nfrom io import StringIO\n\n# Exemple d'event Windows exporté en XML\nxml_event = \"\"\"\n<Event xmlns=\"http://schemas.microsoft.com/win/2004/08/events/event\">\n  <System>\n    <EventID>4625</EventID>\n    <TimeCreated SystemTime=\"2024-01-15T10:24:01.123Z\"/>\n    <Computer>SERVER01</Computer>\n  </System>\n  <EventData>\n    <Data Name=\"TargetUserName\">Administrator</Data>\n    <Data Name=\"IpAddress\">185.220.101.3</Data>\n    <Data Name=\"IpPort\">54321</Data>\n    <Data Name=\"LogonType\">3</Data>\n  </EventData>\n</Event>\n\"\"\"\n\ndef parser_event_xml(xml_str):\n    ns = {\"ev\": \"http://schemas.microsoft.com/win/2004/08/events/event\"}\n    root = ET.fromstring(xml_str)\n    \n    event_id = root.findtext(\".//ev:EventID\", namespaces=ns)\n    time_str = root.find(\".//ev:TimeCreated\", namespaces=ns)\n    computer = root.findtext(\".//ev:Computer\", namespaces=ns)\n    \n    # Extraire les données\n    data = {}\n    for elem in root.findall(\".//ev:Data\", namespaces=ns):\n        name = elem.get(\"Name\")\n        if name:\n            data[name] = elem.text or \"\"\n    \n    return {\n        \"event_id\": event_id,\n        \"timestamp\": time_str.get(\"SystemTime\") if time_str is not None else \"\",\n        \"computer\": computer,\n        \"data\": data\n    }\n\nevent = parser_event_xml(xml_event)\nprint(f\"EventID: {event['event_id']}\")\nprint(f\"IP Source: {event['data'].get('IpAddress')}\")\nprint(f\"Compte: {event['data'].get('TargetUserName')}\")\nprint(f\"Type de logon: {event['data'].get('LogonType')}\")\n```"
+    },
+    {
+      "section": "Analyser les échecs d'authentification Windows",
+      "content": "```python\nimport csv\nimport re\nfrom collections import Counter\nfrom io import StringIO\n\nLOGON_TYPES = {\n    \"2\": \"Interactive (local)\",\n    \"3\": \"Network\",\n    \"4\": \"Batch\",\n    \"5\": \"Service\",\n    \"7\": \"Unlock\",\n    \"8\": \"NetworkCleartext\",\n    \"10\": \"RemoteInteractive (RDP)\",\n    \"11\": \"CachedInteractive\"\n}\n\ndef analyser_echecs_4625(events):\n    ips_attaquantes = Counter()\n    comptes_cibles = Counter()\n    types_logon = Counter()\n    \n    for evt in events:\n        if evt.get(\"event_id\") == \"4625\":\n            ip = evt[\"data\"].get(\"IpAddress\", \"-\")\n            user = evt[\"data\"].get(\"TargetUserName\", \"-\")\n            logon_type = evt[\"data\"].get(\"LogonType\", \"0\")\n            \n            if ip != \"-\" and not ip.startswith(\"127.\"):\n                ips_attaquantes[ip] += 1\n            comptes_cibles[user] += 1\n            types_logon[LOGON_TYPES.get(logon_type, logon_type)] += 1\n    \n    return ips_attaquantes, comptes_cibles, types_logon\n\n# Données de test\nevents = [\n    {\"event_id\": \"4625\", \"data\": {\"IpAddress\": \"185.220.101.3\", \"TargetUserName\": \"Administrator\", \"LogonType\": \"3\"}},\n    {\"event_id\": \"4625\", \"data\": {\"IpAddress\": \"185.220.101.3\", \"TargetUserName\": \"admin\", \"LogonType\": \"3\"}},\n    {\"event_id\": \"4624\", \"data\": {\"IpAddress\": \"192.168.1.5\", \"TargetUserName\": \"user1\", \"LogonType\": \"2\"}},\n]\n\nips, comptes, types = analyser_echecs_4625(events)\nprint(\"Top attaquants:\", ips.most_common(3))\nprint(\"Comptes ciblés:\", comptes.most_common(3))\nprint(\"Types de logon:\", dict(types))\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m2-ex1",
+      "title": "Compter les Event IDs",
+      "description": "Analyser une liste d'événements et compter les occurrences de chaque Event ID",
+      "instructions": "Soit :\n```python\nevents = [\n    {\"id\": \"4625\"}, {\"id\": \"4624\"}, {\"id\": \"4625\"},\n    {\"id\": \"4625\"}, {\"id\": \"4720\"}, {\"id\": \"4624\"}\n]\n```\nAffichez le nombre de `4625` (échecs de connexion) :\n```\nÉchecs 4625 : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Échecs 4625 : 3",
+      "correction": "from collections import Counter\nevents = [\n    {\"id\": \"4625\"}, {\"id\": \"4624\"}, {\"id\": \"4625\"},\n    {\"id\": \"4625\"}, {\"id\": \"4720\"}, {\"id\": \"4624\"}\n]\nc = Counter(e[\"id\"] for e in events)\nprint(f\"Échecs 4625 : {c['4625']}\")",
+      "explanation": "Counter est parfait pour compter les EventIDs. L'EventID 4625 est le signal d'alerte principal pour les attaques par force brute sur Windows."
+    },
+    {
+      "id": "py-l3-m2-ex2",
+      "title": "Détecter la création de compte suspect",
+      "description": "Filtrer les événements de création de compte (EventID 4720)",
+      "instructions": "Soit :\n```python\nlogs = [\n    \"4624,2024-01-15,admin,192.168.1.1\",\n    \"4720,2024-01-15,backdoor,10.0.0.99\",\n    \"4625,2024-01-15,root,185.220.101.3\",\n    \"4720,2024-01-15,hacker,185.220.101.3\",\n]\n```\nExtrayez les lignes EventID `4720` et affichez :\n```\nComptes créés : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Comptes créés : 2",
+      "correction": "logs = [\n    \"4624,2024-01-15,admin,192.168.1.1\",\n    \"4720,2024-01-15,backdoor,10.0.0.99\",\n    \"4625,2024-01-15,root,185.220.101.3\",\n    \"4720,2024-01-15,hacker,185.220.101.3\",\n]\ncrees = [l for l in logs if l.startswith(\"4720\")]\nprint(f\"Comptes créés : {len(crees)}\")",
+      "explanation": "L'EventID 4720 signale la création d'un compte utilisateur Windows. En corrélant avec l'IP source et l'heure, on peut détecter la création de backdoors."
+    },
+    {
+      "id": "py-l3-m2-ex3",
+      "title": "Parser un fragment XML d'Event Log",
+      "description": "Extraire l'EventID et l'IP d'un fragment XML Windows",
+      "instructions": "Parsez ce XML et affichez l'EventID et l'IP :\n```python\nxml = '<Event><System><EventID>4625</EventID></System><EventData><Data Name=\"IpAddress\">10.0.0.99</Data></EventData></Event>'\n```\nRésultat :\n```\nEventID: 4625 | IP: 10.0.0.99\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "EventID: 4625 | IP: 10.0.0.99",
+      "correction": "import xml.etree.ElementTree as ET\nxml = '<Event><System><EventID>4625</EventID></System><EventData><Data Name=\"IpAddress\">10.0.0.99</Data></EventData></Event>'\nroot = ET.fromstring(xml)\neid = root.findtext(\".//EventID\")\nip_elem = root.find(\".//Data[@Name='IpAddress']\")\nip = ip_elem.text if ip_elem is not None else \"N/A\"\nprint(f\"EventID: {eid} | IP: {ip}\")",
+      "explanation": "`find('.//Data[@Name=\\'IpAddress\\']')` utilise XPath pour trouver l'élément avec l'attribut Name=\"IpAddress\". `xml.etree.ElementTree` est dans la stdlib Python."
+    }
+  ]
+}

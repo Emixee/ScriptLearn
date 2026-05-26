@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m3",
+  "title": "Hachage et intégrité des fichiers",
+  "lang": "python",
+  "level": 3,
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Pourquoi le hachage est central en SOC",
+      "content": "Les hashs sont utilisés partout en cybersécurité :\n\n- **Identification de malware** : VirusTotal identifie les fichiers par leur hash MD5/SHA256\n- **Intégrité des fichiers** : détecter si un fichier système a été modifié\n- **IOC (Indicators of Compromise)** : partager des hashs de malware connus\n- **Forensics** : vérifier l'intégrité des preuves numériques (chain of custody)\n\n```python\nimport hashlib\n\n# Algorithmes disponibles\nprint(hashlib.algorithms_guaranteed)\n# {'sha256', 'sha512', 'md5', 'sha1', 'sha3_256', ...}\n```\n\n> **Note sécurité** : MD5 et SHA1 sont cryptographiquement cassés pour les signatures, mais restent utilisés comme identifiants de fichiers en SOC."
+    },
+    {
+      "section": "Calculer le hash d'un fichier",
+      "content": "```python\nimport hashlib\n\ndef hash_fichier(chemin, algorithme=\"sha256\"):\n    \"\"\"Calcule le hash d'un fichier de façon efficace (par blocs).\"\"\"\n    h = hashlib.new(algorithme)\n    try:\n        with open(chemin, \"rb\") as f:  # Mode binaire obligatoire\n            # Lecture par blocs de 64KB pour les gros fichiers\n            for bloc in iter(lambda: f.read(65536), b\"\"):\n                h.update(bloc)\n        return h.hexdigest()\n    except FileNotFoundError:\n        return None\n    except PermissionError:\n        return \"PERMISSION_DENIED\"\n\n# Calculer plusieurs hashs en même temps\ndef hashs_fichier(chemin):\n    \"\"\"Retourne MD5, SHA1 et SHA256 d'un fichier.\"\"\"\n    algos = {\"md5\": hashlib.md5(), \"sha1\": hashlib.sha1(), \"sha256\": hashlib.sha256()}\n    try:\n        with open(chemin, \"rb\") as f:\n            for bloc in iter(lambda: f.read(65536), b\"\"):\n                for h in algos.values():\n                    h.update(bloc)\n        return {nom: h.hexdigest() for nom, h in algos.items()}\n    except Exception as e:\n        return {\"error\": str(e)}\n\n# Test sur un fichier système\nresult = hashs_fichier(r\"C:\\Windows\\System32\\drivers\\etc\\hosts\")\nfor algo, val in result.items():\n    print(f\"{algo.upper()}: {val}\")\n```"
+    },
+    {
+      "section": "Baseline d'intégrité des fichiers",
+      "content": "```python\nimport hashlib\nimport json\nimport os\nfrom datetime import datetime\n\ndef creer_baseline(dossier, extensions=[\".exe\", \".dll\", \".sys\"]):\n    \"\"\"Crée une baseline des hashs des fichiers critiques.\"\"\"\n    baseline = {\n        \"created_at\": datetime.now().isoformat(),\n        \"dossier\": dossier,\n        \"fichiers\": {}\n    }\n    \n    try:\n        for racine, _, fichiers in os.walk(dossier):\n            for nom in fichiers:\n                if any(nom.lower().endswith(ext) for ext in extensions):\n                    chemin = os.path.join(racine, nom)\n                    h = hash_fichier(chemin)\n                    if h and h != \"PERMISSION_DENIED\":\n                        baseline[\"fichiers\"][chemin] = {\n                            \"sha256\": h,\n                            \"taille\": os.path.getsize(chemin)\n                        }\n    except Exception as e:\n        print(f\"Erreur: {e}\")\n    \n    return baseline\n\ndef comparer_baseline(baseline_avant, baseline_apres):\n    \"\"\"Compare deux baselines et retourne les modifications.\"\"\"\n    resultats = {\"modifies\": [], \"ajoutes\": [], \"supprimes\": []}\n    \n    avant = baseline_avant[\"fichiers\"]\n    apres = baseline_apres[\"fichiers\"]\n    \n    for chemin, infos in avant.items():\n        if chemin not in apres:\n            resultats[\"supprimes\"].append(chemin)\n        elif infos[\"sha256\"] != apres[chemin][\"sha256\"]:\n            resultats[\"modifies\"].append(chemin)\n    \n    resultats[\"ajoutes\"] = [c for c in apres if c not in avant]\n    return resultats\n```"
+    },
+    {
+      "section": "Vérifier un hash contre une base d'IOC",
+      "content": "```python\nimport hashlib\n\n# Liste noire de hashs malveillants (IOC)\nHASHS_MALVEILLANTS = {\n    \"44d88612fea8a8f36de82e1278abb02f\": \"EICAR test file\",\n    \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\": \"Fichier vide SHA256\",\n    \"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4\": \"Trojan.Generic\"\n}\n\ndef verifier_hash(chemin, base_ioc):\n    \"\"\"Vérifie si un fichier est dans la base IOC.\"\"\"\n    h = hash_fichier(chemin)\n    if h and h in base_ioc:\n        return True, base_ioc[h]\n    return False, None\n\n# Hash d'une chaîne (pour les tests)\ndef hash_chaine(texte, algo=\"sha256\"):\n    return hashlib.new(algo, texte.encode()).hexdigest()\n\n# Tester\nhash_test = hash_chaine(\"malware content\")\nprint(f\"Hash calculé : {hash_test}\")\n\n# Simuler une vérification\nioc_test = {hash_test: \"Malware simulé\"}\nif hash_test in ioc_test:\n    print(f\"ALERTE : {ioc_test[hash_test]}\")\nelse:\n    print(\"Fichier propre\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m3-ex1",
+      "title": "Calculer le SHA256 d'une chaîne",
+      "description": "Utiliser hashlib pour calculer le hash SHA256",
+      "instructions": "Calculez le SHA256 de la chaîne `\"Hello, SOC!\"` et affichez les 16 premiers caractères du hash :\n```\nSHA256[:16]: XXXXXXXXXXXXXXXX\n```\n(La valeur exacte sera calculée par Python)",
+      "validationType": "output_contains",
+      "expectedOutput": "SHA256[:16]:",
+      "correction": "import hashlib\nh = hashlib.sha256(\"Hello, SOC!\".encode()).hexdigest()\nprint(f\"SHA256[:16]: {h[:16]}\")",
+      "explanation": "`.encode()` convertit la chaîne en bytes (nécessaire pour hashlib). `.hexdigest()` retourne le hash en hexadécimal. SHA256 produit toujours 64 caractères hexadécimaux."
+    },
+    {
+      "id": "py-l3-m3-ex2",
+      "title": "Vérifier un hash MD5",
+      "description": "Comparer le hash d'une chaîne avec un hash attendu",
+      "instructions": "Calculez le MD5 de `\"test\"` et vérifiez s'il correspond à `\"098f6bcd4621d373cade4e832627b4f6\"`.\n\nAffichez :\n```\nHash valide : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Hash valide : True",
+      "correction": "import hashlib\nh = hashlib.md5(\"test\".encode()).hexdigest()\nattendu = \"098f6bcd4621d373cade4e832627b4f6\"\nprint(f\"Hash valide : {h == attendu}\")",
+      "explanation": "Cette comparaison simule la vérification d'intégrité d'un fichier téléchargé. Le site source publie le hash attendu, vous calculez le hash du fichier téléchargé et comparez."
+    },
+    {
+      "id": "py-l3-m3-ex3",
+      "title": "Détecter un IOC par hash",
+      "description": "Vérifier si un hash fait partie d'une liste d'IOC connus",
+      "instructions": "Soit :\n```python\nioc_db = {\n    \"abc123def456abc123def456abc123de\": \"Trojan.Emotet\",\n    \"098f6bcd4621d373cade4e832627b4f6\": \"Malware.Test\"\n}\nhash_suspect = \"098f6bcd4621d373cade4e832627b4f6\"\n```\nAffichez :\n```\nALERTE: Malware.Test\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALERTE: Malware.Test",
+      "correction": "ioc_db = {\n    \"abc123def456abc123def456abc123de\": \"Trojan.Emotet\",\n    \"098f6bcd4621d373cade4e832627b4f6\": \"Malware.Test\"\n}\nhash_suspect = \"098f6bcd4621d373cade4e832627b4f6\"\nif hash_suspect in ioc_db:\n    print(f\"ALERTE: {ioc_db[hash_suspect]}\")\nelse:\n    print(\"Propre\")",
+      "explanation": "La recherche dans un dictionnaire Python est en O(1) — parfaite pour vérifier des milliers de hashs en temps réel. C'est le principe de base des antivirus basés sur les signatures."
+    }
+  ]
+}

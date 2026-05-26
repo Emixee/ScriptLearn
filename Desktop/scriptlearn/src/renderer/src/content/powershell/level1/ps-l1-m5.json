@@ -1,0 +1,72 @@
+{
+  "id": "ps-l1-m5",
+  "title": "Lire et écrire des fichiers",
+  "level": 1,
+  "lang": "powershell",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Lire un fichier : Get-Content",
+      "content": "`Get-Content` (alias `cat` ou `gc`) lit le contenu d'un fichier texte.\n\n```powershell\n# Lire tout le fichier\nGet-Content C:\\Temp\\notes.txt\n\n# Lire les 5 premières lignes\nGet-Content C:\\Temp\\notes.txt -TotalCount 5\n\n# Lire les 5 dernières lignes\nGet-Content C:\\Temp\\notes.txt -Tail 5\n\n# Lire le fichier entier comme une seule chaîne\nGet-Content C:\\Temp\\notes.txt -Raw\n```\n\nPar défaut, `Get-Content` retourne un **tableau de chaînes** (une par ligne). Avec `-Raw`, il retourne une seule chaîne contenant tout le fichier."
+    },
+    {
+      "title": "Écrire dans un fichier : Set-Content et Add-Content",
+      "content": "**Écraser / créer un fichier :**\n```powershell\nSet-Content -Path C:\\Temp\\notes.txt -Value \"Première ligne\"\n```\n\n**Ajouter à la fin d'un fichier :**\n```powershell\nAdd-Content -Path C:\\Temp\\notes.txt -Value \"Deuxième ligne\"\nAdd-Content -Path C:\\Temp\\notes.txt -Value \"Troisième ligne\"\n```\n\n**Écrire plusieurs lignes d'un coup :**\n```powershell\n$lignes = @(\n    \"Ligne 1\",\n    \"Ligne 2\",\n    \"Ligne 3\"\n)\nSet-Content -Path C:\\Temp\\notes.txt -Value $lignes\n```\n\n> ⚠️ `Set-Content` **écrase** le contenu existant. Utilisez `Add-Content` pour ajouter sans effacer."
+    },
+    {
+      "title": "La redirection avec Out-File",
+      "content": "`Out-File` permet de rediriger la sortie d'une commande vers un fichier.\n\n```powershell\n# Sauvegarder la liste des processus dans un fichier\nGet-Process | Out-File C:\\Temp\\processus.txt\n\n# Ajouter à la suite (sans écraser)\nGet-Date | Out-File C:\\Temp\\journal.txt -Append\n```\n\nDifférence avec `Set-Content` : `Out-File` formate la sortie comme elle apparaîtrait dans la console (avec les colonnes, etc.), tandis que `Set-Content` écrit exactement la valeur de la chaîne."
+    },
+    {
+      "title": "Tester l'existence d'un fichier",
+      "content": "Avant de lire ou modifier un fichier, il est bon de vérifier qu'il existe :\n\n```powershell\n$chemin = \"C:\\Temp\\notes.txt\"\n\nif (Test-Path $chemin) {\n    Write-Host \"Le fichier existe.\"\n    Get-Content $chemin\n} else {\n    Write-Host \"Le fichier n'existe pas.\"\n}\n```\n\n`Test-Path` retourne `$true` si le chemin existe, `$false` sinon. Il fonctionne pour les fichiers ET les dossiers."
+    },
+    {
+      "title": "Encoder et formater les fichiers",
+      "content": "PowerShell utilise par défaut l'encodage **UTF-16 LE** (Unicode) pour les fichiers. Pour forcer l'UTF-8 (recommandé pour la compatibilité) :\n\n```powershell\n# Écrire en UTF-8\nSet-Content -Path fichier.txt -Value \"Texte\" -Encoding UTF8\n\n# Lire en spécifiant l'encodage\nGet-Content -Path fichier.txt -Encoding UTF8\n```\n\nEncodings disponibles : `UTF8`, `ASCII`, `Unicode`, `UTF32`, `Default`"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m5-1",
+      "order": 1,
+      "title": "Créer un fichier de notes",
+      "instructions": "Créez un fichier `C:\\Temp\\ScriptLearn\\notes.txt` contenant le texte suivant :\n```\nMon journal PowerShell\n```\n\nUtilisez `Set-Content`.",
+      "expectedOutput": "notes.txt",
+      "validationType": "contains",
+      "correction": "Set-Content -Path C:\\Temp\\ScriptLearn\\notes.txt -Value \"Mon journal PowerShell\"",
+      "explanation": "`Set-Content` crée le fichier s'il n'existe pas et écrit la valeur spécifiée. Si le fichier existait déjà, son contenu est **remplacé** entièrement."
+    },
+    {
+      "id": "ex-ps-l1-m5-2",
+      "order": 2,
+      "title": "Ajouter des lignes au fichier",
+      "instructions": "Ajoutez deux nouvelles lignes à votre fichier `notes.txt` :\n```\nDate : 23/05/2026\nStatut : En apprentissage\n```\n\nUtilisez `Add-Content` deux fois (ou une fois avec un tableau).",
+      "expectedOutput": "En apprentissage",
+      "validationType": "contains",
+      "correction": "Add-Content -Path C:\\Temp\\ScriptLearn\\notes.txt -Value \"Date : $(Get-Date -Format 'dd/MM/yyyy')\"\nAdd-Content -Path C:\\Temp\\ScriptLearn\\notes.txt -Value \"Statut : En apprentissage\"",
+      "explanation": "`Add-Content` ajoute à la **fin** du fichier sans écraser le contenu existant. Notez l'utilisation de `$(Get-Date -Format 'dd/MM/yyyy')` pour insérer la date dynamiquement."
+    },
+    {
+      "id": "ex-ps-l1-m5-3",
+      "order": 3,
+      "title": "Lire et afficher le fichier",
+      "instructions": "Lisez et affichez le contenu complet du fichier `notes.txt`.\n\nEnsuite, affichez **uniquement la première ligne** avec `-TotalCount 1`.",
+      "expectedOutput": "Mon journal PowerShell",
+      "validationType": "contains",
+      "correction": "Get-Content C:\\Temp\\ScriptLearn\\notes.txt\nGet-Content C:\\Temp\\ScriptLearn\\notes.txt -TotalCount 1",
+      "explanation": "`Get-Content` sans option lit toutes les lignes. `-TotalCount 1` (ou `-Head 1`) limite la lecture à la première ligne. C'est l'équivalent de `head -1` en Linux."
+    },
+    {
+      "id": "ex-ps-l1-m5-4",
+      "order": 4,
+      "title": "Sauvegarder la liste des processus",
+      "instructions": "Sauvegardez la liste des processus en cours d'exécution dans un fichier `processus.txt` dans votre dossier `C:\\Temp\\ScriptLearn\\`.\n\nUtilisez `Get-Process` combiné avec `Out-File`.",
+      "expectedOutput": "processus.txt",
+      "validationType": "contains",
+      "correction": "Get-Process | Out-File -FilePath C:\\Temp\\ScriptLearn\\processus.txt",
+      "explanation": "L'opérateur `|` (pipe) envoie la sortie de `Get-Process` vers `Out-File`, qui l'écrit dans un fichier. La sortie est formatée comme elle apparaîtrait dans la console, avec les colonnes `Id`, `ProcessName`, `CPU`, etc."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m3",
+  "title": "JSON, CSV et données structurées",
+  "lang": "python",
+  "level": 2,
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "JSON — format universel des APIs de sécurité",
+      "content": "La majorité des outils SOC (VirusTotal, MISP, Elastic, Splunk) échangent des données en JSON :\n\n```python\nimport json\n\n# Charger du JSON (depuis une chaîne)\nalerte_json = '''\n{\n  \"id\": \"ALT-2024-001\",\n  \"severity\": \"HIGH\",\n  \"source_ip\": \"185.220.101.3\",\n  \"indicators\": [\"c2\", \"cobalt_strike\"],\n  \"score\": 9.2\n}\n'''\nalerte = json.loads(alerte_json)\nprint(alerte[\"severity\"])   # HIGH\nprint(alerte[\"score\"])      # 9.2\nprint(alerte[\"indicators\"]) # ['c2', 'cobalt_strike']\n\n# Sérialiser en JSON\nrapport = {\"timestamp\": \"2024-01-15\", \"alertes\": 42, \"critiques\": 3}\njson_str = json.dumps(rapport, indent=2, ensure_ascii=False)\nprint(json_str)\n```"
+    },
+    {
+      "section": "Lire et écrire des fichiers JSON",
+      "content": "```python\nimport json\nfrom datetime import datetime\n\n# Charger depuis un fichier\ndef charger_ioc(chemin):\n    try:\n        with open(chemin, \"r\", encoding=\"utf-8\") as f:\n            return json.load(f)\n    except (FileNotFoundError, json.JSONDecodeError) as e:\n        print(f\"Erreur : {e}\")\n        return {}\n\n# Sauvegarder dans un fichier\ndef sauvegarder_rapport(chemin, donnees):\n    with open(chemin, \"w\", encoding=\"utf-8\") as f:\n        json.dump(donnees, f, indent=2, ensure_ascii=False, default=str)\n\n# Exemple : générer un rapport d'alerte\nrapport = {\n    \"generated_at\": datetime.now().isoformat(),\n    \"analyst\": \"SOC Team\",\n    \"alerts\": [\n        {\"id\": \"ALT-001\", \"ip\": \"185.220.101.3\", \"severity\": \"CRITICAL\"},\n        {\"id\": \"ALT-002\", \"ip\": \"10.0.0.5\",     \"severity\": \"HIGH\"}\n    ],\n    \"total\": 2\n}\nsauvegarder_rapport(\"rapport.json\", rapport)\nprint(\"Rapport sauvegardé\")\n```"
+    },
+    {
+      "section": "CSV — exports SIEM et Excel",
+      "content": "```python\nimport csv\n\n# Lire un CSV d'alertes exporté depuis un SIEM\ndef analyser_alertes_csv(chemin):\n    alertes_critiques = []\n    \n    try:\n        with open(chemin, newline=\"\", encoding=\"utf-8\") as f:\n            reader = csv.DictReader(f)  # La 1re ligne est l'en-tête\n            for row in reader:\n                if row.get(\"severity\") in [\"CRITICAL\", \"HIGH\"]:\n                    alertes_critiques.append(row)\n    except FileNotFoundError:\n        pass\n    \n    return alertes_critiques\n\n# Écrire un CSV de rapport\ndef exporter_csv(chemin, donnees, colonnes):\n    with open(chemin, \"w\", newline=\"\", encoding=\"utf-8\") as f:\n        writer = csv.DictWriter(f, fieldnames=colonnes)\n        writer.writeheader()\n        writer.writerows(donnees)\n\n# Exemple\niocsauve = [\n    {\"ip\": \"185.220.101.3\", \"type\": \"C2\", \"score\": \"9.2\"},\n    {\"ip\": \"194.165.16.11\", \"type\": \"scanner\", \"score\": \"7.5\"},\n]\nexporter_csv(\"ioc_export.csv\", iocsauve, [\"ip\", \"type\", \"score\"])\nprint(\"CSV exporté\")\n```"
+    },
+    {
+      "section": "Naviguer dans des structures JSON complexes",
+      "content": "```python\nimport json\n\n# Réponse typique d'une API de threat intelligence\nreponse_vt = {\n    \"data\": {\n        \"id\": \"d41d8cd98f00b204e9800998ecf8427e\",\n        \"type\": \"file\",\n        \"attributes\": {\n            \"last_analysis_stats\": {\n                \"malicious\": 32,\n                \"suspicious\": 5,\n                \"undetected\": 15\n            },\n            \"names\": [\"malware.exe\", \"update.exe\"],\n            \"tags\": [\"trojan\", \"ransomware\"]\n        }\n    }\n}\n\n# Accès sécurisé avec .get()\nattrs = reponse_vt.get(\"data\", {}).get(\"attributes\", {})\nstats = attrs.get(\"last_analysis_stats\", {})\nmalicious = stats.get(\"malicious\", 0)\ntotal = sum(stats.values())\n\nprint(f\"Détections : {malicious}/{total}\")\nprint(f\"Tags : {', '.join(attrs.get('tags', []))}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m3-ex1",
+      "title": "Parser une réponse JSON",
+      "description": "Extraire des données d'un objet JSON d'alerte",
+      "instructions": "Soit :\n```python\nalerte = '{\"id\": \"ALT-001\", \"ip\": \"10.0.0.99\", \"score\": 8.5, \"tags\": [\"ssh\", \"brute_force\"]}'\n```\n\nParsez le JSON et affichez :\n```\nALT-001 | 10.0.0.99 | Score: 8.5\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALT-001 | 10.0.0.99 | Score: 8.5",
+      "correction": "import json\nalerte = '{\"id\": \"ALT-001\", \"ip\": \"10.0.0.99\", \"score\": 8.5, \"tags\": [\"ssh\", \"brute_force\"]}'\nd = json.loads(alerte)\nprint(f\"{d['id']} | {d['ip']} | Score: {d['score']}\")",
+      "explanation": "`json.loads()` (load string) convertit une chaîne JSON en dictionnaire Python. `json.load()` (sans 's') lit depuis un fichier."
+    },
+    {
+      "id": "py-l2-m3-ex2",
+      "title": "Sérialiser des IOC en JSON",
+      "description": "Convertir une liste d'IOC en JSON formaté",
+      "instructions": "Soit :\n```python\nioc_list = [{\"ip\": \"185.220.101.3\", \"type\": \"C2\"}, {\"ip\": \"10.0.0.5\", \"type\": \"scanner\"}]\n```\n\nConvertissez en JSON avec indentation 2 et affichez. Le résultat doit contenir :\n```\n\"type\": \"C2\"\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "\"type\": \"C2\"",
+      "correction": "import json\nioc_list = [{\"ip\": \"185.220.101.3\", \"type\": \"C2\"}, {\"ip\": \"10.0.0.5\", \"type\": \"scanner\"}]\nprint(json.dumps(ioc_list, indent=2))",
+      "explanation": "`json.dumps()` sérialise en chaîne. `indent=2` ajoute une indentation de 2 espaces pour la lisibilité. Utiliser `json.dump()` pour écrire directement dans un fichier."
+    },
+    {
+      "id": "py-l2-m3-ex3",
+      "title": "Lire un CSV d'alertes",
+      "description": "Créer et parser un CSV d'alertes avec csv.DictReader",
+      "instructions": "Écrivez d'abord un fichier `alertes.csv` avec ce contenu :\n```\nip,severite,port\n185.220.101.3,CRITIQUE,4444\n10.0.0.5,HAUTE,22\n192.168.1.1,FAIBLE,80\n```\nPuis lisez-le avec `csv.DictReader` et affichez le nombre d'alertes avec severite `CRITIQUE` :\n```\nAlertes critiques : 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Alertes critiques : 1",
+      "correction": "import csv\nwith open(\"alertes.csv\", \"w\", newline=\"\") as f:\n    f.write(\"ip,severite,port\\n185.220.101.3,CRITIQUE,4444\\n10.0.0.5,HAUTE,22\\n192.168.1.1,FAIBLE,80\\n\")\nwith open(\"alertes.csv\", newline=\"\") as f:\n    reader = csv.DictReader(f)\n    critiques = [r for r in reader if r[\"severite\"] == \"CRITIQUE\"]\nprint(f\"Alertes critiques : {len(critiques)}\")",
+      "explanation": "`csv.DictReader` utilise la première ligne comme noms de colonnes et expose chaque ligne comme un dictionnaire. C'est le format standard d'export des SIEMs."
+    }
+  ]
+}

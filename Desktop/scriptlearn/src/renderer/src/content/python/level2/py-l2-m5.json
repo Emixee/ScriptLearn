@@ -1,0 +1,58 @@
+{
+  "id": "py-l2-m5",
+  "title": "Requêtes HTTP et APIs Web",
+  "lang": "python",
+  "level": 2,
+  "order": 5,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "urllib — requêtes HTTP sans dépendances",
+      "content": "Les APIs de sécurité (VirusTotal, AbuseIPDB, Shodan) s'interrogent via HTTP. Python intègre `urllib` dans sa bibliothèque standard :\n\n```python\nimport urllib.request\nimport urllib.parse\nimport json\n\n# Requête GET simple\ndef get_json(url):\n    try:\ntml        req = urllib.request.Request(url, headers={\"User-Agent\": \"SOC-Tool/1.0\"})\n        with urllib.request.urlopen(req, timeout=10) as resp:\n            data = resp.read().decode(\"utf-8\")\n            return json.loads(data)\n    except urllib.error.HTTPError as e:\n        print(f\"HTTP {e.code}: {e.reason}\")\n    except urllib.error.URLError as e:\n        print(f\"Connexion impossible : {e.reason}\")\n    except Exception as e:\n        print(f\"Erreur : {e}\")\n    return None\n\n# Test avec une API publique\ndata = get_json(\"https://httpbin.org/ip\")\nif data:\n    print(f\"IP publique : {data.get('origin')}\")\n```"
+    },
+    {
+      "section": "Appel à des APIs de Threat Intelligence",
+      "content": "```python\nimport urllib.request\nimport urllib.parse\nimport json\n\nVT_API_KEY = \"VOTRE_CLE_VIRUSTOTAL\"  # Gratuite sur virustotal.com\n\ndef verifier_ip_virustotal(ip):\n    \"\"\"Vérifie la réputation d'une IP sur VirusTotal.\"\"\"\n    url = f\"https://www.virustotal.com/api/v3/ip_addresses/{ip}\"\n    req = urllib.request.Request(\n        url,\n        headers={\"x-apikey\": VT_API_KEY, \"Accept\": \"application/json\"}\n    )\n    try:\n        with urllib.request.urlopen(req, timeout=15) as resp:\n            data = json.loads(resp.read())\n            stats = data[\"data\"][\"attributes\"][\"last_analysis_stats\"]\n            malicious = stats.get(\"malicious\", 0)\n            total = sum(stats.values())\n            print(f\"{ip}: {malicious}/{total} détections\")\n            return malicious > 0\n    except Exception as e:\n        print(f\"Erreur VT : {e}\")\n        return None\n\n# verifier_ip_virustotal(\"185.220.101.3\")  # Décommenter avec votre clé\n```"
+    },
+    {
+      "section": "AbuseIPDB — vérification de réputation",
+      "content": "```python\nimport urllib.request\nimport urllib.parse\nimport json\n\nABUSE_API_KEY = \"VOTRE_CLE_ABUSEIPDB\"  # Gratuite sur abuseipdb.com\n\ndef verifier_abuseipdb(ip, days=90):\n    \"\"\"Vérifie le score d'abus d'une IP.\"\"\"\n    params = urllib.parse.urlencode({\n        \"ipAddress\": ip,\n        \"maxAgeInDays\": days\n    })\n    url = f\"https://api.abuseipdb.com/api/v2/check?{params}\"\n    req = urllib.request.Request(\n        url,\n        headers={\n            \"Key\": ABUSE_API_KEY,\n            \"Accept\": \"application/json\"\n        }\n    )\n    try:\n        with urllib.request.urlopen(req, timeout=15) as resp:\n            data = json.loads(resp.read())\n            infos = data[\"data\"]\n            score = infos.get(\"abuseConfidenceScore\", 0)\n            pays = infos.get(\"countryCode\", \"?\")\n            print(f\"{ip} [{pays}] Score abus: {score}%\")\n            return score\n    except Exception as e:\n        print(f\"Erreur AbuseIPDB : {e}\")\n        return -1\n```"
+    },
+    {
+      "section": "Enrichissement en lot d'IOC",
+      "content": "```python\nimport time\nimport json\n\ndef enrichir_ioc_batch(ips, api_func, delai=1.0):\n    \"\"\"\n    Enrichit une liste d'IPs via une API.\n    delai : pause entre chaque requête (respecter les rate limits)\n    \"\"\"\n    resultats = {}\n    for i, ip in enumerate(ips, 1):\n        print(f\"[{i}/{len(ips)}] Analyse de {ip}...\")\n        resultats[ip] = api_func(ip)\n        if i < len(ips):\n            time.sleep(delai)  # Éviter le rate limiting\n    return resultats\n\n# Simuler l'enrichissement (sans API réelle)\ndef mock_threat_intel(ip):\n    score_db = {\n        \"185.220.101.3\": 95,\n        \"194.165.16.11\": 82,\n        \"10.0.0.1\":       0\n    }\n    return {\"score\": score_db.get(ip, 10), \"source\": \"mock\"}\n\nips_a_verifier = [\"185.220.101.3\", \"10.0.0.1\"]\nresultats = enrichir_ioc_batch(ips_a_verifier, mock_threat_intel, delai=0)\n\nfor ip, data in resultats.items():\n    niveau = \"MALVEILLANT\" if data[\"score\"] > 50 else \"OK\"\n    print(f\"{ip}: {niveau} (score={data['score']})\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l2-m5-ex1",
+      "title": "Construire une URL avec paramètres",
+      "description": "Utiliser urllib.parse.urlencode pour construire une URL d'API",
+      "instructions": "Construisez l'URL suivante avec `urllib.parse.urlencode` pour une requête vers `https://api.example.com/check` avec les paramètres `ip=10.0.0.1` et `days=30`.\n\nAffichez l'URL complète :\n```\nhttps://api.example.com/check?ip=10.0.0.1&days=30\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ip=10.0.0.1",
+      "correction": "import urllib.parse\nbase = \"https://api.example.com/check\"\nparams = urllib.parse.urlencode({\"ip\": \"10.0.0.1\", \"days\": 30})\nprint(f\"{base}?{params}\")",
+      "explanation": "`urlencode` convertit un dictionnaire en chaîne de paramètres URL encodée. Essentiel pour construire des requêtes API propres, surtout avec des caractères spéciaux."
+    },
+    {
+      "id": "py-l2-m5-ex2",
+      "title": "Faire une requête HTTP GET",
+      "description": "Récupérer des données JSON depuis une API publique",
+      "instructions": "Faites une requête GET vers `http://ip-api.com/json/8.8.8.8` avec `urllib.request.urlopen` et affichez le champ `country` de la réponse JSON.\n\nRésultat attendu (contient) :\n```\nPays : United States\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Pays :",
+      "correction": "import urllib.request\nimport json\ntry:\n    with urllib.request.urlopen(\"http://ip-api.com/json/8.8.8.8\", timeout=10) as r:\n        data = json.loads(r.read())\n        print(f\"Pays : {data.get('country', 'Inconnu')}\")\nexcept Exception as e:\n    print(f\"Erreur réseau : {e}\")",
+      "explanation": "`urlopen` ouvre une connexion HTTP et `.read()` récupère le corps. Le `timeout=10` évite que le script se bloque indéfiniment. Le `try/except` gère les erreurs réseau."
+    },
+    {
+      "id": "py-l2-m5-ex3",
+      "title": "Géolocaliser des IPs suspectes",
+      "description": "Enrichir une liste d'IPs avec leur pays d'origine",
+      "instructions": "Pour chaque IP dans `[\"8.8.8.8\", \"1.1.1.1\"]`, interrogez `http://ip-api.com/json/{ip}` et affichez le pays.\n\nRésultat (contient) :\n```\n8.8.8.8 →\n```\n\n⚠️ Si pas de connexion internet, attrapez l'erreur et affichez `(erreur réseau)`.",
+      "validationType": "output_contains",
+      "expectedOutput": "8.8.8.8 →",
+      "correction": "import urllib.request\nimport json\nips = [\"8.8.8.8\", \"1.1.1.1\"]\nfor ip in ips:\n    try:\n        with urllib.request.urlopen(f\"http://ip-api.com/json/{ip}\", timeout=10) as r:\n            data = json.loads(r.read())\n            pays = data.get(\"country\", \"Inconnu\")\n            print(f\"{ip} → {pays}\")\n    except Exception:\n        print(f\"{ip} → (erreur réseau)\")",
+      "explanation": "La géolocalisation d'IP est une technique d'enrichissement SOC courante. Notez le `except Exception` général pour gérer les timeouts, connexions refusées ou erreurs DNS gracieusement."
+    }
+  ]
+}

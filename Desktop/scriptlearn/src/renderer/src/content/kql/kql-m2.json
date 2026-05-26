@@ -1,0 +1,55 @@
+{
+  "id": "kql-m2",
+  "title": "Opérateurs KQL avancés",
+  "lang": "kql",
+  "level": 7,
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "section": "Manipulation de chaînes et regex",
+      "content": "**KQL offre des opérateurs de chaînes puissants pour analyser les logs :**\n\n```kql\n// ─── Opérateurs de chaînes ───\n// has          : contient un mot (insensible casse, optimisé index)\n// contains     : contient une sous-chaîne (insensible casse)\n// startswith   : commence par\n// endswith     : se termine par\n// matches regex: regex complète\n// !has / !contains : négation\n\nSyslog\n| where SyslogMessage has \"Failed\"\n| where SyslogMessage !has \"pam_unix\"\n\n// ─── Sensible à la casse ───\n// has_cs, contains_cs, startswith_cs, endswith_cs\nTable\n| where Column has_cs \"ERROR\"\n\n// ─── in et !in ───\nSecurityEvent\n| where EventID in (4624, 4625, 4648)\n| where Computer !in (\"DC01\", \"DC02\")\n\n// ─── Wildcards ───\nSecurityEvent\n| where Computer startswith \"WORKSTATION\"\n| where Account endswith \"$\"  // Comptes machine AD\n\n// ─── extract() : regex avec groupe ───\n// extract(regex, groupe, texte)\nSyslog\n| extend IP = extract(@\"from ([0-9.]+)\", 1, SyslogMessage)\n| extend User = extract(@\"for (\\S+) from\", 1, SyslogMessage)\n\n// ─── parse : parse par template ───\n// Plus lisible qu'extract pour des formats fixes\nSyslog\n| parse SyslogMessage with \"Failed password for \" Username \" from \" SourceIP \" port \" Port \" ssh2\"\n| where isnotempty(SourceIP)\n```"
+    },
+    {
+      "section": "Agrégation et statistiques",
+      "content": "**summarize est le cœur de l'analyse SOC — il transforme des millions de logs en métriques :**\n\n```kql\n// ─── Fonctions d'agrégation ───\nSecurityEvent\n| where TimeGenerated > ago(24h)\n| summarize \n    TotalEvents  = count(),                    // Nombre d'événements\n    UniqueIPs    = dcount(IpAddress),          // Count distinct\n    FirstSeen    = min(TimeGenerated),         // Minimum\n    LastSeen     = max(TimeGenerated),         // Maximum\n    IPList       = make_set(IpAddress),        // Set de valeurs uniques\n    AccountList  = make_list(Account),         // Liste de toutes les valeurs\n    Avg          = avg(EventID)                // Moyenne\n    by Computer\n\n// ─── summarize multi-dimensions ───\nSecurityEvent\n| where EventID in (4624, 4625)\n| summarize Count=count() by EventID, IpAddress, bin(TimeGenerated, 1h)\n\n// ─── top N ───\nSecurityEvent\n| where EventID == 4625\n| summarize Count=count() by IpAddress\n| top 10 by Count\n\n// ─── percentile ───\nSigninLogs\n| summarize \n    p50 = percentile(DurationMs, 50),\n    p99 = percentile(DurationMs, 99)\n    by AppDisplayName\n\n// ─── countif : count conditionnel ───\nSecurityEvent\n| summarize \n    TotalLogins = count(),\n    FailedLogins = countif(EventID == 4625),\n    SuccessLogins = countif(EventID == 4624)\n    by IpAddress\n| extend TauxEchec = round(100.0 * FailedLogins / TotalLogins, 1)\n| where FailedLogins > 5\n| sort by TauxEchec desc\n```"
+    },
+    {
+      "section": "Jointures et corrélation de tables",
+      "content": "**Les jointures permettent de corréler des événements de tables différentes :**\n\n```kql\n// ─── join : joindre deux tables ───\n// inner join par défaut\nlet BreachIPs = SecurityAlert\n    | where AlertName has \"Brute Force\"\n    | extend IP = tostring(Entities[0].Address)\n    | summarize by IP;\n\nSigninLogs\n| where TimeGenerated > ago(24h)\n| join kind=inner BreachIPs on $left.IPAddress == $right.IP\n| project TimeGenerated, UserPrincipalName, IPAddress, Location\n\n// ─── Types de join ───\n// inner    : lignes avec correspondance dans les deux tables\n// leftouter: toutes les lignes de gauche + correspondances\n// antiright: lignes de gauche SANS correspondance (exclusion)\n\n// ─── Exemple antiright (IPs non vues en alerte) ───\nSigninLogs\n| summarize by IPAddress\n| join kind=antiright (\n    SecurityAlert | extend IP = tostring(Entities[0].Address) | summarize by IP\n) on $left.IPAddress == $right.IP\n\n// ─── union : combiner plusieurs tables ───\nlet LinuxAuth = Syslog | where Facility == \"auth\" | extend Source = \"Linux\";\nlet WindowsAuth = SecurityEvent | where EventID in (4624, 4625) | extend Source = \"Windows\";\n\nunion LinuxAuth, WindowsAuth\n| summarize Count=count() by Source, bin(TimeGenerated, 1h)\n| render timechart\n\n// ─── lookup : table de référence ───\nlet IOCTable = datatable(IP:string, Menace:string)[\n    \"185.220.101.3\", \"TOR C2\",\n    \"194.165.16.11\", \"Scanner\"\n];\nSigninLogs\n| lookup kind=inner IOCTable on $left.IPAddress == $right.IP\n| project TimeGenerated, UserPrincipalName, IPAddress, Menace\n```"
+    },
+    {
+      "section": "Variables et requêtes composées (let)",
+      "content": "**`let` permet de définir des variables et de structurer des requêtes complexes :**\n\n```kql\n// ─── let : variable scalaire ───\nlet SeuillBruteForce = 10;\nlet FenetreTemps = 1h;\n\nSecurityEvent\n| where TimeGenerated > ago(FenetreTemps)\n| where EventID == 4625\n| summarize Count=count() by IpAddress\n| where Count >= SeuillBruteForce\n\n// ─── let : sous-requête (table) ───\nlet IPSuspectes = SecurityEvent\n    | where EventID == 4625\n    | where TimeGenerated > ago(24h)\n    | summarize Fails=count() by IpAddress\n    | where Fails >= 5\n    | project IpAddress;\n\n// Utiliser la variable dans la requête principale\nSecurityEvent\n| where TimeGenerated > ago(24h)\n| where EventID == 4624  // Succès\n| where IpAddress in (IPSuspectes)  // Filtrer par IPs suspectes\n| project TimeGenerated, IpAddress, Account, Computer\n\n// ─── let : fonction ───\nlet scorer = (activite:string) {\n    case(\n        activite == \"port_scan\", 20,\n        activite == \"brute_force\", 40,\n        activite == \"login_success_after_fail\", 80,\n        10  // défaut\n    )\n};\n\n// datatable : créer une table inline ───\nlet Liste_Noire = datatable(IP:string, Raison:string) [\n    \"185.220.101.3\", \"TOR exit node\",\n    \"194.165.16.11\", \"Known scanner\",\n    \"45.33.32.156\",  \"Shodan host\"\n];\n\nSecurityEvent\n| where EventID == 4625\n| join kind=inner Liste_Noire on $left.IpAddress == $right.IP\n| project TimeGenerated, IpAddress, Account, Raison\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "kql-m2-ex1",
+      "title": "Graphique temporel d'événements",
+      "instructions": "Créez un **graphique temporel** des échecs de connexion (EventID 4625) par intervalles d'**1 heure** sur les dernières 24h.\n\nUtilisez `bin(TimeGenerated, 1h)` dans le `summarize`, puis terminez par `render timechart`.",
+      "requiredTable": "SecurityEvent",
+      "requiredKeywords": ["eventid == 4625", "summarize", "bin(timegenerated, 1h)", "render timechart"],
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)\n| where EventID == 4625\n| summarize Count = count() by bin(TimeGenerated, 1h)\n| render timechart",
+      "explanation": "`bin()` regroupe les timestamps en intervalles réguliers. `render timechart` génère automatiquement un graphique en courbes dans Sentinel — indispensable pour détecter des pics d'activité anormaux."
+    },
+    {
+      "id": "kql-m2-ex2",
+      "title": "Extend — extraire une IP avec regex",
+      "instructions": "Depuis `Syslog`, filtrez les messages contenant `\"Failed password\"` et ajoutez une colonne `SourceIP` extraite avec `extract()`.\n\nPattern regex : `@\"from (\\S+) port\"`\n\nGardez uniquement les lignes où `SourceIP` n'est pas vide (`isnotempty()`).",
+      "requiredTable": "Syslog",
+      "requiredKeywords": ["failed password", "extend", "extract(", "sourceip", "isnotempty"],
+      "correction": "Syslog\n| where SyslogMessage has \"Failed password\"\n| extend SourceIP = extract(@\"from (\\S+) port\", 1, SyslogMessage)\n| where isnotempty(SourceIP)",
+      "explanation": "`has` est plus rapide que `contains` car il cherche un mot entier. `extract()` applique un regex et retourne le groupe capturé (index 1). `isnotempty()` filtre les lignes où l'IP n'a pas pu être extraite."
+    },
+    {
+      "id": "kql-m2-ex3",
+      "title": "Make_set — détecter le password spraying",
+      "instructions": "Pour chaque IP ayant échoué à se connecter (EventID 4625, 24h), listez tous les **comptes ciblés** (`Account`) dans `SecurityEvent`.\n\nUtilisez `make_set(Account)` pour créer une liste unique des comptes par IP, et affichez uniquement les IPs qui ont ciblé **plus d'un compte distinct** (`array_length() > 1`).",
+      "requiredTable": "SecurityEvent",
+      "requiredKeywords": ["eventid == 4625", "summarize", "make_set(account)", "array_length"],
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)\n| where EventID == 4625\n| summarize Accounts = make_set(Account), Count = count() by IpAddress\n| where array_length(Accounts) > 1\n| sort by Count desc",
+      "explanation": "`make_set()` crée un tableau de valeurs uniques. `array_length() > 1` détecte les attaques de type **password spraying** : 1 mot de passe testé sur plusieurs comptes — technique conçue pour contourner les blocages de compte."
+    }
+  ]
+}

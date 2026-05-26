@@ -1,0 +1,74 @@
+{
+  "id": "regex-m3",
+  "title": "Regex avancées : lookahead et lookbehind",
+  "level": 8,
+  "lang": "regex",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Lookahead et lookbehind",
+      "content": "Les **assertions de position** (lookahead / lookbehind) permettent de tester ce qui précède ou suit un motif, **sans le consommer** :\n\n| Syntaxe | Type | Signification |\n|---|---|---|\n| `(?=...)` | Lookahead positif | Doit être suivi par |\n| `(?!...)` | Lookahead négatif | Ne doit pas être suivi par |\n| `(?<=...)` | Lookbehind positif | Doit être précédé par |\n| `(?<!...)` | Lookbehind négatif | Ne doit pas être précédé par |\n\n```python\n# Trouver 'prix' suivi d'un chiffre\nre.findall(r'\\d+(?= euros)', '100 euros, 50 dollars')\n# Retourne : ['100']\n```"
+    },
+    {
+      "title": "Groupes nommés",
+      "content": "Les **groupes nommés** `(?P<nom>...)` rendent le code plus lisible :\n\n```python\nm = re.search(\n  r'(?P<annee>\\d{4})-(?P<mois>\\d{2})-(?P<jour>\\d{2})',\n  '2024-03-15'\n)\nm.group('annee')  # '2024'\nm.group('mois')   # '03'\nm.group('jour')   # '15'\n\n# Accès via un dictionnaire\nm.groupdict()  # {'annee': '2024', 'mois': '03', 'jour': '15'}\n```"
+    },
+    {
+      "title": "Greedy vs. Lazy",
+      "content": "Par défaut, les quantificateurs sont **greedy** (gourmands) : ils capturent le maximum possible.\n\nAjouter `?` les rend **lazy** (paresseux) : ils capturent le minimum.\n\n```python\ntexte = '<b>gras</b> et <i>italique</i>'\n\n# Greedy : capture tout de <b> jusqu'au dernier </i>\nre.search(r'<.*>', texte).group()\n# → '<b>gras</b> et <i>italique</i>'\n\n# Lazy : s'arrête à la première fermeture\nre.findall(r'<.*?>', texte)\n# → ['<b>', '</b>', '<i>', '</i>']\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-m3-1",
+      "order": 1,
+      "title": "Lookahead — extraire un montant",
+      "instructions": "Extrayez les **montants numériques** suivis de `' EUR'` dans un texte.\n\nUtilisez un lookahead positif : `\\d+(?= EUR)`\n\nTestez sur `'Facture: 150 EUR, taxe: 30 EUR, total: 180 USD'`.",
+      "requiredKeywords": ["re.findall", "\\d+", "(?= eur)"],
+      "validationType": "keywords",
+      "correction": "import re\nre.findall(r'\\d+(?= EUR)', 'Facture: 150 EUR, taxe: 30 EUR, total: 180 USD')",
+      "explanation": "`(?= EUR)` est un lookahead : il vérifie que `EUR` suit les chiffres, mais `EUR` n'est pas inclus dans le résultat capturé."
+    },
+    {
+      "id": "ex-regex-m3-2",
+      "order": 2,
+      "title": "Lookbehind — valeur après un label",
+      "instructions": "Extrayez la valeur `192.168.1.1` dans `'IP: 192.168.1.1'`.\n\nUtilisez un lookbehind positif : `(?<=IP: )[\\d.]+`",
+      "requiredKeywords": ["re.search", "(?<=ip: )", "[\\d.]+"],
+      "validationType": "keywords",
+      "correction": "import re\nre.search(r'(?<=IP: )[\\d.]+', 'IP: 192.168.1.1 PORT: 8080').group()",
+      "explanation": "`(?<=IP: )` vérifie que le match est précédé par `'IP: '` sans l'inclure dans le résultat. Idéal pour extraire des valeurs après des labels dans des logs."
+    },
+    {
+      "id": "ex-regex-m3-3",
+      "order": 3,
+      "title": "Groupes nommés",
+      "instructions": "Parsez un log au format `[2024-03-15 14:23:45] ERROR: message`.\n\nCapturez `date`, `heure`, `niveau` et `message` dans des **groupes nommés**.",
+      "requiredKeywords": ["re.search", "(?p<", "\\d{4}", "\\d{2}"],
+      "validationType": "keywords",
+      "correction": "import re\nm = re.search(r'\\[(?P<date>\\d{4}-\\d{2}-\\d{2}) (?P<heure>\\d{2}:\\d{2}:\\d{2})\\] (?P<niveau>\\w+): (?P<message>.+)', '[2024-03-15 14:23:45] ERROR: disk full')\nif m: print(m.groupdict())",
+      "explanation": "`(?P<nom>...)` crée un groupe nommé. `m.groupdict()` retourne un dictionnaire `{nom: valeur}`. C'est très lisible pour des patterns complexes."
+    },
+    {
+      "id": "ex-regex-m3-4",
+      "order": 4,
+      "title": "Lazy quantifier — extraire les balises",
+      "instructions": "Extrayez toutes les **balises HTML** d'un texte avec un quantificateur **lazy**.\n\nPattern : `<.*?>`\n\nTestez sur `'<b>texte</b> et <span>autre</span>'`.",
+      "requiredKeywords": ["re.findall", "<.*?>"],
+      "validationType": "keywords",
+      "correction": "import re\nre.findall(r'<.*?>', '<b>texte</b> et <span>autre</span>')",
+      "explanation": "`.*?` est lazy : il s'arrête dès la première `>` trouvée. `.*` (greedy) aurait tout capturé jusqu'à la dernière `>`."
+    },
+    {
+      "id": "ex-regex-m3-5",
+      "order": 5,
+      "title": "Lookahead négatif — exclure des mots",
+      "instructions": "Trouvez les mots `user` **non suivis** de `_admin`.\n\nUtilisez un lookahead négatif : `user(?!_admin)`\n\nTestez sur `'user_admin user_guest user'`.",
+      "requiredKeywords": ["re.findall", "user(?!_admin)"],
+      "validationType": "keywords",
+      "correction": "import re\nre.findall(r'user(?!_admin)', 'user_admin user_guest user')",
+      "explanation": "`(?!_admin)` est un lookahead négatif : il ne matche que si `_admin` ne suit **pas** immédiatement. Utile pour filtrer des variantes dans des logs."
+    }
+  ]
+}

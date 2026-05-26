@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m3",
+  "title": "Génération de rapports SOC",
+  "lang": "python",
+  "level": 4,
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Types de rapports SOC",
+      "content": "Un analyste SOC génère différents types de rapports :\n\n- **Rapport d'incident** : chronologie et actions d'une compromission\n- **Rapport de threat hunting** : résultats d'une recherche de menaces\n- **Rapport de vulnérabilité** : expositions identifiées\n- **Rapport quotidien/hebdomadaire** : métriques et KPIs\n- **IOC Report** : liste des indicateurs identifiés\n\nFormats courants : JSON (machine-readable), Markdown, HTML, CSV."
+    },
+    {
+      "section": "Rapport JSON structuré",
+      "content": "```python\nimport json\nfrom datetime import datetime\n\ndef generer_rapport_incident(incident_id, alertes, iocs, timeline):\n    \"\"\"Génère un rapport d'incident structuré en JSON.\"\"\"\n    rapport = {\n        \"incident\": {\n            \"id\": incident_id,\n            \"created_at\": datetime.now().isoformat(),\n            \"status\": \"OPEN\",\n            \"severity\": max((a.get(\"severite\", \"FAIBLE\") for a in alertes), \n                           default=\"FAIBLE\",\n                           key=lambda s: [\"FAIBLE\",\"MOYENNE\",\"HAUTE\",\"CRITIQUE\"].index(s))\n        },\n        \"summary\": {\n            \"nb_alertes\": len(alertes),\n            \"nb_iocs\": len(iocs),\n            \"nb_evenements\": len(timeline)\n        },\n        \"alertes\": alertes,\n        \"iocs\": iocs,\n        \"timeline\": timeline\n    }\n    return rapport\n\n# Exemple\nalerts = [{\"severite\": \"CRITIQUE\", \"regle\": \"INTRUSION\", \"ip\": \"185.220.101.3\"}]\niocs = [{\"valeur\": \"185.220.101.3\", \"type\": \"ip\"}]\ntimeline = [\n    {\"ts\": \"2024-01-15 10:00:00\", \"evt\": \"Port scan détecté\"},\n    {\"ts\": \"2024-01-15 10:02:00\", \"evt\": \"Connexion SSH réussie\"},\n]\n\nrapport = generer_rapport_incident(\"INC-2024-001\", alerts, iocs, timeline)\nprint(json.dumps(rapport[\"incident\"], indent=2))\n```"
+    },
+    {
+      "section": "Rapport Markdown",
+      "content": "```python\nfrom datetime import datetime\n\ndef generer_rapport_markdown(rapport):\n    \"\"\"Génère un rapport d'incident en Markdown.\"\"\"\n    inc = rapport[\"incident\"]\n    md = []\n    \n    md.append(f\"# Rapport d'Incident — {inc['id']}\")\n    md.append(f\"**Date** : {inc['created_at'][:10]}  \")\n    md.append(f\"**Sévérité** : {inc['severity']}  \")\n    md.append(f\"**Statut** : {inc['status']}\")\n    md.append(\"\")\n    \n    md.append(\"## Résumé\")\n    s = rapport[\"summary\"]\n    md.append(f\"- Alertes : **{s['nb_alertes']}**\")\n    md.append(f\"- IOC : **{s['nb_iocs']}**\")\n    md.append(f\"- Événements : **{s['nb_evenements']}**\")\n    md.append(\"\")\n    \n    md.append(\"## Timeline\")\n    md.append(\"| Timestamp | Événement |\")\n    md.append(\"|-----------|-----------|\")\n    for evt in rapport[\"timeline\"]:\n        md.append(f\"| {evt['ts']} | {evt['evt']} |\")\n    md.append(\"\")\n    \n    md.append(\"## IOC Identifiés\")\n    for ioc in rapport[\"iocs\"]:\n        md.append(f\"- `{ioc['valeur']}` ({ioc['type']})\")\n    \n    return \"\\n\".join(md)\n\nmd_rapport = generer_rapport_markdown(rapport)\nprint(md_rapport[:500])\n\n# Sauvegarder\nwith open(\"incident_INC-2024-001.md\", \"w\", encoding=\"utf-8\") as f:\n    f.write(md_rapport)\nprint(\"Rapport Markdown sauvegardé\")\n```"
+    },
+    {
+      "section": "Rapport HTML formaté",
+      "content": "```python\ndef generer_rapport_html(rapport):\n    \"\"\"Génère un rapport HTML lisible dans un navigateur.\"\"\"\n    inc = rapport[\"incident\"]\n    couleurs = {\"CRITIQUE\": \"#ef4444\", \"HAUTE\": \"#f97316\", \n                \"MOYENNE\": \"#f59e0b\", \"FAIBLE\": \"#10b981\"}\n    couleur = couleurs.get(inc[\"severity\"], \"#6b7280\")\n    \n    timeline_rows = \"\".join(\n        f\"<tr><td>{e['ts']}</td><td>{e['evt']}</td></tr>\"\n        for e in rapport[\"timeline\"]\n    )\n    ioc_list = \"\".join(f\"<li><code>{i['valeur']}</code> ({i['type']})</li>\" for i in rapport[\"iocs\"])\n    \n    html = f\"\"\"<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Incident {inc['id']}</title>\n<style>body{{font-family:sans-serif;max-width:900px;margin:2rem auto;background:#0f1117;color:#e2e8f0}}\n.badge{{background:{couleur};color:white;padding:2px 8px;border-radius:4px;font-weight:bold}}\ntable{{width:100%;border-collapse:collapse}}td,th{{padding:8px;border:1px solid #2d3748;text-align:left}}\nth{{background:#1a1d2e}}code{{background:#1a1d2e;padding:2px 6px;border-radius:3px}}</style>\n</head><body>\n<h1>Incident {inc['id']} <span class=\"badge\">{inc['severity']}</span></h1>\n<p><strong>Date :</strong> {inc['created_at'][:10]} — <strong>Statut :</strong> {inc['status']}</p>\n<h2>Timeline</h2>\n<table><tr><th>Timestamp</th><th>Événement</th></tr>{timeline_rows}</table>\n<h2>IOC</h2><ul>{ioc_list}</ul>\n</body></html>\"\"\"\n    \n    with open(\"rapport.html\", \"w\", encoding=\"utf-8\") as f:\n        f.write(html)\n    print(\"Rapport HTML créé : rapport.html\")\n\ngenerer_rapport_html(rapport)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m3-ex1",
+      "title": "Générer un rapport JSON d'alerte",
+      "description": "Créer un rapport JSON structuré d'un incident",
+      "instructions": "Créez un dictionnaire rapport avec les clés `\"id\"`, `\"severite\"`, `\"ip\"` et `\"timestamp\"` (date actuelle au format ISO), puis sauvegardez en JSON et affichez la sévérité :\n```\nSévérité : CRITIQUE\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Sévérité : CRITIQUE",
+      "correction": "import json\nfrom datetime import datetime\nrapport = {\n    \"id\": \"INC-2024-001\",\n    \"severite\": \"CRITIQUE\",\n    \"ip\": \"185.220.101.3\",\n    \"timestamp\": datetime.now().isoformat()\n}\nwith open(\"rapport.json\", \"w\") as f:\n    json.dump(rapport, f)\nwith open(\"rapport.json\") as f:\n    r = json.load(f)\nprint(f\"Sévérité : {r['severite']}\")",
+      "explanation": "`datetime.now().isoformat()` génère un timestamp ISO 8601 standard. `default=str` dans `json.dump` gère les types non-sérialisables comme `datetime`."
+    },
+    {
+      "id": "py-l4-m3-ex2",
+      "title": "Générer un tableau Markdown",
+      "description": "Créer un tableau Markdown de timeline d'incident",
+      "instructions": "Générez un tableau Markdown pour cette timeline :\n```python\ntimeline = [\n    {\"ts\": \"10:00\", \"evt\": \"Scan de ports\"},\n    {\"ts\": \"10:02\", \"evt\": \"Brute force SSH\"},\n]\n```\nAffichez le Markdown (doit contenir `| 10:00 |`) :\n```\n| Timestamp | Événement |\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "| 10:00 |",
+      "correction": "timeline = [\n    {\"ts\": \"10:00\", \"evt\": \"Scan de ports\"},\n    {\"ts\": \"10:02\", \"evt\": \"Brute force SSH\"},\n]\nprint(\"| Timestamp | Événement |\")\nprint(\"|-----------|-----------|\")\nfor e in timeline:\n    print(f\"| {e['ts']} | {e['evt']} |\")",
+      "explanation": "Les tableaux Markdown sont délimités par `|`. La ligne de séparation `|---|---|` est obligatoire. Ce format est supporté par GitHub, GitLab, Notion, et la plupart des wikis."
+    },
+    {
+      "id": "py-l4-m3-ex3",
+      "title": "Générer un rapport HTML",
+      "description": "Créer un fichier HTML simple de rapport d'incident",
+      "instructions": "Générez et sauvegardez un fichier `rapport.html` contenant :\n```html\n<h1>Incident INC-2024-001</h1>\n<p>Sévérité : CRITIQUE</p>\n```\nRelisez le fichier et affichez qu'il contient bien `CRITIQUE` :\n```\nHTML créé : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "HTML créé : True",
+      "correction": "html = \"<h1>Incident INC-2024-001</h1>\\n<p>Sévérité : CRITIQUE</p>\"\nwith open(\"rapport.html\", \"w\", encoding=\"utf-8\") as f:\n    f.write(html)\nwith open(\"rapport.html\", encoding=\"utf-8\") as f:\n    contenu = f.read()\nprint(f\"HTML créé : {'CRITIQUE' in contenu}\")",
+      "explanation": "Les rapports HTML sont utiles car ils sont lisibles directement dans un navigateur sans outil supplémentaire. Ils peuvent inclure des CSS pour une meilleure présentation."
+    }
+  ]
+}

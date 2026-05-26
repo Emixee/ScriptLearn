@@ -1,0 +1,62 @@
+{
+  "id": "ps-l2-m5",
+  "title": "Gestion des erreurs",
+  "level": 2,
+  "lang": "powershell",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Try / Catch / Finally",
+      "content": "PowerShell gère les erreurs avec des blocs `try/catch/finally` :\n\n```powershell\ntry {\n    # Code qui peut générer une erreur\n    $contenu = Get-Content \"fichier_inexistant.txt\" -ErrorAction Stop\n    Write-Host \"Lu : $($contenu.Count) lignes\"\n}\ncatch {\n    # Exécuté en cas d'erreur\n    Write-Host \"Erreur : $($_.Exception.Message)\" -ForegroundColor Red\n}\nfinally {\n    # Toujours exécuté (nettoyage)\n    Write-Host \"Bloc finally exécuté\"\n}\n```\n\n> **`-ErrorAction Stop`** est crucial : sans lui, beaucoup d'erreurs PowerShell sont des **non-terminating errors** qui n'activent PAS le `catch` ! Avec `-ErrorAction Stop`, l'erreur devient terminante."
+    },
+    {
+      "title": "Types d'erreurs et $Error",
+      "content": "**Types d'erreurs PowerShell :**\n\n1. **Terminating errors** → arrêtent le script, activent `catch`\n2. **Non-terminating errors** → affichent en rouge, continuent l'exécution\n\n```powershell\n# Convertir une non-terminating en terminating\n$ErrorActionPreference = 'Stop'  # global\n# ou\nGet-Item \"inexistant\" -ErrorAction Stop  # pour une cmdlet\n\n# $Error — tableau des dernières erreurs\nGet-Item \"inexistant\" -ErrorAction SilentlyContinue\nif ($Error[0]) {\n    Write-Host \"Dernière erreur : $($Error[0].Exception.Message)\"\n    $Error.Clear()  # vider\n}\n\n# Dans un catch, $_ est l'erreur courante\ntry {\n    throw \"Mon erreur personnalisée\"\n} catch {\n    Write-Host $_.Exception.Message\n    Write-Host $_.InvocationInfo.ScriptLineNumber  # numéro de ligne\n}\n```"
+    },
+    {
+      "title": "Catch par type d'exception",
+      "content": "On peut attraper des types spécifiques d'exceptions :\n\n```powershell\ntry {\n    $n = [int]\"abc\"   # conversion impossible\n} catch [System.FormatException] {\n    Write-Host \"Erreur de format\"\n} catch [System.IO.FileNotFoundException] {\n    Write-Host \"Fichier introuvable\"\n} catch {\n    Write-Host \"Autre erreur : $($_.Exception.Message)\"\n} finally {\n    Write-Host \"Nettoyage\"\n}\n\n# Ré-lancer une erreur\ntry {\n    Get-Content \"secret.txt\" -ErrorAction Stop\n} catch [System.UnauthorizedAccessException] {\n    Write-Host \"Accès refusé\" -ForegroundColor Yellow\n    throw  # ré-lancer pour propagation\n}\n```"
+    },
+    {
+      "title": "ErrorAction et -ErrorVariable",
+      "content": "```powershell\n# -ErrorAction : comportement par erreur\n#   Stop         → exception terminating (active catch)\n#   Continue     → comportement par défaut (affiche et continue)\n#   SilentlyContinue → ignore l'erreur silencieusement\n#   Inquire      → demande à l'utilisateur\n\n# Capturer l'erreur dans une variable\nGet-Item \"inexistant\" -ErrorAction SilentlyContinue -ErrorVariable monErreur\n\nif ($monErreur) {\n    Write-Host \"Erreur capturée : $monErreur\"\n} else {\n    Write-Host \"Aucune erreur\"\n}\n\n# Préférence globale\n$ErrorActionPreference = 'Stop'   # tout devient terminating\n# Remettre à défaut :\n$ErrorActionPreference = 'Continue'\n\n# Test d'existence avant action\nif (Test-Path \"mon_fichier.txt\") {\n    Get-Content \"mon_fichier.txt\"\n} else {\n    Write-Warning \"Fichier introuvable\"\n}\n```"
+    },
+    {
+      "title": "Logging et diagnostics",
+      "content": "```powershell\n# Write-Error vs Write-Warning vs Write-Verbose\nWrite-Error \"Erreur critique\"      # va dans le flux d'erreur\nWrite-Warning \"Attention !\"         # en jaune\nWrite-Verbose \"Détail technique\"    # affiché seulement si -Verbose\n\n# Fonction de logging\nfunction Write-Log {\n    param(\n        [Parameter(Mandatory)]\n        [string]$Message,\n        [ValidateSet('INFO','WARN','ERROR')]\n        [string]$Level = 'INFO'\n    )\n    $ts = Get-Date -Format 'HH:mm:ss'\n    $colors = @{ INFO='Cyan'; WARN='Yellow'; ERROR='Red' }\n    Write-Host \"[$Level] $ts $Message\" -ForegroundColor $colors[$Level]\n}\n\nWrite-Log \"Démarrage\" -Level INFO\nWrite-Log \"Fichier manquant\" -Level WARN\nWrite-Log \"Connexion échouée\" -Level ERROR\n\n# Logger dans un fichier\n\"[$(Get-Date)] Erreur : $message\" | Add-Content -Path \"C:\\Logs\\app.log\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l2-m5-1",
+      "order": 1,
+      "title": "Try / Catch de base",
+      "instructions": "Utilisez `try/catch` pour essayer de lire un fichier qui n'existe pas (`\"inexistant.txt\"`). Afficher l'erreur dans le catch.\n\nRésultat attendu :\n```\nErreur capturée : ...\n```",
+      "expectedOutput": "Erreur capturée",
+      "validationType": "contains",
+      "correction": "try {\n    $contenu = Get-Content \"inexistant.txt\" -ErrorAction Stop\n} catch {\n    Write-Host \"Erreur capturée : $($_.Exception.Message)\"\n}",
+      "explanation": "`-ErrorAction Stop` est **obligatoire** pour que `Get-Content` déclenche une exception que `catch` peut attraper. Sans ça, l'erreur est « non-terminating » et va directement dans `$Error` sans passer par le catch. C'est un piège classique en PowerShell !"
+    },
+    {
+      "id": "ex-ps-l2-m5-2",
+      "order": 2,
+      "title": "ErrorVariable",
+      "instructions": "Utilisez `Test-Path` pour vérifier si `C:\\Temp` existe, puis essayez de lire un fichier inexistant avec `-ErrorAction SilentlyContinue -ErrorVariable err`. Affichez le résultat.\n\nRésultat attendu :\n```\nC:\\Temp existe : True\nErreur : ...\n```",
+      "expectedOutput": "existe : True",
+      "validationType": "contains",
+      "correction": "$existeTemp = Test-Path \"C:\\Temp\"\nWrite-Host \"C:\\Temp existe : $existeTemp\"\n\nGet-Content \"C:\\Temp\\inexistant.txt\" -ErrorAction SilentlyContinue -ErrorVariable err\nif ($err) {\n    Write-Host \"Erreur : $err\"\n}",
+      "explanation": "`-ErrorVariable err` stocke l'objet erreur dans `$err`. Combiné avec `-ErrorAction SilentlyContinue`, la cmdlet échoue silencieusement mais l'erreur est accessible pour inspection. C'est utile quand vous ne voulez pas arrêter le script mais quand même logger/vérifier les erreurs."
+    },
+    {
+      "id": "ex-ps-l2-m5-3",
+      "order": 3,
+      "title": "Fonction avec gestion d'erreur",
+      "instructions": "Créez une fonction `Diviser` qui prend deux paramètres `$a` et `$b`. Si `$b` est zéro, lancez une erreur avec `throw`. Sinon retournez le résultat. Testez avec 10/2 et 5/0.\n\nRésultat attendu :\n```\n10 / 2 = 5\nErreur : Division par zéro !\n```",
+      "expectedOutput": "Division par zéro",
+      "validationType": "contains",
+      "correction": "function Diviser {\n    param([double]$a, [double]$b)\n    if ($b -eq 0) { throw \"Division par zéro !\" }\n    return $a / $b\n}\n\ntry {\n    $r = Diviser 10 2\n    Write-Host \"10 / 2 = $r\"\n} catch {\n    Write-Host \"Erreur : $($_.Exception.Message)\"\n}\n\ntry {\n    Diviser 5 0\n} catch {\n    Write-Host \"Erreur : $($_.Exception.Message)\"\n}",
+      "explanation": "`throw \"message\"` crée une exception terminating. Le mot-clé `throw` peut prendre une chaîne simple ou un objet d'exception. L'appelant doit utiliser `try/catch` pour la gérer. Sans `try/catch`, l'exception remonte et arrête le script avec un message rouge."
+    }
+  ]
+}

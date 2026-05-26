@@ -1,0 +1,72 @@
+{
+  "id": "bash-l3-m1",
+  "title": "Expressions régulières",
+  "level": 3,
+  "lang": "bash",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Regex de base avec grep",
+      "content": "Les expressions régulières (regex) permettent de chercher des motifs dans du texte :\n\n```bash\n# grep -E : mode ERE (Extended Regular Expression)\necho -e \"chat\\nchien\\ncheval\\nvache\" | grep -E \"^ch\"   # chat chien cheval\n\n# Métacaractères principaux\n# .  — n'importe quel caractère\n# *  — 0 ou plusieurs fois le caractère précédent\n# +  — 1 ou plusieurs fois (ERE)\n# ?  — 0 ou 1 fois (ERE)\n# ^  — début de ligne\n# $  — fin de ligne\n# [] — classe de caractères\n# () — groupe de capture (ERE)\n# |  — OU (ERE)\n\necho \"bonjour\" | grep -E \"^b.*r$\"      # bonjour\necho \"42abc\" | grep -E \"^[0-9]+\"       # contient des chiffres au début\necho \"test123\" | grep -oE \"[0-9]+\"     # 123 (extrait le motif)\n```\n\n**Options grep utiles :**\n```bash\ngrep -i  # insensible à la casse\ngrep -v  # inverse (lignes qui ne correspondent PAS)\ngrep -c  # compte les correspondances\ngrep -n  # affiche les numéros de ligne\ngrep -o  # n'affiche que la partie correspondante\ngrep -r  # récursif dans les dossiers\n```"
+    },
+    {
+      "title": "Regex avec [[ =~ ]]",
+      "content": "Bash 3+ supporte les regex directement dans les conditions :\n\n```bash\n# [[ chaîne =~ regex ]]\n# BASH_REMATCH[0] = correspondance entière\n# BASH_REMATCH[1] = premier groupe capturé, etc.\n\nemail=\"user@example.com\"\nif [[ $email =~ ^([a-zA-Z0-9._-]+)@([a-zA-Z0-9.-]+)\\.([a-zA-Z]{2,})$ ]]; then\n    echo \"Email valide\"\n    echo \"Utilisateur : ${BASH_REMATCH[1]}\"\n    echo \"Domaine : ${BASH_REMATCH[2]}.${BASH_REMATCH[3]}\"\nfi\n\n# Valider un numéro de téléphone\ntel=\"06-12-34-56-78\"\nif [[ $tel =~ ^0[6-7](-[0-9]{2}){4}$ ]]; then\n    echo \"Numéro mobile valide\"\nfi\n\n# Valider une IP\nip=\"192.168.1.100\"\nif [[ $ip =~ ^([0-9]{1,3}\\.){3}[0-9]{1,3}$ ]]; then\n    echo \"Format IP valide (syntaxe, pas la valeur)\"\nfi\n```\n\n> **Important :** Ne citez PAS la regex entre guillemets dans `[[ =~ ]]`, sinon elle est traitée comme une chaîne littérale."
+    },
+    {
+      "title": "Substitution avec sed",
+      "content": "```bash\n# Substitution basique : s/motif/remplacement/\necho \"chat noir\" | sed 's/noir/blanc/'\n\n# Avec groupes de capture \\1 \\2\necho \"Alice 30\" | sed -E 's/([A-Za-z]+) ([0-9]+)/\\2 ans : \\1/'\n# → 30 ans : Alice\n\n# Substitution globale (flag g)\necho \"aaa bbb aaa\" | sed 's/aaa/xxx/g'\n\n# Supprimer des lignes\necho -e \"ligne1\\n#commentaire\\nligne2\" | sed '/^#/d'\n\n# Modifier en place un fichier\nsed -i 's/ancien/nouveau/g' fichier.txt\n\n# Remplacer seulement sur une plage de lignes\nsed -n '2,4p' fichier.txt   # affiche lignes 2 à 4\nsed '2,4s/foo/bar/g' fichier.txt\n\n# Extraire entre deux motifs\nsed -n '/DEBUT/,/FIN/p' fichier.txt\n```"
+    },
+    {
+      "title": "Extraction avec awk",
+      "content": "```bash\n# Syntaxe awk : awk 'condition { action }' fichier\n# $0 = ligne entière, $1 $2... = champs, NF = nb champs, NR = numéro de ligne\n\necho -e \"Alice 30\\nBob 25\\nCharlie 35\" | awk '{ print $1, \"a\", $2, \"ans\" }'\n# Alice a 30 ans\n# Bob a 25 ans\n# Charlie a 35 ans\n\n# Filtrer les lignes\necho -e \"Alice 30\\nBob 25\\nCharlie 35\" | awk '$2 > 28 { print $1 }'\n# Alice\n# Charlie\n\n# Séparateur de champs\necho \"a:b:c:d\" | awk -F: '{ print $2, $4 }'\n# b d\n\n# Calculer une somme\necho -e \"10\\n20\\n30\" | awk '{ total += $1 } END { print \"Total:\", total }'\n# Total: 60\n\n# BEGIN et END\necho -e \"Alice 30\\nBob 25\" | awk 'BEGIN { print \"Nom Age\" } { print } END { print \"Fin\" }'\n```"
+    },
+    {
+      "title": "Regex avancées : classes et quantificateurs",
+      "content": "```bash\n# Classes de caractères POSIX\necho \"abc123\" | grep -oE '[[:alpha:]]+'   # abc\necho \"abc123\" | grep -oE '[[:digit:]]+'   # 123\necho \"abc 123\" | grep -oE '[[:alnum:]]+'  # abc 123\necho \"  hello  \" | grep -oE '[[:space:]]' # les espaces\n\n# [[:alpha:]]  : lettres\n# [[:digit:]]  : chiffres\n# [[:alnum:]]  : lettres + chiffres\n# [[:upper:]]  : majuscules\n# [[:lower:]]  : minuscules\n# [[:space:]]  : espaces/tabs\n# [[:punct:]]  : ponctuation\n\n# Quantificateurs\n# {n}    — exactement n fois\n# {n,}   — au moins n fois\n# {n,m}  — entre n et m fois\n\necho \"aaa\" | grep -E '^a{3}$'       # exact 3 fois\necho \"2024-01-15\" | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'  # date ISO\n\n# Chercher dans des fichiers\ngrep -rn --include='*.sh' 'function ' ~/scripts/\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m1-1",
+      "order": 1,
+      "title": "Filtrer avec grep -E",
+      "instructions": "Créez un tableau de mots et filtrez ceux qui commencent par une majuscule.\n\n```bash\nmots=(\"Alice\" \"bob\" \"Charlie\" \"david\" \"Eve\")\n```\n\nAffichez chaque mot sur une ligne puis filtrez avec `grep -E '^[A-Z]'`.\n\nRésultat attendu :\n```\nAlice\nCharlie\nEve\n```",
+      "expectedOutput": "Charlie",
+      "validationType": "contains",
+      "correction": "mots=(\"Alice\" \"bob\" \"Charlie\" \"david\" \"Eve\")\nfor m in \"${mots[@]}\"; do echo \"$m\"; done | grep -E '^[A-Z]'",
+      "explanation": "`grep -E '^[A-Z]'` filtre les lignes commençant par une lettre majuscule. `^` ancre au début de ligne. `[A-Z]` correspond à n'importe quelle majuscule. La boucle for produit chaque mot sur une ligne séparée, que grep peut traiter."
+    },
+    {
+      "id": "ex-bash-l3-m1-2",
+      "order": 2,
+      "title": "Validation regex avec [[ =~ ]]",
+      "instructions": "Écrivez un script qui valide si une chaîne ressemble à une adresse email.\n\nTestez avec `\"user@example.com\"` (valide) et `\"pas_un_email\"` (invalide).\n\nRésultat attendu :\n```\nuser@example.com : valide\npas_un_email : invalide\n```",
+      "expectedOutput": "valide",
+      "validationType": "contains",
+      "correction": "valider_email() {\n    local email=$1\n    if [[ $email =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$ ]]; then\n        echo \"$email : valide\"\n    else\n        echo \"$email : invalide\"\n    fi\n}\n\nvalider_email \"user@example.com\"\nvalider_email \"pas_un_email\"",
+      "explanation": "La regex `^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$` décompose l'email : partie locale `[a-zA-Z0-9._-]+`, `@`, domaine `[a-zA-Z0-9.-]+`, point `\\.`, extension `[a-zA-Z]{2,}`. Le `\\.` est nécessaire car `.` seul signifie \"n'importe quel caractère\"."
+    },
+    {
+      "id": "ex-bash-l3-m1-3",
+      "order": 3,
+      "title": "Extraction avec sed",
+      "instructions": "Inversez l'ordre \"prénom nom\" en \"nom prénom\" avec sed.\n\n```bash\npersonnes=(\"Alice Dupont\" \"Bob Martin\" \"Charlie Durand\")\n```\n\nRésultat attendu :\n```\nDupont Alice\nMartin Bob\nDurand Charlie\n```",
+      "expectedOutput": "Dupont Alice",
+      "validationType": "contains",
+      "correction": "personnes=(\"Alice Dupont\" \"Bob Martin\" \"Charlie Durand\")\nfor p in \"${personnes[@]}\"; do\n    echo \"$p\" | sed -E 's/([A-Za-z]+) ([A-Za-z]+)/\\2 \\1/'\ndone",
+      "explanation": "`sed -E 's/([A-Za-z]+) ([A-Za-z]+)/\\2 \\1/'` capture deux groupes : le prénom `\\1` et le nom `\\2`, puis les réécrit dans l'ordre inverse. Les parenthèses `()` en mode ERE (`-E`) créent les groupes de capture. `\\1` et `\\2` référencent ces groupes dans le remplacement."
+    },
+    {
+      "id": "ex-bash-l3-m1-4",
+      "order": 4,
+      "title": "Calcul avec awk",
+      "instructions": "Créez un tableau de notes et calculez leur moyenne avec awk.\n\n```bash\nnotes=\"15 12 18 9 14 16\"\n```\n\nAfficher : `Moyenne : X.XX`\n\nRésultat attendu :\n```\nMoyenne : 14.00\n```",
+      "expectedOutput": "Moyenne",
+      "validationType": "contains",
+      "correction": "notes=\"15 12 18 9 14 16\"\necho $notes | tr ' ' '\\n' | awk '{ sum += $1; n++ } END { printf \"Moyenne : %.2f\\n\", sum/n }'",
+      "explanation": "`tr ' ' '\\n'` transforme les espaces en sauts de ligne pour que chaque note soit sur sa propre ligne. `awk` accumule la somme et le compteur dans les variables `sum` et `n`. Le bloc `END` s'exécute après toutes les lignes et affiche la moyenne formatée avec `printf \"%.2f\"`."
+    }
+  ]
+}

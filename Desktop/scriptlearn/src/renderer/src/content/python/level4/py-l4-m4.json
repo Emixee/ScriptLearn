@@ -1,0 +1,58 @@
+{
+  "id": "py-l4-m4",
+  "title": "Automatisation d'investigation",
+  "lang": "python",
+  "level": 4,
+  "order": 4,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Workflow d'investigation automatisé",
+      "content": "Un script d'investigation automatisé regroupe toutes les vérifications sur un IOC en un seul appel. Pour une IP suspecte, cela inclut :\n\n1. Géolocalisation\n2. Résolution DNS inverse\n3. Vérification contre la liste noire locale\n4. Score de réputation (si API disponible)\n5. Corrélation avec les logs internes\n6. Génération du rapport\n\n```python\nfrom datetime import datetime\nimport socket\nimport urllib.request\nimport json\n\nclass Investigation:\n    \"\"\"Classe d'investigation automatisée d'un IOC.\"\"\"\n    \n    def __init__(self, ioc, ioc_db=None):\n        self.ioc = ioc\n        self.ioc_db = ioc_db or {}\n        self.resultats = {\"ioc\": ioc, \"timestamp\": datetime.now().isoformat(), \"findings\": {}}\n```"
+    },
+    {
+      "section": "Investigation complète d'une IP",
+      "content": "```python\nimport socket\nimport urllib.request\nimport json\nfrom datetime import datetime\n\n# Liste noire locale simulée\nLISTE_NOIRE = {\n    \"185.220.101.3\": {\"tags\": [\"tor\", \"brute_force\"], \"score\": 95},\n    \"194.165.16.11\": {\"tags\": [\"scanner\", \"c2\"],     \"score\": 88},\n}\n\ndef investiguer_ip(ip):\n    \"\"\"Investigation complète d'une adresse IP.\"\"\"\n    rapport = {\"ip\": ip, \"timestamp\": datetime.now().isoformat(), \"findings\": {}}\n    \n    # 1. Résolution DNS inverse\n    try:\n        hostname = socket.gethostbyaddr(ip)[0]\n        rapport[\"findings\"][\"hostname\"] = hostname\n    except:\n        rapport[\"findings\"][\"hostname\"] = \"N/A\"\n    \n    # 2. Géolocalisation\n    try:\n        with urllib.request.urlopen(f\"http://ip-api.com/json/{ip}?fields=country,city,isp,proxy,hosting\", timeout=5) as r:\n            geo = json.loads(r.read())\n            rapport[\"findings\"][\"geo\"] = geo\n    except:\n        rapport[\"findings\"][\"geo\"] = {}\n    \n    # 3. Vérification liste noire\n    if ip in LISTE_NOIRE:\n        rapport[\"findings\"][\"liste_noire\"] = LISTE_NOIRE[ip]\n        rapport[\"verdict\"] = \"MALVEILLANT\"\n    else:\n        rapport[\"findings\"][\"liste_noire\"] = None\n        rapport[\"verdict\"] = \"INCONNU\"\n    \n    # 4. Afficher le résumé\n    geo = rapport[\"findings\"].get(\"geo\", {})\n    print(f\"\\n=== Investigation : {ip} ===\")\n    print(f\"Verdict     : {rapport['verdict']}\")\n    print(f\"Hostname    : {rapport['findings']['hostname']}\")\n    print(f\"Pays        : {geo.get('country', 'N/A')}\")\n    print(f\"ISP         : {geo.get('isp', 'N/A')}\")\n    print(f\"Proxy/Hosting: {geo.get('proxy') or geo.get('hosting')}\")\n    \n    if rapport[\"findings\"][\"liste_noire\"]:\n        li = rapport[\"findings\"][\"liste_noire\"]\n        print(f\"Tags IOC    : {', '.join(li['tags'])}\")\n        print(f\"Score       : {li['score']}/100\")\n    \n    return rapport\n\n# Test\nrapport = investiguer_ip(\"185.220.101.3\")\n```"
+    },
+    {
+      "section": "Pipeline d'investigation en lot",
+      "content": "```python\nimport time\nimport json\nfrom datetime import datetime\n\ndef investiguer_lot(iocs, delai=1.0):\n    \"\"\"Investigate une liste d'IOC et produit un rapport consolidé.\"\"\"\n    rapports = []\n    stats = {\"total\": len(iocs), \"malveillants\": 0, \"inconnus\": 0, \"erreurs\": 0}\n    \n    print(f\"Investigation de {len(iocs)} IOC(s)...\")\n    print(\"-\" * 50)\n    \n    for i, ioc in enumerate(iocs, 1):\n        print(f\"[{i}/{len(iocs)}] Analyse de {ioc}...\")\n        try:\n            r = investiguer_ip(ioc)\n            rapports.append(r)\n            if r[\"verdict\"] == \"MALVEILLANT\":\n                stats[\"malveillants\"] += 1\n            else:\n                stats[\"inconnus\"] += 1\n        except Exception as e:\n            print(f\"  Erreur : {e}\")\n            stats[\"erreurs\"] += 1\n        \n        if i < len(iocs) and delai > 0:\n            time.sleep(delai)\n    \n    print(\"-\" * 50)\n    print(f\"Résultats: {stats['malveillants']} malveillants, {stats['inconnus']} inconnus, {stats['erreurs']} erreurs\")\n    \n    # Sauvegarder\n    with open(\"investigation_batch.json\", \"w\") as f:\n        json.dump({\"stats\": stats, \"rapports\": rapports}, f, indent=2, default=str)\n    \n    return rapports, stats\n\n# Test (sans délai pour l'exercice)\nrapports, stats = investiguer_lot([\"185.220.101.3\", \"8.8.8.8\"], delai=0)\nprint(f\"Malveillants : {stats['malveillants']}\")\n```"
+    },
+    {
+      "section": "Investigation d'un domaine suspect",
+      "content": "```python\nimport socket\nimport re\nfrom datetime import datetime\n\nDOMAINES_SUSPECTS_PATTERNS = [\n    re.compile(r\"\\d{5,}\\.\\w+\"),                    # Noms avec beaucoup de chiffres\n    re.compile(r\"[a-z]{20,}\\.\"),                     # Domaines très longs\n    re.compile(r\"\\.(xyz|top|club|online|site)$\"),    # TLDs à risque\n    re.compile(r\"update|install|secure|login\", re.I), # Mots clés phishing\n]\n\ndef investiguer_domaine(domaine):\n    rapport = {\"domaine\": domaine, \"findings\": {}, \"indicateurs\": []}\n    \n    # Résolution IP\n    try:\n        ips = socket.gethostbyname_ex(domaine)[2]\n        rapport[\"findings\"][\"ips\"] = ips\n        print(f\"IPs : {ips}\")\n    except socket.gaierror:\n        rapport[\"findings\"][\"ips\"] = []\n        rapport[\"indicateurs\"].append(\"Non résolvable (domaine potentiellement DGA ou sinkholed)\")\n    \n    # Patterns suspects dans le nom\n    for pattern in DOMAINES_SUSPECTS_PATTERNS:\n        if pattern.search(domaine):\n            rapport[\"indicateurs\"].append(f\"Pattern suspect : {pattern.pattern}\")\n    \n    # Longueur du domaine\n    if len(domaine) > 30:\n        rapport[\"indicateurs\"].append(f\"Domaine très long ({len(domaine)} caractères)\")\n    \n    score = len(rapport[\"indicateurs\"]) * 20\n    rapport[\"score\"] = min(score, 100)\n    print(f\"Score de suspicion : {rapport['score']}/100\")\n    print(f\"Indicateurs : {rapport['indicateurs']}\")\n    \n    return rapport\n\ninvestiguer_domaine(\"secure-login-update.xyz\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l4-m4-ex1",
+      "title": "Vérifier une IP contre une liste noire",
+      "description": "Implémenter une vérification de liste noire locale",
+      "instructions": "Soit :\n```python\nliste_noire = {\"185.220.101.3\": \"C2\", \"10.0.0.99\": \"scanner\"}\nip = \"185.220.101.3\"\n```\nAffichez :\n```\nALERTE : 185.220.101.3 est dans la liste noire → C2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "ALERTE : 185.220.101.3 est dans la liste noire → C2",
+      "correction": "liste_noire = {\"185.220.101.3\": \"C2\", \"10.0.0.99\": \"scanner\"}\nip = \"185.220.101.3\"\nif ip in liste_noire:\n    print(f\"ALERTE : {ip} est dans la liste noire → {liste_noire[ip]}\")\nelse:\n    print(f\"{ip} : propre\")",
+      "explanation": "La vérification dans un dictionnaire Python est en O(1) — parfaite pour des listes noires de millions d'entrées. En production, on utilise des sets ou bases de données pour encore plus de performance."
+    },
+    {
+      "id": "py-l4-m4-ex2",
+      "title": "Analyser un domaine suspect",
+      "description": "Détecter des patterns suspects dans un nom de domaine",
+      "instructions": "Vérifiez si le domaine `\"secure-login-update.xyz\"` contient des patterns suspects (`.xyz` final ou les mots `update`, `login`, `secure`).\n\nAffichez :\n```\nDomaine suspect : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Domaine suspect : True",
+      "correction": "import re\ndomaine = \"secure-login-update.xyz\"\npatterns = [r\"\\.xyz$\", r\"update|login|secure\"]\nsuspecte = any(re.search(p, domaine, re.I) for p in patterns)\nprint(f\"Domaine suspect : {suspecte}\")",
+      "explanation": "`any()` retourne True dès que l'une des conditions est vraie. `re.I` rend la recherche insensible à la casse. Les domaines avec des mots liés à la sécurité et des TLDs bon marché sont des signaux phishing courants."
+    },
+    {
+      "id": "py-l4-m4-ex3",
+      "title": "Générer un verdict d'investigation",
+      "description": "Prendre une décision automatique basée sur les findings",
+      "instructions": "Soit :\n```python\nfindings = {\"liste_noire\": True, \"score_geo\": 90, \"proxy\": True}\n```\n\nAffichez un verdict basé sur les règles :\n- `liste_noire` True → `MALVEILLANT`\n- `score_geo` >= 80 ou `proxy` → `SUSPECT`\n- sinon → `BÉNIN`\n\n```\nVerdict : MALVEILLANT\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Verdict : MALVEILLANT",
+      "correction": "findings = {\"liste_noire\": True, \"score_geo\": 90, \"proxy\": True}\nif findings.get(\"liste_noire\"):\n    verdict = \"MALVEILLANT\"\nelif findings.get(\"score_geo\", 0) >= 80 or findings.get(\"proxy\"):\n    verdict = \"SUSPECT\"\nelse:\n    verdict = \"BÉNIN\"\nprint(f\"Verdict : {verdict}\")",
+      "explanation": "Les règles de verdict sont le cœur d'un système de triage automatique. Dans un SOAR (Security Orchestration), ces verdicts déclenchent des actions automatiques (blocage IP, notification, ticket)."
+    }
+  ]
+}

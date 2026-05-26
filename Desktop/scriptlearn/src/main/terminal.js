@@ -1,0 +1,96 @@
+import { ipcMain } from 'electron'
+import { spawn, execSync } from 'child_process'
+import { existsSync } from 'fs'
+import { EventEmitter } from 'events'
+
+// Sur Windows 11 / WSL2 récent, bash.exe n'est plus créé.
+// On détecte WSL via wsl.exe (toujours présent si WSL est installé).
+function checkBashAvailable() {
+  return existsSync('C:\\Windows\\System32\\wsl.exe')
+}
+
+function checkPythonAvailable() {
+  try {
+    execSync('python --version', { timeout: 3000, windowsHide: true, stdio: 'pipe' })
+    return true
+  } catch {
+    try {
+      execSync('python3 --version', { timeout: 3000, windowsHide: true, stdio: 'pipe' })
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+const sessions = new Map()
+const emitter = new EventEmitter()
+
+function createSession(id, shell) {
+  let cmd, args
+  if (shell === 'powershell') {
+    cmd = 'powershell.exe'
+    args = ['-NoLogo', '-NoExit', '-Command', '-']
+  } else if (shell === 'python') {
+    cmd = 'python'
+    args = ['-i', '-u']
+  } else {
+    // wsl.exe lance le shell de la distro par défaut (Ubuntu-24.04 / Ubuntu-22.04)
+    cmd = 'wsl.exe'
+    args = ['--', 'bash', '--login', '-i']
+  }
+
+  const proc = spawn(cmd, args, {
+    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8' },
+    windowsHide: true
+  })
+
+  sessions.set(id, proc)
+
+  proc.stdout.on('data', (data) => {
+    emitter.emit(`data:${id}`, data.toString())
+  })
+  proc.stderr.on('data', (data) => {
+    emitter.emit(`data:${id}`, data.toString())
+  })
+  proc.on('exit', () => {
+    sessions.delete(id)
+    emitter.emit(`exit:${id}`)
+  })
+
+  return proc
+}
+
+export function setupTerminalIPC(mainWindow) {
+  ipcMain.handle('terminal:bashAvailable', () => checkBashAvailable())
+  ipcMain.handle('terminal:pythonAvailable', () => checkPythonAvailable())
+
+  ipcMain.handle('terminal:create', (_, { id, shell }) => {
+    if (sessions.has(id)) return { ok: true }
+    createSession(id, shell)
+    return { ok: true }
+  })
+
+  ipcMain.handle('terminal:write', (_, { id, data }) => {
+    const proc = sessions.get(id)
+    if (proc) proc.stdin.write(data)
+  })
+
+  ipcMain.handle('terminal:kill', (_, { id }) => {
+    const proc = sessions.get(id)
+    if (proc) proc.kill()
+    sessions.delete(id)
+  })
+
+  // Réémettre avec l'id encodé dans le nom d'événement
+  const originalEmit = emitter.emit.bind(emitter)
+  emitter.emit = (event, ...args) => {
+    if (event.startsWith('data:')) {
+      const id = event.slice(5)
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('terminal:data', { id, chunk: args[0] })
+      }
+    }
+    return originalEmit(event, ...args)
+  }
+}

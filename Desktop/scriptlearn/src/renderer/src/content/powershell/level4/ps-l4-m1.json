@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m1",
+  "title": "Classes PowerShell",
+  "level": 4,
+  "lang": "powershell",
+  "order": 1,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Définir une classe",
+      "content": "PowerShell 5+ supporte les classes orientées objet :\n\n```powershell\nclass Personne {\n    # Propriétés\n    [string]$Nom\n    [string]$Prenom\n    [int]$Age\n    \n    # Constructeur par défaut\n    Personne() {}\n    \n    # Constructeur avec paramètres\n    Personne([string]$nom, [string]$prenom, [int]$age) {\n        $this.Nom    = $nom\n        $this.Prenom = $prenom\n        $this.Age    = $age\n    }\n    \n    # Méthode\n    [string] NomComplet() {\n        return \"$($this.Prenom) $($this.Nom)\"\n    }\n    \n    [bool] EstMajeur() {\n        return $this.Age -ge 18\n    }\n    \n    # Override ToString\n    [string] ToString() {\n        return \"$($this.NomComplet()) ($($this.Age) ans)\"\n    }\n}\n\n$p = [Personne]::new(\"Dupont\", \"Alice\", 30)\nWrite-Host $p.NomComplet()   # Alice Dupont\nWrite-Host $p.EstMajeur()    # True\nWrite-Host $p                # Alice Dupont (30 ans)\n```"
+    },
+    {
+      "title": "Héritage",
+      "content": "```powershell\nclass Animal {\n    [string]$Nom\n    [string]$Son\n    \n    Animal([string]$nom) {\n        $this.Nom = $nom\n    }\n    \n    [string] Parler() {\n        return \"$($this.Nom) fait : $($this.Son)\"\n    }\n    \n    [string] ToString() { return \"Animal: $($this.Nom)\" }\n}\n\nclass Chien : Animal {\n    [string]$Race\n    \n    Chien([string]$nom, [string]$race) : base($nom) {\n        $this.Son  = \"Wouf\"\n        $this.Race = $race\n    }\n    \n    [string] Parler() {\n        return \"$($this.Nom) ($($this.Race)) : WOUF !\"\n    }\n}\n\nclass Chat : Animal {\n    Chat([string]$nom) : base($nom) {\n        $this.Son = \"Miaou\"\n    }\n}\n\n$chien = [Chien]::new(\"Rex\", \"Labrador\")\n$chat  = [Chat]::new(\"Misty\")\n\n@($chien, $chat) | ForEach-Object { Write-Host $_.Parler() }\n```"
+    },
+    {
+      "title": "Méthodes statiques et propriétés",
+      "content": "```powershell\nclass Compteur {\n    # Propriété statique (partagée par toutes les instances)\n    static [int]$NbInstances = 0\n    \n    [string]$Nom\n    hidden [int]$_valeur = 0   # propriété masquée\n    \n    Compteur([string]$nom) {\n        $this.Nom = $nom\n        [Compteur]::NbInstances++\n    }\n    \n    # Getter/Setter via méthodes\n    [int] GetValeur() { return $this._valeur }\n    \n    Incrementer() { $this._valeur++ }\n    \n    Reset() { $this._valeur = 0 }\n    \n    # Méthode statique\n    static [void] AfficherStats() {\n        Write-Host \"Instances créées : $([Compteur]::NbInstances)\"\n    }\n}\n\n$c1 = [Compteur]::new(\"A\")\n$c2 = [Compteur]::new(\"B\")\n$c1.Incrementer(); $c1.Incrementer()\n\n[Compteur]::AfficherStats()    # Instances créées : 2\nWrite-Host $c1.GetValeur()     # 2\n```"
+    },
+    {
+      "title": "Interfaces et types génériques",
+      "content": "```powershell\n# Implémenter une interface .NET\nclass MaListe : System.Collections.Generic.IEnumerable[object] {\n    hidden [System.Collections.Generic.List[object]]$_items = \n        [System.Collections.Generic.List[object]]::new()\n    \n    Add([object]$item) { $this._items.Add($item) }\n    \n    [System.Collections.Generic.IEnumerator[object]] GetEnumerator() {\n        return $this._items.GetEnumerator()\n    }\n    \n    [System.Collections.IEnumerator] \n    [System.Collections.IEnumerable]::GetEnumerator() {\n        return $this._items.GetEnumerator()\n    }\n}\n\n# Utiliser des types génériques .NET\n$dict = [System.Collections.Generic.Dictionary[string, int]]::new()\n$dict['pomme'] = 5\n$dict['poire'] = 3\n$dict.ContainsKey('pomme')   # True\n\n# Stack et Queue\n$stack = [System.Collections.Generic.Stack[string]]::new()\n$stack.Push(\"premier\")\n$stack.Push(\"deuxième\")\n$stack.Pop()  # deuxième (LIFO)\n```"
+    },
+    {
+      "title": "Énumérations et validations",
+      "content": "```powershell\n# Énumération\nenum Statut {\n    Inconnu  = 0\n    Actif    = 1\n    Inactif  = 2\n    Supprime = 3\n}\n\nclass Utilisateur {\n    [string]$Login\n    [Statut]$Statut = [Statut]::Actif\n    [datetime]$Création = (Get-Date)\n    \n    Utilisateur([string]$login) {\n        $this.Login = $login\n    }\n    \n    Desactiver() {\n        $this.Statut = [Statut]::Inactif\n    }\n    \n    [bool] EstActif() {\n        return $this.Statut -eq [Statut]::Actif\n    }\n    \n    [string] ToString() {\n        return \"[$($this.Statut)] $($this.Login)\"\n    }\n}\n\n$u = [Utilisateur]::new(\"alice\")\nWrite-Host \"Actif : $($u.EstActif())\"   # True\n$u.Desactiver()\nWrite-Host $u   # [Inactif] alice\n\n# Utiliser l'enum\n$statut = [Statut]::Actif\n$statut.ToString()  # Actif\n[int]$statut        # 1\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m1-1",
+      "order": 1,
+      "title": "Classe de base",
+      "instructions": "Créez une classe `Rectangle` avec :\n- Propriétés `Largeur` et `Hauteur` (double)\n- Constructeur prenant largeur et hauteur\n- Méthode `Surface()` retournant la surface\n- Méthode `Perimetre()` retournant le périmètre\n\nTestez avec un rectangle 5×3.\n\nRésultat attendu :\n```\nSurface : 15\nPérimètre : 16\n```",
+      "expectedOutput": "Surface : 15",
+      "validationType": "contains",
+      "correction": "class Rectangle {\n    [double]$Largeur\n    [double]$Hauteur\n    \n    Rectangle([double]$l, [double]$h) {\n        $this.Largeur = $l\n        $this.Hauteur = $h\n    }\n    \n    [double] Surface() { return $this.Largeur * $this.Hauteur }\n    [double] Perimetre() { return 2 * ($this.Largeur + $this.Hauteur) }\n}\n\n$r = [Rectangle]::new(5, 3)\nWrite-Host \"Surface : $($r.Surface())\"\nWrite-Host \"Périmètre : $($r.Perimetre())\"",
+      "explanation": "Les classes PowerShell utilisent `$this` pour référencer l'instance courante. Le constructeur a le même nom que la classe. `[double]$Largeur` déclare une propriété typée. `[double] Surface()` déclare une méthode avec son type de retour. `[Rectangle]::new(5, 3)` instancie la classe (équivalent `New-Object Rectangle 5 3`)."
+    },
+    {
+      "id": "ex-ps-l4-m1-2",
+      "order": 2,
+      "title": "Héritage de classe",
+      "instructions": "Créez une classe `Vehicule` avec `Marque` et `Vitesse`, une méthode `Decrire()`. Créez une sous-classe `Voiture` avec `NbPortes`. Testez.\n\nRésultat attendu :\n```\nPeugeot (4 portes) à 130 km/h\n```",
+      "expectedOutput": "portes",
+      "validationType": "contains",
+      "correction": "class Vehicule {\n    [string]$Marque\n    [int]$Vitesse\n    \n    Vehicule([string]$marque, [int]$vitesse) {\n        $this.Marque   = $marque\n        $this.Vitesse  = $vitesse\n    }\n    \n    [string] Decrire() {\n        return \"$($this.Marque) à $($this.Vitesse) km/h\"\n    }\n}\n\nclass Voiture : Vehicule {\n    [int]$NbPortes\n    \n    Voiture([string]$marque, [int]$vitesse, [int]$portes) : base($marque, $vitesse) {\n        $this.NbPortes = $portes\n    }\n    \n    [string] Decrire() {\n        return \"$($this.Marque) ($($this.NbPortes) portes) à $($this.Vitesse) km/h\"\n    }\n}\n\n$v = [Voiture]::new(\"Peugeot\", 130, 4)\nWrite-Host $v.Decrire()",
+      "explanation": "`class Voiture : Vehicule` déclare l'héritage. `: base($marque, $vitesse)` appelle le constructeur parent. La méthode `Decrire()` dans `Voiture` **surcharge** celle de `Vehicule` (override). PowerShell supporte l'héritage simple (une seule classe parente) mais plusieurs interfaces."
+    },
+    {
+      "id": "ex-ps-l4-m1-3",
+      "order": 3,
+      "title": "Propriété statique",
+      "instructions": "Créez une classe `Banque` avec une propriété statique `TauxInteret` (défaut 2.5%) et une méthode d'instance `CalculerInterets($capital, $annees)`. Testez avec 10000€ sur 5 ans.\n\nRésultat attendu :\n```\nIntérêts sur 5 ans : 1281.56 €\n```",
+      "expectedOutput": "Intérêts sur 5 ans",
+      "validationType": "contains",
+      "correction": "class Banque {\n    static [double]$TauxInteret = 2.5\n    \n    [double] CalculerInterets([double]$capital, [int]$annees) {\n        $taux = [Banque]::TauxInteret / 100\n        return [math]::Round($capital * ([math]::Pow(1 + $taux, $annees) - 1), 2)\n    }\n}\n\n$b = [Banque]::new()\n$interets = $b.CalculerInterets(10000, 5)\nWrite-Host \"Intérêts sur 5 ans : $interets €\"",
+      "explanation": "`static [double]$TauxInteret` déclare une propriété de classe partagée par toutes les instances. On y accède avec `[Banque]::TauxInteret`. `[math]::Pow(base, exposant)` calcule la puissance. La formule des intérêts composés est `capital × ((1+taux)^n - 1)`. `[math]::Round(valeur, 2)` arrondit à 2 décimales."
+    }
+  ]
+}

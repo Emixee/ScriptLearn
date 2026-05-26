@@ -1,0 +1,72 @@
+{
+  "id": "ps-l1-m2",
+  "title": "Navigation dans le système de fichiers",
+  "level": 1,
+  "lang": "powershell",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Se repérer : Get-Location",
+      "content": "`Get-Location` (alias `pwd`) indique **où vous vous trouvez** dans le système de fichiers. C'est la première commande à connaître.\n\n```powershell\nGet-Location\n# Résultat : Path\n#            ----\n#            C:\\Users\\Utilisateur\n```\n\nLe résultat est un **objet** avec une propriété `Path`. Vous pouvez accéder directement au chemin :\n```powershell\n(Get-Location).Path\n```"
+    },
+    {
+      "title": "Lister les fichiers : Get-ChildItem",
+      "content": "`Get-ChildItem` (alias `ls` ou `dir`) liste le **contenu d'un dossier**.\n\n```powershell\nGet-ChildItem\nGet-ChildItem C:\\Windows\nGet-ChildItem -Path C:\\Windows -Filter *.exe\nGet-ChildItem -Recurse   # sous-dossiers inclus\nGet-ChildItem -File      # fichiers uniquement\nGet-ChildItem -Directory # dossiers uniquement\n```\n\nChaque résultat est un objet avec des propriétés : `Name`, `Length`, `LastWriteTime`, `Mode`..."
+    },
+    {
+      "title": "Se déplacer : Set-Location",
+      "content": "`Set-Location` (alias `cd`) **change le dossier courant**.\n\n```powershell\nSet-Location C:\\Users\nSet-Location ..          # dossier parent\nSet-Location ~           # dossier personnel\nSet-Location -          # dossier précédent\n```\n\n**Chemins relatifs vs absolus :**\n- Absolu : commence par `C:\\` ou `\\\\` → toujours le même endroit\n- Relatif : relatif au dossier courant → `..\\MonDossier`, `.\\script.ps1`"
+    },
+    {
+      "title": "Créer : New-Item",
+      "content": "`New-Item` crée des fichiers ou des dossiers.\n\n```powershell\n# Créer un dossier\nNew-Item -ItemType Directory -Path C:\\Temp\\MonDossier\n\n# Créer un fichier vide\nNew-Item -ItemType File -Path C:\\Temp\\monfichier.txt\n\n# Créer un fichier avec contenu\nNew-Item -ItemType File -Path C:\\Temp\\note.txt -Value \"Bonjour\"\n```\n\n`-Force` permet de créer les dossiers parents manquants sans erreur."
+    },
+    {
+      "title": "Copier, Déplacer, Supprimer",
+      "content": "```powershell\n# Copier\nCopy-Item source.txt destination.txt\nCopy-Item MonDossier\\ -Destination Sauvegarde\\ -Recurse\n\n# Déplacer / Renommer\nMove-Item ancien.txt nouveau.txt\nMove-Item C:\\Temp\\fichier.txt C:\\Users\\Bureau\\\n\n# Supprimer\nRemove-Item fichier.txt\nRemove-Item MonDossier -Recurse  # dossier et tout son contenu\n```\n\n> ⚠️ **Attention :** `Remove-Item` ne met pas les fichiers dans la corbeille. La suppression est définitive !"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m2-1",
+      "order": 1,
+      "title": "Afficher le dossier courant",
+      "instructions": "Affichez le **chemin complet** du dossier dans lequel vous vous trouvez actuellement.\n\nUtilisez `Get-Location`.",
+      "expectedOutput": "C:\\",
+      "validationType": "contains",
+      "correction": "Get-Location",
+      "explanation": "`Get-Location` retourne un objet dont la propriété `Path` contient le chemin courant. PowerShell affiche automatiquement la valeur de retour d'une commande si elle n'est pas stockée dans une variable."
+    },
+    {
+      "id": "ex-ps-l1-m2-2",
+      "order": 2,
+      "title": "Lister uniquement les dossiers",
+      "instructions": "Listez **uniquement les sous-dossiers** du dossier `C:\\Windows` (sans les fichiers).\n\nIndice : `Get-ChildItem` a un paramètre `-Directory`.",
+      "expectedOutput": "Directory",
+      "validationType": "contains",
+      "correction": "Get-ChildItem -Path C:\\Windows -Directory",
+      "explanation": "Le paramètre `-Directory` filtre les résultats pour n'afficher que les dossiers. De même, `-File` n'afficherait que les fichiers. Ces filtres évitent de traiter manuellement le champ `Mode` de chaque élément."
+    },
+    {
+      "id": "ex-ps-l1-m2-3",
+      "order": 3,
+      "title": "Créer un dossier de travail",
+      "instructions": "Créez un dossier nommé `ScriptLearn` à la racine de `C:\\Temp\\`.\n\nSi `C:\\Temp` n'existe pas, utilisez le paramètre `-Force` pour créer les dossiers intermédiaires.\n\n```powershell\nNew-Item -ItemType Directory -Path ??? -Force\n```",
+      "expectedOutput": "ScriptLearn",
+      "validationType": "contains",
+      "correction": "New-Item -ItemType Directory -Path C:\\Temp\\ScriptLearn -Force",
+      "explanation": "`-ItemType Directory` indique qu'on crée un dossier (et non un fichier). `-Force` crée automatiquement les dossiers parents manquants, évitant une erreur si `C:\\Temp` n'existe pas encore."
+    },
+    {
+      "id": "ex-ps-l1-m2-4",
+      "order": 4,
+      "title": "Lister les fichiers .exe de System32",
+      "instructions": "Listez tous les fichiers `.exe` situés dans `C:\\Windows\\System32`.\n\nUtilisez le paramètre `-Filter` pour n'afficher que les `.exe`.",
+      "expectedOutput": ".exe",
+      "validationType": "contains",
+      "correction": "Get-ChildItem -Path C:\\Windows\\System32 -Filter *.exe",
+      "explanation": "`-Filter *.exe` utilise un joker (`*`) pour ne sélectionner que les fichiers dont le nom se termine par `.exe`. C'est plus rapide que de tout lister puis filtrer avec `Where-Object`."
+    }
+  ]
+}

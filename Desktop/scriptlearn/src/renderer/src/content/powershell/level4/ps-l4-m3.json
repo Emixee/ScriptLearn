@@ -1,0 +1,62 @@
+{
+  "id": "ps-l4-m3",
+  "title": "Active Directory",
+  "level": 4,
+  "lang": "powershell",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Module ActiveDirectory",
+      "content": "```powershell\n# Installer le module (Windows Server ou RSAT)\n# Install-WindowsFeature RSAT-AD-PowerShell  (serveur)\n# Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools  (client)\n\n# Importer\nImport-Module ActiveDirectory\n\n# Obtenir des infos sur le domaine\nGet-ADDomain\nGet-ADForest\n(Get-ADDomain).PDCEmulator\n\n# Utilisateurs\nGet-ADUser -Identity \"alice.dupont\"\nGet-ADUser -Filter { Enabled -eq $true } -Properties *\n\n# Avec des propriétés spécifiques\nGet-ADUser -Filter * -Properties LastLogonDate, Department |\n    Where-Object { $_.LastLogonDate -lt (Get-Date).AddDays(-90) } |\n    Select-Object Name, LastLogonDate, Department\n\n# Chercher\nGet-ADUser -Filter \"Name -like 'Alice*'\"\nGet-ADUser -LDAPFilter \"(department=IT)\"\n```"
+    },
+    {
+      "title": "Gestion des utilisateurs",
+      "content": "```powershell\n# Créer un utilisateur\nNew-ADUser `\n    -Name \"Alice Dupont\" `\n    -GivenName \"Alice\" `\n    -Surname \"Dupont\" `\n    -SamAccountName \"alice.dupont\" `\n    -UserPrincipalName \"alice.dupont@mondomaine.fr\" `\n    -Path \"OU=Utilisateurs,DC=mondomaine,DC=fr\" `\n    -AccountPassword (ConvertTo-SecureString \"MotDePasse123!\" -AsPlainText -Force) `\n    -Enabled $true `\n    -Department \"Informatique\"\n\n# Modifier un utilisateur\nSet-ADUser -Identity \"alice.dupont\" -Title \"Chef de projet\"\nSet-ADUser -Identity \"alice.dupont\" -Department \"DevOps\" -Office \"Paris\"\n\n# Activer/désactiver\nDisable-ADAccount -Identity \"alice.dupont\"\nEnable-ADAccount  -Identity \"alice.dupont\"\n\n# Réinitialiser le mot de passe\nSet-ADAccountPassword -Identity \"alice.dupont\" `\n    -NewPassword (ConvertTo-SecureString \"NvxMdp123!\" -AsPlainText -Force) `\n    -Reset\n\n# Supprimer\nRemove-ADUser -Identity \"alice.dupont\" -Confirm:$false\n```"
+    },
+    {
+      "title": "Groupes et memberships",
+      "content": "```powershell\n# Lister les groupes\nGet-ADGroup -Filter *\nGet-ADGroup -Filter { GroupScope -eq 'Global' } | Select-Object Name\n\n# Créer un groupe\nNew-ADGroup `\n    -Name \"DevOps-Team\" `\n    -GroupScope Global `\n    -GroupCategory Security `\n    -Path \"OU=Groupes,DC=mondomaine,DC=fr\" `\n    -Description \"Équipe DevOps\"\n\n# Membres d'un groupe\nGet-ADGroupMember -Identity \"DevOps-Team\" | Select-Object Name, ObjectClass\nGet-ADGroupMember -Identity \"Domain Admins\" -Recursive  # incluant les sous-groupes\n\n# Ajouter/retirer des membres\nAdd-ADGroupMember -Identity \"DevOps-Team\" -Members \"alice.dupont\",\"bob.martin\"\nRemove-ADGroupMember -Identity \"DevOps-Team\" -Members \"bob.martin\" -Confirm:$false\n\n# Groupes d'un utilisateur\n(Get-ADUser -Identity \"alice.dupont\" -Properties MemberOf).MemberOf |\n    Get-ADGroup | Select-Object Name\n\n# Synchroniser la membership avec une liste\n$voulus = @(\"alice.dupont\", \"charlie.durand\")\n$actuels = (Get-ADGroupMember \"DevOps-Team\").SamAccountName\n$voulus | Where-Object { $_ -notin $actuels } | ForEach-Object { Add-ADGroupMember \"DevOps-Team\" $_ }\n$actuels | Where-Object { $_ -notin $voulus } | ForEach-Object { Remove-ADGroupMember \"DevOps-Team\" $_ -Confirm:$false }\n```"
+    },
+    {
+      "title": "Rapports et audit AD",
+      "content": "```powershell\n# Comptes inactifs depuis 90 jours\n$date90 = (Get-Date).AddDays(-90)\nGet-ADUser -Filter { Enabled -eq $true -and LastLogonDate -lt $date90 } `\n    -Properties LastLogonDate |\n    Select-Object Name, SamAccountName, LastLogonDate |\n    Export-Csv \"comptes_inactifs.csv\" -NoTypeInformation\n\n# Comptes sans expiration de mot de passe\nGet-ADUser -Filter { PasswordNeverExpires -eq $true -and Enabled -eq $true } |\n    Select-Object Name, SamAccountName\n\n# Rapport: utilisateurs par département\nGet-ADUser -Filter * -Properties Department |\n    Group-Object Department |\n    Sort-Object Count -Descending |\n    Select-Object Name, Count |\n    Format-Table\n\n# Audit des modifications (événements)\nGet-WinEvent -FilterHashtable @{\n    LogName = 'Security'\n    Id      = @(4720, 4722, 4724, 4728, 4732)  # création, activation, MDP reset, ajout groupe\n} | Select-Object TimeCreated, Id, Message | Format-List\n\n# Rapport HTML\nGet-ADUser -Filter { Enabled -eq $true } -Properties Department, Email |\n    Select-Object Name, Department, Email |\n    ConvertTo-Html -Title \"Annuaire Actif\" |\n    Out-File \"annuaire.html\"\n```"
+    },
+    {
+      "title": "Automatisation AD",
+      "content": "```powershell\n# Onboarding automatique depuis un CSV\n$nouveaux = Import-Csv \"nouveaux_employes.csv\"\n# Colonnes: Prenom,Nom,Departement,Manager\n\nforeach ($emp in $nouveaux) {\n    $sam = \"$($emp.Prenom.ToLower()).$($emp.Nom.ToLower())\"\n    $upn = \"$sam@mondomaine.fr\"\n    \n    # Vérifier si l'utilisateur existe déjà\n    if (Get-ADUser -Filter \"SamAccountName -eq '$sam'\" -ErrorAction SilentlyContinue) {\n        Write-Warning \"$sam existe déjà\"\n        continue\n    }\n    \n    New-ADUser `\n        -GivenName $emp.Prenom `\n        -Surname $emp.Nom `\n        -SamAccountName $sam `\n        -UserPrincipalName $upn `\n        -Department $emp.Departement `\n        -Manager $emp.Manager `\n        -Path \"OU=Utilisateurs,DC=corp,DC=local\" `\n        -AccountPassword (ConvertTo-SecureString \"Temp2024!\" -AsPlainText -Force) `\n        -ChangePasswordAtLogon $true `\n        -Enabled $true\n    \n    # Ajouter au groupe du département\n    Add-ADGroupMember -Identity \"GRP-$($emp.Departement)\" -Members $sam -ErrorAction SilentlyContinue\n    \n    Write-Host \"Créé : $sam\"\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l4-m3-1",
+      "order": 1,
+      "title": "Simuler la gestion AD",
+      "instructions": "Sans module AD réel, simulez un rapport d'utilisateurs avec une liste de `PSCustomObject` représentant des utilisateurs AD. Créez 3 utilisateurs avec `Nom`, `Département`, `Actif`. Filtrez les actifs et exportez en CSV.\n\nRésultat attendu :\n```\nAlice,IT,True\nCharlie,RH,True\n```",
+      "expectedOutput": "Alice",
+      "validationType": "contains",
+      "correction": "$utilisateurs = @(\n    [PSCustomObject]@{ Nom='Alice';   Departement='IT'; Actif=$true  },\n    [PSCustomObject]@{ Nom='Bob';     Departement='IT'; Actif=$false },\n    [PSCustomObject]@{ Nom='Charlie'; Departement='RH'; Actif=$true  }\n)\n\n$actifs = $utilisateurs | Where-Object Actif -eq $true\n$actifs | ForEach-Object { Write-Host \"$($_.Nom),$($_.Departement),$($_.Actif)\" }",
+      "explanation": "Ce pattern simule ce que ferait `Get-ADUser -Filter { Enabled -eq $true }`. En environnement de production, remplacez simplement la liste par `Get-ADUser -Filter { Enabled -eq $true } -Properties Department`. La manipulation des résultats (Where-Object, ForEach-Object, Export-Csv) est identique que les données viennent d'AD ou d'un objet local."
+    },
+    {
+      "id": "ex-ps-l4-m3-2",
+      "order": 2,
+      "title": "Générer un rapport HTML",
+      "instructions": "Créez une liste de 4 utilisateurs (Nom, Département, Email) et générez un rapport HTML avec `ConvertTo-Html`. Vérifiez que le fichier est créé, puis supprimez-le.\n\nRésultat attendu :\n```\nRapport créé : True\n```",
+      "expectedOutput": "Rapport créé : True",
+      "validationType": "contains",
+      "correction": "$users = @(\n    [PSCustomObject]@{ Nom='Alice Dupont'; Departement='IT';  Email='alice@corp.fr' },\n    [PSCustomObject]@{ Nom='Bob Martin';   Departement='RH';  Email='bob@corp.fr'   },\n    [PSCustomObject]@{ Nom='Clara Simon';  Departement='IT';  Email='clara@corp.fr' },\n    [PSCustomObject]@{ Nom='David Noir';   Departement='Dev'; Email='david@corp.fr' }\n)\n\n$users | ConvertTo-Html -Title 'Annuaire' -Body '<h1>Utilisateurs</h1>' |\n    Out-File 'annuaire.html'\n\n$existe = Test-Path 'annuaire.html'\nWrite-Host \"Rapport créé : $existe\"\nRemove-Item 'annuaire.html'",
+      "explanation": "`ConvertTo-Html` génère du HTML standard compatible avec tous les navigateurs. `-Body` ajoute du contenu HTML avant le tableau. Pour un style plus soigné, utilisez `-Head` pour ajouter du CSS. Le fichier généré peut être envoyé par email ou publié sur un site intranet — c'est une technique courante pour les rapports d'administration automatisés."
+    },
+    {
+      "id": "ex-ps-l4-m3-3",
+      "order": 3,
+      "title": "Onboarding depuis CSV",
+      "instructions": "Simulez l'onboarding depuis un CSV en mémoire. Pour chaque nouvel employé, générez un `SamAccountName` (`prenom.nom`) et affichez `Créé : sam`.\n\n```powershell\n$csv = \"Prenom,Nom,Departement\\nAlice,Dupont,IT\\nBob,Martin,RH\"\n```\n\nRésultat attendu :\n```\nCréé : alice.dupont\nCréé : bob.martin\n```",
+      "expectedOutput": "Créé : alice.dupont",
+      "validationType": "contains",
+      "correction": "$csv = \"Prenom,Nom,Departement`nAlice,Dupont,IT`nBob,Martin,RH\"\n$employes = $csv | ConvertFrom-Csv\n\nforeach ($emp in $employes) {\n    $sam = \"$($emp.Prenom.ToLower()).$($emp.Nom.ToLower())\"\n    Write-Host \"Créé : $sam\"\n}",
+      "explanation": "`ConvertFrom-Csv` parse une chaîne CSV et retourne des objets PS. `.ToLower()` est une méthode .NET sur les chaînes — toujours disponible en PS. Le pattern `prenom.nom` génère le SamAccountName selon la convention d'entreprise. En production, vérifiez l'unicité avec `Get-ADUser -Filter \"SamAccountName -eq '$sam'\"` avant de créer."
+    }
+  ]
+}

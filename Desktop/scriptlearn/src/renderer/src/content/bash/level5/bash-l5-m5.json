@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m5",
+  "title": "Interopérabilité et intégrations",
+  "level": 5,
+  "lang": "bash",
+  "order": 5,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Bash avec Python et Node.js",
+      "content": "```bash\n#!/bin/bash\n# Appeler Python depuis Bash pour des calculs complexes\n\npython_calc() {\n    python3 - << EOF\nimport math, sys\nn = $1\nprint(f\"sqrt({n}) = {math.sqrt(n):.6f}\")\nprint(f\"log({n})  = {math.log(n):.6f}\")\nEOF\n}\n\npython_calc 144\n\n# Traiter du JSON avec Python (si jq n'est pas disponible)\njson_get() {\n    local json=$1 key=$2\n    python3 -c \"import json,sys; d=json.loads('''$json'''); print(d.get('$key',''))\"\n}\n\n# Appeler Node.js\nnode_eval() {\n    node -e \"$1\"\n}\n\nnode_eval \"console.log(Math.PI.toFixed(5))\"\n\n# Passer des données structurées\ndata=$(cat << 'EOF'\n{\"users\": [{\"name\": \"Alice\", \"score\": 85}, {\"name\": \"Bob\", \"score\": 92}]}\nEOF\n)\n\npython3 << EOF\nimport json\ndata = json.loads('''$data''')\nfor u in data['users']:\n    print(f\"{u['name']:10} : {u['score']}\")\nEOF\n```"
+    },
+    {
+      "title": "Intégration base de données",
+      "content": "```bash\n#!/bin/bash\n# Interagir avec des bases de données\n\n# PostgreSQL\npg_query() {\n    local query=$1\n    PGPASSWORD=\"$DB_PASSWORD\" psql \\\n        -h \"$DB_HOST\" -U \"$DB_USER\" -d \"$DB_NAME\" \\\n        -t -A -F'|' \\\n        -c \"$query\"\n}\n\n# Récupérer des données\nresults=$(pg_query \"SELECT name, email FROM users WHERE active = true LIMIT 10\")\nwhile IFS='|' read -r name email; do\n    echo \"$name : $email\"\ndone <<< \"$results\"\n\n# MySQL\nmysql_query() {\n    mysql -h \"$DB_HOST\" -u \"$DB_USER\" -p\"$DB_PASSWORD\" \\\n        \"$DB_NAME\" -N -B \\\n        -e \"$1\"\n}\n\n# SQLite (léger, pas de serveur)\nsqlite3 /tmp/test.db << 'SQL'\nCREATE TABLE IF NOT EXISTS logs (ts TEXT, msg TEXT);\nINSERT INTO logs VALUES (datetime('now'), 'Script démarré');\nSELECT * FROM logs;\nSQL\n\n# Redis\nredis_set() { redis-cli SET \"$1\" \"$2\" EX \"${3:-3600}\"; }\nredis_get() { redis-cli GET \"$1\"; }\n\nredis_set \"deploy_version\" \"1.2.3\" 86400\nredis_get \"deploy_version\"\n```"
+    },
+    {
+      "title": "Message queues et événements",
+      "content": "```bash\n#!/bin/bash\n# File de messages simple avec des FIFOs\n\nQUEUE_DIR=\"/tmp/bash_queue\"\nmkdir -p \"$QUEUE_DIR\"\n\nenqueue() {\n    local queue=$1 msg=$2\n    local id\n    id=$(date +%s%N)\n    echo \"$msg\" > \"$QUEUE_DIR/${queue}_${id}.msg\"\n}\n\ndequeue() {\n    local queue=$1\n    local oldest\n    oldest=$(ls -1 \"$QUEUE_DIR/${queue}_\"*.msg 2>/dev/null | head -1)\n    if [ -n \"$oldest\" ]; then\n        cat \"$oldest\"\n        rm -f \"$oldest\"\n        return 0\n    fi\n    return 1  # file vide\n}\n\nqueue_size() {\n    ls -1 \"$QUEUE_DIR/${1}_\"*.msg 2>/dev/null | wc -l\n}\n\n# Producer\nfor i in 1 2 3; do\n    enqueue \"tasks\" \"Tâche $i\"\ndone\necho \"Taille file : $(queue_size tasks)\"\n\n# Consumer\nwhile dequeue \"tasks\" | { read msg; echo \"Traité : $msg\"; }; do\n    : # continue\ndone\n\nrm -rf \"$QUEUE_DIR\"\n```"
+    },
+    {
+      "title": "Intégration avec les outils DevOps",
+      "content": "```bash\n#!/bin/bash\n# Intégrations DevOps courantes\n\n# Kubernetes\nkubectl_safe() {\n    local ctx=$1; shift\n    kubectl --context=\"$ctx\" \"$@\"\n}\n\n# Attendre qu'un deployment soit prêt\nwait_deployment() {\n    local ns=$1 name=$2\n    kubectl rollout status deployment/\"$name\" -n \"$ns\" --timeout=120s\n}\n\n# Ansible\nrun_playbook() {\n    ansible-playbook \"$1\" \\\n        -i \"$2\" \\\n        --vault-password-file ~/.vault_pass \\\n        \"${@:3}\"\n}\n\n# Consul (service discovery)\nconsul_get() {\n    curl -sf \"http://localhost:8500/v1/kv/$1?raw\"\n}\nconsul_set() {\n    curl -sf -X PUT \"http://localhost:8500/v1/kv/$1\" -d \"$2\"\n}\n\n# Prometheus pushgateway\npush_metric() {\n    local metric=$1 value=$2 job=${3:-script}\n    cat << EOF | curl -sf --data-binary @- \\\n        \"http://pushgateway:9091/metrics/job/$job\"\n# TYPE $metric gauge\n$metric $value\nEOF\n}\n\n# Vault (secrets)\nget_secret() {\n    vault kv get -field=\"$2\" \"$1\"\n}\n```"
+    },
+    {
+      "title": "Conteneurs et orchestration",
+      "content": "```bash\n#!/bin/bash\n# Scripts avancés Docker/Kubernetes\n\n# Multi-stage build avec cache\ndocker_build_cached() {\n    local image=$1 dockerfile=${2:-Dockerfile}\n    local build_args=()\n    \n    # Utiliser le cache du registry\n    docker pull \"$image:latest\" 2>/dev/null || true\n    \n    docker build \\\n        --cache-from \"$image:latest\" \\\n        --build-arg BUILDKIT_INLINE_CACHE=1 \\\n        -f \"$dockerfile\" \\\n        -t \"$image:latest\" \\\n        -t \"$image:$(git rev-parse --short HEAD 2>/dev/null || echo unknown)\" \\\n        .\n}\n\n# Deployer sur K8s avec vérification\nk8s_deploy() {\n    local manifest=$1 namespace=${2:-default}\n    \n    # Dry-run d'abord\n    kubectl apply --dry-run=client -f \"$manifest\" -n \"$namespace\" || return 1\n    \n    # Appliquer\n    kubectl apply -f \"$manifest\" -n \"$namespace\"\n    \n    # Attendre le rollout\n    local name\n    name=$(kubectl get -f \"$manifest\" -o jsonpath='{.metadata.name}')\n    kubectl rollout status deployment/\"$name\" -n \"$namespace\" --timeout=300s\n    \n    echo \"Déploiement $name : OK\"\n}\n\n# Exec dans un pod\nk8s_exec() {\n    local app=$1 ns=${2:-default}\n    local pod\n    pod=$(kubectl get pods -n \"$ns\" -l \"app=$app\" -o jsonpath='{.items[0].metadata.name}')\n    kubectl exec -it \"$pod\" -n \"$ns\" -- bash\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m5-1",
+      "order": 1,
+      "title": "Appeler Python depuis Bash",
+      "instructions": "Écrivez un script Bash qui appelle Python pour calculer et afficher les 10 premiers nombres de la suite de Fibonacci.\n\nRésultat attendu :\n```\n0 1 1 2 3 5 8 13 21 34\n```",
+      "expectedOutput": "0 1 1 2 3 5 8 13 21 34",
+      "validationType": "contains",
+      "correction": "python3 << 'EOF'\na, b = 0, 1\nfib = []\nfor _ in range(10):\n    fib.append(str(a))\n    a, b = b, a + b\nprint(' '.join(fib))\nEOF",
+      "explanation": "Le heredoc `<< 'EOF'` (avec guillemets simples) passe du code Python verbatim à python3 via stdin. Bash exécute `python3` qui lit son code depuis stdin. Cette technique permet d'embarquer n'importe quel langage dans un script Bash pour les calculs complexes. Les guillemets simples autour d'EOF empêchent l'interpolation bash dans le code Python."
+    },
+    {
+      "id": "ex-bash-l5-m5-2",
+      "order": 2,
+      "title": "File de messages simple",
+      "instructions": "Implémentez une file de messages FIFO simple avec des fonctions `enqueue` et `dequeue`. Enqueue 3 messages, puis dequeue-les dans l'ordre.\n\nRésultat attendu :\n```\nMessage 1\nMessage 2\nMessage 3\n```",
+      "expectedOutput": "Message 3",
+      "validationType": "contains",
+      "correction": "QUEUE=\"/tmp/queue_$$\"\nmkdir -p \"$QUEUE\"\ntrap 'rm -rf \"$QUEUE\"' EXIT\n\nenqueue() {\n    local id; id=$(printf '%020d' $(($(date +%s%N))))\n    echo \"$1\" > \"$QUEUE/$id.msg\"\n}\n\ndequeue() {\n    local f; f=$(ls -1 \"$QUEUE/\"*.msg 2>/dev/null | head -1)\n    [ -z \"$f\" ] && return 1\n    cat \"$f\"\n    rm -f \"$f\"\n}\n\nenqueue \"Message 1\"\nenqueue \"Message 2\"\nenqueue \"Message 3\"\n\nwhile msg=$(dequeue); do\n    echo \"$msg\"\ndone",
+      "explanation": "`printf '%020d'` padde le timestamp avec des zéros pour que le tri lexicographique (`ls -1 | head -1`) corresponde à l'ordre chronologique. Chaque message est un fichier séparé — la création de fichier est atomique sur la plupart des systèmes. `ls -1 | head -1` prend le plus ancien. C'est un pattern de queue durable (les messages survivent aux redémarrages)."
+    },
+    {
+      "id": "ex-bash-l5-m5-3",
+      "order": 3,
+      "title": "SQLite depuis Bash",
+      "instructions": "Créez une base SQLite en mémoire (`:memory:`) ou dans `/tmp`, créez une table `logs`, insérez 3 enregistrements, et faites une query SELECT.\n\nRésultat attendu :\n```\n1|2024-...|Démarrage\n2|2024-...|Traitement\n3|2024-...|Fin\n```",
+      "expectedOutput": "Démarrage",
+      "validationType": "contains",
+      "correction": "DB=\"/tmp/test_$$.db\"\ntrap 'rm -f \"$DB\"' EXIT\n\nsqlite3 \"$DB\" << 'SQL'\nCREATE TABLE logs (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, msg TEXT);\nINSERT INTO logs (ts, msg) VALUES (datetime('now'), 'Démarrage');\nINSERT INTO logs (ts, msg) VALUES (datetime('now'), 'Traitement');\nINSERT INTO logs (ts, msg) VALUES (datetime('now'), 'Fin');\nSELECT * FROM logs;\nSQL",
+      "explanation": "`sqlite3 fichier.db << 'SQL'` exécute un bloc SQL via heredoc. `datetime('now')` est une fonction SQLite pour la date courante. `INTEGER PRIMARY KEY AUTOINCREMENT` crée un identifiant auto-incrémenté. SQLite est parfait pour les scripts nécessitant une persistance structurée sans serveur de base de données."
+    }
+  ]
+}

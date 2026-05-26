@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m1",
+  "title": "Parsing et DSL",
+  "level": 5,
+  "lang": "bash",
+  "order": 1,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "title": "Parser du texte structuré",
+      "content": "```bash\n# Parser un fichier INI\nparse_ini() {\n    local file=$1\n    local section=\"\"\n    declare -gA INI_VALUES\n    \n    while IFS= read -r line; do\n        # Supprimer commentaires et espaces\n        line=$(echo \"$line\" | sed 's/[;#].*//; s/^[[:space:]]*//; s/[[:space:]]*$//')\n        [ -z \"$line\" ] && continue\n        \n        if [[ $line =~ ^\\[(.+)\\]$ ]]; then\n            section=${BASH_REMATCH[1]}\n        elif [[ $line =~ ^([^=]+)=(.*)$ ]]; then\n            local key=${BASH_REMATCH[1]// /}\n            local val=${BASH_REMATCH[2]}\n            INI_VALUES[\"${section}.${key}\"]=\"$val\"\n        fi\n    done < \"$file\"\n}\n\n# Utilisation\ncat > config.ini << 'EOF'\n[database]\nhost = localhost\nport = 5432\nname = mydb\n\n[app]\ndebug = true\nEOF\n\nparse_ini config.ini\necho \"DB host : ${INI_VALUES[database.host]}\"\necho \"DB port : ${INI_VALUES[database.port]}\"\nrm config.ini\n```"
+    },
+    {
+      "title": "DSL simple — générateur de configuration",
+      "content": "```bash\n#!/bin/bash\n# DSL pour générer des configs nginx\n\n# Variables d'état du DSL\ndeclare -a SERVERS\ndeclare -A SERVER_CONFIG\n\n# Fonctions DSL\nserver() {\n    local name=$1\n    SERVERS+=(\"$name\")\n    _current_server=\"$name\"\n}\n\nlisten() { SERVER_CONFIG[\"$_current_server.listen\"]=$1; }\nroot()   { SERVER_CONFIG[\"$_current_server.root\"]=$1; }\nindex()  { SERVER_CONFIG[\"$_current_server.index\"]=$1; }\n\n# Générateur nginx\ngenerate_nginx() {\n    for srv in \"${SERVERS[@]}\"; do\n        local port=${SERVER_CONFIG[\"$srv.listen\"]:-80}\n        local root=${SERVER_CONFIG[\"$srv.root\"]:-/var/www/html}\n        local idx=${SERVER_CONFIG[\"$srv.index\"]:-index.html}\n        \n        cat << EOF\nserver {\n    listen $port;\n    server_name $srv;\n    root $root;\n    index $idx;\n}\n\nEOF\n    done\n}\n\n# Utilisation du DSL\nserver \"example.com\"\n    listen 80\n    root /var/www/example\n    index index.html\n\nserver \"api.example.com\"\n    listen 8080\n    root /var/www/api\n\ngenerate_nginx\n```"
+    },
+    {
+      "title": "Parseur de commandes",
+      "content": "```bash\n#!/bin/bash\n# Mini interpréteur de commandes personnalisées\n\ndeclare -A VARIABLES\n\neval_expr() {\n    local expr=$1\n    # Substituer les variables\n    while [[ $expr =~ \\$([A-Za-z_][A-Za-z0-9_]*) ]]; do\n        local var=${BASH_REMATCH[1]}\n        local val=${VARIABLES[$var]:-}\n        expr=${expr/\\$$var/$val}\n    done\n    # Évaluer l'expression arithmétique\n    echo $((expr))\n}\n\nexecute_command() {\n    local cmd=$1 args=${@:2}\n    \n    case \"$cmd\" in\n        set)\n            local var val\n            IFS='=' read -r var val <<< \"$args\"\n            VARIABLES[$var]=$val\n            echo \"$var = $val\"\n            ;;\n        print)\n            local val=${args/\\$/${VARIABLES[}  # simplification\n            echo \"${args//\\$([A-Za-z_]*)/${VARIABLES[\\1]:-}}\"  \n            ;;\n        calc)\n            echo \"= $(eval_expr \"$args\")\"\n            ;;\n        quit) exit 0 ;;\n        help) echo \"Commandes : set var=val | print expr | calc expr | quit\" ;;\n        *) echo \"Commande inconnue : $cmd\" >&2 ;;\n    esac\n}\n\n# Lire depuis stdin ou fichier\nwhile IFS= read -r line; do\n    [[ $line =~ ^[[:space:]]*$ || $line =~ ^# ]] && continue\n    execute_command $line\ndone\n```"
+    },
+    {
+      "title": "Templates et génération de code",
+      "content": "```bash\n#!/bin/bash\n# Moteur de template minimal\n\nrender_template() {\n    local template=$1\n    shift\n    # Charger les variables\n    eval \"$@\"\n    # Substituer {{ variable }} par la valeur\n    local result\n    result=$(cat \"$template\")\n    \n    while [[ $result =~ \\{\\{[[:space:]]*([A-Za-z_]+)[[:space:]]*\\}\\} ]]; do\n        local var=${BASH_REMATCH[1]}\n        local val=${!var:-}\n        result=${result//\\{\\{[[:space:]]*$var[[:space:]]*\\}\\}/$val}\n    done\n    \n    echo \"$result\"\n}\n\n# Template\ncat > template.html << 'EOF'\n<!DOCTYPE html>\n<html>\n<head><title>{{ TITLE }}</title></head>\n<body>\n<h1>{{ GREETING }}, {{ NAME }}</h1>\n<p>Bienvenue sur {{ SITE }}</p>\n</body>\n</html>\nEOF\n\nrender_template template.html \\\n    TITLE=\"Accueil\" \\\n    GREETING=\"Bonjour\" \\\n    NAME=\"Alice\" \\\n    SITE=\"MonSite\"\n\nrm template.html\n```"
+    },
+    {
+      "title": "Interpréteur de script simplifié",
+      "content": "```bash\n#!/bin/bash\n# Évaluateur de mini-langage de scripting\n\nrun_script() {\n    local script_file=$1\n    declare -A vars\n    local lineno=0\n    \n    while IFS= read -r line || [ -n \"$line\" ]; do\n        ((lineno++))\n        # Ignorer commentaires et lignes vides\n        [[ $line =~ ^[[:space:]]*# || $line =~ ^[[:space:]]*$ ]] && continue\n        \n        # Substituer les variables\n        local expanded=$line\n        for key in \"${!vars[@]}\"; do\n            expanded=${expanded//\\$$key/${vars[$key]}}\n        done\n        \n        # Analyser la commande\n        read -r cmd rest <<< \"$expanded\"\n        \n        case \"$cmd\" in\n            LET) # LET x = expr\n                local var; local expr\n                [[ $rest =~ ^([A-Za-z_]+)[[:space:]]*=[[:space:]]*(.+)$ ]]\n                var=${BASH_REMATCH[1]}\n                expr=${BASH_REMATCH[2]}\n                vars[$var]=$(echo \"$expr\" | bc -l 2>/dev/null || echo \"$expr\")\n                ;;\n            PRINT)\n                echo \"$rest\"\n                ;;\n            IF) # IF condition THEN ... ENDIF\n                # Simplifié : évaluer la condition\n                if eval \"[ $rest ]\"; then echo \"[IF true]\"; fi\n                ;;\n            *)\n                echo \"[ERR ligne $lineno] Commande inconnue : $cmd\" >&2\n                ;;\n        esac\n    done < \"$script_file\"\n}\n\n# Exemple\ncat > mini_script.txt << 'EOF'\n# Mon mini script\nLET x = 10\nLET y = 20\nLET sum = $x + $y\nPRINT La somme est : $sum\nEOF\n\nrun_script mini_script.txt\nrm mini_script.txt\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m1-1",
+      "order": 1,
+      "title": "Parser un fichier de config",
+      "instructions": "Parsez le fichier de configuration suivant et extrayez les valeurs :\n\n```\nhost=localhost\nport=5432\nname=mydb\n```\n\nAffichez `host=localhost`, `port=5432`, `name=mydb`.\n\nRésultat attendu :\n```\nhost=localhost\nport=5432\nname=mydb\n```",
+      "expectedOutput": "port=5432",
+      "validationType": "contains",
+      "correction": "config=$(cat << 'EOF'\nhost=localhost\nport=5432\nname=mydb\nEOF\n)\n\ndeclare -A CONFIG\n\nwhile IFS='=' read -r key value; do\n    [[ $key =~ ^[[:space:]]*# ]] && continue\n    [[ -z $key ]] && continue\n    CONFIG[$key]=$value\ndone <<< \"$config\"\n\nfor key in \"${!CONFIG[@]}\"; do\n    echo \"$key=${CONFIG[$key]}\"\ndone | sort",
+      "explanation": "`while IFS='=' read -r key value` utilise `=` comme séparateur de champ pour parser `clé=valeur`. `declare -A CONFIG` déclare un tableau associatif. `${!CONFIG[@]}` retourne les clés du tableau. `<<< \"$config\"` (here-string) redirige la valeur d'une variable comme stdin. Ce pattern est la base de tout parseur de configuration en Bash."
+    },
+    {
+      "id": "ex-bash-l5-m1-2",
+      "order": 2,
+      "title": "Générateur de fichier via template",
+      "instructions": "Créez un template et substituez les variables avec `envsubst` ou `sed`.\n\nTemplate : `Bonjour ${NOM}, votre ID est ${ID}.`\n\nRésultat attendu :\n```\nBonjour Alice, votre ID est 42.\n```",
+      "expectedOutput": "Bonjour Alice, votre ID est 42.",
+      "validationType": "contains",
+      "correction": "export NOM=\"Alice\"\nexport ID=\"42\"\n\ntemplate='Bonjour ${NOM}, votre ID est ${ID}.'\n\nif command -v envsubst >/dev/null 2>&1; then\n    echo \"$template\" | envsubst\nelse\n    echo \"$template\" | sed \"s/\\${NOM}/$NOM/g; s/\\${ID}/$ID/g\"\nfi",
+      "explanation": "`envsubst` substitue les variables d'environnement dans un texte. Il ne substitue que les variables exportées (d'où `export`). `envsubst '${NOM} ${ID}'` restreint la substitution à ces variables seulement (évite de substituer accidentellement d'autres `${...}`). La solution `sed` est le fallback portable pour les systèmes sans `envsubst`."
+    },
+    {
+      "id": "ex-bash-l5-m1-3",
+      "order": 3,
+      "title": "Évaluateur d'expressions",
+      "instructions": "Créez une fonction `evaluer` qui évalue des expressions arithmétiques simples passées en chaîne : `\"10 + 5\"`, `\"3 * 4\"`, `\"20 / 4\"`.\n\nRésultat attendu :\n```\n10 + 5 = 15\n3 * 4 = 12\n20 / 4 = 5\n```",
+      "expectedOutput": "3 * 4 = 12",
+      "validationType": "contains",
+      "correction": "evaluer() {\n    local expr=$1\n    local result\n    result=$(echo \"$expr\" | bc 2>/dev/null || echo $((expr)))\n    echo \"$expr = $result\"\n}\n\nevaluer \"10 + 5\"\nevaluer \"3 * 4\"\nevaluer \"20 / 4\"",
+      "explanation": "`bc` (Basic Calculator) est la calculatrice standard Unix qui supporte les nombres décimaux, les fonctions mathématiques et une syntaxe riche. `echo \"expr\" | bc` envoie l'expression à bc via pipe. `$((expr))` est l'arithmétique entière native de bash (sans bc). `bc` est préféré car il gère les flottants et les opérateurs plus complexes."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "bash-l6-m2",
+  "title": "Analyse du trafic réseau sous Linux",
+  "lang": "bash",
+  "level": 6,
+  "order": 2,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "section": "Outils réseau Linux pour le SOC",
+      "content": "L'analyse du trafic réseau est fondamentale en SOC. Sous Linux, les outils natifs permettent de surveiller les connexions sans installer de logiciel tiers.\n\n```bash\n# ─── Connexions actives ───\nss -tnp          # TCP établies + processus\nss -tulpn        # Ports en écoute\nnetstat -ano     # Alternative classique\n\n# ─── Statistiques interface ───\nip -s link show eth0\nifconfig eth0\n\n# ─── Trafic en temps réel ───\nnethogs eth0     # Par processus\niftop -i eth0    # Par connexion\n\n# ─── Capture de paquets ───\ntcpdump -i eth0 -n -c 100\ntcpdump -i eth0 'port 443' -w capture.pcap\n\n# ─── Résolution DNS inversée ───\ndig -x 185.220.101.3\nnslookup 185.220.101.3\n```"
+    },
+    {
+      "section": "Analyser les connexions établies",
+      "content": "```bash\n#!/bin/bash\n# Analyse des connexions TCP établies\n\necho \"=== Connexions TCP établies ===\"\necho \"\"\n\n# Connexions sortantes actives avec processus\necho \"[Connexions sortantes actives]\"\nss -tnp state established \\\n  | awk 'NR>1 {print $4, $5, $6}' \\\n  | column -t\n\necho \"\"\necho \"[Ports en écoute]\"\nss -tlnp \\\n  | awk 'NR>1 {print $4, $6}' \\\n  | column -t\n\necho \"\"\necho \"[Top IPs distantes]\"\nss -tn state established \\\n  | awk 'NR>1 {print $5}' \\\n  | cut -d: -f1 \\\n  | sort | uniq -c | sort -rn | head -10\n\necho \"\"\necho \"[Connexions vers ports suspects]\"\nfor port in 4444 1337 6666 8888 31337; do\n    count=$(ss -tn | grep -c \":$port \")\n    if [[ $count -gt 0 ]]; then\n        echo \"  Port $port : $count connexion(s) SUSPECT\"\n    fi\ndone\n```"
+    },
+    {
+      "section": "Capture et analyse avec tcpdump",
+      "content": "```bash\n#!/bin/bash\n# Capture et analyse rapide avec tcpdump\n\nIFACE=\"${1:-eth0}\"\nDURÉE=\"${2:-10}\"\nOUTPUT=\"capture_$(date +%Y%m%d_%H%M%S).pcap\"\n\necho \"Capture sur $IFACE pendant ${DURÉE}s → $OUTPUT\"\n\n# Capturer pendant N secondes\ntimeout \"$DURÉE\" tcpdump -i \"$IFACE\" -n -w \"$OUTPUT\" 2>/dev/null\n\nif [[ -f \"$OUTPUT\" ]]; then\n    echo \"Capture terminée : $(ls -lh $OUTPUT | awk '{print $5}')\"\n    \n    # Analyser avec tcpdump en lecture\n    echo \"\"\n    echo \"[Top IPs sources]\"\n    tcpdump -r \"$OUTPUT\" -n 2>/dev/null \\\n      | awk '{print $3}' \\\n      | cut -d. -f1-4 \\\n      | sort | uniq -c | sort -rn | head -5\n    \n    echo \"\"\n    echo \"[Ports destination uniques]\"\n    tcpdump -r \"$OUTPUT\" -n 'tcp' 2>/dev/null \\\n      | grep -oE '\\.[0-9]+:' \\\n      | tr -d '.:' | sort -un | head -10\nfi\n\n# Alternative avec tshark (si installé)\n# tshark -r capture.pcap -T fields -e ip.src -e ip.dst -e tcp.dstport \\\n#   | sort | uniq -c | sort -rn | head -20\n```"
+    },
+    {
+      "section": "Détecter les scans de ports et exfiltrations",
+      "content": "```bash\n#!/bin/bash\n# Détecter anomalies réseau dans les logs\n\n# ─── Détecter scans de ports dans les logs firewall ───\nanalyse_firewall() {\n    local log_file=\"${1:-/var/log/syslog}\"\n    echo \"=== Analyse firewall : $log_file ===\"\n    \n    # Connexions refusées par IP source\n    grep -i 'REJECT\\|DROP\\|BLOCKED' \"$log_file\" \\\n      | grep -oE 'SRC=[0-9.]+' | cut -d= -f2 \\\n      | sort | uniq -c | sort -rn | head -10 \\\n      | while read count ip; do\n          echo \"  $ip : $count paquets refusés\"\n          if [[ $count -gt 100 ]]; then\n              echo \"    [SCAN PROBABLE]\"\n          fi\n      done\n}\n\n# ─── Détecter volume de trafic anormal ───\ncheck_trafic_dns() {\n    echo \"=== Requêtes DNS inhabituelles ===\"\n    # DNS vers des serveurs inhabituels (pas 8.8.8.8 ou résolveur interne)\n    ss -un | grep ':53' | awk '{print $5}' | cut -d: -f1 \\\n      | grep -v -E '^(8\\.8|1\\.1|192\\.168|10\\.)' \\\n      | sort | uniq -c | sort -rn | head -5\n}\n\n# ─── Connexions vers pays suspects ───\ncheck_geoip_connexions() {\n    echo \"=== IPs distantes actuelles ===\"\n    ss -tn state established \\\n      | awk 'NR>1 {print $5}' \\\n      | cut -d: -f1 \\\n      | grep -v '^$\\|127\\.' \\\n      | sort -u \\\n      | while read ip; do\n          echo \"  $ip\"\n          # En production : whois $ip | grep -i country\n      done\n}\n\nanalyse_firewall \"/var/log/syslog\"\necho \"\"\ncheck_trafic_dns\necho \"\"\ncheck_geoip_connexions\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "bash-l6-m2-ex1",
+      "title": "Lister les ports en écoute",
+      "description": "Identifier les services actifs sur la machine",
+      "instructions": "Utilisez `ss -tlnp` pour lister les ports TCP en écoute. Comptez et affichez le résultat :\n```\nPorts en écoute : X\n```\n(X dépend de votre système)",
+      "validationType": "output_contains",
+      "expectedOutput": "Ports en écoute :",
+      "correction": "count=$(ss -tlnp | grep -c LISTEN)\necho \"Ports en écoute : $count\"",
+      "explanation": "`ss -tlnp` : `-t` TCP, `-l` listening, `-n` numérique (pas de résolution), `-p` processus. `grep -c LISTEN` compte les lignes contenant LISTEN. Connaître les ports ouverts est la base d'un audit de surface d'attaque."
+    },
+    {
+      "id": "bash-l6-m2-ex2",
+      "title": "Compter les connexions établies",
+      "description": "Surveiller le nombre de connexions TCP actives",
+      "instructions": "Comptez les connexions TCP actuellement établies et affichez :\n```\nConnexions établies : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Connexions établies :",
+      "correction": "count=$(ss -tn state established | grep -c ESTAB)\necho \"Connexions établies : $count\"",
+      "explanation": "`ss -tn state established` filtre uniquement les connexions dans l'état ESTABLISHED. Une augmentation soudaine peut indiquer un DDoS ou une exfiltration en cours."
+    },
+    {
+      "id": "bash-l6-m2-ex3",
+      "title": "Détecter une connexion sur port suspect",
+      "description": "Vérifier si un port typique de backdoor est actif",
+      "instructions": "Vérifiez si une connexion est active sur le port `4444` (Metasploit). Si oui, affichez `SUSPECT`, sinon `OK` :\n```\nPort 4444 : OK\n```\n(ou SUSPECT si le port est actif)",
+      "validationType": "output_contains",
+      "expectedOutput": "Port 4444 :",
+      "correction": "if ss -tn | grep -q ':4444'; then\n    echo \"Port 4444 : SUSPECT\"\nelse\n    echo \"Port 4444 : OK\"\nfi",
+      "explanation": "Le port 4444 est le port par défaut du handler Metasploit. D'autres ports suspects : 1337, 6666, 31337, 8888. En production, on check ces ports après chaque alerte de type `PROCESS_INJECTION`."
+    }
+  ]
+}

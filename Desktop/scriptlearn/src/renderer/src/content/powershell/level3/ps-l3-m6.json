@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m6",
+  "title": "Format, export et import",
+  "level": 3,
+  "lang": "powershell",
+  "order": 6,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Formatage de la sortie",
+      "content": "```powershell\n# Format-Table\nGet-Process | Format-Table Name, CPU, WorkingSet -AutoSize\nGet-Process | Format-Table -Property * -Wrap   # toutes les props\n\n# Format-List (une propriété par ligne)\nGet-Process -Name powershell | Format-List *\n\n# Format-Wide (une seule colonne, en grille)\nGet-Process | Format-Wide Name -Column 4\n\n# Propriétés calculées dans le format\nGet-Process | Format-Table Name, \n    @{N='CPU(s)'; E={[math]::Round($_.CPU,1)}; Align='Right'},\n    @{N='RAM(Mo)'; E={[math]::Round($_.WorkingSet/1MB,1)}; Align='Right'} `\n    -AutoSize\n\n# Out-GridView — grille interactive (Windows)\nGet-Process | Out-GridView -Title 'Processus' -PassThru | Stop-Process\n\n# Out-String — convertir en texte\n$texte = Get-Service | Select-Object -First 5 | Format-Table | Out-String\nWrite-Host $texte\n```"
+    },
+    {
+      "title": "CSV — Import et Export",
+      "content": "```powershell\n# Exporter en CSV\nGet-Process | Select-Object Name, CPU, WorkingSet |\n    Export-Csv -Path \"processus.csv\" -NoTypeInformation -Encoding UTF8\n\n# Importer du CSV\n$data = Import-Csv -Path \"processus.csv\"\n$data[0].Name   # première ligne, colonne Name\n$data | Where-Object { [double]$_.CPU -gt 1 }\n\n# Créer un CSV à la main\n$employes = @(\n    [PSCustomObject]@{ Nom='Alice'; Poste='Dev'; Salaire=50000 },\n    [PSCustomObject]@{ Nom='Bob';   Poste='DBA'; Salaire=55000 }\n)\n$employes | Export-Csv \"employes.csv\" -NoTypeInformation\n\n# ConvertTo-Csv / ConvertFrom-Csv (sans fichier)\n$csv = $employes | ConvertTo-Csv -NoTypeInformation\n$objets = $csv | ConvertFrom-Csv\n\n# Séparateur personnalisé (Excel français utilise ;)\nExport-Csv -Delimiter ';'\nImport-Csv -Delimiter ';'\n```"
+    },
+    {
+      "title": "JSON — Import et Export",
+      "content": "```powershell\n# ConvertTo-Json\n$data = @{ nom='Alice'; age=30; langues=@('FR','EN') }\n$json = $data | ConvertTo-Json\n# Avec profondeur (tableaux imbriqués)\n$json = $data | ConvertTo-Json -Depth 5\n\n# ConvertFrom-Json\n$objet = $json | ConvertFrom-Json\n$objet.nom        # Alice\n$objet.langues[0] # FR\n\n# Lire/écrire un fichier JSON\n$config = Get-Content \"config.json\" | ConvertFrom-Json\n$config.serveur = \"new-server\"\n$config | ConvertTo-Json | Set-Content \"config.json\"\n\n# Modifier une propriété\n$config = Get-Content \"appsettings.json\" | ConvertFrom-Json\n$config.ConnectionStrings.Default = \"Server=nouveau;Database=db\"\n$config | ConvertTo-Json -Depth 10 | Set-Content \"appsettings.json\"\n\n# Tableaux JSON\n$array = '[{\"id\":1},{\"id\":2}]' | ConvertFrom-Json\n$array.Count   # 2\n$array[0].id   # 1\n```"
+    },
+    {
+      "title": "XML",
+      "content": "```powershell\n# Charger du XML\n[xml]$config = Get-Content \"config.xml\"\n# ou\n$xml = [xml](Invoke-WebRequest \"https://example.com/feed.xml\").Content\n\n# Naviguer dans le XML (notation pointée)\n$config.racine.element.valeur\n$config.SelectNodes(\"//utilisateur\")  # XPath\n$config.SelectSingleNode(\"//serveur/@url\").Value\n\n# Modifier du XML\n$config.racine.port = \"8080\"\n$config.Save(\"config.xml\")\n\n# Créer du XML\n$doc = New-Object System.Xml.XmlDocument\n$root = $doc.CreateElement(\"config\")\n$doc.AppendChild($root) | Out-Null\n$el = $doc.CreateElement(\"serveur\")\n$el.InnerText = \"localhost\"\n$root.AppendChild($el) | Out-Null\n$doc.Save(\"nouveau.xml\")\n\n# ConvertTo-Xml / Export-Clixml\nGet-Process | Select-Object -First 3 | Export-Clixml \"processus.xml\"\n$procs = Import-Clixml \"processus.xml\"   # restaure les types\n```"
+    },
+    {
+      "title": "Rapports HTML",
+      "content": "```powershell\n# ConvertTo-Html\nGet-Service | Where-Object Status -eq 'Running' | \n    Select-Object Name, DisplayName, Status |\n    ConvertTo-Html -Title \"Services actifs\" `\n        -Body \"<h1>Services en cours d'exécution</h1>\" `\n        -Head \"<style>table{border-collapse:collapse} td,th{border:1px solid #ccc; padding:4px}</style>\" |\n    Out-File \"services.html\"\n\n# Rapport complet avec plusieurs tableaux\n$html = @\"\n<!DOCTYPE html>\n<html><head><title>Rapport</title></head><body>\n<h1>Rapport Système</h1>\n<h2>Top 5 processus</h2>\n$(Get-Process | Sort-Object WorkingSet -Desc | Select-Object -First 5 |\n  Select-Object Name,@{N='RAM_Mo';E={[math]::Round($_.WorkingSet/1MB,1)}} |\n  ConvertTo-Html -Fragment)\n</body></html>\n\"@\n$html | Out-File \"rapport.html\"\n\n# Ouvrir dans le navigateur\nInvoke-Item \"rapport.html\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m6-1",
+      "order": 1,
+      "title": "Exporter en CSV",
+      "instructions": "Créez un tableau de 3 employés avec `Nom`, `Poste`, `Salaire`, exportez-le en CSV avec `Export-Csv`, puis ré-importez-le avec `Import-Csv` et affichez les noms.\n\nRésultat attendu :\n```\nAlice\nBob\nCharlie\n```",
+      "expectedOutput": "Alice",
+      "validationType": "contains",
+      "correction": "$employes = @(\n    [PSCustomObject]@{ Nom='Alice';   Poste='Dev'; Salaire=50000 },\n    [PSCustomObject]@{ Nom='Bob';     Poste='DBA'; Salaire=55000 },\n    [PSCustomObject]@{ Nom='Charlie'; Poste='Ops'; Salaire=52000 }\n)\n$employes | Export-Csv -Path \"employes.csv\" -NoTypeInformation\n$import = Import-Csv -Path \"employes.csv\"\n$import | ForEach-Object { Write-Host $_.Nom }\nRemove-Item \"employes.csv\"",
+      "explanation": "`Export-Csv -NoTypeInformation` supprime la ligne de type `#TYPE...` que PowerShell ajouterait sinon. `Import-Csv` relit le fichier et reconstruit des objets — toutes les propriétés sont des chaînes (contrairement aux entiers originaux). Pour retrouver un entier, castez : `[int]$_.Salaire`."
+    },
+    {
+      "id": "ex-ps-l3-m6-2",
+      "order": 2,
+      "title": "Manipuler du JSON",
+      "instructions": "Convertissez un objet PowerShell en JSON, puis reconvertissez-le et accédez à une propriété.\n\n```powershell\n$config = @{ serveur = \"localhost\"; port = 8080; ssl = $false }\n```\n\nRésultat attendu :\n```\nServeur : localhost\nPort : 8080\n```",
+      "expectedOutput": "Serveur : localhost",
+      "validationType": "contains",
+      "correction": "$config = @{ serveur = \"localhost\"; port = 8080; ssl = $false }\n$json = $config | ConvertTo-Json\n$objet = $json | ConvertFrom-Json\nWrite-Host \"Serveur : $($objet.serveur)\"\nWrite-Host \"Port : $($objet.port)\"",
+      "explanation": "`ConvertTo-Json` sérialise n'importe quel objet PS en JSON. `ConvertFrom-Json` recrée un objet PS depuis du JSON. Les clés de la hashtable deviennent des propriétés de l'objet résultant. Attention : les types sont préservés pour les valeurs simples (string, int, bool), mais les tableaux et hashtables imbriqués nécessitent `-Depth` pour une sérialisation complète."
+    },
+    {
+      "id": "ex-ps-l3-m6-3",
+      "order": 3,
+      "title": "Rapport HTML",
+      "instructions": "Utilisez `ConvertTo-Html` pour générer un tableau HTML des 3 premiers services actifs, sauvegardez dans `services.html`, vérifiez que le fichier existe, puis supprimez-le.\n\nRésultat attendu :\n```\nFichier créé : True\n```",
+      "expectedOutput": "True",
+      "validationType": "contains",
+      "correction": "Get-Service | Where-Object Status -eq 'Running' | Select-Object -First 3 |\n    Select-Object Name, Status |\n    ConvertTo-Html -Title 'Services' |\n    Out-File 'services.html'\n\n$existe = Test-Path 'services.html'\nWrite-Host \"Fichier créé : $existe\"\nRemove-Item 'services.html'",
+      "explanation": "`ConvertTo-Html` génère une page HTML complète avec un tableau `<table>`. `-Title` définit le `<title>` de la page, `-Body` ajoute du contenu avant le tableau, `-Fragment` génère seulement le `<table>` sans la page complète. `Out-File` écrit la chaîne HTML dans un fichier. Le résultat peut être ouvert dans n'importe quel navigateur."
+    }
+  ]
+}

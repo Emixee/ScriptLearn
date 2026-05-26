@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m5",
+  "title": "Automatisation IR Windows",
+  "lang": "powershell",
+  "level": 6,
+  "order": 5,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Collecte de preuves Windows automatisée",
+      "content": "La collecte de preuves en environnement Windows suit l'ordre de volatilité. PowerShell permet d'automatiser entièrement ce processus.\n\n```powershell\n# Triage rapide Windows — collecte des données volatiles\n\n$incidentId = \"INC-$(Get-Date -Format 'yyyyMMdd-HHmmss')\"\n$dir = \"$env:TEMP\\$incidentId\"\nNew-Item -ItemType Directory -Path $dir | Out-Null\n\nfunction Collect {\n    param([string]$Nom, [scriptblock]$Commande)\n    Write-Host \"Collecte : $Nom\"\n    try {\n        & $Commande | Out-File -FilePath \"$dir\\$Nom.txt\" -Encoding UTF8\n    } catch {\n        \"ERREUR : $_\" | Out-File -FilePath \"$dir\\$Nom.txt\" -Encoding UTF8\n    }\n}\n\n# ─── Métadonnées ───\nCollect 'metadata' { \n    [PSCustomObject]@{\n        Timestamp  = Get-Date -Format 'o'\n        Hostname   = $env:COMPUTERNAME\n        Username   = $env:USERNAME\n        Domain     = $env:USERDOMAIN\n        OS         = (Get-WmiObject Win32_OperatingSystem).Caption\n        Uptime     = (Get-Date) - (gcim Win32_OperatingSystem).LastBootUpTime\n    } | Format-List\n}\n\nWrite-Host \"Dossier de collecte : $dir\"\n```"
+    },
+    {
+      "section": "Collecte — Processus, connexions, services",
+      "content": "```powershell\n$incidentId = \"INC-$(Get-Date -Format 'yyyyMMdd-HHmmss')\"\n$dir = \"$env:TEMP\\$incidentId\"\nNew-Item -ItemType Directory -Path $dir -Force | Out-Null\n\nfunction Collect {\n    param([string]$Nom, [scriptblock]$Commande)\n    Write-Host \"Collecte : $Nom\"\n    try { & $Commande | Out-File \"$dir\\$Nom.txt\" -Encoding UTF8 }\n    catch { \"ERREUR : $_\" | Out-File \"$dir\\$Nom.txt\" -Encoding UTF8 }\n}\n\n# Processus actifs avec chemins\nCollect 'processes' {\n    Get-Process | Select-Object Id, Name, CPU, WorkingSet, Path, StartTime |\n        Sort-Object CPU -Descending\n}\n\n# Connexions réseau avec processus\nCollect 'netstat' {\n    Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue |\n        Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, State,\n        @{N='Process';E={(Get-Process -Id $_.OwningProcess -EA SilentlyContinue).Name}} |\n        Sort-Object RemoteAddress\n}\n\n# Services en cours d'exécution\nCollect 'services' {\n    Get-Service | Where-Object Status -eq 'Running' |\n        Select-Object Name, DisplayName, Status, StartType\n}\n\n# Utilisateurs connectés\nCollect 'users' {\n    query user 2>&1\n    Get-LocalUser | Select-Object Name, Enabled, LastLogon, PasswordLastSet\n}\n\n# Tâches planifiées\nCollect 'scheduled_tasks' {\n    Get-ScheduledTask | Where-Object State -ne 'Disabled' |\n        Select-Object TaskName, TaskPath, State,\n        @{N='LastRun';E={$_.LastRunTime}} | Sort-Object LastRun -Descending |\n        Select-Object -First 50\n}\n\nWrite-Host \"`nCollecte terminée : $dir\"\nGet-ChildItem $dir | Select-Object Name, Length | Format-Table\n```"
+    },
+    {
+      "section": "Containment — Isolation réseau Windows",
+      "content": "```powershell\n# Isolation d'une machine Windows compromise\n# Usage : Exécuter avec droits administrateur\n\nfunction Invoke-IsolationReseau {\n    param(\n        [string]$SOC_IP = '10.0.0.100',\n        [switch]$DryRun\n    )\n    \n    $action = if ($DryRun) { 'SIMULATION' } else { 'EXÉCUTION' }\n    Write-Host \"[$action] Isolation réseau - SOC IP autorisée : $SOC_IP\"\n    \n    $exec = { param($cmd) \n        if ($DryRun) { Write-Host \"  [DRY] $cmd\" }\n        else { Invoke-Expression $cmd }\n    }\n    \n    # Bloquer tout le trafic entrant/sortant\n    & $exec 'netsh advfirewall set allprofiles firewallpolicy blockinbound,blockoutbound'\n    \n    # Autoriser uniquement le SOC\n    & $exec \"netsh advfirewall firewall add rule name='SOC-Allow-In' dir=in action=allow remoteip=$SOC_IP\"\n    & $exec \"netsh advfirewall firewall add rule name='SOC-Allow-Out' dir=out action=allow remoteip=$SOC_IP\"\n    \n    # Autoriser le loopback\n    & $exec 'netsh advfirewall firewall add rule name=\"Loopback\" dir=in action=allow remoteip=127.0.0.1'\n    \n    Write-Host \"Machine isolée. Seul $SOC_IP autorisé.\"\n    Write-Host \"Pour restaurer : netsh advfirewall reset\"\n}\n\n# Blocage d'une IP spécifique\nfunction Block-IPAddress {\n    param([string]$IP, [string]$Raison = 'SOC Block')\n    \n    if ($IP -notmatch '^[0-9]{1,3}(\\.[0-9]{1,3}){3}$') {\n        Write-Error \"IP invalide : $IP\"\n        return\n    }\n    \n    netsh advfirewall firewall add rule name=\"SOC-Block-$IP\" `\n        dir=in action=block remoteip=$IP protocol=any\n    netsh advfirewall firewall add rule name=\"SOC-Block-Out-$IP\" `\n        dir=out action=block remoteip=$IP protocol=any\n    \n    Write-Host \"IP bloquée : $IP — $Raison\"\n}\n\n# Test\nInvoke-IsolationReseau -SOC_IP '10.0.0.100' -DryRun\n```"
+    },
+    {
+      "section": "Rapport IR et archivage",
+      "content": "```powershell\n# Génération du rapport d'incident et archivage\n\nfunction New-IncidentReport {\n    param(\n        [string]$IncidentId,\n        [string]$DossierCollecte,\n        [string]$Analyste = $env:USERNAME\n    )\n    \n    $rapport = \"$DossierCollecte\\rapport_$IncidentId.md\"\n    \n    $md = @\"\n# Rapport d'Incident — $IncidentId\n\n**Date** : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  \n**Analyste** : $Analyste  \n**Machine** : $env:COMPUTERNAME ($env:COMPUTERNAME.$env:USERDNSDOMAIN)  \n\n## Résumé exécutif\n\nCollecte de preuves effectuée automatiquement suite à détection d'activité suspecte.\n\n## Artefacts collectés\n\n\"@\n    \n    Get-ChildItem $DossierCollecte -Filter '*.txt' | ForEach-Object {\n        $lines = (Get-Content $_.FullName).Count\n        $md += \"- **$($_.BaseName)** : $lines lignes`n\"\n    }\n    \n    $md += @\"\n\n## Actions prises\n\n- [ ] Containment réseau\n- [ ] Notification RSSI\n- [ ] Ticket créé\n- [ ] Analyse forensics en cours\n\n## Prochaines étapes\n\n1. Analyser les processus collectés\n2. Vérifier les connexions sortantes\n3. Corréler avec les logs SIEM\n\"@\n    \n    Set-Content -Path $rapport -Value $md -Encoding UTF8\n    Write-Host \"Rapport créé : $rapport\"\n    \n    # Archiver\n    $archive = \"$env:TEMP\\${IncidentId}.zip\"\n    Compress-Archive -Path \"$DossierCollecte\\*\" -DestinationPath $archive -Force\n    Write-Host \"Archive : $archive\"\n}\n\n$id = \"INC-$(Get-Date -Format 'yyyyMMdd-HHmmss')\"\n$tmpDir = \"$env:TEMP\\$id\"\nNew-Item -ItemType Directory -Path $tmpDir -Force | Out-Null\n\"Test collecte\" | Out-File \"$tmpDir\\metadata.txt\"\nNew-IncidentReport -IncidentId $id -DossierCollecte $tmpDir\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m5-ex1",
+      "title": "Lister les connexions établies avec processus",
+      "description": "Identifier les processus qui ont des connexions réseau actives",
+      "instructions": "Listez les connexions TCP établies et affichez le nombre :\n```\nConnexions établies : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Connexions établies :",
+      "correction": "$count = (Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue).Count\nWrite-Host \"Connexions établies : $count\"",
+      "explanation": "`Get-NetTCPConnection` est la cmdlet moderne (PowerShell 3+). Elle expose le PID propriétaire via `OwningProcess`, permettant de relier chaque connexion à son processus — essentiel pour identifier les connexions C2."
+    },
+    {
+      "id": "ps-l6-m5-ex2",
+      "title": "Lister les tâches planifiées actives",
+      "description": "Identifier les tâches planifiées non désactivées",
+      "instructions": "Listez les tâches planifiées avec l'état autre que `Disabled` et affichez leur nombre :\n```\nTâches planifiées actives : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Tâches planifiées actives :",
+      "correction": "$count = (Get-ScheduledTask | Where-Object State -ne 'Disabled').Count\nWrite-Host \"Tâches planifiées actives : $count\"",
+      "explanation": "Les tâches planifiées sont un mécanisme de persistance favori. `schtasks /query /fo LIST` est l'équivalent en cmd. En investigation, les tâches récentes dans `\\Microsoft\\Windows\\` ou à la racine `\\` avec des commandes PowerShell/cmd sont prioritaires."
+    },
+    {
+      "id": "ps-l6-m5-ex3",
+      "title": "Créer une archive ZIP de collecte",
+      "description": "Archiver les artefacts collectés pour transport sécurisé",
+      "instructions": "Créez un dossier `/tmp/ir_collect/`, écrivez `test` dans `data.txt`, puis archivez-le dans `ir_collect.zip`. Affichez :\n```\nArchive créée : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Archive créée : True",
+      "correction": "New-Item -ItemType Directory -Path \"$env:TEMP\\ir_collect\" -Force | Out-Null\n\"test\" | Out-File \"$env:TEMP\\ir_collect\\data.txt\"\nCompress-Archive -Path \"$env:TEMP\\ir_collect\\*\" -DestinationPath \"$env:TEMP\\ir_collect.zip\" -Force\nWrite-Host \"Archive créée : $(Test-Path \"$env:TEMP\\ir_collect.zip\")\"",
+      "explanation": "`Compress-Archive` est disponible nativement dans PowerShell 5+. `Test-Path` retourne `True` si le fichier existe. En forensics, les archives permettent de préserver les métadonnées (timestamps) et de vérifier l'intégrité via hash de l'archive."
+    }
+  ]
+}

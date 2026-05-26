@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m1",
+  "title": "Expressions régulières",
+  "level": 3,
+  "lang": "powershell",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "L'opérateur -match",
+      "content": "PowerShell intègre les regex avec `-match`, `-notmatch`, `-replace` et `Select-String` :\n\n```powershell\n# -match : teste si une chaîne correspond à une regex\n\"bonjour\" -match \"^b.*r$\"   # True\n\"test123\" -match \"\\d+\"       # True\n\"abc\" -match \"^[0-9]+$\"     # False\n\n# Après -match : $Matches contient les groupes capturés\n\"Alice 30\" -match \"^(\\w+) (\\d+)$\"\n$Matches[0]   # Alice 30 (correspondance complète)\n$Matches[1]   # Alice\n$Matches[2]   # 30\n\n# Groupes nommés\n\"2024-01-15\" -match \"^(?<annee>\\d{4})-(?<mois>\\d{2})-(?<jour>\\d{2})$\"\n$Matches['annee']  # 2024\n$Matches['mois']   # 01\n$Matches['jour']   # 15\n\n# -notmatch : inverse\n\"abc\" -notmatch \"\\d\"  # True (pas de chiffre)\n```"
+    },
+    {
+      "title": "-replace avec regex",
+      "content": "```powershell\n# Syntaxe : chaîne -replace 'pattern', 'remplacement'\n\"Chat noir\" -replace \"noir\", \"blanc\"\n# Chat blanc\n\n# Avec groupes de capture ($1, $2...)\n\"Alice 30\" -replace \"^(\\w+) (\\d+)$\", '$2 ans : $1'\n# 30 ans : Alice\n# Note : guillemets SIMPLES pour $1, $2 (sinon PS évalue les vars)\n\n# Supprimer des caractères\n\"  hello  \" -replace \"^\\s+|\\s+$\", \"\"   # trim\n\"a1b2c3\" -replace \"[a-z]\", \"\"           # chiffres seulement : 123\n\n# Remplacement insensible à la casse\n\"Bonjour BONJOUR bonjour\" -replace \"(?i)bonjour\", \"salut\"\n# salut salut salut\n\n# Sur un tableau : s'applique à chaque élément\n@(\"alice@example.com\", \"bob@test.org\") -replace \"@.*\", \"\"\n# alice bob\n\n# [regex]::Replace pour plus de contrôle\n[regex]::Replace(\"hello world\", \"\\b\\w\", { $args[0].Value.ToUpper() })\n# Hello World\n```"
+    },
+    {
+      "title": "Select-String — grep PowerShell",
+      "content": "`Select-String` recherche des motifs dans des fichiers ou chaînes :\n\n```powershell\n# Chercher dans des fichiers\nSelect-String -Path \"*.log\" -Pattern \"ERROR\"\n\n# Chercher dans une chaîne\n\"ligne 1\\nligne 2\\nerreur ici\\nligne 4\" | Select-String \"erreur\"\n\n# Propriétés de l'objet résultat\n$result = \"texte test\" | Select-String -Pattern \"(\\w+)est\"\n$result.Matches[0].Value    # test\n$result.Matches[0].Groups[1].Value  # t\n$result.LineNumber          # numéro de ligne\n$result.Filename            # nom de fichier\n\n# Options\nSelect-String -Pattern \"error\" -CaseSensitive\nSelect-String -Pattern \"error\" -NotMatch\nSelect-String -Path \"*.ps1\" -Pattern \"TODO\" -List  # un résultat par fichier\n\n# Extraire les correspondances\n\"ID:123 ID:456 ID:789\" | Select-String -Pattern \"ID:(\\d+)\" -AllMatches |\n    ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value }\n# 123 456 789\n```"
+    },
+    {
+      "title": "La classe [regex]",
+      "content": "```powershell\n# Créer un objet regex\n$r = [regex]\"^\\d{5}$\"\n$r.IsMatch(\"75001\")   # True\n$r.IsMatch(\"abc\")     # False\n\n# Match — premier match\n$m = [regex]::Match(\"mon email : alice@example.com\", \"[\\w.]+@[\\w.]+\")\n$m.Value   # alice@example.com\n$m.Success # True\n$m.Index   # position dans la chaîne\n\n# Matches — tous les matches\n$ms = [regex]::Matches(\"12 oranges et 5 pommes\", \"\\d+\")\n$ms | ForEach-Object { $_.Value }  # 12 5\n\n# Split avec regex\n[regex]::Split(\"un1deux22trois\", \"\\d+\")\n# un deux trois\n\n# Replace avec regex\n[regex]::Replace(\"hello world\", \"\\b\\w\", { $args[0].Value.ToUpper() })\n# Hello World\n\n# Options de regex\n$opts = [System.Text.RegularExpressions.RegexOptions]\n$r = [regex]::new(\"BONJOUR\", $opts::IgnoreCase -bor $opts::Multiline)\n```"
+    },
+    {
+      "title": "Validation par regex",
+      "content": "```powershell\n# Fonctions de validation réutilisables\nfunction Test-Email {\n    param([string]$Email)\n    return $Email -match '^[\\w.+-]+@[\\w-]+\\.[\\w.]+$'\n}\n\nfunction Test-CodePostal {\n    param([string]$Code)\n    return $Code -match '^\\d{5}$'\n}\n\nfunction Test-IPv4 {\n    param([string]$IP)\n    if ($IP -notmatch '^(\\d{1,3}\\.){3}\\d{1,3}$') { return $false }\n    return ($IP -split '\\.') | ForEach-Object { [int]$_ } |\n        Where-Object { $_ -gt 255 } | Measure-Object | \n        Select-Object -ExpandProperty Count | ForEach-Object { $_ -eq 0 }\n}\n\n# Utilisation\n@(\"alice@example.com\", \"pas_email\", \"test@\") | ForEach-Object {\n    $valid = Test-Email $_\n    [PSCustomObject]@{ Email = $_; Valide = $valid }\n} | Format-Table\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m1-1",
+      "order": 1,
+      "title": "Validation avec -match",
+      "instructions": "Créez une fonction `Test-CodePostal` qui vérifie si un code postal français est valide (5 chiffres). Testez avec `\"75001\"` (valide) et `\"abc\"` (invalide).\n\nRésultat attendu :\n```\n75001 : Valide\nabc : Invalide\n```",
+      "expectedOutput": "Valide",
+      "validationType": "contains",
+      "correction": "function Test-CodePostal {\n    param([string]$Code)\n    if ($Code -match '^\\d{5}$') {\n        Write-Host \"$Code : Valide\"\n    } else {\n        Write-Host \"$Code : Invalide\"\n    }\n}\n\nTest-CodePostal \"75001\"\nTest-CodePostal \"abc\"",
+      "explanation": "`-match '^\\d{5}$'` vérifie : `^` début, `\\d{5}` exactement 5 chiffres, `$` fin. Sans les ancres `^` et `$`, `\"123456\"` passerait la validation car il contient `\\d{5}`. En PowerShell, `-match` est insensible à la casse par défaut (utilisez `-cmatch` pour la sensibilité)."
+    },
+    {
+      "id": "ex-ps-l3-m1-2",
+      "order": 2,
+      "title": "Groupes de capture",
+      "instructions": "Parsez une date au format `DD/MM/YYYY` avec `-match` et groupes nommés, puis affichez-la au format `YYYY-MM-DD`.\n\nTestez avec `\"25/12/2024\"`.\n\nRésultat attendu :\n```\n2024-12-25\n```",
+      "expectedOutput": "2024-12-25",
+      "validationType": "contains",
+      "correction": "$date = \"25/12/2024\"\nif ($date -match '^(?<jour>\\d{2})/(?<mois>\\d{2})/(?<annee>\\d{4})$') {\n    Write-Host \"$($Matches['annee'])-$($Matches['mois'])-$($Matches['jour'])\"\n}",
+      "explanation": "`(?<jour>\\d{2})` crée un groupe nommé `jour`. Après un `-match` réussi, `$Matches` est automatiquement peuplé. `$Matches['jour']` accède au groupe nommé. Cette approche est plus lisible que `$Matches[1]`, `$Matches[2]` car les noms sont auto-documentés."
+    },
+    {
+      "id": "ex-ps-l3-m1-3",
+      "order": 3,
+      "title": "-replace avec groupes",
+      "instructions": "Utilisez `-replace` pour reformater une liste de noms `\"Prénom NOM\"` en `\"NOM, Prénom\"`.\n\n```powershell\n$noms = @(\"Alice DUPONT\", \"Bob MARTIN\", \"Charlie DURAND\")\n```\n\nRésultat attendu :\n```\nDUPONT, Alice\nMARTIN, Bob\nDURAND, Charlie\n```",
+      "expectedOutput": "DUPONT, Alice",
+      "validationType": "contains",
+      "correction": "$noms = @(\"Alice DUPONT\", \"Bob MARTIN\", \"Charlie DURAND\")\n$noms | ForEach-Object {\n    $_ -replace '^(\\w+) (\\w+)$', '$2, $1'\n}",
+      "explanation": "`$_ -replace '^(\\w+) (\\w+)$', '$2, $1'` capture deux groupes : prénom (`$1`) et nom (`$2`), puis les inverse dans le remplacement. L'utilisation de guillemets simples autour du remplacement est importante : avec des guillemets doubles, PowerShell évaluerait `$2` comme une variable PS (vide) avant de passer à `-replace`."
+    }
+  ]
+}

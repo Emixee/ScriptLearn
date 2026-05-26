@@ -1,0 +1,58 @@
+{
+  "id": "py-l5-m1",
+  "title": "Moteur de détection basé sur des règles",
+  "lang": "python",
+  "level": 5,
+  "order": 1,
+  "estimatedMinutes": 70,
+  "course": [
+    {
+      "section": "Architecture d'un moteur de détection",
+      "content": "Un moteur de détection évalue des **règles** contre un **flux d'événements**. C'est le cœur d'un SIEM ou IDS. L'architecture comprend :\n\n1. **Ingestion** : parsing des événements bruts\n2. **Normalisation** : format unifié (ECS, OSSEM)\n3. **Évaluation des règles** : matching contre les événements\n4. **Déduplication** : éviter les alertes en doublon\n5. **Escalade** : priorisation et notification\n\n```python\nfrom dataclasses import dataclass, field\nfrom typing import Callable, List, Dict, Any\nfrom datetime import datetime\n\n@dataclass\nclass Regle:\n    id: str\n    nom: str\n    severite: str          # FAIBLE | MOYENNE | HAUTE | CRITIQUE\n    condition: Callable    # Fonction qui prend un événement et retourne bool\n    description: str = \"\"\n    tags: List[str] = field(default_factory=list)\n    \n@dataclass\nclass Alerte:\n    regle_id: str\n    regle_nom: str\n    severite: str\n    evenement: Dict[str, Any]\n    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())\n```"
+    },
+    {
+      "section": "Définir des règles de détection",
+      "content": "```python\n# Règles de détection SOC classiques\nREGLES_SOC = [\n    Regle(\n        id=\"R001\",\n        nom=\"BRUTE_FORCE_SSH\",\n        severite=\"HAUTE\",\n        description=\"5+ échecs SSH depuis la même IP en 60s\",\n        tags=[\"brute-force\", \"ssh\", \"t1110\"],\n        condition=lambda e: (\n            e.get(\"type\") == \"auth_fail\" and\n            e.get(\"service\") == \"ssh\" and\n            e.get(\"count\", 0) >= 5\n        )\n    ),\n    Regle(\n        id=\"R002\",\n        nom=\"NEW_ADMIN_ACCOUNT\",\n        severite=\"CRITIQUE\",\n        description=\"Création d'un compte administrateur\",\n        tags=[\"persistence\", \"t1136\"],\n        condition=lambda e: (\n            e.get(\"type\") == \"user_created\" and\n            \"admin\" in e.get(\"groups\", [])\n        )\n    ),\n    Regle(\n        id=\"R003\",\n        nom=\"LATERAL_MOVEMENT\",\n        severite=\"CRITIQUE\",\n        description=\"Connexion réussie depuis une IP interne inhabituelle\",\n        tags=[\"lateral-movement\", \"t1021\"],\n        condition=lambda e: (\n            e.get(\"type\") == \"auth_success\" and\n            e.get(\"src_ip\", \"\").startswith(\"10.\") and\n            e.get(\"new_src\", False)\n        )\n    ),\n    Regle(\n        id=\"R004\",\n        nom=\"PROCESS_INJECTION\",\n        severite=\"CRITIQUE\",\n        description=\"Injection de processus détectée (parent/enfant suspect)\",\n        tags=[\"execution\", \"t1055\"],\n        condition=lambda e: (\n            e.get(\"type\") == \"process_create\" and\n            e.get(\"parent\") in [\"winword.exe\", \"excel.exe\", \"outlook.exe\"] and\n            e.get(\"child\") in [\"powershell.exe\", \"cmd.exe\", \"wscript.exe\"]\n        )\n    ),\n]\n\nprint(f\"{len(REGLES_SOC)} règles chargées\")\nfor r in REGLES_SOC:\n    print(f\"  [{r.id}] {r.nom} ({r.severite}) — {', '.join(r.tags)}\")\n```"
+    },
+    {
+      "section": "Moteur d'évaluation",
+      "content": "```python\nfrom collections import defaultdict\n\nclass MoteurDetection:\n    def __init__(self, regles):\n        self.regles = regles\n        self.alertes = []\n        self.stats = defaultdict(int)\n    \n    def evaluer(self, evenement):\n        \"\"\"Évalue un événement contre toutes les règles.\"\"\"\n        nouvelles_alertes = []\n        for regle in self.regles:\n            try:\n                if regle.condition(evenement):\n                    alerte = Alerte(\n                        regle_id=regle.id,\n                        regle_nom=regle.nom,\n                        severite=regle.severite,\n                        evenement=evenement\n                    )\n                    nouvelles_alertes.append(alerte)\n                    self.alertes.append(alerte)\n                    self.stats[regle.severite] += 1\n            except Exception:\n                pass  # Événement incomplet, règle non applicable\n        return nouvelles_alertes\n    \n    def traiter_flux(self, evenements):\n        \"\"\"Traite un flux d'événements.\"\"\"\n        for evt in evenements:\n            alertes = self.evaluer(evt)\n            for a in alertes:\n                print(f\"[{a.severite}] {a.regle_nom} — {a.evenement}\")\n        print(f\"\\nStats : {dict(self.stats)}\")\n        return self.alertes\n\n# Simulation\nevts = [\n    {\"type\": \"auth_fail\", \"service\": \"ssh\", \"ip\": \"185.220.101.3\", \"count\": 7},\n    {\"type\": \"auth_success\", \"service\": \"ssh\", \"ip\": \"185.220.101.3\"},\n    {\"type\": \"user_created\", \"username\": \"backdoor\", \"groups\": [\"admin\", \"users\"]},\n    {\"type\": \"process_create\", \"parent\": \"winword.exe\", \"child\": \"powershell.exe\"},\n    {\"type\": \"dns_query\", \"domain\": \"google.com\"},  # Bénin\n]\n\nmoteur = MoteurDetection(REGLES_SOC)\nmoteur.traiter_flux(evts)\n```"
+    },
+    {
+      "section": "Déduplication et agrégation",
+      "content": "```python\nfrom collections import defaultdict\nfrom datetime import datetime, timedelta\n\nclass MoteurAvecDedup:\n    \"\"\"Moteur avec déduplication des alertes répétées.\"\"\"\n    \n    def __init__(self, regles, fenetre_dedup_sec=300):\n        self.regles = regles\n        self.alertes = []\n        self.vues = {}  # (regle_id, cle_event) -> last_seen\n        self.fenetre = timedelta(seconds=fenetre_dedup_sec)\n    \n    def _cle_dedup(self, regle_id, evt):\n        \"\"\"Génère une clé unique pour la déduplication.\"\"\"\n        # Clé basée sur la règle + IP source (ou autre champ discriminant)\n        return (regle_id, evt.get(\"ip\") or evt.get(\"username\") or \"\")\n    \n    def evaluer(self, evenement):\n        nouvelles = []\n        maintenant = datetime.now()\n        \n        for regle in self.regles:\n            try:\n                if regle.condition(evenement):\n                    cle = self._cle_dedup(regle.id, evenement)\n                    derniere = self.vues.get(cle)\n                    \n                    if derniere is None or (maintenant - derniere) > self.fenetre:\n                        alerte = Alerte(regle.id, regle.nom, regle.severite, evenement)\n                        nouvelles.append(alerte)\n                        self.alertes.append(alerte)\n                        self.vues[cle] = maintenant\n                        print(f\"[NOUVELLE] [{regle.severite}] {regle.nom}\")\n                    else:\n                        print(f\"[DEDUP] {regle.nom} (déjà vu il y a {(maintenant-derniere).seconds}s)\")\n            except Exception:\n                pass\n        return nouvelles\n\nmoteur2 = MoteurAvecDedup(REGLES_SOC, fenetre_dedup_sec=300)\nmoteur2.evaluer({\"type\": \"auth_fail\", \"service\": \"ssh\", \"ip\": \"185.220.101.3\", \"count\": 7})\nmoteur2.evaluer({\"type\": \"auth_fail\", \"service\": \"ssh\", \"ip\": \"185.220.101.3\", \"count\": 8})\nprint(f\"Total alertes uniques : {len(moteur2.alertes)}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l5-m1-ex1",
+      "title": "Évaluer une règle de détection",
+      "description": "Appliquer une condition de règle sur un événement",
+      "instructions": "Soit la règle : un événement est suspect si `type == \"auth_fail\"` ET `count >= 5`.\n```python\nevt = {\"type\": \"auth_fail\", \"ip\": \"185.220.101.3\", \"count\": 7}\n```\nAffichez :\n```\nAlerte déclenchée : True\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Alerte déclenchée : True",
+      "correction": "evt = {\"type\": \"auth_fail\", \"ip\": \"185.220.101.3\", \"count\": 7}\nalerte = evt.get(\"type\") == \"auth_fail\" and evt.get(\"count\", 0) >= 5\nprint(f\"Alerte déclenchée : {alerte}\")",
+      "explanation": "`dict.get(clé, défaut)` évite les KeyError sur les événements incomplets. Une règle de détection est simplement une condition booléenne — la puissance vient du nombre de règles et de leur combinaison."
+    },
+    {
+      "id": "py-l5-m1-ex2",
+      "title": "Compter les alertes par sévérité",
+      "description": "Agréger les alertes d'un moteur de détection",
+      "instructions": "Soit :\n```python\nalertes = [\n    {\"severite\": \"HAUTE\",     \"regle\": \"BRUTE_FORCE\"},\n    {\"severite\": \"CRITIQUE\",  \"regle\": \"INJECT\"},\n    {\"severite\": \"HAUTE\",     \"regle\": \"SCAN\"},\n    {\"severite\": \"CRITIQUE\",  \"regle\": \"PERSIST\"},\n]\n```\nAffichez le nombre d'alertes CRITIQUE :\n```\nAlertes CRITIQUE : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Alertes CRITIQUE : 2",
+      "correction": "from collections import Counter\nalertes = [\n    {\"severite\": \"HAUTE\",     \"regle\": \"BRUTE_FORCE\"},\n    {\"severite\": \"CRITIQUE\",  \"regle\": \"INJECT\"},\n    {\"severite\": \"HAUTE\",     \"regle\": \"SCAN\"},\n    {\"severite\": \"CRITIQUE\",  \"regle\": \"PERSIST\"},\n]\nc = Counter(a[\"severite\"] for a in alertes)\nprint(f\"Alertes CRITIQUE : {c['CRITIQUE']}\")",
+      "explanation": "`Counter` compte automatiquement chaque valeur. Dans un SOC, les tableaux de bord affichent exactement ces métriques pour prioriser la réponse aux incidents."
+    },
+    {
+      "id": "py-l5-m1-ex3",
+      "title": "Filtrer les alertes hautes et critiques",
+      "description": "Prioriser les alertes selon la sévérité",
+      "instructions": "Soit :\n```python\nalertes = [\n    {\"severite\": \"FAIBLE\",   \"regle\": \"R1\"},\n    {\"severite\": \"CRITIQUE\", \"regle\": \"R2\"},\n    {\"severite\": \"HAUTE\",    \"regle\": \"R3\"},\n    {\"severite\": \"MOYENNE\",  \"regle\": \"R4\"},\n]\n```\nFiltrez les alertes HAUTE ou CRITIQUE et affichez leur nombre :\n```\nAlertes prioritaires : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Alertes prioritaires : 2",
+      "correction": "alertes = [\n    {\"severite\": \"FAIBLE\",   \"regle\": \"R1\"},\n    {\"severite\": \"CRITIQUE\", \"regle\": \"R2\"},\n    {\"severite\": \"HAUTE\",    \"regle\": \"R3\"},\n    {\"severite\": \"MOYENNE\",  \"regle\": \"R4\"},\n]\nprioritaires = [a for a in alertes if a[\"severite\"] in (\"HAUTE\", \"CRITIQUE\")]\nprint(f\"Alertes prioritaires : {len(prioritaires)}\")",
+      "explanation": "Le triage par sévérité est le premier filtre d'un analyste SOC. `in (\"HAUTE\", \"CRITIQUE\")` est plus lisible et efficace que deux conditions `or`. La liste en compréhension reste Pythonique."
+    }
+  ]
+}

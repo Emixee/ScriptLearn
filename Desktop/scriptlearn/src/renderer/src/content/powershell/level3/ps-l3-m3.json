@@ -1,0 +1,62 @@
+{
+  "id": "ps-l3-m3",
+  "title": "Réseau et Web",
+  "level": 3,
+  "lang": "powershell",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Invoke-WebRequest et Invoke-RestMethod",
+      "content": "```powershell\n# Invoke-WebRequest : télécharger une page ou un fichier\n$response = Invoke-WebRequest -Uri \"https://example.com\"\n$response.StatusCode      # 200\n$response.Content         # HTML brut\n$response.Headers         # hashtable des en-têtes\n\n# Télécharger un fichier\nInvoke-WebRequest -Uri \"https://example.com/fichier.zip\" `\n    -OutFile \"C:\\Downloads\\fichier.zip\"\n\n# Invoke-RestMethod : pour les APIs JSON (parse automatiquement)\n$data = Invoke-RestMethod -Uri \"https://jsonplaceholder.typicode.com/todos/1\"\n$data.title      # delectus aut autem\n$data.completed  # False\n\n# POST avec JSON\n$body = @{ nom = \"Alice\"; age = 30 } | ConvertTo-Json\n$result = Invoke-RestMethod -Uri \"https://api.example.com/users\" `\n    -Method POST `\n    -ContentType \"application/json\" `\n    -Body $body\n```"
+    },
+    {
+      "title": "Requêtes HTTP avancées",
+      "content": "```powershell\n# Headers personnalisés\n$headers = @{\n    \"Authorization\" = \"Bearer mon-token\"\n    \"X-Api-Key\" = \"ma-cle\"\n}\n$result = Invoke-RestMethod -Uri $url -Headers $headers\n\n# Gestion des erreurs HTTP\ntry {\n    $result = Invoke-RestMethod -Uri \"https://api.example.com/data\" `\n        -ErrorAction Stop\n} catch [System.Net.WebException] {\n    $statusCode = $_.Exception.Response.StatusCode.value__\n    Write-Host \"Erreur HTTP : $statusCode\"\n} catch {\n    Write-Host \"Erreur : $($_.Exception.Message)\"\n}\n\n# Pagination\n$page = 1\ndo {\n    $data = Invoke-RestMethod -Uri \"https://api.example.com/items?page=$page\"\n    $data.items | ForEach-Object { Write-Host $_.name }\n    $page++\n} while ($data.hasMore)\n\n# Certificats SSL auto-signés (test uniquement)\n[Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }\n# OU PS 6+\nInvoke-WebRequest -SkipCertificateCheck -Uri $url\n```"
+    },
+    {
+      "title": "Vérifications réseau",
+      "content": "```powershell\n# Test-NetConnection — outil polyvalent\nTest-NetConnection -ComputerName \"google.com\"              # ping\nTest-NetConnection -ComputerName \"google.com\" -Port 443    # test port\nTest-NetConnection -ComputerName \"8.8.8.8\" -TraceRoute     # traceroute\n\n# Résultat\n$result = Test-NetConnection -ComputerName \"google.com\" -Port 80\n$result.TcpTestSucceeded   # True/False\n$result.RemoteAddress      # adresse IP\n$result.PingSucceeded      # True/False\n\n# Test-Connection — ping\nTest-Connection -TargetName \"google.com\" -Count 3\nif (Test-Connection -TargetName \"8.8.8.8\" -Quiet) {\n    Write-Host \"Internet accessible\"\n}\n\n# Résolution DNS\nResolve-DnsName \"google.com\"\nResolve-DnsName \"google.com\" -Type MX   # enregistrements MX\n\n# Informations réseau\nGet-NetIPAddress                        # toutes les IPs\nGet-NetIPAddress -AddressFamily IPv4    # IPv4 seulement\nGet-NetAdapter                          # adaptateurs réseau\n```"
+    },
+    {
+      "title": "Consommer une API REST",
+      "content": "```powershell\n# Exemple complet : wrapper d'API\nfunction Invoke-JsonAPI {\n    param(\n        [string]$Url,\n        [string]$Method = 'GET',\n        [hashtable]$Headers = @{},\n        [object]$Body = $null\n    )\n    \n    $params = @{\n        Uri         = $Url\n        Method      = $Method\n        Headers     = $Headers\n        ContentType = 'application/json'\n        ErrorAction = 'Stop'\n    }\n    \n    if ($Body) {\n        $params.Body = $Body | ConvertTo-Json -Depth 10\n    }\n    \n    try {\n        Invoke-RestMethod @params\n    } catch {\n        [PSCustomObject]@{\n            Error   = $true\n            Code    = $_.Exception.Response?.StatusCode.value__\n            Message = $_.Exception.Message\n        }\n    }\n}\n\n# Utilisation\n$users = Invoke-JsonAPI -Url \"https://jsonplaceholder.typicode.com/users\"\n$users | Select-Object name, email | Format-Table\n```"
+    },
+    {
+      "title": "Envoi d'emails et notifications",
+      "content": "```powershell\n# Send-MailMessage (nécessite un serveur SMTP)\nSend-MailMessage `\n    -From \"script@mondomaine.fr\" `\n    -To \"admin@mondomaine.fr\" `\n    -Subject \"Rapport quotidien\" `\n    -Body \"Tout va bien.\" `\n    -SmtpServer \"smtp.mondomaine.fr\" `\n    -Port 587 `\n    -UseSsl `\n    -Credential (Get-Credential)\n\n# Avec pièce jointe\nSend-MailMessage `\n    -Attachments \"C:\\rapports\\rapport.csv\" `\n    -BodyAsHtml `\n    -Body \"<h1>Rapport</h1><p>Voir pièce jointe.</p>\" `\n    @commonParams\n\n# Notification Teams / Slack via webhook\n$body = @{\n    text = \"Alerte : le serveur répond lentement !\"\n} | ConvertTo-Json\nInvoke-RestMethod `\n    -Uri \"https://hooks.slack.com/services/...\" `\n    -Method POST `\n    -ContentType \"application/json\" `\n    -Body $body\n\n# Notification Windows Toast (Windows 10+)\n[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l3-m3-1",
+      "order": 1,
+      "title": "Requête API REST",
+      "instructions": "Utilisez `Invoke-RestMethod` pour récupérer le todo #1 depuis `https://jsonplaceholder.typicode.com/todos/1` et affichez son titre et son statut de complétion.\n\nRésultat attendu :\n```\nTitre : delectus aut autem\nTerminé : False\n```",
+      "expectedOutput": "delectus",
+      "validationType": "contains",
+      "correction": "$todo = Invoke-RestMethod -Uri \"https://jsonplaceholder.typicode.com/todos/1\"\nWrite-Host \"Titre : $($todo.title)\"\nWrite-Host \"Terminé : $($todo.completed)\"",
+      "explanation": "`Invoke-RestMethod` parse automatiquement le JSON et retourne un objet PowerShell. Contrairement à `Invoke-WebRequest` qui retourne le JSON sous forme de texte, `Invoke-RestMethod` vous donne directement les propriétés. `$todo.title` accède au champ `title` du JSON sans aucun parsing manuel."
+    },
+    {
+      "id": "ex-ps-l3-m3-2",
+      "order": 2,
+      "title": "Test de connectivité",
+      "instructions": "Vérifiez si Google est accessible sur le port 443 avec `Test-NetConnection`. Affichez le résultat de `TcpTestSucceeded`.\n\nRésultat attendu :\n```\nConnexion HTTPS Google : True\n```",
+      "expectedOutput": "True",
+      "validationType": "contains",
+      "correction": "$result = Test-NetConnection -ComputerName \"google.com\" -Port 443 -WarningAction SilentlyContinue\nWrite-Host \"Connexion HTTPS Google : $($result.TcpTestSucceeded)\"",
+      "explanation": "`Test-NetConnection -Port 443` teste si le port TCP 443 (HTTPS) est accessible. `-WarningAction SilentlyContinue` supprime les avertissements de progression. `TcpTestSucceeded` renvoie `$true` si la connexion TCP a réussi, `$false` sinon. C'est équivalent à `nc -zv` en Bash."
+    },
+    {
+      "id": "ex-ps-l3-m3-3",
+      "order": 3,
+      "title": "Parser plusieurs ressources",
+      "instructions": "Récupérez les 3 premiers utilisateurs depuis `https://jsonplaceholder.typicode.com/users` et affichez leur nom et leur email.\n\nRésultat attendu :\n```\nLeanne Graham — Sincere@april.biz\nErvin Howell — Shanna@melissa.tv\nClementine Bauch — Nathan@yesenia.net\n```",
+      "expectedOutput": "Leanne Graham",
+      "validationType": "contains",
+      "correction": "$users = Invoke-RestMethod -Uri \"https://jsonplaceholder.typicode.com/users\"\n$users | Select-Object -First 3 | ForEach-Object {\n    Write-Host \"$($_.name) — $($_.email)\"\n}",
+      "explanation": "`Invoke-RestMethod` retourne directement un tableau PowerShell d'objets quand le JSON est un tableau. `Select-Object -First 3` prend les 3 premiers éléments. `ForEach-Object` itère et `$($_.name)` accède à la propriété `name` de chaque objet avec interpolation de sous-expression."
+    }
+  ]
+}

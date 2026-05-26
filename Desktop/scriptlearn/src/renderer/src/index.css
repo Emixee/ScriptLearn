@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #0f1117;
+  color: #f1f5f9;
+  overflow: hidden;
+  user-select: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1d2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* ============================================================
+   Blocs de code — Prism.js (thème ScriptLearn dark)
+   ============================================================ */
+
+.sl-code-block {
+  position: relative;
+  background: #0d0f16;
+  border: 1px solid #2d3748;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+  overflow: hidden;
+  user-select: text;
+}
+
+.sl-code-block .sl-lang-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.65rem;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4b5563;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sl-code-block pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  color: #e2e8f0;
+  white-space: pre;
+}
+
+.sl-code-block code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+/* Tokens Prism */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #4b5563;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #64748b;
+}
+
+.token.namespace {
+  opacity: 0.75;
+}
+
+/* Mots-clés : if, else, function, foreach, param, return … */
+.token.keyword,
+.token.important {
+  color: #c084fc;
+  font-weight: 500;
+}
+
+/* Chaînes */
+.token.string,
+.token.char,
+.token.attr-value {
+  color: #fbbf24;
+}
+
+/* Nombres */
+.token.number,
+.token.boolean,
+.token.constant,
+.token.symbol {
+  color: #f97316;
+}
+
+/* Noms de fonctions et cmdlets */
+.token.function,
+.token.function-name {
+  color: #60a5fa;
+}
+
+/* Variables : $var, ${var} */
+.token.variable,
+.token.variable.important {
+  color: #22d3ee;
+}
+
+/* Classes, types */
+.token.class-name,
+.token.builtin,
+.token.type {
+  color: #4ade80;
+}
+
+/* Opérateurs */
+.token.operator,
+.token.entity {
+  color: #94a3b8;
+}
+
+/* Balises / sélecteurs */
+.token.tag,
+.token.selector,
+.token.attr-name {
+  color: #f87171;
+}
+
+/* Regex */
+.token.regex {
+  color: #fb923c;
+}
+
+.token.italic { font-style: italic; }
+.token.bold   { font-weight: bold; }
+
+/* Inline code */
+.sl-inline-code {
+  background: #232640;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  color: #22d3ee;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875em;
+  user-select: text;
+}

@@ -1,0 +1,62 @@
+{
+  "id": "bash-l3-m5",
+  "title": "Cron et planification",
+  "level": 3,
+  "lang": "bash",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Syntaxe crontab",
+      "content": "Cron planifie l'exécution automatique de scripts :\n\n```\n# Format d'une entrée crontab :\n# minute  heure  jour_mois  mois  jour_semaine  commande\n#   *       *        *       *         *\n# (0-59) (0-23)   (1-31)  (1-12)    (0-7)\n# * = n'importe quelle valeur\n# 0,7 dans jour_semaine = dimanche\n\n# Exemples\n# Chaque minute\n* * * * * /chemin/script.sh\n\n# Tous les jours à 2h30\n30 2 * * * /scripts/backup.sh\n\n# Tous les lundis à 9h00\n0 9 * * 1 /scripts/rapport.sh\n\n# Toutes les 15 minutes\n*/15 * * * * /scripts/check.sh\n\n# Le 1er de chaque mois à minuit\n0 0 1 * * /scripts/mensuel.sh\n\n# Du lundi au vendredi à 8h et 17h\n0 8,17 * * 1-5 /scripts/notif.sh\n```"
+    },
+    {
+      "title": "Gérer ses crontabs",
+      "content": "```bash\n# Éditer la crontab de l'utilisateur courant\ncrontab -e\n\n# Lister les crontabs\ncrontab -l\n\n# Supprimer toutes les crontabs\ncrontab -r\n\n# Crontab d'un autre utilisateur (root)\ncrontab -u alice -l\n\n# Importer depuis un fichier\ncrontab fichier_cron.txt\n\n# Sauvegarder la crontab\ncrontab -l > ~/backup_crontab.txt\n\n# Dossiers de cron système (Linux)\nls /etc/cron.d/      # configs nommées\nls /etc/cron.daily/  # scripts quotidiens\nls /etc/cron.weekly/ # scripts hebdomadaires\nls /etc/cron.monthly/# scripts mensuels\n\n# Vérifier les logs cron (Linux)\ngrep CRON /var/log/syslog\njournalctl -u cron\n```"
+    },
+    {
+      "title": "Bonnes pratiques pour scripts cron",
+      "content": "```bash\n#!/bin/bash\n# Script bien conçu pour cron\n\n# 1. Spécifier le PATH (cron a un PATH minimal)\nexport PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\n# 2. Changer de répertoire de travail\ncd /chemin/absolu/du/projet || exit 1\n\n# 3. Fichier de verrou (éviter les doublons)\nLOCKFILE=\"/tmp/mon_script.lock\"\nif [ -f \"$LOCKFILE\" ]; then\n    echo \"Script déjà en cours d'exécution\" >&2\n    exit 1\nfi\ntouch \"$LOCKFILE\"\ntrap 'rm -f \"$LOCKFILE\"' EXIT\n\n# 4. Logger toutes les sorties\nLOG=\"/var/log/mon_script_$(date +%Y%m%d).log\"\nexec >\"$LOG\" 2>&1\n\necho \"Démarrage : $(date)\"\n\n# 5. Votre code ici...\n\necho \"Fin : $(date)\"\n# Le trap supprime $LOCKFILE\n```\n\n**Dans la crontab, rediriger les sorties :**\n```\n30 2 * * * /scripts/backup.sh >> /var/log/backup.log 2>&1\n# ou ignorer complètement\n30 2 * * * /scripts/backup.sh > /dev/null 2>&1\n```"
+    },
+    {
+      "title": "at — tâches ponctuelles",
+      "content": "```bash\n# at exécute une commande une seule fois à une heure donnée\n\n# Syntaxe\necho \"commande\" | at TIME\nat TIME <<< \"commande\"\n\n# Exemples de temps\nat now + 5 minutes\nat 14:30\nat 14:30 tomorrow\nat midnight\nat noon + 1 day\nat 23:59 Dec 31\n\n# Planifier un backup\nat 3:00 AM <<< \"/scripts/backup.sh\"\n\n# Planifier plusieurs commandes\nat now + 1 hour << 'EOF'\ncd /tmp\nls -la > liste_tmp.txt\nEOF\n\n# Gérer les jobs at\natq          # lister les jobs planifiés\natrm 3       # supprimer le job numéro 3\nat -c 3      # voir le contenu du job 3\n```"
+    },
+    {
+      "title": "systemd timers — alternative moderne",
+      "content": "Sur les systèmes systemd, les timers remplacent avantageusement cron :\n\n```bash\n# Voir les timers actifs\nsystemctl list-timers\nsystemctl list-timers --all\n\n# Créer un service et son timer\n# /etc/systemd/system/mon-script.service\ncat > /etc/systemd/system/mon-script.service << 'EOF'\n[Unit]\nDescription=Mon Script Automatique\n\n[Service]\nType=oneshot\nExecStart=/chemin/mon_script.sh\nUser=alice\nEOF\n\n# /etc/systemd/system/mon-script.timer\ncat > /etc/systemd/system/mon-script.timer << 'EOF'\n[Unit]\nDescription=Timer pour Mon Script\n\n[Timer]\nOnCalendar=daily\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF\n\nsystemctl enable --now mon-script.timer\nsystemctl status mon-script.timer\n\n# Voir les logs\njournalctl -u mon-script.service\n```\n\n**Avantages des timers systemd :** journalisation intégrée, gestion des dépendances, catch-up si la machine était éteinte (`Persistent=true`)."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l3-m5-1",
+      "order": 1,
+      "title": "Afficher la syntaxe cron",
+      "instructions": "Affichez une « crontab commentée » qui planifie 3 tâches imaginaires :\n1. Un backup tous les jours à 2h du matin\n2. Un rapport tous les lundis à 9h\n3. Un check toutes les 15 minutes\n\nRésultat attendu (doit contenir `*/15`) :\n```\n0 2 * * * /scripts/backup.sh\n0 9 * * 1 /scripts/rapport.sh\n*/15 * * * * /scripts/check.sh\n```",
+      "expectedOutput": "*/15",
+      "validationType": "contains",
+      "correction": "cat << 'EOF'\n0 2 * * * /scripts/backup.sh\n0 9 * * 1 /scripts/rapport.sh\n*/15 * * * * /scripts/check.sh\nEOF",
+      "explanation": "`*/15` signifie \"toutes les 15 unités\" (ici, minutes). `0 2 * * *` = 2h00 chaque jour. `0 9 * * 1` = 9h00 le lundi (jour 1). Le heredoc `cat << 'EOF'` affiche le texte tel quel sans interprétation des `$`."
+    },
+    {
+      "id": "ex-bash-l3-m5-2",
+      "order": 2,
+      "title": "Script avec verrou",
+      "instructions": "Créez un script qui :\n1. Crée un fichier de verrou `/tmp/test_lock.lock`\n2. Installe un `trap` pour le supprimer à EXIT\n3. Affiche `Script en cours...`\n4. Attend 0.1 secondes (`sleep 0.1`)\n5. Affiche `Script terminé`\n\nRésultat attendu :\n```\nScript en cours...\nScript terminé\n```",
+      "expectedOutput": "Script terminé",
+      "validationType": "contains",
+      "correction": "LOCKFILE=\"/tmp/test_lock.lock\"\ntrap 'rm -f \"$LOCKFILE\"' EXIT\ntouch \"$LOCKFILE\"\n\necho \"Script en cours...\"\nsleep 0.1\necho \"Script terminé\"",
+      "explanation": "Le fichier verrou `$LOCKFILE` empêche deux instances du script de tourner simultanément : au démarrage, vérifiez `if [ -f \"$LOCKFILE\" ]; then exit 1; fi`. Le `trap '...' EXIT` garantit la suppression du verrou même en cas d'erreur — essentiel pour ne pas bloquer les futures exécutions cron."
+    },
+    {
+      "id": "ex-bash-l3-m5-3",
+      "order": 3,
+      "title": "Script de backup avec horodatage",
+      "instructions": "Créez un script qui simule un backup :\n1. Calcule le nom de l'archive : `backup_YYYYMMDD.tar.gz`\n2. Affiche : `Backup : backup_20240115.tar.gz créé`\n(utilisez `date +%Y%m%d` pour la date)\n\nRésultat attendu :\n```\nBackup : backup_... créé\n```",
+      "expectedOutput": "Backup :",
+      "validationType": "contains",
+      "correction": "nom_archive=\"backup_$(date +%Y%m%d).tar.gz\"\necho \"Backup : $nom_archive créé\"",
+      "explanation": "`date +%Y%m%d` formate la date sans séparateurs : `20240115` pour le 15 janvier 2024. Cette convention de nommage `YYYYMMDD` permet un tri alphabétique chronologique des archives. Combiné à `find -mtime +30 -delete`, vous obtenez une rotation automatique des vieux backups."
+    }
+  ]
+}

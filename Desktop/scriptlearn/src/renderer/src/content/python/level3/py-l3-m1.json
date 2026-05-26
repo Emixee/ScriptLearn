@@ -1,0 +1,58 @@
+{
+  "id": "py-l3-m1",
+  "title": "Parsing de logs Linux (auth, syslog)",
+  "lang": "python",
+  "level": 3,
+  "order": 1,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "section": "Structure des logs Linux",
+      "content": "Les logs Linux suivent le format **syslog** :\n```\nJan 15 10:23:45 hostname processus[PID]: message\n```\n\nFichiers de logs critiques pour un analyste SOC :\n\n| Fichier | Contenu |\n|---------|--------|\n| `/var/log/auth.log` | Authentifications, sudo, SSH |\n| `/var/log/syslog` | Messages système généraux |\n| `/var/log/kern.log` | Logs du noyau Linux |\n| `/var/log/apache2/access.log` | Requêtes HTTP Apache |\n| `/var/log/nginx/error.log` | Erreurs Nginx |\n| `/var/log/ufw.log` | Firewall UFW |\n\n```python\nimport re\nfrom collections import Counter, defaultdict\nfrom datetime import datetime\n```"
+    },
+    {
+      "section": "Parser auth.log — détection SSH",
+      "content": "```python\nimport re\nfrom collections import Counter\n\ndef analyser_auth_log(lignes):\n    \"\"\"\n    Analyse les tentatives SSH dans auth.log.\n    Retourne les statistiques et les attaquants.\n    \"\"\"\n    echecs = []      # (timestamp, user, ip)\n    succes = []      # (timestamp, user, ip)\n    \n    # Patterns de log SSH\n    p_echec  = re.compile(r\"(\\w+ \\d+ \\d+:\\d+:\\d+).*Failed password for (\\S+) from (\\d+\\.\\d+\\.\\d+\\.\\d+)\")\n    p_succes = re.compile(r\"(\\w+ \\d+ \\d+:\\d+:\\d+).*Accepted password for (\\S+) from (\\d+\\.\\d+\\.\\d+\\.\\d+)\")\n    p_invalid = re.compile(r\"Failed password for invalid user (\\S+) from (\\d+\\.\\d+\\.\\d+\\.\\d+)\")\n    \n    for ligne in lignes:\n        m = p_echec.search(ligne)\n        if m:\n            echecs.append({\"ts\": m.group(1), \"user\": m.group(2), \"ip\": m.group(3)})\n            continue\n        m = p_succes.search(ligne)\n        if m:\n            succes.append({\"ts\": m.group(1), \"user\": m.group(2), \"ip\": m.group(3)})\n    \n    return echecs, succes\n\n# Test avec logs simulés\nlogs_simules = [\n    \"Jan 15 10:00:01 srv sshd[123]: Failed password for root from 185.220.101.3 port 45100 ssh2\",\n    \"Jan 15 10:00:02 srv sshd[124]: Failed password for root from 185.220.101.3 port 45101 ssh2\",\n    \"Jan 15 10:00:05 srv sshd[125]: Accepted password for admin from 192.168.1.5 port 52000 ssh2\",\n    \"Jan 15 10:00:10 srv sshd[126]: Failed password for invalid user oracle from 194.165.16.11 port 51200 ssh2\",\n]\n\nechecs, succes = analyser_auth_log(logs_simules)\nprint(f\"Échecs SSH : {len(echecs)}\")\nprint(f\"Succès SSH : {len(succes)}\")\nattaquants = Counter(e[\"ip\"] for e in echecs)\nfor ip, n in attaquants.most_common():\n    print(f\"  {ip}: {n} tentatives\")\n```"
+    },
+    {
+      "section": "Détecter le brute force",
+      "content": "```python\nfrom collections import defaultdict\nimport re\n\ndef detecter_brute_force(lignes, seuil=5, fenetre_minutes=10):\n    \"\"\"\n    Détecte les attaques brute force SSH.\n    Alerte si une IP dépasse le seuil dans la fenêtre de temps.\n    \"\"\"\n    echecs_par_ip = defaultdict(list)  # ip → [timestamps]\n    pattern = re.compile(\n        r\"(\\w{3}  ?\\d+ \\d{2}:\\d{2}:\\d{2}).*Failed password.*from (\\d+\\.\\d+\\.\\d+\\.\\d+)\"\n    )\n    \n    for ligne in lignes:\n        m = pattern.search(ligne)\n        if m:\n            echecs_par_ip[m.group(2)].append(m.group(1))\n    \n    alertes = []\n    for ip, timestamps in echecs_par_ip.items():\n        if len(timestamps) >= seuil:\n            alertes.append({\n                \"ip\": ip,\n                \"tentatives\": len(timestamps),\n                \"niveau\": \"CRITIQUE\" if len(timestamps) >= 10 else \"HAUTE\"\n            })\n    \n    return alertes\n\nlogs = [\n    f\"Jan 15 10:00:0{i} srv sshd: Failed password for root from 185.220.101.3 port 4510{i}\"\n    for i in range(8)\n]\nalertes = detecter_brute_force(logs, seuil=5)\nfor a in alertes:\n    print(f\"[{a['niveau']}] Brute force depuis {a['ip']}: {a['tentatives']} tentatives\")\n```"
+    },
+    {
+      "section": "Parser syslog — éléments suspects",
+      "content": "```python\nimport re\n\n# Patterns d'activité suspecte dans syslog\nPATTERNS_SUSPECTS = {\n    \"sudo_echec\":      re.compile(r\"sudo.*authentication failure.*user=(\\S+)\"),\n    \"crontab_modif\":   re.compile(r\"crontab.*EDIT.*for (\\S+)\"),\n    \"user_ajoute\":     re.compile(r\"useradd.*new user.*name=(\\S+)\"),\n    \"nouveau_service\": re.compile(r\"systemd.*Started (\\S+)\"),\n    \"connexion_root\":  re.compile(r\"session opened for user root\"),\n}\n\ndef scanner_syslog(lignes):\n    alertes = []\n    for i, ligne in enumerate(lignes):\n        for nom, pattern in PATTERNS_SUSPECTS.items():\n            m = pattern.search(ligne)\n            if m:\n                alertes.append({\n                    \"ligne\": i+1,\n                    \"type\": nom,\n                    \"detail\": m.group(1) if m.lastindex else \"\",\n                    \"raw\": ligne.strip()\n                })\n    return alertes\n\n# Test\nlogs_test = [\n    \"Jan 15 10:05:00 srv sudo: authentication failure; user=apache\",\n    \"Jan 15 10:06:00 srv useradd[1234]: new user name=backdoor, uid=0\",\n    \"Jan 15 10:07:00 srv systemd: Started sshd.service\",\n]\nfor a in scanner_syslog(logs_test):\n    print(f\"[{a['type']}] Ligne {a['ligne']}: {a['detail']}\")\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l3-m1-ex1",
+      "title": "Extraire les IPs des échecs SSH",
+      "description": "Parser des logs auth.log pour extraire les IPs des échecs d'authentification",
+      "instructions": "Soit ces logs :\n```python\nlogs = [\n    \"Jan 15 10:00:01 srv sshd: Failed password for root from 185.220.101.3 port 45100\",\n    \"Jan 15 10:00:02 srv sshd: Accepted password for admin from 192.168.1.5 port 52000\",\n    \"Jan 15 10:00:03 srv sshd: Failed password for oracle from 194.165.16.11 port 51200\",\n]\n```\nExtrayez les IPs des lignes `Failed password` et affichez :\n```\nAttaquants : ['185.220.101.3', '194.165.16.11']\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "185.220.101.3",
+      "correction": "import re\nlogs = [\n    \"Jan 15 10:00:01 srv sshd: Failed password for root from 185.220.101.3 port 45100\",\n    \"Jan 15 10:00:02 srv sshd: Accepted password for admin from 192.168.1.5 port 52000\",\n    \"Jan 15 10:00:03 srv sshd: Failed password for oracle from 194.165.16.11 port 51200\",\n]\nattaquants = []\nfor log in logs:\n    if \"Failed password\" in log:\n        m = re.search(r\"from (\\d+\\.\\d+\\.\\d+\\.\\d+)\", log)\n        if m:\n            attaquants.append(m.group(1))\nprint(f\"Attaquants : {attaquants}\")",
+      "explanation": "Le filtre `\"Failed password\" in log` pré-filtre avant la regex, ce qui améliore les performances sur de gros fichiers."
+    },
+    {
+      "id": "py-l3-m1-ex2",
+      "title": "Détecter un brute force",
+      "description": "Compter les tentatives SSH par IP et alerter si seuil dépassé",
+      "instructions": "Soit :\n```python\nlogs = [\n    \"Jan 15 10:00:01 srv sshd: Failed password for root from 185.220.101.3\",\n    \"Jan 15 10:00:02 srv sshd: Failed password for admin from 185.220.101.3\",\n    \"Jan 15 10:00:03 srv sshd: Failed password for test from 185.220.101.3\",\n    \"Jan 15 10:00:04 srv sshd: Failed password for root from 10.0.0.1\",\n]\n```\nAffichez les IPs avec **3 tentatives ou plus** :\n```\nBrute force : 185.220.101.3 (3 tentatives)\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Brute force : 185.220.101.3 (3 tentatives)",
+      "correction": "import re\nfrom collections import Counter\nlogs = [\n    \"Jan 15 10:00:01 srv sshd: Failed password for root from 185.220.101.3\",\n    \"Jan 15 10:00:02 srv sshd: Failed password for admin from 185.220.101.3\",\n    \"Jan 15 10:00:03 srv sshd: Failed password for test from 185.220.101.3\",\n    \"Jan 15 10:00:04 srv sshd: Failed password for root from 10.0.0.1\",\n]\nips = [re.search(r\"from (\\d+\\.\\d+\\.\\d+\\.\\d+)\", l).group(1) for l in logs if \"Failed\" in l]\nfor ip, n in Counter(ips).items():\n    if n >= 3:\n        print(f\"Brute force : {ip} ({n} tentatives)\")",
+      "explanation": "Counter + seuil est la technique de base pour la détection de brute force. En production, on ajoute une fenêtre temporelle pour éviter les faux positifs sur de longues périodes."
+    },
+    {
+      "id": "py-l3-m1-ex3",
+      "title": "Identifier les utilisateurs visés",
+      "description": "Extraire les usernames ciblés dans les tentatives SSH",
+      "instructions": "Depuis ces logs, extrayez les usernames **uniques** ciblés dans les `Failed password` :\n```python\nlogs = [\n    \"Jan 15 sshd: Failed password for root from 10.0.0.1\",\n    \"Jan 15 sshd: Failed password for admin from 10.0.0.1\",\n    \"Jan 15 sshd: Failed password for root from 185.220.101.3\",\n    \"Jan 15 sshd: Failed password for postgres from 185.220.101.3\",\n]\n```\nAffichez le nombre de comptes ciblés uniques :\n```\nComptes ciblés : 3\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Comptes ciblés : 3",
+      "correction": "import re\nlogs = [\n    \"Jan 15 sshd: Failed password for root from 10.0.0.1\",\n    \"Jan 15 sshd: Failed password for admin from 10.0.0.1\",\n    \"Jan 15 sshd: Failed password for root from 185.220.101.3\",\n    \"Jan 15 sshd: Failed password for postgres from 185.220.101.3\",\n]\nusers = set()\nfor log in logs:\n    m = re.search(r\"Failed password for (\\S+) from\", log)\n    if m:\n        users.add(m.group(1))\nprint(f\"Comptes ciblés : {len(users)}\")",
+      "explanation": "Un set élimine automatiquement les doublons. Analyser les comptes ciblés (root, admin, postgres) révèle les services vulnérables exposés sur le serveur."
+    }
+  ]
+}

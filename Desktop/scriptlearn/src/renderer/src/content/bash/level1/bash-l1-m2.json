@@ -1,0 +1,72 @@
+{
+  "id": "bash-l1-m2",
+  "title": "Navigation dans le système de fichiers",
+  "level": 1,
+  "lang": "bash",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Se repérer : pwd",
+      "content": "`pwd` (Print Working Directory) affiche le **dossier courant** — là où vous vous trouvez dans l'arborescence.\n\n```bash\npwd\n# Affiche par exemple : /home/utilisateur\n```\n\n**Structure des chemins Linux :**\n- `/` est la **racine** (équivalent de `C:\\` sous Windows)\n- Les dossiers sont séparés par `/` (et non `\\` comme sous Windows)\n- `~` est un raccourci vers votre **dossier personnel** (`/home/votre_nom`)\n- `.` désigne le dossier **courant**\n- `..` désigne le dossier **parent**"
+    },
+    {
+      "title": "Lister les fichiers : ls",
+      "content": "`ls` liste le contenu du dossier courant.\n\n```bash\nls                    # liste simple\nls -l                 # liste détaillée (permissions, taille, date)\nls -a                 # inclut les fichiers cachés (commençant par .)\nls -la                # détaillée + fichiers cachés\nls -lh                # taille lisible (Ko, Mo, Go)\nls /chemin/dossier    # lister un autre dossier\n```\n\n**Comprendre `ls -l` :**\n```\ndrwxr-xr-x  2 alice alice 4096 mai 23 12:00 Documents\n-rw-r--r--  1 alice alice  256 mai 23 11:30 notes.txt\n```\n- `d` = dossier, `-` = fichier\n- `rwx` = droits lecture/écriture/exécution\n- Chiffre = nombre de liens\n- Propriétaire, groupe, taille, date, nom"
+    },
+    {
+      "title": "Se déplacer : cd",
+      "content": "`cd` (Change Directory) change le dossier courant.\n\n```bash\ncd /home/utilisateur    # chemin absolu\ncd Documents           # chemin relatif (sous-dossier)\ncd ..                  # dossier parent\ncd ~                   # dossier personnel\ncd -                   # dossier précédent\ncd /                   # racine du système\n```\n\n**Chemin absolu vs relatif :**\n- **Absolu** : commence par `/` → toujours le même endroit, quel que soit l'emplacement courant\n- **Relatif** : ne commence pas par `/` → relatif au dossier courant\n\n```bash\npwd                    # /home/alice\ncd Documents           # → /home/alice/Documents (relatif)\ncd /home/alice/Photos  # → /home/alice/Photos (absolu)\n```"
+    },
+    {
+      "title": "Créer des dossiers et fichiers",
+      "content": "```bash\n# Créer un dossier\nmkdir MonDossier\nmkdir -p chemin/vers/dossier   # crée les dossiers intermédiaires\n\n# Créer un fichier vide\ntouch monfichier.txt\ntouch fichier1.txt fichier2.txt   # plusieurs fichiers d'un coup\n\n# Créer un fichier avec contenu\necho \"Bonjour\" > notes.txt        # crée (ou écrase) le fichier\necho \"Bonjour\" >> notes.txt       # ajoute à la fin\n```\n\n> **Attention aux espaces dans les noms :** Évitez-les ou mettez le nom entre guillemets. Préférez `mon_dossier` à `mon dossier`."
+    },
+    {
+      "title": "Copier, Déplacer, Supprimer",
+      "content": "```bash\n# Copier\ncp source.txt destination.txt\ncp -r MonDossier/ Sauvegarde/   # -r pour les dossiers (récursif)\n\n# Déplacer / Renommer\nmv ancien.txt nouveau.txt\nmv fichier.txt /chemin/destination/\n\n# Supprimer\nrm fichier.txt\nrm -r MonDossier/      # supprimer un dossier et son contenu\nrm -i fichier.txt      # demander confirmation\n```\n\n> ⚠️ **Attention :** Il n'y a **pas de corbeille** sous Bash. `rm` supprime définitivement. Utilisez `rm -i` (interactif) pour les suppressions importantes."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l1-m2-1",
+      "order": 1,
+      "title": "Afficher le dossier courant",
+      "instructions": "Affichez le **chemin complet** du dossier dans lequel vous vous trouvez.",
+      "expectedOutput": "/",
+      "validationType": "contains",
+      "correction": "pwd",
+      "explanation": "`pwd` (Print Working Directory) affiche le chemin absolu du dossier courant. Sous WSL, vous démarrez généralement dans `/home/votre_nom`. Le résultat commence toujours par `/` (la racine)."
+    },
+    {
+      "id": "ex-bash-l1-m2-2",
+      "order": 2,
+      "title": "Lister les fichiers cachés",
+      "instructions": "Listez **tous** les fichiers de votre dossier personnel (`~`), **y compris les fichiers cachés** (ceux dont le nom commence par `.`).\n\nIndice : l'option `-a` de `ls` inclut les fichiers cachés.",
+      "expectedOutput": ".bashrc",
+      "validationType": "contains",
+      "correction": "ls -la ~",
+      "explanation": "Les fichiers et dossiers dont le nom commence par `.` sont **cachés** sous Linux (ex: `.bashrc`, `.ssh`). L'option `-a` (all) les inclut dans la liste. `-l` affiche les détails. Ces fichiers de configuration sont nombreux dans le dossier personnel."
+    },
+    {
+      "id": "ex-bash-l1-m2-3",
+      "order": 3,
+      "title": "Créer une arborescence",
+      "instructions": "Créez la structure de dossiers suivante en **une seule commande** :\n```\n~/scriptlearn/niveau1/bash/\n```\n\nIndice : `mkdir` avec l'option `-p` crée tous les dossiers intermédiaires.",
+      "expectedOutput": "bash",
+      "validationType": "output_nonempty",
+      "correction": "mkdir -p ~/scriptlearn/niveau1/bash",
+      "explanation": "`-p` (parents) crée automatiquement tous les dossiers du chemin qui n'existent pas encore. Sans `-p`, si `scriptlearn` n'existe pas, la commande échouerait avec une erreur."
+    },
+    {
+      "id": "ex-bash-l1-m2-4",
+      "order": 4,
+      "title": "Naviguer et lister",
+      "instructions": "En **deux commandes** :\n1. Naviguez dans le dossier `~/scriptlearn/niveau1/bash/` que vous venez de créer\n2. Listez son contenu (il est vide, mais `ls` doit s'exécuter sans erreur)\n\nEnsuite, revenez à votre dossier personnel avec `cd ~`.",
+      "expectedOutput": "",
+      "validationType": "output_nonempty",
+      "correction": "cd ~/scriptlearn/niveau1/bash\nls\ncd ~",
+      "explanation": "Si le dossier est vide, `ls` ne retourne rien mais s'exécute sans erreur (code de retour 0). C'est différent d'une erreur (code de retour non nul). Vous pouvez vérifier le code de retour avec `echo $?` : 0 = succès."
+    }
+  ]
+}

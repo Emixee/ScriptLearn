@@ -1,0 +1,58 @@
+{
+  "id": "ps-l6-m6",
+  "title": "Intégration Microsoft Defender et Sentinel",
+  "lang": "powershell",
+  "level": 6,
+  "order": 6,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "section": "Microsoft Defender — API locale PowerShell",
+      "content": "Microsoft Defender expose une interface PowerShell complète pour le monitoring et la réponse.\n\n```powershell\n# ─── Statut Defender ───\n$defender = Get-MpComputerStatus -ErrorAction SilentlyContinue\nif ($defender) {\n    Write-Host \"=== Microsoft Defender ===\"\n    Write-Host \"Protection temps réel : $($defender.RealTimeProtectionEnabled)\"\n    Write-Host \"Signatures (virus) : $($defender.AntivirusSignatureVersion)\"\n    Write-Host \"Dernière mise à jour : $($defender.AntivirusSignatureLastUpdated)\"\n    Write-Host \"Dernier scan : $($defender.QuickScanEndTime)\"\n    Write-Host \"Protection réseau : $($defender.NisEnabled)\"\n} else {\n    Write-Host \"Defender non disponible ou désactivé\"\n}\n\n# ─── Préférences Defender ───\n$prefs = Get-MpPreference -ErrorAction SilentlyContinue\nif ($prefs) {\n    Write-Host \"\"\n    Write-Host \"Exclusions répertoires : $($prefs.ExclusionPath -join ', ')\"\n    Write-Host \"MAPS reporting : $($prefs.MAPSReporting)\"\n}\n```"
+    },
+    {
+      "section": "Analyse des détections Defender",
+      "content": "```powershell\n# Analyser les détections Defender récentes\n\nfunction Get-DefenderDetections {\n    param([int]$DerniersJours = 7)\n    \n    try {\n        $detections = Get-MpThreatDetection -ErrorAction Stop\n        \n        if ($detections) {\n            $recentes = $detections | Where-Object { \n                $_.InitialDetectionTime -gt (Get-Date).AddDays(-$DerniersJours)\n            }\n            \n            Write-Host \"Détections Defender ($DerniersJours j) : $($recentes.Count)\"\n            \n            $recentes | Sort-Object InitialDetectionTime -Descending |\n                Select-Object -First 10 | ForEach-Object {\n                $menace = Get-MpThreat -ThreatID $_.ThreatID -ErrorAction SilentlyContinue\n                Write-Host \"\"\n                Write-Host \"  Menace      : $($menace.ThreatName)\"\n                Write-Host \"  Catégorie   : $($menace.CategoryID)\"\n                Write-Host \"  Sévérité    : $($menace.SeverityID)\"\n                Write-Host \"  Détecté le  : $($_.InitialDetectionTime)\"\n                Write-Host \"  Fichier     : $($_.Resources -join ',')\"\n                Write-Host \"  Statut      : $($_.CurrentThreatExecutionStatusID)\"\n            }\n        } else {\n            Write-Host \"Aucune détection récente\"\n        }\n    } catch {\n        Write-Host \"Erreur : $_\"\n        Write-Host \"(Defender non disponible ou droits insuffisants)\"\n    }\n}\n\nGet-DefenderDetections -DerniersJours 30\n\n# ─── Lancer un scan rapide ───\n# Start-MpScan -ScanType QuickScan\n# Start-MpScan -ScanType FullScan -ScanPath 'C:\\Users'\n```"
+    },
+    {
+      "section": "Sentinel — Requêtes via API REST",
+      "content": "```powershell\n# Interaction avec Microsoft Sentinel via API Azure\n# Prérequis : Az module ou token d'accès\n\nfunction Get-SentinelIncidents {\n    param(\n        [string]$SubscriptionId,\n        [string]$ResourceGroup,\n        [string]$WorkspaceName,\n        [string]$Token,\n        [int]$MaxIncidents = 10\n    )\n    \n    $baseUrl = \"https://management.azure.com/subscriptions/$SubscriptionId\"\n    $baseUrl += \"/resourceGroups/$ResourceGroup/providers/Microsoft.OperationalInsights\"\n    $baseUrl += \"/workspaces/$WorkspaceName/providers/Microsoft.SecurityInsights\"\n    \n    $headers = @{ Authorization = \"Bearer $Token\" }\n    \n    $url = \"$baseUrl/incidents?api-version=2023-02-01&`$top=$MaxIncidents&`$orderby=properties/createdTimeUtc desc\"\n    \n    try {\n        $response = Invoke-RestMethod -Uri $url -Headers $headers -Method GET\n        return $response.value\n    } catch {\n        Write-Error \"Erreur API Sentinel : $_\"\n        return $null\n    }\n}\n\n# Simulation du format d'un incident Sentinel\n$incident_exemple = [PSCustomObject]@{\n    name       = 'a1b2c3d4-...'\n    properties = [PSCustomObject]@{\n        title            = 'Possible Brute Force SSH'\n        severity         = 'High'\n        status           = 'New'\n        createdTimeUtc   = (Get-Date).AddHours(-2)\n        alertsCount      = 3\n        tactics          = @('CredentialAccess', 'InitialAccess')\n    }\n}\n\nWrite-Host \"Incident Sentinel (exemple) :\"\nWrite-Host \"  Titre    : $($incident_exemple.properties.title)\"\nWrite-Host \"  Sévérité : $($incident_exemple.properties.severity)\"\nWrite-Host \"  Tactiques: $($incident_exemple.properties.tactics -join ', ')\"\nWrite-Host \"  Alertes  : $($incident_exemple.properties.alertsCount)\"\n```"
+    },
+    {
+      "section": "Playbook PowerShell — réponse automatisée Sentinel",
+      "content": "```powershell\n# Playbook de réponse automatisée intégré à Sentinel\n# (Logique App ou Azure Automation Runbook)\n\nfunction Invoke-PlaybookBruteForce {\n    param(\n        [string]$IP,\n        [string]$IncidentId,\n        [string]$Analyste = 'SOC-Auto'\n    )\n    \n    $log = [System.Collections.Generic.List[string]]::new()\n    $ts = { \"[$(Get-Date -Format 'HH:mm:ss')]\" }\n    \n    $log.Add(\"$(& $ts) Playbook démarré : $IncidentId — IP=$IP\")\n    Write-Host $log[-1]\n    \n    # Étape 1 : Enrichissement (simulation)\n    $log.Add(\"$(& $ts) Enrichissement TIP...\")\n    $ioc = @{ Score=92; Tags=@('tor','brute_force'); Pays='RU' }\n    $log.Add(\"$(& $ts) IOC trouvé : score=$($ioc.Score) pays=$($ioc.Pays)\")\n    Write-Host $log[-1]\n    \n    # Étape 2 : Décision\n    $verdict = if ($ioc.Score -ge 80) { 'BLOQUER' } else { 'SURVEILLER' }\n    $log.Add(\"$(& $ts) Verdict : $verdict\")\n    Write-Host $log[-1]\n    \n    # Étape 3 : Containment (simulation)\n    if ($verdict -eq 'BLOQUER') {\n        $log.Add(\"$(& $ts) [SIMULATION] Blocage firewall : $IP\")\n        Write-Host $log[-1]\n        \n        # En production :\n        # New-AzFirewallPolicyRuleCollectionGroup ... (blocage Azure Firewall)\n        # Set-AzNetworkSecurityRuleConfig ... (blocage NSG)\n    }\n    \n    # Étape 4 : Mise à jour incident Sentinel (simulation)\n    $log.Add(\"$(& $ts) [SIMULATION] Incident $IncidentId mis à jour — statut: InProgress\")\n    Write-Host $log[-1]\n    \n    # Rapport\n    $rapport = $log -join \"`n\"\n    Write-Host \"`n=== Résumé Playbook ===\"\n    Write-Host \"Actions : $($log.Count) étapes\"\n    Write-Host \"Verdict final : $verdict\"\n    \n    return [PSCustomObject]@{ Verdict=$verdict; Log=$rapport; Etapes=$log.Count }\n}\n\n$result = Invoke-PlaybookBruteForce -IP '185.220.101.3' -IncidentId 'INC-2024-001'\nWrite-Host \"`nPlaybook terminé : $($result.Etapes) étapes — $($result.Verdict)\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ps-l6-m6-ex1",
+      "title": "Vérifier le statut de Defender",
+      "description": "Interroger l'état de Microsoft Defender via PowerShell",
+      "instructions": "Récupérez le statut Defender avec `Get-MpComputerStatus` et affichez si la protection temps réel est activée :\n```\nProtection temps réel : True\n```\n(ou False selon la configuration)",
+      "validationType": "output_contains",
+      "expectedOutput": "Protection temps réel :",
+      "correction": "$status = Get-MpComputerStatus -ErrorAction SilentlyContinue\n$rtp = if ($status) { $status.RealTimeProtectionEnabled } else { 'N/A' }\nWrite-Host \"Protection temps réel : $rtp\"",
+      "explanation": "`Get-MpComputerStatus` est disponible sur Windows 10/Server 2016+. En SOC, vérifier que la protection temps réel est active fait partie du health check quotidien. Un Defender désactivé sur une machine peut indiquer une compromission (les malwares désactivent l'AV)."
+    },
+    {
+      "id": "ps-l6-m6-ex2",
+      "title": "Lire les préférences Defender",
+      "description": "Auditer les exclusions configurées dans Defender",
+      "instructions": "Récupérez les préférences Defender avec `Get-MpPreference` et affichez le nombre d'exclusions de chemins :\n```\nExclusions configurées : X\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Exclusions configurées :",
+      "correction": "$prefs = Get-MpPreference -ErrorAction SilentlyContinue\n$count = if ($prefs -and $prefs.ExclusionPath) { $prefs.ExclusionPath.Count } else { 0 }\nWrite-Host \"Exclusions configurées : $count\"",
+      "explanation": "Les exclusions Defender sont un IOC critique : les attaquants ajoutent leurs dossiers en exclusion pour éviter la détection. `ExclusionPath`, `ExclusionExtension`, et `ExclusionProcess` sont les vecteurs courants. En incident response, un `C:\\Users\\Public\\` ou `C:\\ProgramData\\` en exclusion est très suspect."
+    },
+    {
+      "id": "ps-l6-m6-ex3",
+      "title": "Simuler un verdict de playbook",
+      "description": "Implémenter la logique de décision d'un playbook SOC",
+      "instructions": "Soit un IOC avec score 92. Si le score est >= 80, le verdict est `BLOQUER`, sinon `SURVEILLER`. Affichez :\n```\nVerdict playbook : BLOQUER\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Verdict playbook : BLOQUER",
+      "correction": "$score = 92\n$verdict = if ($score -ge 80) { 'BLOQUER' } else { 'SURVEILLER' }\nWrite-Host \"Verdict playbook : $verdict\"",
+      "explanation": "La logique if/else inline avec `if ($cond) { val1 } else { val2 }` est l'équivalent PowerShell de l'opérateur ternaire. Dans un playbook Sentinel (Logic App), cette condition déclenche différentes branches d'actions automatisées."
+    }
+  ]
+}

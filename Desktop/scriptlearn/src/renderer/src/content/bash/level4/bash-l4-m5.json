@@ -1,0 +1,62 @@
+{
+  "id": "bash-l4-m5",
+  "title": "Tests et CI/CD",
+  "level": 4,
+  "lang": "bash",
+  "order": 5,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Framework de test en Bash",
+      "content": "```bash\n#!/bin/bash\n# Mini framework de test\n\nPASSED=0\nFAILED=0\nTOTAL=0\n\ndescribe() { echo \"\\n== $1 ==\"; }\n\nit() {\n    local desc=$1\n    local result=0\n    shift\n    \"$@\" 2>/dev/null || result=$?\n    ((TOTAL++))\n    if [ $result -eq 0 ]; then\n        echo \"  ✓ $desc\"\n        ((PASSED++))\n    else\n        echo \"  ✗ $desc\"\n        ((FAILED++))\n    fi\n}\n\nassert_eq() {\n    [ \"$1\" = \"$2\" ] || { echo \"    Attendu: '$2', Obtenu: '$1'\"; return 1; }\n}\n\nassert_contains() {\n    echo \"$1\" | grep -q \"$2\" || { echo \"    '$1' ne contient pas '$2'\"; return 1; }\n}\n\n# Tests\ndescribe \"Fonctions mathématiques\"\nit \"addition\" assert_eq $((2+2)) 4\nit \"multiplication\" assert_eq $((3*4)) 12\n\ndescribe \"Chaînes\"\nit \"minuscules\" assert_eq \"$(echo HELLO | tr '[:upper:]' '[:lower:]')\" \"hello\"\nit \"longueur\" assert_eq ${#HELLO} 5\n\necho \"\\nRésultat : $PASSED/$TOTAL tests passés\"\n[ $FAILED -eq 0 ] || exit 1\n```"
+    },
+    {
+      "title": "Intégration continue — GitHub Actions",
+      "content": "```yaml\n# .github/workflows/test.yml\nname: Tests Bash\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      \n      - name: Vérification syntaxe\n        run: |\n          find . -name '*.sh' -exec bash -n {} \\;\n      \n      - name: ShellCheck\n        uses: ludeeus/action-shellcheck@master\n        with:\n          severity: warning\n      \n      - name: Exécuter les tests\n        run: |\n          chmod +x tests/run_tests.sh\n          ./tests/run_tests.sh\n      \n      - name: Upload logs\n        if: failure()\n        uses: actions/upload-artifact@v4\n        with:\n          name: test-logs\n          path: /tmp/*.log\n```"
+    },
+    {
+      "title": "ShellCheck et qualité du code",
+      "content": "```bash\n# ShellCheck analyse le code bash statiquement\n# Installation : apt install shellcheck / brew install shellcheck\n\n# Problèmes courants détectés par ShellCheck\n\n# SC2086 : guillemets manquants\nfile=mon fichier.txt\nrm $file           # SC2086: Double quote\nrm \"$file\"         # correct\n\n# SC2046 : word splitting dans $(...)\nfor f in $(ls); do  # SC2046: Quote\nfor f in *; do       # correct (glob)\n\n# SC2064 : trap sans guillemets\ntrap 'rm -f $tmp' EXIT  # mieux avec doubles guillemets dans certains cas\ntrap \"rm -f \\\"$tmp\\\"\" EXIT  # correct si $tmp doit s'évaluer maintenant\n\n# SC2155 : déclaration et assignation séparées\nlocal var=$(commande)        # SC2155\nlocal var; var=$(commande)   # correct\n\n# Directives ShellCheck\n# shellcheck disable=SC2086  # désactiver pour une ligne\n# shellcheck source=lib.sh    # indiquer la source\n\n# Vérifier un fichier\nshellcheck mon_script.sh\n# Vérifier plusieurs fichiers\nfind . -name '*.sh' | xargs shellcheck\n```"
+    },
+    {
+      "title": "Git hooks",
+      "content": "```bash\n#!/bin/bash\n# .git/hooks/pre-commit\n# Vérifications avant chaque commit\n\nset -e\n\necho \"=== Pre-commit checks ===\"\n\n# 1. ShellCheck sur les fichiers .sh modifiés\nchanged_sh=$(git diff --cached --name-only --diff-filter=ACM | grep '\\.sh$' || true)\n\nif [ -n \"$changed_sh\" ]; then\n    echo \"ShellCheck...\"\n    echo \"$changed_sh\" | xargs shellcheck || {\n        echo \"ShellCheck a trouvé des erreurs\"\n        exit 1\n    }\nfi\n\n# 2. Vérifier la syntaxe bash\nfor f in $changed_sh; do\n    bash -n \"$f\" || { echo \"Syntaxe invalide : $f\"; exit 1; }\ndone\n\n# 3. Vérifier qu'il n'y a pas de secrets évidents\nif git diff --cached | grep -E '(password|secret|token|key)\\s*=\\s*[^$\"\\x27{]' | grep -v '#'; then\n    echo \"ATTENTION : secret potentiel dans le diff !\"\n    exit 1\nfi\n\necho \"Toutes les vérifications sont passées\"\n```"
+    },
+    {
+      "title": "Docker et conteneurisation",
+      "content": "```bash\n#!/bin/bash\n# Scripts d'aide Docker\n\n# Build et tag\ndocker_build() {\n    local name=$1 tag=${2:-latest}\n    local git_hash\n    git_hash=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')\n    \n    docker build \\\n        --tag \"$name:$tag\" \\\n        --tag \"$name:$git_hash\" \\\n        --build-arg BUILD_DATE=\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \\\n        --build-arg GIT_HASH=\"$git_hash\" \\\n        .\n}\n\n# Health check d'un conteneur\nwait_container_healthy() {\n    local name=$1 timeout=${2:-60}\n    local elapsed=0\n    \n    while [ $elapsed -lt $timeout ]; do\n        status=$(docker inspect --format='{{.State.Health.Status}}' \"$name\" 2>/dev/null)\n        [ \"$status\" = \"healthy\" ] && { echo \"$name est healthy\"; return 0; }\n        sleep 2\n        ((elapsed+=2))\n    done\n    \n    echo \"Timeout : $name n'est pas healthy après ${timeout}s\" >&2\n    return 1\n}\n\n# Nettoyage\ndocker_cleanup() {\n    docker image prune -f\n    docker container prune -f\n    docker volume prune -f\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l4-m5-1",
+      "order": 1,
+      "title": "Mini framework de test",
+      "instructions": "Créez un mini framework avec des fonctions `assert_eq` et `assert_ne`. Testez :\n- `assert_eq \"hello\" \"hello\"` → doit afficher `[PASS]`\n- `assert_ne \"foo\" \"bar\"` → doit afficher `[PASS]`\n- `assert_eq \"foo\" \"bar\"` → doit afficher `[FAIL]`\n\nRésultat attendu :\n```\n[PASS] hello == hello\n[PASS] foo != bar\n[FAIL] foo != bar (attendu égal)\n```",
+      "expectedOutput": "[PASS] hello == hello",
+      "validationType": "contains",
+      "correction": "PASSED=0; FAILED=0\n\nassert_eq() {\n    if [ \"$1\" = \"$2\" ]; then\n        echo \"[PASS] $1 == $2\"; ((PASSED++))\n    else\n        echo \"[FAIL] $1 != $2 (attendu égal)\"; ((FAILED++))\n    fi\n}\n\nassert_ne() {\n    if [ \"$1\" != \"$2\" ]; then\n        echo \"[PASS] $1 != $2\"; ((PASSED++))\n    else\n        echo \"[FAIL] $1 == $2 (attendu différent)\"; ((FAILED++))\n    fi\n}\n\nassert_eq \"hello\" \"hello\"\nassert_ne \"foo\" \"bar\"\nassert_eq \"foo\" \"bar\"\n\necho \"Résultat : $PASSED passés, $FAILED échoués\"",
+      "explanation": "Ce pattern de mini-framework de test est la base de BATS (Bash Automated Testing System). Les fonctions `assert_*` testent une condition et incrémentent les compteurs. `((PASSED++))` est la syntaxe arithmétique Bash pour l'incrémentation. Le code de sortie final (`exit 1` si $FAILED > 0) permet l'intégration CI."
+    },
+    {
+      "id": "ex-bash-l4-m5-2",
+      "order": 2,
+      "title": "Vérification de syntaxe",
+      "instructions": "Écrivez un script qui vérifie la syntaxe de tous les scripts `.sh` dans le dossier courant avec `bash -n`.\n\n1. Créez deux fichiers : `bon_script.sh` (syntaxe valide) et un test de validation\n2. Affichez `OK : bon_script.sh` pour chaque fichier valide\n\nRésultat attendu :\n```\nOK : bon_script.sh\n```",
+      "expectedOutput": "OK :",
+      "validationType": "contains",
+      "correction": "echo '#!/bin/bash\\necho hello' > bon_script.sh\n\nfor f in *.sh; do\n    [ -f \"$f\" ] || continue\n    if bash -n \"$f\" 2>/dev/null; then\n        echo \"OK : $f\"\n    else\n        echo \"ERREUR : $f\" >&2\n    fi\ndone\n\nrm -f bon_script.sh",
+      "explanation": "`bash -n script.sh` parse le script sans l'exécuter et retourne 0 si la syntaxe est valide, non-zéro sinon. `2>/dev/null` cache les messages d'erreur de syntaxe. Ce type de vérification est typiquement fait dans un hook pre-commit ou un pipeline CI pour détecter les erreurs de syntaxe avant le déploiement."
+    },
+    {
+      "id": "ex-bash-l4-m5-3",
+      "order": 3,
+      "title": "Pipeline CI simulé",
+      "instructions": "Simulez un pipeline CI en 3 étapes :\n1. `lint` : vérifier que `$SCRIPT` est défini\n2. `test` : vérifier que `1+1=2`\n3. `deploy` : afficher `Déploiement en production`\n\nAffichez le statut de chaque étape.\n\nRésultat attendu :\n```\n[LINT]   OK\n[TEST]   OK\n[DEPLOY] Déploiement en production\n```",
+      "expectedOutput": "[DEPLOY]",
+      "validationType": "contains",
+      "correction": "SCRIPT=\"mon_script.sh\"\n\nstep() {\n    local name=$1 status=$2\n    printf \"[%-6s] %s\\n\" \"$name\" \"$status\"\n}\n\n# Lint\nif [ -n \"${SCRIPT:-}\" ]; then\n    step LINT OK\nelse\n    step LINT \"ÉCHEC : SCRIPT non défini\"\n    exit 1\nfi\n\n# Test\nif [ $((1+1)) -eq 2 ]; then\n    step TEST OK\nelse\n    step TEST \"ÉCHEC\"\n    exit 1\nfi\n\n# Deploy\nstep DEPLOY \"Déploiement en production\"",
+      "explanation": "`printf \"[%-6s] %s\\n\"` formate la sortie : `%-6s` aligne le nom de l'étape à gauche sur 6 caractères. Ce pattern d'affichage structuré rend les logs CI lisibles. Chaque étape retourne un code de sortie non-zéro en cas d'échec, ce qui avec `set -e` arrête le pipeline immédiatement."
+    }
+  ]
+}

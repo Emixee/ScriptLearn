@@ -1,0 +1,62 @@
+{
+  "id": "py-l1-m1",
+  "title": "Introduction à Python",
+  "lang": "python",
+  "level": 1,
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "section": "Pourquoi Python pour un analyste SOC ?",
+      "content": "Python est le langage **#1 de la cybersécurité**. Voici pourquoi chaque analyste SOC doit le maîtriser :\n\n- **Parsing de logs** : lire, filtrer et analyser des millions de lignes de logs en secondes\n- **APIs de sécurité** : interroger VirusTotal, AbuseIPDB, MISP, Shodan programmatiquement\n- **Automatisation IR** : scripts de collecte de preuves, triage, containment automatique\n- **Analyse de malware** : extraire des IOC, analyser des binaires, désobfusquer du code\n- **Outils SIEM** : Splunk, Elastic, Microsoft Sentinel ont tous des APIs Python\n\nPython est disponible partout (Windows, Linux, macOS) et s'installe en une commande."
+    },
+    {
+      "section": "Lancer Python",
+      "content": "Pour démarrer Python en mode interactif (REPL) :\n\n```bash\npython\n```\n\nVous verrez le prompt `>>>`. Tapez du code directement :\n\n```python\n>>> print(\"Hello, SOC!\")\nHello, SOC!\n>>> 2 + 2\n4\n>>> exit()\n```\n\nPour exécuter un script Python :\n```bash\npython mon_script.py\n```"
+    },
+    {
+      "section": "Votre premier script",
+      "content": "Un script Python est un fichier texte avec l'extension `.py`. Exemple de `hello_soc.py` :\n\n```python\n# Mon premier script SOC\nprint(\"=== ScriptLearn SOC ===\")\nprint(\"Bienvenue dans l'analyse de sécurité !\")\n\nip = \"192.168.1.1\"\nprint(f\"IP analysée : {ip}\")\n```\n\nPoints clés :\n- `#` commence un commentaire\n- `print()` affiche du texte\n- `f\"...\"` est une f-string (formatage moderne)\n- L'indentation est **obligatoire** en Python (4 espaces par convention)"
+    },
+    {
+      "section": "Types de base",
+      "content": "Python reconnaît automatiquement le type de vos données :\n\n```python\n# Chaîne de caractères (str)\nip = \"192.168.1.105\"\ndomaine = 'malware.example.com'\n\n# Entier (int)\nport = 443\nnombre_alertes = 0\n\n# Flottant (float)\nscore_risque = 8.5\n\n# Booléen (bool)\nest_malveillant = True\nbloqué = False\n\n# Afficher le type\nprint(type(ip))    # <class 'str'>\nprint(type(port))  # <class 'int'>\n```"
+    },
+    {
+      "section": "Opérations essentielles",
+      "content": "```python\n# Concaténation\nalerte = \"Connexion suspecte depuis \" + ip\nprint(alerte)\n\n# F-strings (recommandé)\nprint(f\"Port {port} ouvert sur {ip}\")\n\n# Opérations sur chaînes\nhash_md5 = \"A1B2C3D4E5F6\"\nprint(hash_md5.lower())     # a1b2c3d4e5f6\nprint(hash_md5.upper())     # A1B2C3D4E5F6\nprint(len(hash_md5))        # 12\nprint(\"C3\" in hash_md5)    # True\n\n# Vérifier un type d'IP (simple)\nprint(ip.startswith(\"192.\"))  # True\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m1-ex1",
+      "title": "Hello, SOC !",
+      "description": "Afficher un message de bienvenue avec print()",
+      "instructions": "Utilisez `print()` pour afficher le texte :\n```\nBonjour, analyste SOC !\n```\n\nEn Python, `print(\"texte\")` affiche du texte suivi d'un retour à la ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "analyste SOC",
+      "correction": "print(\"Bonjour, analyste SOC !\")",
+      "explanation": "`print()` est la fonction d'affichage de base en Python. Les chaînes peuvent être entre guillemets simples ou doubles."
+    },
+    {
+      "id": "py-l1-m1-ex2",
+      "title": "Variable IP",
+      "description": "Créer une variable ip et afficher son contenu avec une f-string",
+      "instructions": "Créez une variable `ip` contenant la valeur `\"10.0.0.1\"` puis affichez :\n```\nIP suspecte : 10.0.0.1\n```\nUtilisez une f-string : `f\"IP suspecte : {ip}\"`",
+      "validationType": "output_contains",
+      "expectedOutput": "IP suspecte : 10.0.0.1",
+      "correction": "ip = \"10.0.0.1\"\nprint(f\"IP suspecte : {ip}\")",
+      "explanation": "Les variables Python ne nécessitent pas de déclaration de type. Les f-strings (préfixées de `f`) permettent d'insérer des variables directement dans une chaîne avec `{nom_variable}`."
+    },
+    {
+      "id": "py-l1-m1-ex3",
+      "title": "Analyser un hash",
+      "description": "Travailler avec un hash MD5 et afficher sa longueur",
+      "instructions": "Créez une variable `hash_md5 = \"d41d8cd98f00b204e9800998ecf8427e\"` puis affichez :\n```\nHash MD5 : d41d8cd98f00b204e9800998ecf8427e\nLongueur : 32\n```\nUtilisez `len()` pour obtenir la longueur.",
+      "validationType": "output_contains",
+      "expectedOutput": "Longueur : 32",
+      "correction": "hash_md5 = \"d41d8cd98f00b204e9800998ecf8427e\"\nprint(f\"Hash MD5 : {hash_md5}\")\nprint(f\"Longueur : {len(hash_md5)}\")",
+      "explanation": "`len()` renvoie le nombre de caractères d'une chaîne. Un hash MD5 a toujours 32 caractères hexadécimaux."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "py-l1-m4",
+  "title": "Fonctions et modules standards",
+  "lang": "python",
+  "level": 1,
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "section": "Définir des fonctions",
+      "content": "Les fonctions permettent de réutiliser du code — essentiel pour construire des outils SOC :\n\n```python\ndef classifier_ip(ip):\n    \"\"\"Retourne le type d'une adresse IP.\"\"\"\n    if ip.startswith(\"10.\") or ip.startswith(\"172.\") or ip.startswith(\"192.168.\"):\n        return \"privée\"\n    elif ip.startswith(\"127.\"):\n        return \"loopback\"\n    else:\n        return \"publique\"\n\n# Appel\nresult = classifier_ip(\"185.220.101.3\")\nprint(result)  # publique\n\nfor ip in [\"10.0.0.1\", \"8.8.8.8\", \"127.0.0.1\"]:\n    print(f\"{ip} → {classifier_ip(ip)}\")\n```"
+    },
+    {
+      "section": "Paramètres et valeurs par défaut",
+      "content": "```python\ndef generer_alerte(ip, port, niveau=\"MOYEN\", message=\"Connexion suspecte\"):\n    return f\"[{niveau}] {ip}:{port} — {message}\"\n\n# Avec valeurs par défaut\nprint(generer_alerte(\"10.0.0.5\", 4444))\n# [MOYEN] 10.0.0.5:4444 — Connexion suspecte\n\n# Surcharge des paramètres\nprint(generer_alerte(\"185.100.1.5\", 22, niveau=\"CRITIQUE\", message=\"SSH Brute Force\"))\n# [CRITIQUE] 185.100.1.5:22 — SSH Brute Force\n\n# Retourner plusieurs valeurs\ndef analyser_connexion(ip, port):\n    est_suspecte = port in [4444, 1337, 31337]\n    score = 9.0 if est_suspecte else 2.0\n    return est_suspecte, score\n\nsuspecte, score = analyser_connexion(\"10.0.0.1\", 4444)\nprint(f\"Suspecte: {suspecte}, Score: {score}\")\n```"
+    },
+    {
+      "section": "Modules essentiels — os et sys",
+      "content": "```python\nimport os\nimport sys\n\n# os : interaction avec le système d'exploitation\nprint(os.getcwd())              # Répertoire courant\nprint(os.path.exists(\"/etc/passwd\"))  # Vérifier si un fichier existe\nprint(os.path.basename(\"/var/log/auth.log\"))  # auth.log\nprint(os.path.dirname(\"/var/log/auth.log\"))   # /var/log\n\n# Lister les fichiers de logs\nlogs = os.listdir(\"/var/log\") if os.path.exists(\"/var/log\") else []\nfor f in logs[:5]:\n    print(f)\n\n# sys : informations sur l'environnement Python\nprint(sys.platform)    # win32 ou linux\nprint(sys.version)     # version Python\n```"
+    },
+    {
+      "section": "Module datetime — timestamps",
+      "content": "```python\nfrom datetime import datetime, timedelta\n\n# Date et heure actuelles\nmaintenant = datetime.now()\nprint(maintenant)  # 2024-01-15 10:23:45.123456\n\n# Formater\nprint(maintenant.strftime(\"%Y-%m-%d %H:%M:%S\"))\n# 2024-01-15 10:23:45\n\n# Parser un timestamp de log\nts_str = \"Jan 15 10:23:45\"\nts = datetime.strptime(ts_str, \"%b %d %H:%M:%S\")\nprint(ts)\n\n# Calcul temporel (détection d'ancienneté)\ndepuis = datetime(2024, 1, 10)\njours_ecoulés = (maintenant - depuis).days\nprint(f\"Alerte vieille de {jours_ecoulés} jours\")\n\n# Fenêtre temporelle (alertes de la dernière heure)\nil_y_a_1h = maintenant - timedelta(hours=1)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l1-m4-ex1",
+      "title": "Fonction de classification de port",
+      "description": "Créer une fonction qui retourne la catégorie d'un port",
+      "instructions": "Écrivez une fonction `categorie_port(port)` qui retourne :\n- `\"bien connu\"` si port <= 1023\n- `\"enregistré\"` si port <= 49151\n- `\"dynamique\"` sinon\n\nAffichez le résultat pour le port `8080` :\n```\nenregistré\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "enregistré",
+      "correction": "def categorie_port(port):\n    if port <= 1023:\n        return \"bien connu\"\n    elif port <= 49151:\n        return \"enregistré\"\n    else:\n        return \"dynamique\"\n\nprint(categorie_port(8080))",
+      "explanation": "Les fonctions Python utilisent `def` suivi du nom et des paramètres. `return` renvoie une valeur. La classification des ports (0-1023, 1024-49151, 49152-65535) est définie par l'IANA."
+    },
+    {
+      "id": "py-l1-m4-ex2",
+      "title": "Formater un timestamp",
+      "description": "Utiliser datetime pour formater la date actuelle",
+      "instructions": "Importez `datetime` depuis le module `datetime`. Affichez la date du jour au format :\n```\nDate : YYYY-MM-DD\n```\n(La valeur exacte dépend de la date du jour, vérifiez que le format est correct)\n\nUtilisez `datetime.now().strftime(\"%Y-%m-%d\")`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Date : 2",
+      "correction": "from datetime import datetime\ndate = datetime.now().strftime(\"%Y-%m-%d\")\nprint(f\"Date : {date}\")",
+      "explanation": "`strftime()` formate une date selon un pattern. `%Y` = année 4 chiffres, `%m` = mois, `%d` = jour. Indispensable pour horodater les alertes et rapports SOC."
+    },
+    {
+      "id": "py-l1-m4-ex3",
+      "title": "Vérifier l'existence d'un chemin",
+      "description": "Utiliser os.path pour vérifier l'existence d'un fichier de log",
+      "instructions": "Importez `os`. Vérifiez si le chemin `C:\\Windows\\System32\\drivers\\etc\\hosts` existe et affichez :\n```\nFichier hosts trouvé : True\n```\nou\n```\nFichier hosts trouvé : False\n```\nSelon le résultat de `os.path.exists(chemin)`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Fichier hosts trouvé :",
+      "correction": "import os\nchemin = r\"C:\\Windows\\System32\\drivers\\etc\\hosts\"\nprint(f\"Fichier hosts trouvé : {os.path.exists(chemin)}\")",
+      "explanation": "`os.path.exists()` renvoie `True` si le chemin existe. Le préfixe `r` devant la chaîne crée une \"raw string\" où les backslashes ne sont pas des caractères d'échappement."
+    }
+  ]
+}

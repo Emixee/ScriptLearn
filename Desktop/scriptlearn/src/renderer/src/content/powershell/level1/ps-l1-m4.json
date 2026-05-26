@@ -1,0 +1,72 @@
+{
+  "id": "ps-l1-m4",
+  "title": "Créer et exécuter un script .ps1",
+  "level": 1,
+  "lang": "powershell",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'un script .ps1 ?",
+      "content": "Un **script PowerShell** est un simple fichier texte avec l'extension `.ps1` qui contient une suite de commandes PowerShell. Au lieu de taper les commandes une par une dans la console, on les écrit dans un fichier et on exécute ce fichier.\n\nAvantages :\n- Réutilisable : exécuter le même script autant de fois que nécessaire\n- Partageable : envoyer le script à d'autres personnes\n- Versionnable : suivre les modifications avec Git"
+    },
+    {
+      "title": "La politique d'exécution (ExecutionPolicy)",
+      "content": "Par défaut, Windows **bloque l'exécution des scripts** PowerShell pour des raisons de sécurité. C'est la **politique d'exécution** (`ExecutionPolicy`).\n\nPour vérifier la politique actuelle :\n```powershell\nGet-ExecutionPolicy\n```\n\nPolitiques courantes :\n- `Restricted` — aucun script n'est autorisé (défaut)\n- `RemoteSigned` — les scripts locaux s'exécutent ; les scripts téléchargés doivent être signés\n- `Unrestricted` — tous les scripts s'exécutent (non recommandé)\n\nPour autoriser les scripts locaux (recommandé pour l'apprentissage) :\n```powershell\nSet-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned\n```\n\nLe paramètre `-Scope CurrentUser` applique le changement uniquement à votre compte, sans modifier le système global."
+    },
+    {
+      "title": "Créer un script",
+      "content": "Un script PowerShell peut être créé avec n'importe quel éditeur de texte. Exemple de script simple `bonjour.ps1` :\n\n```powershell\n# Ceci est un commentaire\n$nom = \"Alice\"\nWrite-Host \"Bonjour, $nom !\"\nWrite-Host \"La date est : $(Get-Date -Format 'dd/MM/yyyy')\"\n```\n\nLes lignes commençant par `#` sont des **commentaires** : PowerShell les ignore complètement. Ils servent à documenter le code."
+    },
+    {
+      "title": "Exécuter un script",
+      "content": "Pour exécuter un script, utilisez son chemin précédé de `.\\ ` (point-barre oblique) si vous êtes dans le même dossier :\n\n```powershell\n# Se placer dans le bon dossier\nSet-Location C:\\Scripts\n\n# Exécuter le script\n.\\bonjour.ps1\n```\n\nOu spécifiez le chemin complet :\n```powershell\n& \"C:\\Scripts\\bonjour.ps1\"\n```\n\nLe `&` (opérateur d'appel) est utile quand le chemin contient des espaces."
+    },
+    {
+      "title": "Les paramètres d'un script",
+      "content": "Un script peut accepter des **arguments** en entrée grâce au bloc `param()` au début du fichier :\n\n```powershell\n# saluer.ps1\nparam(\n    [string]$Prenom = \"Inconnu\",\n    [int]$Age = 0\n)\n\nWrite-Host \"Bonjour $Prenom, vous avez $Age ans.\"\n```\n\nExécution avec arguments :\n```powershell\n.\\saluer.ps1 -Prenom \"Alice\" -Age 30\n# Affiche : Bonjour Alice, vous avez 30 ans.\n```\n\n`[string]` et `[int]` définissent le **type** attendu. La valeur après `=` est la valeur **par défaut** si le paramètre est omis."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-ps-l1-m4-1",
+      "order": 1,
+      "title": "Vérifier la politique d'exécution",
+      "instructions": "Affichez la politique d'exécution PowerShell **actuellement active** sur votre machine.\n\nUtilisez `Get-ExecutionPolicy`.",
+      "expectedOutput": "Restricted",
+      "validationType": "output_nonempty",
+      "correction": "Get-ExecutionPolicy",
+      "explanation": "`Get-ExecutionPolicy` retourne le niveau de sécurité actif. Sur Windows, la valeur par défaut est `Restricted`. Si vous voyez `RemoteSigned` ou `Unrestricted`, la politique a déjà été modifiée sur cette machine."
+    },
+    {
+      "id": "ex-ps-l1-m4-2",
+      "order": 2,
+      "title": "Créer un script depuis PowerShell",
+      "instructions": "Créez un fichier `premier_script.ps1` dans `C:\\Temp\\ScriptLearn\\` avec le contenu suivant :\n\n```\nWrite-Host \"Mon premier script PowerShell !\"\n```\n\nUtilisez `New-Item` avec le paramètre `-Value`.\n\n```powershell\nNew-Item -ItemType File -Path ??? -Value ??? -Force\n```",
+      "expectedOutput": "premier_script.ps1",
+      "validationType": "contains",
+      "correction": "New-Item -ItemType File -Path C:\\Temp\\ScriptLearn\\premier_script.ps1 -Value 'Write-Host \"Mon premier script PowerShell !\"' -Force",
+      "explanation": "`-Value` permet de définir le contenu du fichier dès sa création. `-Force` crée les dossiers parents si nécessaire. On utilise des guillemets simples pour le contenu de `-Value` afin d'éviter que PowerShell n'interprète les guillemets doubles internes."
+    },
+    {
+      "id": "ex-ps-l1-m4-3",
+      "order": 3,
+      "title": "Afficher le contenu du script créé",
+      "instructions": "Affichez le **contenu** du fichier `premier_script.ps1` que vous venez de créer.\n\nUtilisez `Get-Content`.",
+      "expectedOutput": "Write-Host",
+      "validationType": "contains",
+      "correction": "Get-Content C:\\Temp\\ScriptLearn\\premier_script.ps1",
+      "explanation": "`Get-Content` lit le contenu d'un fichier texte et l'affiche ligne par ligne. C'est l'équivalent de `cat` sous Linux."
+    },
+    {
+      "id": "ex-ps-l1-m4-4",
+      "order": 4,
+      "title": "Écrire un script avec la date du jour",
+      "instructions": "Dans le terminal, tapez directement ce petit script en **plusieurs lignes** (le terminal accepte les sauts de ligne avec `Shift+Entrée` dans PowerShell ISE, ou tapez chaque commande séparément) :\n\n```powershell\n$date = Get-Date -Format \"dd/MM/yyyy\"\nWrite-Host \"Aujourd'hui nous sommes le $date\"\n```\n\nRésultat attendu (avec la date du jour) :\n```\nAujourd'hui nous sommes le 23/05/2026\n```",
+      "expectedOutput": "nous sommes le",
+      "validationType": "contains",
+      "correction": "$date = Get-Date -Format \"dd/MM/yyyy\"\nWrite-Host \"Aujourd'hui nous sommes le $date\"",
+      "explanation": "`Get-Date` retourne la date et l'heure actuelles. Le paramètre `-Format` permet de définir l'affichage : `dd` = jour, `MM` = mois, `yyyy` = année sur 4 chiffres."
+    }
+  ]
+}

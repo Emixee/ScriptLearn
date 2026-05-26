@@ -1,0 +1,74 @@
+{
+  "id": "git-m2",
+  "title": "Branches et fusion",
+  "level": 8,
+  "lang": "git",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Les branches Git",
+      "content": "Une **branche** est un pointeur léger vers un commit. Elles permettent de développer des fonctionnalités en parallèle sans perturber le code principal.\n\n```bash\ngit branch              # lister les branches\ngit branch ma-feature   # créer une branche\ngit switch ma-feature   # se déplacer vers la branche\ngit switch -c nouvelle  # créer ET basculer (raccourci)\n```\n\nLa branche principale s'appelle `main` (ou `master` dans les anciens dépôts)."
+    },
+    {
+      "title": "Fusionner avec git merge",
+      "content": "Une fois la fonctionnalité terminée, on **fusionne** la branche dans `main` :\n\n```bash\ngit switch main\ngit merge ma-feature\n```\n\n**Fast-forward** : si `main` n'a pas évolué, Git déplace simplement le pointeur.\n\n**Merge commit** : si les deux branches ont divergé, Git crée un commit de fusion.\n\nEn cas de **conflit**, Git marque les fichiers avec `<<<<<<<` et `>>>>>>>`. Il faut les résoudre manuellement puis `git add` + `git commit`."
+    },
+    {
+      "title": "Visualiser et nettoyer",
+      "content": "```bash\n# Voir l'historique avec branches\ngit log --oneline --graph --all\n\n# Voir les différences entre branches\ngit diff main..ma-feature\n\n# Supprimer une branche fusionnée\ngit branch -d ma-feature\n\n# Supprimer une branche non fusionnée (forcer)\ngit branch -D branche-abandonnee\n\n# Voir sur quelle branche on est\ngit branch --show-current\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-m2-1",
+      "order": 1,
+      "title": "Créer et basculer sur une branche",
+      "instructions": "Créez une nouvelle branche `feature/login` **et basculez immédiatement** dessus.",
+      "requiredKeywords": ["git switch", "-c", "feature/login"],
+      "validationType": "keywords",
+      "correction": "git switch -c feature/login",
+      "explanation": "`git switch -c nom` = créer + basculer en une commande. Ancienne syntaxe équivalente : `git checkout -b nom`. Préférez `git switch` (plus clair) dans les nouvelles versions."
+    },
+    {
+      "id": "ex-git-m2-2",
+      "order": 2,
+      "title": "Lister toutes les branches",
+      "instructions": "Listez **toutes les branches** du dépôt, locales et distantes.",
+      "requiredKeywords": ["git branch", "-a"],
+      "validationType": "keywords",
+      "correction": "git branch -a",
+      "explanation": "`git branch` seul affiche les branches locales. `-a` (all) inclut aussi les branches distantes (préfixées `remotes/origin/...`)."
+    },
+    {
+      "id": "ex-git-m2-3",
+      "order": 3,
+      "title": "Fusionner une branche",
+      "instructions": "Depuis la branche `main`, fusionnez la branche `feature/login` dedans.",
+      "requiredKeywords": ["git merge", "feature/login"],
+      "validationType": "keywords",
+      "correction": "git switch main && git merge feature/login",
+      "explanation": "On fusionne **depuis la branche cible** (`main`). `git merge feature/login` intègre tous les commits de `feature/login` dans `main`."
+    },
+    {
+      "id": "ex-git-m2-4",
+      "order": 4,
+      "title": "Voir les différences entre branches",
+      "instructions": "Affichez les différences entre la branche `main` et la branche `develop`.",
+      "requiredKeywords": ["git diff", "main", "develop"],
+      "validationType": "keywords",
+      "correction": "git diff main..develop",
+      "explanation": "`git diff A..B` montre les changements présents dans B mais pas dans A. Très utile avant de faire une PR pour vérifier ce qu'on s'apprête à fusionner."
+    },
+    {
+      "id": "ex-git-m2-5",
+      "order": 5,
+      "title": "Visualiser l'historique en graphe",
+      "instructions": "Affichez l'historique en **graphe ASCII** avec toutes les branches.",
+      "requiredKeywords": ["git log", "--graph", "--oneline", "--all"],
+      "validationType": "keywords",
+      "correction": "git log --graph --oneline --all",
+      "explanation": "`--graph` dessine les embranchements en ASCII. `--all` inclut toutes les branches. C'est le moyen le plus rapide de visualiser la topologie du dépôt sans outil externe."
+    }
+  ]
+}

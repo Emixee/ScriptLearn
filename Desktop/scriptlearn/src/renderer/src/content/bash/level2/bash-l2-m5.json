@@ -1,0 +1,72 @@
+{
+  "id": "bash-l2-m5",
+  "title": "Fonctions avancées",
+  "level": 2,
+  "lang": "bash",
+  "order": 5,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Retourner des valeurs",
+      "content": "En Bash, `return` ne retourne qu'un **code de sortie entier** (0-255). Pour retourner une chaîne ou un nombre, utilisez `echo` avec substitution :\n\n```bash\n# Mauvaise approche (return avec entier)\ncarre() {\n    return $(($1 * $1))   # limité à 0-255 !\n}\n\n# Bonne approche : echo + $()\ncarre() {\n    local n=$1\n    echo $((n * n))\n}\n\nresultat=$(carre 7)\necho \"7² = $resultat\"   # 7² = 49\n\n# Retourner plusieurs valeurs (via stdout)\ndivision() {\n    local dividende=$1 diviseur=$2\n    local quotient=$((dividende / diviseur))\n    local reste=$((dividende % diviseur))\n    echo \"$quotient $reste\"\n}\n\nlecture quotient reste <<< $(division 17 5)\necho \"17 ÷ 5 = $quotient reste $reste\"   # 17 ÷ 5 = 3 reste 2\n```"
+    },
+    {
+      "title": "Variables locales et portée",
+      "content": "Sans `local`, les variables de fonction sont globales !\n\n```bash\ncompteur=100  # variable globale\n\nmauvaise_fonction() {\n    compteur=0  # écrase la variable globale !\n    echo \"Dans la fonction : $compteur\"\n}\n\nbonne_fonction() {\n    local compteur=0  # variable locale : ne touche pas à la globale\n    local message=\"local\"  # toujours local\n    echo \"Dans la fonction : $compteur ($message)\"\n}\n\nmauvaise_fonction\necho \"Après mauvaise_fonction : $compteur\"  # 0 (écrasée !)\n\nbonne_fonction\necho \"Après bonne_fonction : $compteur\"     # 0 (globale conservée)\n```\n\n**Règles de bonnes pratiques :**\n1. Utilisez toujours `local` pour les variables de fonction\n2. Déclarez toutes les variables locales en début de fonction\n3. Évitez de modifier des variables globales depuis les fonctions"
+    },
+    {
+      "title": "Fonctions avec validation des arguments",
+      "content": "```bash\ndiviser() {\n    local dividende=$1\n    local diviseur=$2\n    \n    # Validation\n    if [ -z \"$dividende\" ] || [ -z \"$diviseur\" ]; then\n        echo \"Usage : diviser <dividende> <diviseur>\" >&2\n        return 1\n    fi\n    \n    if [ \"$diviseur\" -eq 0 ]; then\n        echo \"Erreur : division par zéro\" >&2\n        return 2\n    fi\n    \n    echo $((dividende / diviseur))\n}\n\n# Utilisation avec gestion d'erreur\nif resultat=$(diviser 20 4); then\n    echo \"Résultat : $resultat\"\nelse\n    echo \"Erreur (code : $?)\" >&2\nfi\n```\n\n**Codes de retour conventionnels :**\n- `0` = succès\n- `1` = erreur générale\n- `2` = mauvaise utilisation (mauvais arguments)"
+    },
+    {
+      "title": "Récursion",
+      "content": "Les fonctions Bash peuvent s'appeler elles-mêmes :\n\n```bash\n# Factorielle\nfactorielle() {\n    local n=$1\n    if [ $n -le 1 ]; then\n        echo 1\n    else\n        local sous=$(factorielle $((n-1)))\n        echo $((n * sous))\n    fi\n}\n\necho \"5! = $(factorielle 5)\"   # 5! = 120\n\n# Fibonacci (moins efficace, mais illustratif)\nfibo() {\n    local n=$1\n    [ $n -le 1 ] && echo $n && return\n    local a=$(fibo $((n-1)))\n    local b=$(fibo $((n-2)))\n    echo $((a + b))\n}\necho \"fibo(8) = $(fibo 8)\"   # 21\n```\n\n> **Attention :** La récursion Bash est lente car chaque appel crée un sous-shell. Pour les calculs intensifs, préférez les boucles."
+    },
+    {
+      "title": "Bibliothèques de fonctions",
+      "content": "On peut organiser les fonctions dans des fichiers séparés et les charger avec `source` (ou `.`) :\n\n```bash\n# Fichier : ~/scriptlearn/lib/utils.sh\nlog_info()  { echo \"[INFO]  $(date +%H:%M:%S) $*\"; }\nlog_warn()  { echo \"[WARN]  $(date +%H:%M:%S) $*\" >&2; }\nlog_error() { echo \"[ERROR] $(date +%H:%M:%S) $*\" >&2; }\n\nis_number() {\n    [[ $1 =~ ^[0-9]+$ ]]\n}\n\n# Fichier principal : mon_script.sh\nsource ~/scriptlearn/lib/utils.sh\n# ou : . ~/scriptlearn/lib/utils.sh\n\nlog_info \"Démarrage du script\"\nis_number \"42\" && echo \"C'est un nombre\" || echo \"Pas un nombre\"\nlog_info \"Fin\"\n```\n\n`$*` dans une fonction représente tous les arguments combinés en une chaîne."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l2-m5-1",
+      "order": 1,
+      "title": "Fonction qui retourne une valeur",
+      "instructions": "Créez une fonction `maximum` qui prend deux nombres en argument et affiche le plus grand.\n\n```bash\nmaximum 15 8  # doit afficher 15\nmaximum 3 42  # doit afficher 42\n```\n\nAppellez-la et affichez le résultat avec `$(maximum 15 8)`.",
+      "expectedOutput": "15",
+      "validationType": "contains",
+      "correction": "maximum() {\n    local a=$1 b=$2\n    if [ $a -ge $b ]; then\n        echo $a\n    else\n        echo $b\n    fi\n}\n\nresultat=$(maximum 15 8)\necho $resultat",
+      "explanation": "La fonction utilise `echo` pour « retourner » une valeur, et l'appelant la capture avec `$(maximum ...)`. Cette technique de substitution de commande `$()` est le seul moyen en Bash de récupérer une valeur chaîne depuis une fonction."
+    },
+    {
+      "id": "ex-bash-l2-m5-2",
+      "order": 2,
+      "title": "Variables locales",
+      "instructions": "Créez une variable globale `x=100`. Écrivez une fonction `tester` qui définit `local x=0` et affiche `x` depuis la fonction. Puis affichez `x` depuis le script principal.\n\nRésultat attendu :\n```\nDans la fonction : 0\nDans le script : 100\n```",
+      "expectedOutput": "Dans le script : 100",
+      "validationType": "contains",
+      "correction": "x=100\n\ntester() {\n    local x=0\n    echo \"Dans la fonction : $x\"\n}\n\ntester\necho \"Dans le script : $x\"",
+      "explanation": "`local x=0` crée une variable `x` qui n'existe que dans la fonction. À l'extérieur, la variable globale `x=100` est inchangée. Sans `local`, la ligne `x=0` dans la fonction écraserait la variable globale — un bug difficile à tracer !"
+    },
+    {
+      "id": "ex-bash-l2-m5-3",
+      "order": 3,
+      "title": "Fonction avec validation",
+      "instructions": "Créez une fonction `racine_carree` qui :\n1. Vérifie que l'argument est fourni et positif\n2. Calcule la racine carrée via `echo \"scale=2; sqrt($1)\" | bc`\n3. Retourne une erreur (`return 1`) si l'argument est invalide\n\nTestez avec `racine_carree 16` → `4.00`",
+      "expectedOutput": "4.00",
+      "validationType": "contains",
+      "correction": "racine_carree() {\n    if [ -z \"$1\" ] || [ \"$1\" -lt 0 ] 2>/dev/null; then\n        echo \"Erreur : argument invalide\" >&2\n        return 1\n    fi\n    echo \"scale=2; sqrt($1)\" | bc\n}\n\nracine_carree 16",
+      "explanation": "`bc` (Basic Calculator) effectue des calculs en virgule flottante. `scale=2` définit 2 décimales. `sqrt()` est une fonction intégrée de `bc`. `2>/dev/null` supprime les erreurs si `$1` n'est pas un nombre (le test `-lt 0` échouerait sur une chaîne)."
+    },
+    {
+      "id": "ex-bash-l2-m5-4",
+      "order": 4,
+      "title": "Factorielle récursive",
+      "instructions": "Créez une fonction `factorielle` qui calcule n! de façon récursive.\n\nRésultat attendu :\n```\n6! = 720\n```",
+      "expectedOutput": "720",
+      "validationType": "contains",
+      "correction": "factorielle() {\n    local n=$1\n    if [ $n -le 1 ]; then\n        echo 1\n    else\n        local sous=$(factorielle $((n-1)))\n        echo $((n * sous))\n    fi\n}\n\necho \"6! = $(factorielle 6)\"",
+      "explanation": "La récursion Bash crée un **sous-shell** à chaque appel de `$(factorielle ...)`. Pour n=6, cela crée 6 sous-shells imbriqués. C'est fonctionnel mais lent : évitez la récursion profonde en Bash. Pour des calculs intensifs, utilisez Python ou une boucle."
+    }
+  ]
+}

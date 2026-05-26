@@ -1,0 +1,58 @@
+{
+  "id": "py-l5-m6",
+  "title": "Projet final — outil SOC complet",
+  "lang": "python",
+  "level": 5,
+  "order": 6,
+  "estimatedMinutes": 90,
+  "course": [
+    {
+      "section": "Architecture de l'outil SOC complet",
+      "content": "Ce module final assemble toutes les compétences Python pour construire un outil SOC complet : ingestion de logs, enrichissement TIP, corrélation, génération d'alertes et rapport.\n\n```\nFlux de données :\n[Logs bruts] → [Parser] → [Normaliseur] → [TIP Lookup]\n                                               ↓\n                                        [Moteur règles]\n                                               ↓\n                                     [Alertes] → [Rapport]\n```\n\n```python\nimport json\nimport re\nimport os\nfrom datetime import datetime\nfrom collections import defaultdict, Counter\n\n# ─── Configuration ───────────────────────────────────────────\nCONFIG = {\n    \"seuil_brute_force\": 5,\n    \"seuil_score_ioc\": 70,\n    \"rapport_html\": True,\n    \"rapport_json\": True,\n}\n\n# ─── Base IOC locale ─────────────────────────────────────────\nIOC_DB = {\n    \"185.220.101.3\":  {\"score\": 95, \"tags\": [\"tor\", \"c2\"]},\n    \"194.165.16.11\":  {\"score\": 75, \"tags\": [\"scanner\"]},\n    \"malware.xyz\":    {\"score\": 90, \"tags\": [\"phishing\", \"c2\"]},\n}\nprint(f\"Config chargée | IOC DB : {len(IOC_DB)} entrées\")\n```"
+    },
+    {
+      "section": "Parsing et normalisation des logs",
+      "content": "```python\ndef parser_log_ssh(ligne):\n    \"\"\"\n    Parse une ligne de log SSH au format syslog.\n    Retourne un événement normalisé ou None.\n    \"\"\"\n    patterns = {\n        \"ssh_fail\":    re.compile(r\"Failed (\\w+) for (\\S+) from (\\S+) port (\\d+)\"),\n        \"ssh_success\": re.compile(r\"Accepted (\\w+) for (\\S+) from (\\S+) port (\\d+)\"),\n        \"disconnect\":  re.compile(r\"Disconnected from (\\S+) port (\\d+)\"),\n    }\n    for type_evt, pattern in patterns.items():\n        m = pattern.search(ligne)\n        if m:\n            evt = {\"type\": type_evt, \"raw\": ligne.strip()}\n            if type_evt in (\"ssh_fail\", \"ssh_success\"):\n                evt.update({\"method\": m.group(1), \"user\": m.group(2),\n                             \"ip\": m.group(3), \"port\": m.group(4)})\n            return evt\n    return None\n\ndef parser_logs(lignes):\n    \"\"\"Parse une liste de lignes de logs.\"\"\"\n    evenements = []\n    for ligne in lignes:\n        evt = parser_log_ssh(ligne)\n        if evt:\n            evt[\"ts\"] = datetime.now().isoformat()\n            evenements.append(evt)\n    print(f\"Parsed : {len(evenements)} événements sur {len(lignes)} lignes\")\n    return evenements\n\n# Données de test\nlogs_test = [\n    \"Jan 15 10:00:01 sshd: Failed password for root from 185.220.101.3 port 54321\",\n    \"Jan 15 10:00:02 sshd: Failed password for admin from 185.220.101.3 port 54322\",\n    \"Jan 15 10:00:03 sshd: Failed password for root from 185.220.101.3 port 54323\",\n    \"Jan 15 10:00:04 sshd: Failed password for www-data from 185.220.101.3 port 54324\",\n    \"Jan 15 10:00:05 sshd: Failed password for ubuntu from 185.220.101.3 port 54325\",\n    \"Jan 15 10:00:10 sshd: Accepted password for www-data from 185.220.101.3 port 54330\",\n    \"Jan 15 10:01:00 sshd: Failed password for root from 10.0.0.5 port 22100\",\n]\nevenements = parser_logs(logs_test)\nfor e in evenements[:3]:\n    print(f\"  {e['type']:15} ip={e.get('ip')} user={e.get('user')}\")\n```"
+    },
+    {
+      "section": "Pipeline d'analyse complet",
+      "content": "```python\ndef enrichir_evenements(evenements, ioc_db):\n    \"\"\"Enrichit les événements avec la TIP.\"\"\"\n    for evt in evenements:\n        ip = evt.get(\"ip\")\n        if ip and ip in ioc_db:\n            evt[\"ioc_match\"] = ioc_db[ip]\n            evt[\"ioc_score\"] = ioc_db[ip][\"score\"]\n    return evenements\n\ndef detecter_alertes(evenements, config):\n    \"\"\"Applique les règles de détection.\"\"\"\n    alertes = []\n    par_ip = defaultdict(lambda: defaultdict(list))\n    \n    for evt in evenements:\n        ip = evt.get(\"ip\", \"N/A\")\n        par_ip[ip][evt[\"type\"]].append(evt)\n    \n    for ip, types in par_ip.items():\n        echecs = types.get(\"ssh_fail\", [])\n        succes = types.get(\"ssh_success\", [])\n        ioc = evenements[0].get(\"ioc_match\") if evenements else None\n        ioc_score = max((e.get(\"ioc_score\", 0) for e in evenements if e.get(\"ip\") == ip), default=0)\n        \n        # Règle : Brute Force\n        if len(echecs) >= config[\"seuil_brute_force\"]:\n            alertes.append({\"regle\": \"BRUTE_FORCE\", \"ip\": ip,\n                            \"severite\": \"HAUTE\", \"count\": len(echecs)})\n        \n        # Règle : IOC connu + connexion réussie → Intrusion\n        if ioc_score >= config[\"seuil_score_ioc\"] and succes:\n            alertes.append({\"regle\": \"INTRUSION_IOC\", \"ip\": ip,\n                            \"severite\": \"CRITIQUE\", \"ioc_score\": ioc_score})\n        \n        # Règle : Brute Force suivi de succès → Compromission\n        if echecs and succes:\n            alertes.append({\"regle\": \"COMPROMISSION\", \"ip\": ip,\n                            \"severite\": \"CRITIQUE\",\n                            \"details\": f\"{len(echecs)} echecs + connexion réussie\"})\n    \n    return alertes\n\n# Pipeline complet\nevenements = enrichir_evenements(evenements, IOC_DB)\nalertes = detecter_alertes(evenements, CONFIG)\n\nprint(f\"\\n{'='*50}\")\nprint(f\"ALERTES GÉNÉRÉES : {len(alertes)}\")\nprint('='*50)\nfor a in alertes:\n    print(f\"[{a['severite']:9}] {a['regle']:20} IP={a['ip']}\")\n```"
+    },
+    {
+      "section": "Génération du rapport final",
+      "content": "```python\ndef generer_rapport_final(evenements, alertes, chemin=\"rapport_soc.json\"):\n    \"\"\"Génère le rapport final de l'analyse SOC.\"\"\"\n    critiques = [a for a in alertes if a[\"severite\"] == \"CRITIQUE\"]\n    ips_uniques = {e.get(\"ip\") for e in evenements if e.get(\"ip\")}\n    \n    rapport = {\n        \"metadata\": {\n            \"timestamp\": datetime.now().isoformat(),\n            \"outil\": \"SOC Analyzer v1.0\",\n            \"analyste\": os.getenv(\"USERNAME\", \"inconnu\")\n        },\n        \"resume\": {\n            \"evenements_analyses\": len(evenements),\n            \"alertes_totales\": len(alertes),\n            \"alertes_critiques\": len(critiques),\n            \"ips_uniques\": len(ips_uniques),\n            \"ioc_matches\": sum(1 for e in evenements if e.get(\"ioc_match\"))\n        },\n        \"alertes\": alertes,\n        \"top_ips\": [\n            {\"ip\": ip, \"count\": count}\n            for ip, count in Counter(e.get(\"ip\") for e in evenements if e.get(\"ip\")).most_common(5)\n        ]\n    }\n    \n    with open(chemin, \"w\", encoding=\"utf-8\") as f:\n        json.dump(rapport, f, indent=2, ensure_ascii=False)\n    \n    print(f\"\\nRapport sauvegardé : {chemin}\")\n    print(f\"Résumé :\")\n    for cle, val in rapport[\"resume\"].items():\n        print(f\"  {cle:<30} : {val}\")\n    \n    # Score de sévérité global\n    score_global = len(critiques) * 20 + len([a for a in alertes if a[\"severite\"] == \"HAUTE\"]) * 10\n    niveau = \"CRITIQUE\" if score_global >= 40 else \"HAUTE\" if score_global >= 20 else \"MOYENNE\"\n    print(f\"\\nNiveau de menace global : {niveau} (score={score_global})\")\n    return rapport\n\nrapport_final = generer_rapport_final(evenements, alertes)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "py-l5-m6-ex1",
+      "title": "Parser et compter les événements SSH",
+      "description": "Extraire les types d'événements de logs SSH",
+      "instructions": "Parsez cette liste de logs et comptez les `fail` et `success` :\n```python\nimport re\nlogs = [\n    \"Failed password for root from 185.220.101.3\",\n    \"Failed password for admin from 185.220.101.3\",\n    \"Accepted password for www-data from 185.220.101.3\",\n]\n```\nAffichez :\n```\nFails: 2 | Success: 1\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Fails: 2 | Success: 1",
+      "correction": "import re\nlogs = [\n    \"Failed password for root from 185.220.101.3\",\n    \"Failed password for admin from 185.220.101.3\",\n    \"Accepted password for www-data from 185.220.101.3\",\n]\nfails = sum(1 for l in logs if re.search(r\"Failed\", l))\nsuccess = sum(1 for l in logs if re.search(r\"Accepted\", l))\nprint(f\"Fails: {fails} | Success: {success}\")",
+      "explanation": "`sum(1 for ...)` est la façon Pythonique de compter les éléments qui satisfont une condition. Évite de créer une liste intermédiaire, plus efficace en mémoire pour de grands logs."
+    },
+    {
+      "id": "py-l5-m6-ex2",
+      "title": "Corréler un événement avec la TIP",
+      "description": "Vérifier si une IP impliquée dans un événement est dans la base IOC",
+      "instructions": "Soit :\n```python\nioc_db = {\"185.220.101.3\": {\"score\": 95, \"tags\": [\"tor\"]}}\nevt = {\"type\": \"ssh_success\", \"ip\": \"185.220.101.3\"}\n```\nSi l'IP est dans l'IOC DB et le score >= 70, affichez :\n```\nCorrélation TIP : CRITIQUE\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Corrélation TIP : CRITIQUE",
+      "correction": "ioc_db = {\"185.220.101.3\": {\"score\": 95, \"tags\": [\"tor\"]}}\nevt = {\"type\": \"ssh_success\", \"ip\": \"185.220.101.3\"}\nip = evt[\"ip\"]\nif ip in ioc_db and ioc_db[ip][\"score\"] >= 70:\n    print(\"Corrélation TIP : CRITIQUE\")\nelse:\n    print(\"Corrélation TIP : OK\")",
+      "explanation": "La corrélation TIP est l'enrichissement le plus important : transformer un événement ordinaire (connexion SSH) en alerte critique en le recoupant avec la threat intelligence."
+    },
+    {
+      "id": "py-l5-m6-ex3",
+      "title": "Générer un résumé d'analyse",
+      "description": "Produire le résumé final d'une session d'analyse SOC",
+      "instructions": "Soit :\n```python\nanalyse = {\n    \"evenements\": 150,\n    \"alertes\": [{\"severite\": \"CRITIQUE\"}, {\"severite\": \"HAUTE\"}, {\"severite\": \"CRITIQUE\"}],\n    \"ioc_matches\": 3,\n}\n```\nAffichez le nombre d'alertes critiques :\n```\nAlertes critiques : 2\n```",
+      "validationType": "output_contains",
+      "expectedOutput": "Alertes critiques : 2",
+      "correction": "analyse = {\n    \"evenements\": 150,\n    \"alertes\": [{\"severite\": \"CRITIQUE\"}, {\"severite\": \"HAUTE\"}, {\"severite\": \"CRITIQUE\"}],\n    \"ioc_matches\": 3,\n}\ncritiques = sum(1 for a in analyse[\"alertes\"] if a[\"severite\"] == \"CRITIQUE\")\nprint(f\"Alertes critiques : {critiques}\")",
+      "explanation": "Ce pattern — compter, filtrer, résumer — est au cœur du travail de tout analyste SOC. Maîtriser Python pour automatiser ces opérations permet de traiter des millions d'événements en secondes plutôt qu'en heures."
+    }
+  ]
+}

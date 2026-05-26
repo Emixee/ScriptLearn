@@ -1,0 +1,62 @@
+{
+  "id": "bash-l5-m6",
+  "title": "Projets et bonnes pratiques finales",
+  "level": 5,
+  "lang": "bash",
+  "order": 6,
+  "estimatedMinutes": 65,
+  "course": [
+    {
+      "title": "Architecture d'un projet Bash professionnel",
+      "content": "```\nmon-projet/\n├── bin/\n│   └── mon-outil              # point d'entrée\n├── lib/\n│   ├── core.sh                # fonctions core\n│   ├── logging.sh             # logging\n│   ├── config.sh              # gestion config\n│   └── utils.sh               # utilitaires\n├── conf/\n│   ├── defaults.conf          # config par défaut\n│   └── production.conf        # config prod\n├── tests/\n│   ├── unit/\n│   │   ├── test_core.sh\n│   │   └── test_utils.sh\n│   ├── integration/\n│   │   └── test_e2e.sh\n│   └── run_tests.sh\n├── docs/\n│   └── README.md\n├── .shellcheckrc              # config ShellCheck\n├── .editorconfig\n└── Makefile\n```\n\n```makefile\n# Makefile\ntest:\n\t@./tests/run_tests.sh\n\nlint:\n\t@find . -name '*.sh' -exec shellcheck {} \\;\n\ninstall:\n\t@install -m 755 bin/mon-outil /usr/local/bin/\n```"
+    },
+    {
+      "title": "Documentation et aide intégrée",
+      "content": "```bash\n#!/bin/bash\n# Documentation à l'intérieur du script\n\n# Convention : commentaires ##\n## Script de déploiement\n## Usage : deploy.sh [OPTIONS] ENVIRONMENT\n## \n## Options :\n##   -b, --branch BRANCH   Branche à déployer (défaut: main)\n##   -f, --force           Forcer le déploiement\n##   -d, --dry-run         Simulation\n##   -h, --help            Afficher cette aide\n##\n## Exemples :\n##   deploy.sh production\n##   deploy.sh -b feature/login staging\n##   deploy.sh --dry-run -b hotfix/bug123 production\n\n# Générer l'aide depuis les commentaires ##\nhelp() {\n    grep '^##' \"$0\" | sed 's/^## \\?//'\n}\n\n# Auto-complétion bash\n_deploy_completion() {\n    local cur prev\n    cur=${COMP_WORDS[COMP_CWORD]}\n    prev=${COMP_WORDS[COMP_CWORD-1]}\n    \n    case $prev in\n        -b|--branch) COMPREPLY=($(git branch -a --format='%(refname:short)' | grep \"^$cur\")) ;;\n        *) COMPREPLY=($(compgen -W \"-b --branch -f --force -d --dry-run -h --help production staging dev\" -- \"$cur\")) ;;\n    esac\n}\nif [[ -n ${BASH_VERSION:-} ]]; then\n    complete -F _deploy_completion deploy.sh\nfi\n```"
+    },
+    {
+      "title": "Tests avancés",
+      "content": "```bash\n#!/bin/bash\n# Framework de tests complet\n\n# bats-core est recommandé en production\n# npm install -g bats\n\n# Fichier: tests/test_functions.bats\n#!/usr/bin/env bats\n\nsetup() {\n    # Charger les fonctions à tester\n    source \"${BATS_TEST_DIRNAME}/../lib/utils.sh\"\n    \n    # Créer un répertoire temporaire\n    export TEST_DIR=\"$(mktemp -d)\"\n}\n\nteardown() {\n    rm -rf \"$TEST_DIR\"\n}\n\n@test \"maximum retourne le plus grand\" {\n    result=$(maximum 5 3)\n    [ \"$result\" -eq 5 ]\n}\n\n@test \"maximum avec nombres égaux\" {\n    result=$(maximum 7 7)\n    [ \"$result\" -eq 7 ]\n}\n\n@test \"nettoyer_entree rejette les entrées vides\" {\n    run nettoyer_entree \"\"\n    [ \"$status\" -eq 1 ]\n}\n\n@test \"nettoyer_entree tronque à 20 caractères\" {\n    result=$(nettoyer_entree \"$(printf 'a%.0s' {1..30})\")\n    [ ${#result} -le 20 ]\n}\n```"
+    },
+    {
+      "title": "Sécurité : validation et sanitisation",
+      "content": "```bash\n#!/bin/bash\n# Bonnes pratiques de sécurité en Bash\n\n# 1. Toujours valider les entrées\nvalidate_path() {\n    local path=$1\n    # Pas de traversée de répertoire\n    [[ $path =~ \\.\\. ]] && { echo \"Chemin invalide\" >&2; return 1; }\n    # Chemin absolu requis\n    [[ $path != /* ]] && { echo \"Chemin absolu requis\" >&2; return 1; }\n    # Pas de caractères dangereux\n    [[ $path =~ [\\;\\&\\|\\$\\`] ]] && { echo \"Caractères interdits\" >&2; return 1; }\n    return 0\n}\n\n# 2. Éviter eval avec des données non fiables\n# DANGEREUX :\nuser_input=\"; rm -rf /tmp/*\"\neval \"echo $user_input\"  # injection de commande !\n\n# SÛR : passer en paramètre, pas via eval\necho \"$user_input\"  # affiche la chaîne littéralement\n\n# 3. Utiliser des tableaux pour les arguments\nfiles=(file1.txt file2.txt \"fichier avec espaces.txt\")\nrm \"${files[@]}\"  # correct\nrm ${files[@]}   # DANGEREUX si espaces dans les noms\n\n# 4. Permissions minimales\numask 077  # fichiers créés avec 600, dossiers avec 700\n\n# 5. Variables sensibles\nreadonly API_KEY=\"$API_KEY_ENV\"  # interdire la réassignation\nunset API_KEY  # effacer quand plus nécessaire\n```"
+    },
+    {
+      "title": "Projet final : outil de déploiement complet",
+      "content": "```bash\n#!/bin/bash\n# deploy.sh — Outil de déploiement complet\nset -euo pipefail\n\nreadonly SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsource \"$SCRIPT_DIR/lib/logging.sh\"\nsource \"$SCRIPT_DIR/lib/config.sh\"\n\n# === Configuration ===\nENV=\"\"\nBRANCH=\"main\"\nDRY_RUN=false\n\n# === Parsing arguments ===\nparse_args() {\n    while [[ $# -gt 0 ]]; do\n        case $1 in\n            -e|--env)    ENV=$2; shift 2 ;;\n            -b|--branch) BRANCH=$2; shift 2 ;;\n            -d|--dry-run) DRY_RUN=true; shift ;;\n            -h|--help)   usage; exit 0 ;;\n            *) log_error \"Option inconnue : $1\"; exit 1 ;;\n        esac\n    done\n    [ -z \"$ENV\" ] && { log_error \"--env requis\"; exit 1; }\n}\n\n# === Pipeline de déploiement ===\ndeploy() {\n    log_info \"Déploiement branche=$BRANCH env=$ENV dry-run=$DRY_RUN\"\n    \n    check_prerequisites\n    checkout_code\n    run_tests\n    build_artifacts\n    \n    if ! $DRY_RUN; then\n        upload_artifacts\n        restart_services\n        verify_deployment\n    fi\n    \n    log_info \"Déploiement terminé avec succès\"\n}\n\nparse_args \"$@\"\ndeploy\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-bash-l5-m6-1",
+      "order": 1,
+      "title": "Validation de sécurité",
+      "instructions": "Créez une fonction `valider_chemin` qui rejette :\n1. Les chemins avec `..` (traversée de répertoire)\n2. Les chemins relatifs (doivent commencer par `/`)\n\nTestez avec `/tmp/valid`, `../../etc/passwd`, et `relative/path`.\n\nRésultat attendu :\n```\n/tmp/valid : OK\n../../etc/passwd : REJETÉ (traversée)\nrelative/path : REJETÉ (relatif)\n```",
+      "expectedOutput": "/tmp/valid : OK",
+      "validationType": "contains",
+      "correction": "valider_chemin() {\n    local path=$1\n    if [[ $path =~ \\.\\.  ]]; then\n        echo \"$path : REJETÉ (traversée)\"\n        return 1\n    fi\n    if [[ $path != /* ]]; then\n        echo \"$path : REJETÉ (relatif)\"\n        return 1\n    fi\n    echo \"$path : OK\"\n    return 0\n}\n\nvalider_chemin \"/tmp/valid\"\nvalider_chemin \"../../etc/passwd\"\nvalider_chemin \"relative/path\"",
+      "explanation": "`[[ $path =~ \\.\\.  ]]` détecte la séquence `..` (traversée de répertoire). `[[ $path != /* ]]` vérifie que le chemin commence par `/`. Ces deux validations empêchent les attaques de traversée de répertoire (`../../../etc/passwd`). En production, utilisez aussi `realpath --canonicalize-existing` pour résoudre les liens symboliques."
+    },
+    {
+      "id": "ex-bash-l5-m6-2",
+      "order": 2,
+      "title": "Documentation auto-générée",
+      "instructions": "Créez un script avec des commentaires `##` et une fonction `aide` qui extrait et affiche ces commentaires.\n\nRésultat attendu :\n```\nScript de démonstration\nUsage : script.sh [options]\n```",
+      "expectedOutput": "Usage :",
+      "validationType": "contains",
+      "correction": "## Script de démonstration\n## Usage : script.sh [options]\n## Options : -h pour l'aide\n\naide() {\n    grep '^##' \"$0\" | sed 's/^## \\?//'\n}\n\naide",
+      "explanation": "La convention `##` pour les commentaires d'aide est un pattern de self-documentation : la documentation est dans le script lui-même. `grep '^##' \"$0\"` lit le fichier courant (`$0`). `sed 's/^## \\?//'` supprime le préfixe `## ` (avec espace optionnel `\\?`). Cela garantit que l'aide est toujours synchronisée avec le code."
+    },
+    {
+      "id": "ex-bash-l5-m6-3",
+      "order": 3,
+      "title": "Mini outil CLI complet",
+      "instructions": "Créez un outil `calculatrice` qui :\n- Accepte `--op add|sub|mul|div`\n- Accepte `--a NUM` et `--b NUM`\n- Valide les arguments\n- Affiche le résultat\n\nTestez avec `--op mul --a 6 --b 7`.\n\nRésultat attendu :\n```\n6 × 7 = 42\n```",
+      "expectedOutput": "6 × 7 = 42",
+      "validationType": "contains",
+      "correction": "OP=\"\"; A=\"\"; B=\"\"\n\nwhile [[ $# -gt 0 ]]; do\n    case $1 in\n        --op) OP=$2; shift 2 ;;\n        --a)  A=$2;  shift 2 ;;\n        --b)  B=$2;  shift 2 ;;\n        -h)   echo \"Usage : $0 --op add|sub|mul|div --a N --b N\"; exit 0 ;;\n        *)    echo \"Option inconnue : $1\" >&2; exit 1 ;;\n    esac\ndone\n\n[ -z \"$OP\" ] || [ -z \"$A\" ] || [ -z \"$B\" ] && {\n    echo \"Erreur : --op, --a et --b sont requis\" >&2; exit 1\n}\n\ncase $OP in\n    add) echo \"$A + $B = $(echo \"$A + $B\" | bc)\" ;;\n    sub) echo \"$A - $B = $(echo \"$A - $B\" | bc)\" ;;\n    mul) echo \"$A × $B = $(echo \"$A * $B\" | bc)\" ;;\n    div) echo \"$A ÷ $B = $(echo \"scale=4; $A / $B\" | bc)\" ;;\n    *)   echo \"Opération inconnue : $OP\" >&2; exit 1 ;;\nesac",
+      "explanation": "Ce script illustre tous les patterns d'un CLI professionnel : parsing d'arguments, validation, gestion d'erreurs, et exécution. `bc` gère les calculs décimaux. `scale=4` pour la division donne 4 décimales. La validation centralisée (`[ -z ... ] || ...`) vérifie tous les paramètres requis avant d'exécuter la logique."
+    }
+  ]
+}
