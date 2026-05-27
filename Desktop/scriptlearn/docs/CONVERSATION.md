@@ -1,9 +1,22 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.0
+## Version actuelle : 0.4.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.1 — Correctif auto-updater (2026-05-27)
+
+### Ce qui a été corrigé
+**Bug** : `src/main/updater.js` cherchait un asset nommé `ScriptLearn-Setup-Hybrid.exe` (nom inexistant dans les releases).
+
+**Cause racine** : electron-builder génère `ScriptLearn Setup X.Y.Z.exe` (avec espaces), et GitHub remplace automatiquement les espaces par des points lors de l'upload → `ScriptLearn.Setup.X.Y.Z.exe`. Le nom change aussi à chaque version (contient X.Y.Z), donc un nom fixe est inutilisable.
+
+**Correction** : recherche dynamique du premier asset `.exe` non-`.blockmap` dans les assets de la release GitHub. Fonctionne pour toutes les versions futures sans modification.
+
+**Fichier modifié** : `src/main/updater.js` — suppression de `ASSET_NAME`, nouvelle logique `assets.find(a => a.name.endsWith('.exe') && !a.name.endsWith('.blockmap'))`
 
 ---
 
