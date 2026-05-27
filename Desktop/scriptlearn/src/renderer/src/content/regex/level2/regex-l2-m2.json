@@ -1,0 +1,74 @@
+{
+  "id": "regex-l2-m2",
+  "title": "Groupes nommés et backreferences",
+  "level": "regex-l2",
+  "lang": "regex",
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Groupes nommés (?P<name>...)",
+      "content": "Les **groupes nommés** permettent de référencer une capture par son nom plutôt que par son numéro :\n\n**Python :**\n```python\n# Syntaxe : (?P<name>...)\npattern = r'(?P<year>\\d{4})-(?P<month>\\d{2})-(?P<day>\\d{2})'\nm = re.match(pattern, '2024-05-15')\nm.group('year')   # '2024'\nm.group('month')  # '05'\nm.group('day')    # '15'\n```\n\n**JavaScript/PCRE :**\n```javascript\n// Syntaxe : (?<name>...)\nconst regex = /(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})/\nconst { year, month, day } = '2024-05-15'.match(regex).groups\n```\n\nAvantage : code auto-documenté, résistant aux réorganisations de groupes."
+    },
+    {
+      "title": "Backreferences — réutiliser une capture",
+      "content": "Une **backreference** (`\\1`, `\\2` ou `\\k<name>`) réutilise dans le pattern ce qu'un groupe a déjà capturé :\n\n```\n# Trouver des mots dupliqués\n\\b(\\w+)\\s+\\1\\b    → \"le le\", \"the the\"...\n\n# Balises HTML ouvrante/fermante\n<(\\w+)>.*?</\\1>   → <h1>titre</h1>, <p>texte</p>\n\n# Guillemets cohérents\n(['\"]).*?\\1       → '...' ou \"...\" (pas '...\")\n```\n\n**Avec groupes nommés :**\n```python\n# Python : \\k<name> ou (?P=name)\nr'(?P<tag>\\w+)>.*?</(?P=tag)'\n\n# Trouver lignes identiques doublées\nr'^(.+)\\n\\1$'\n```"
+    },
+    {
+      "title": "Groupes atomiques et possessifs",
+      "content": "**Groupe atomique** `(?>...)` : une fois matché, ne revient jamais en arrière (no backtracking) :\n```\n# Problème de backtracking\n(a+)a  sur \"aaaa\" : essaie a+={aaaa,aaa,aa,a} → lent\n\n# Atomique — s'arrête au premier match valide\n(?>a+)a  → teste une fois, échoue → beaucoup plus rapide\n```\n\n**Quantificateur possessif** `++`, `*+`, `?+` (PCRE/Java) :\n```\na++  → comme a+ mais possessif (pas de backtracking)\n\\w++  → tous les caractères de mot, possessif\n```\n\n⚠️ Les groupes atomiques et possessifs **ne sont pas disponibles** dans le module `re` de Python de base (disponibles avec `regex` package). Utiles pour optimiser des patterns lents."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l2-m2-1",
+      "order": 1,
+      "title": "Groupe nommé pour une date",
+      "instructions": "Écrivez un pattern avec trois groupes nommés `year`, `month`, `day` pour parser `YYYY-MM-DD` (syntaxe Python `(?P<name>...)`).",
+      "requiredKeywords": ["(?P<year>", "(?P<month>", "(?P<day>"],
+      "validationType": "keywords",
+      "correction": "(?P<year>\\d{4})-(?P<month>\\d{2})-(?P<day>\\d{2})",
+      "explanation": "Les groupes nommés `(?P<year>\\d{4})` etc. permettent d'accéder aux captures par `m.group('year')` au lieu de `m.group(1)`. Le code est plus lisible et moins fragile si on ajoute des groupes."
+    },
+    {
+      "id": "ex-regex-l2-m2-2",
+      "order": 2,
+      "title": "Backreference — mots dupliqués",
+      "instructions": "Écrivez un pattern qui détecte les **mots dupliqués** (`le le`, `the the`) avec une backreference `\\1`.",
+      "requiredKeywords": ["(\\w+)", "\\s+", "\\1"],
+      "validationType": "keywords",
+      "correction": "\\b(\\w+)\\s+\\1\\b",
+      "explanation": "`(\\w+)` capture le premier mot. `\\s+` accepte un ou plusieurs espaces. `\\1` réutilise exactement ce qui a été capturé. `\\b` assure les limites de mot. Utile pour détecter des erreurs de rédaction."
+    },
+    {
+      "id": "ex-regex-l2-m2-3",
+      "order": 3,
+      "title": "Balises HTML cohérentes",
+      "instructions": "Écrivez un pattern qui correspond à des balises HTML `<tag>contenu</tag>` avec une backreference assurant que la balise fermante correspond à la balise ouvrante.",
+      "requiredKeywords": ["<(\\w+)>", "</\\1>"],
+      "validationType": "keywords",
+      "correction": "<(\\w+)>.*?</\\1>",
+      "explanation": "`(\\w+)` capture le nom de la balise. `.*?` (lazy) capture le contenu. `</\\1>` vérifie que la balise fermante est la même. Sans `\\1`, `<h1>titre</p>` serait valide."
+    },
+    {
+      "id": "ex-regex-l2-m2-4",
+      "order": 4,
+      "title": "Guillemets cohérents",
+      "instructions": "Écrivez un pattern qui correspond à du texte entre guillemets, qu'ils soient `'` ou `\"`, avec cohérence (backreference).",
+      "requiredKeywords": ["(['\"])", "\\1"],
+      "validationType": "keywords",
+      "correction": "(['\"]).*?\\1",
+      "explanation": "`(['\"])` capture le guillemet ouvrant. `.*?` accepte n'importe quel contenu (lazy). `\\1` impose le même guillemet fermant. `'hello\"` ne correspond pas — les guillemets doivent être identiques."
+    },
+    {
+      "id": "ex-regex-l2-m2-5",
+      "order": 5,
+      "title": "Groupe nommé en substitution",
+      "instructions": "Écrivez le pattern `(?P<last>\\w+),\\s*(?P<first>\\w+)` et la substitution Python `re.sub` pour inverser en `first last` (syntaxe `\\g<name>`).",
+      "requiredKeywords": ["\\g<first>", "\\g<last>"],
+      "validationType": "keywords",
+      "correction": "re.sub(r'(?P<last>\\w+),\\s*(?P<first>\\w+)', r'\\g<first> \\g<last>', texte)",
+      "explanation": "Dans `re.sub`, les groupes nommés se référencent avec `\\g<name>`. `\\g<first> \\g<last>` inverse l'ordre. `'Dupont, Alice'` → `'Alice Dupont'`. Plus lisible que `\\2 \\1`."
+    }
+  ]
+}

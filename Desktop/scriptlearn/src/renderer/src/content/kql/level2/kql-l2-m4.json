@@ -1,0 +1,74 @@
+{
+  "id": "kql-l2-m4",
+  "title": "Fonctions temporelles et fenêtres glissantes",
+  "level": "kql-l2",
+  "lang": "kql",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Fonctions datetime et durées",
+      "content": "```kql\n// Fonctions temporelles KQL\nprint\n    Now          = now(),\n    Today        = startofday(now()),\n    Yesterday    = startofday(ago(1d)),\n    LastWeek     = startofweek(ago(7d)),\n    LastMonth    = startofmonth(ago(30d))\n\n// Calculs de durée\n| extend\n    AgeMinutes   = datetime_diff('minute', now(), TimeGenerated),\n    AgeHours     = datetime_diff('hour',   now(), TimeGenerated),\n    WeekDay      = dayofweek(TimeGenerated),\n    Month        = monthofyear(TimeGenerated)\n\n// Filtre entre deux datetimes précis\n| where TimeGenerated between\n    (datetime(2024-05-01) .. datetime(2024-05-31))\n\n// Arrondir à l'heure / au jour\n| extend HourBucket = bin(TimeGenerated, 1h)\n| extend DayBucket  = bin(TimeGenerated, 1d)\n```"
+    },
+    {
+      "title": "Patterns temporels — détection d'anomalies",
+      "content": "```kql\n// Comparaison heure courante vs moyenne historique\nlet CurrentHour =\n    SecurityEvent\n    | where TimeGenerated > ago(1h)\n    | where EventID == 4625\n    | count;\n\nlet HistoricalAvg =\n    SecurityEvent\n    | where TimeGenerated between (ago(7d) .. ago(1h))\n    | where EventID == 4625\n    | summarize HourlyCount = count() by bin(TimeGenerated, 1h)\n    | summarize Avg=avg(HourlyCount);\n\nCurrentHour\n| join HistoricalAvg on 1==1  // Cross join (1 ligne chaque)\n| extend Ratio = Count / Avg\n| where Ratio > 3.0  // 3x la moyenne = anomalie\n\n// Activité nocturne vs diurne\nSigninLogs\n| where TimeGenerated > ago(30d)\n| extend Hour = hourofday(TimeGenerated)\n| summarize\n    DayLogins   = countif(Hour between (8 .. 18)),\n    NightLogins = countif(Hour !between (8 .. 18))\n  by UserPrincipalName\n| where NightLogins > DayLogins * 2  // Activité nocturne anormale\n```"
+    },
+    {
+      "title": "prev() et next() — analyse séquentielle",
+      "content": "```kql\n// prev() et next() accèdent aux lignes adjacentes après un tri\nSecurityEvent\n| where TimeGenerated > ago(1h)\n| where Account == \"Alice\"\n| sort by TimeGenerated asc\n| extend\n    PrevEventID  = prev(EventID),\n    PrevTime     = prev(TimeGenerated),\n    TimeSincePrev = TimeGenerated - prev(TimeGenerated)\n| where PrevEventID == 4625 and EventID == 4624\n// Détecte : échec immédiatement suivi d'un succès\n\n// Détecter des séquences suspectes\n// Connexion → Élévation de privilèges → Modification\nSecurityEvent\n| where EventID in (4624, 4672, 4720)\n| sort by Account, TimeGenerated asc\n| extend\n    PrevID = prev(EventID, 1),\n    NextID = next(EventID, 1)\n| where EventID == 4672  // Élévation\n    and PrevID == 4624    // Précédée d'une connexion\n    and NextID == 4720    // Suivie d'une création de compte\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l2-m4-1",
+      "order": 1,
+      "title": "Événements du mois en cours",
+      "instructions": "Affichez tous les événements de `SecurityEvent` du **mois en cours** (de `startofmonth(now())` à maintenant).",
+      "requiredKeywords": ["startofmonth(now())", "between"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated between (startofmonth(now()) .. now())\n| sort by TimeGenerated desc",
+      "explanation": "`startofmonth(now())` retourne le 1er du mois courant à 00:00:00. `between (A .. B)` filtre inclusivement. Équivalent de `where TimeGenerated >= startofmonth(now())`. Utile pour des rapports mensuels automatiques."
+    },
+    {
+      "id": "ex-kql-l2-m4-2",
+      "order": 2,
+      "title": "Connexions nocturnes",
+      "instructions": "Comptez les connexions `SigninLogs` par utilisateur en séparant les **heures de bureau** (8h-18h) et les **heures de nuit** avec `countif()`.",
+      "requiredKeywords": ["countif(", "hourofday", "between (8 .. 18)"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(30d)\n| extend Hour = hourofday(TimeGenerated)\n| summarize DayLogins=countif(Hour between (8 .. 18)), NightLogins=countif(not (Hour between (8 .. 18))) by UserPrincipalName\n| where NightLogins > 0\n| sort by NightLogins desc",
+      "explanation": "`countif(condition)` compte les lignes où la condition est vraie — équivalent de `count()` avec un filtre inline. Séparer connexions de jour et de nuit permet de détecter des utilisateurs avec une activité nocturne anormalement élevée."
+    },
+    {
+      "id": "ex-kql-l2-m4-3",
+      "order": 3,
+      "title": "Volume par heure — timechart",
+      "instructions": "Créez un graphe temporel du nombre d'événements `SecurityEvent` par tranches de **30 minutes** sur les dernières 24h.",
+      "requiredKeywords": ["bin(timegenerated, 30m)", "render timechart"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)\n| summarize Count=count() by bin(TimeGenerated, 30m)\n| render timechart",
+      "explanation": "`bin(TimeGenerated, 30m)` arrondit à la demi-heure. `render timechart` affiche le résultat comme courbe dans Sentinel. Un pic soudain sur le graphe indique une anomalie — attaque, incident, maintenance non planifiée."
+    },
+    {
+      "id": "ex-kql-l2-m4-4",
+      "order": 4,
+      "title": "datetime_diff — durée d'un incident",
+      "instructions": "Calculez la **durée en minutes** entre la première et la dernière tentative de connexion échouée par IP dans `SecurityEvent` (EventID 4625, 1h).",
+      "requiredKeywords": ["datetime_diff('minute'", "min(timegenerated)", "max(timegenerated)"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1h)\n| where EventID == 4625\n| summarize First=min(TimeGenerated), Last=max(TimeGenerated), Total=count() by IpAddress\n| extend DurationMin = datetime_diff('minute', Last, First)\n| sort by Total desc",
+      "explanation": "`datetime_diff('minute', end, start)` calcule la différence en minutes. Combiné avec `min()` et `max()` par groupe, on obtient la durée d'une attaque. Une attaque longue (durée > 60 min) est plus persistante qu'une rafale courte."
+    },
+    {
+      "id": "ex-kql-l2-m4-5",
+      "order": 5,
+      "title": "Comparer période courante et historique",
+      "instructions": "Comparez le nombre de connexions échouées de la **dernière heure** avec la **moyenne horaire des 7 derniers jours** pour détecter une anomalie.",
+      "requiredKeywords": ["let", "ago(1h)", "ago(7d)", "avg("],
+      "validationType": "keywords",
+      "correction": "let CurrentCount = SecurityEvent | where TimeGenerated > ago(1h) | where EventID == 4625 | count;\nlet HistAvg = SecurityEvent | where TimeGenerated between (ago(7d) .. ago(1h)) | where EventID == 4625 | summarize C=count() by bin(TimeGenerated,1h) | summarize Avg=avg(C);\nCurrentCount | join HistAvg on 1==1 | extend Ratio=Count/Avg",
+      "explanation": "Comparer avec une baseline historique est plus robuste qu'un seuil fixe — l'environnement de chaque organisation est différent. Un ratio de 3x la moyenne suggère une anomalie significative. Cette technique est la base de la détection d'anomalies comportementales (UEBA)."
+    }
+  ]
+}

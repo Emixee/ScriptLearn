@@ -1,0 +1,74 @@
+{
+  "id": "spl-l2-m3",
+  "title": "Lookup — enrichir avec des tables de référence",
+  "level": "spl-l2",
+  "lang": "spl",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "lookup — enrichir depuis un fichier CSV",
+      "content": "Un **lookup** enrichit les événements avec des données d'une table de référence (CSV, KV Store) :\n\n```spl\n// Lookup basique — ajouter des colonnes depuis threat_intel.csv\n// Le CSV a les colonnes : ip, threat_type, severity\nindex=web\n| lookup threat_intel.csv ip AS clientip\n  OUTPUT threat_type, severity\n// threat_type et severity sont ajoutés depuis le CSV\n// où threat_intel.ip == événement.clientip\n\n// Garder seulement les lignes avec correspondance (inner join)\n| lookup threat_intel.csv ip AS clientip OUTPUT threat_type\n| where isnotnull(threat_type)\n\n// Lookup avec outputnew — ne remplace pas les champs existants\n| lookup geo_data.csv ip AS src_ip\n  OUTPUTNEW country, city, latitude, longitude\n\n// inputlookup — lire le CSV comme table source\n| inputlookup threat_intel.csv\n| where severity == \"critical\"\n| fields ip, threat_type\n```"
+    },
+    {
+      "title": "Créer des lookups — outputlookup",
+      "content": "```spl\n// outputlookup — sauvegarder le résultat en CSV\nindex=security EventCode=4625 earliest=-24h\n| stats count AS failures BY src_ip\n| where failures > 10\n| outputlookup suspicious_ips.csv\n// Crée ou écrase suspicious_ips.csv dans Splunk\n\n// Puis utiliser dans une autre recherche\nindex=web\n| lookup suspicious_ips.csv src_ip AS clientip\n  OUTPUT failures\n| where isnotnull(failures)\n\n// append=t — ajouter au CSV existant (sans écraser)\nindex=security EventCode=4625\n| stats count BY src_ip\n| outputlookup append=t failed_logins_history.csv\n\n// KV Store (Key-Value Store) — lookup en base NoSQL\n| lookup my_kvstore _key AS sessionid\n  OUTPUT user, risk_score\n```"
+    },
+    {
+      "title": "Macros et lookup transforms",
+      "content": "```spl\n// Macro — requête SPL réutilisable (définie dans Settings > Macros)\n// Appel d'une macro :\n`threat_hunting_base`\n// Équivalent : index=security (EventCode=4625 OR EventCode=4624) earliest=-24h\n\n// Macro avec argument\n`filter_by_host(web01)`\n// Équivalent : | where host=\"web01\"\n\n// lookup transform — lookup avec regex (defini dans transforms.conf)\n// Permet des jointures sur des patterns plutôt que des valeurs exactes\n\n// Combiner lookup + eval + stats\nindex=web earliest=-1h\n| lookup geo_lookup.csv ip AS clientip\n  OUTPUT country, city\n| eval location = country + \", \" + city\n| stats count BY location\n| sort -count\n| head 10\n\n// Enrichir avec les CVE\n| lookup cve_list.csv cve_id OUTPUT cvss_score, description\n| where cvss_score > 7.0\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l2-m3-1",
+      "order": 1,
+      "title": "lookup — enrichir avec Threat Intel",
+      "instructions": "Enrichissez `index=web` avec `threat_intel.csv` en faisant correspondre `clientip` avec le champ `ip` du CSV, et récupérez `threat_type`. Filtrez sur les lignes avec correspondance.",
+      "requiredKeywords": ["| lookup threat_intel.csv ip as clientip", "output threat_type", "isnotnull(threat_type)"],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-1h\n| lookup threat_intel.csv ip AS clientip OUTPUT threat_type\n| where isnotnull(threat_type)\n| table _time, clientip, uri, threat_type",
+      "explanation": "`lookup fichier.csv champ_csv AS champ_event OUTPUT colonnes` : `champ_csv AS champ_event` fait la jointure, `OUTPUT` spécifie les colonnes à ajouter. `isnotnull(threat_type)` filtre les lignes sans correspondance (equivalent inner join)."
+    },
+    {
+      "id": "ex-spl-l2-m3-2",
+      "order": 2,
+      "title": "inputlookup — requêter une table de référence",
+      "instructions": "Lisez directement le contenu de `threat_intel.csv` avec `inputlookup` et filtrez les entrées avec `severity == \"critical\"`.",
+      "requiredKeywords": ["| inputlookup threat_intel.csv", "severity == \"critical\""],
+      "validationType": "keywords",
+      "correction": "| inputlookup threat_intel.csv\n| where severity == \"critical\"\n| table ip, threat_type, severity",
+      "explanation": "`inputlookup` lit le CSV comme source de données (pas besoin d'un index). Utile pour explorer le contenu d'une table de référence, la compter, la filtrer. C'est l'équivalent d'un `SELECT * FROM table` sur les fichiers lookup."
+    },
+    {
+      "id": "ex-spl-l2-m3-3",
+      "order": 3,
+      "title": "outputlookup — sauvegarder des IPs suspectes",
+      "instructions": "Sauvegardez les IPs avec plus de 10 échecs de connexion en 24h dans `suspicious_ips.csv` avec `outputlookup`.",
+      "requiredKeywords": ["stats count as failures by src_ip", "> 10", "| outputlookup suspicious_ips.csv"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-24h\n| stats count AS failures BY src_ip\n| where failures > 10\n| outputlookup suspicious_ips.csv",
+      "explanation": "`outputlookup` exporte le résultat d'une recherche vers un CSV de lookup. Utile pour alimenter d'autres recherches ou tableaux de bord. Cette technique permet de construire des listes dynamiques (IOCs, IPs suspectes) mises à jour automatiquement par des recherches planifiées."
+    },
+    {
+      "id": "ex-spl-l2-m3-4",
+      "order": 4,
+      "title": "lookup géo — top pays sources",
+      "instructions": "Enrichissez `index=web` avec `geo_lookup.csv` (champ `ip` → `clientip`) pour récupérer `country`, puis comptez les connexions par pays.",
+      "requiredKeywords": ["lookup geo_lookup.csv ip as clientip", "output country", "stats count by country"],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-1h\n| lookup geo_lookup.csv ip AS clientip OUTPUTNEW country\n| stats count BY country\n| sort -count\n| head 10",
+      "explanation": "`OUTPUTNEW` ajoute la colonne `country` seulement si elle n'existe pas déjà — évite d'écraser un champ existant. `stats count BY country` agrège ensuite par pays. Utile pour identifier des sources géographiques inhabituelles dans le trafic web."
+    },
+    {
+      "id": "ex-spl-l2-m3-5",
+      "order": 5,
+      "title": "Chaîner lookup + stats",
+      "instructions": "Depuis `index=network`, enrichissez avec `asset_list.csv` (champ `ip` → `src_ip`, récupérer `asset_type` et `owner`), puis comptez les connexions bloquées par type d'asset.",
+      "requiredKeywords": ["lookup asset_list.csv ip as src_ip", "output asset_type", "stats count by asset_type"],
+      "validationType": "keywords",
+      "correction": "index=network action=blocked earliest=-4h\n| lookup asset_list.csv ip AS src_ip OUTPUT asset_type, owner\n| stats count AS blocked_count BY asset_type, owner\n| sort -blocked_count",
+      "explanation": "Chaîner lookup + stats est un pattern courant : d'abord enrichir (ajouter le contexte), puis agréger. Savoir quel type d'asset génère le plus de connexions bloquées aide à prioriser les investigations — un serveur de prod bloqué est plus urgent qu'un poste utilisateur."
+    }
+  ]
+}

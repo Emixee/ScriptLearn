@@ -1,0 +1,74 @@
+{
+  "id": "regex-l1-m1",
+  "title": "Introduction aux expressions régulières",
+  "level": "regex-l1",
+  "lang": "regex",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'une expression régulière ?",
+      "content": "Une **expression régulière** (regex) est un motif de texte qui décrit un ensemble de chaînes. Elle permet de rechercher, valider et extraire du texte.\n\n**Cas d'usage :**\n- Valider un email, un numéro de téléphone, un mot de passe\n- Extraire des adresses IP dans des logs\n- Remplacer des patterns dans du texte\n- Analyser des fichiers de configuration\n\n**Syntaxe de base :** `/motif/flags`\n\n```\n/hello/          → trouve \"hello\" (littéral)\n/[0-9]+/         → une ou plusieurs chiffres\n/^Error:/        → ligne commençant par \"Error:\"\n/\\d{4}-\\d{2}-\\d{2}/ → date au format YYYY-MM-DD\n```\n\nLes regex sont supportées dans presque tous les langages : Python, JavaScript, Java, Bash (grep/sed), PowerShell…"
+    },
+    {
+      "title": "Les métacaractères fondamentaux",
+      "content": "Les **métacaractères** ont une signification spéciale dans les regex :\n\n| Métacaractère | Signification |\n|---|---|\n| `.` | N'importe quel caractère (sauf newline) |\n| `\\d` | Chiffre `[0-9]` |\n| `\\D` | Non-chiffre |\n| `\\w` | Mot : `[a-zA-Z0-9_]` |\n| `\\W` | Non-mot |\n| `\\s` | Espace, tab, newline |\n| `\\S` | Non-espace |\n| `\\n` | Saut de ligne |\n\n```\n\\d\\d\\/\\d\\d\\/\\d\\d\\d\\d   → date DD/MM/YYYY\n\\w+@\\w+\\.\\w+            → email simplifié\n\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}  → IP simplifiée\n```\n\nPour chercher un `.` littéral, l'échapper : `\\.`"
+    },
+    {
+      "title": "Classes de caractères et ancres",
+      "content": "**Classes de caractères** `[...]` :\n```\n[abc]      → a, b ou c\n[a-z]      → lettre minuscule\n[A-Z]      → lettre majuscule\n[0-9]      → chiffre (équivalent \\d)\n[a-zA-Z]   → lettre (min ou maj)\n[^abc]     → tout SAUF a, b, c  (^ = négation)\n[^\\n]      → tout sauf newline\n```\n\n**Ancres** — position dans la chaîne :\n```\n^motif     → en début de chaîne/ligne\nmotif$     → en fin de chaîne/ligne\n\\bword\\b   → mot entier (\\b = limite de mot)\n\\Bword\\B   → dans un mot (non-limite)\n```\n\n```\n^ERROR     → ligne commençant par ERROR\n\\.log$     → chaîne finissant par .log\n\\bcat\\b    → \"cat\" mais pas \"catch\" ni \"concatenate\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l1-m1-1",
+      "order": 1,
+      "title": "Pattern pour un chiffre",
+      "instructions": "Écrivez le métacaractère qui correspond à **n'importe quel chiffre** (0-9).",
+      "requiredKeywords": ["\\d"],
+      "validationType": "keywords",
+      "correction": "\\d",
+      "explanation": "`\\d` est équivalent à `[0-9]`. Il correspond à exactement un chiffre. Pour plusieurs chiffres d'affilée : `\\d+` (un ou plus) ou `\\d{3}` (exactement 3)."
+    },
+    {
+      "id": "ex-regex-l1-m1-2",
+      "order": 2,
+      "title": "Classe de caractères",
+      "instructions": "Écrivez une classe qui correspond aux **lettres minuscules a à z**.",
+      "requiredKeywords": ["[a-z]"],
+      "validationType": "keywords",
+      "correction": "[a-z]",
+      "explanation": "`[a-z]` est une classe de caractères avec plage. Le tiret `-` à l'intérieur de `[...]` définit une plage. `[a-zA-Z]` couvre minuscules ET majuscules."
+    },
+    {
+      "id": "ex-regex-l1-m1-3",
+      "order": 3,
+      "title": "Ancre de début de ligne",
+      "instructions": "Écrivez un pattern qui correspond aux lignes **commençant par** `ERROR`.",
+      "requiredKeywords": ["^error"],
+      "validationType": "keywords",
+      "correction": "^ERROR",
+      "explanation": "`^` ancre au début de la chaîne (ou de la ligne avec le flag multiline). `^ERROR` ne correspond qu'aux lignes qui commencent par ERROR, pas celles qui contiennent ERROR ailleurs."
+    },
+    {
+      "id": "ex-regex-l1-m1-4",
+      "order": 4,
+      "title": "Caractère littéral dans un pattern",
+      "instructions": "Écrivez un pattern qui correspond à une **adresse IP simplifiée** : 3 chiffres, un point, 3 chiffres (`\\d{3}\\.\\d{3}`).",
+      "requiredKeywords": ["\\d", "\\.", "\\d"],
+      "validationType": "keywords",
+      "correction": "\\d{3}\\.\\d{3}",
+      "explanation": "Le `.` sans escape est un métacaractère (n'importe quel caractère). `\\.` correspond au point littéral. `\\d{3}` = exactement 3 chiffres. Toujours échapper les caractères spéciaux quand on veut leur sens littéral."
+    },
+    {
+      "id": "ex-regex-l1-m1-5",
+      "order": 5,
+      "title": "Négation dans une classe",
+      "instructions": "Écrivez une classe qui correspond à **tout caractère sauf les chiffres**.",
+      "requiredKeywords": ["[^0-9]"],
+      "validationType": "keywords",
+      "correction": "[^0-9]",
+      "explanation": "`^` en début de classe `[^...]` = négation. `[^0-9]` correspond à tout caractère qui n'est PAS un chiffre. Équivalent à `\\D`."
+    }
+  ]
+}

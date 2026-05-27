@@ -1,0 +1,74 @@
+{
+  "id": "sql-l2-m2",
+  "title": "GROUP BY et HAVING",
+  "level": "sql-l2",
+  "lang": "sql",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Regrouper avec GROUP BY",
+      "content": "`GROUP BY` divise les lignes en groupes et applique une agrégation sur chaque groupe :\n\n```sql\n-- Nombre d'employés par département\nSELECT department, COUNT(*) AS nb_employes\nFROM employees\nGROUP BY department;\n\n-- Salaire moyen par département\nSELECT department, AVG(salary) AS moy_salaire\nFROM employees\nGROUP BY department;\n```\n\n**Règle importante** : dans un `SELECT` avec `GROUP BY`, chaque colonne doit être soit :\n1. Dans la clause `GROUP BY`\n2. Utilisée dans une fonction d'agrégation\n\n```sql\n-- ✅ Correct\nSELECT department, COUNT(*) FROM employees GROUP BY department;\n\n-- ❌ Interdit\nSELECT department, name, COUNT(*) FROM employees GROUP BY department;\n-- name n'est ni agrégée ni dans GROUP BY\n```"
+    },
+    {
+      "title": "Filtrer les groupes avec HAVING",
+      "content": "`HAVING` filtre les groupes **après** l'agrégation (alors que `WHERE` filtre les lignes avant) :\n\n```sql\n-- Départements avec plus de 5 employés\nSELECT department, COUNT(*) AS nb\nFROM employees\nGROUP BY department\nHAVING COUNT(*) > 5;\n\n-- Départements avec salaire moyen > 60000\nSELECT department, AVG(salary) AS moy\nFROM employees\nGROUP BY department\nHAVING AVG(salary) > 60000;\n```\n\n**WHERE vs HAVING :**\n- `WHERE` → filtre les lignes **avant** le regroupement\n- `HAVING` → filtre les groupes **après** l'agrégation"
+    },
+    {
+      "title": "ORDER BY et GROUP BY combinés",
+      "content": "Ordre d'écriture complet d'une requête SQL :\n\n```\nSELECT\nFROM\nWHERE       ← filtrer les lignes (avant regroupement)\nGROUP BY    ← regrouper\nHAVING      ← filtrer les groupes (après regroupement)\nORDER BY    ← trier le résultat final\nLIMIT       ← limiter\n```\n\nExemple complet :\n```sql\nSELECT department, COUNT(*) AS nb, AVG(salary) AS moy\nFROM employees\nWHERE hire_date > '2020-01-01'\nGROUP BY department\nHAVING COUNT(*) >= 3\nORDER BY moy DESC\nLIMIT 5;\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l2-m2-1",
+      "order": 1,
+      "title": "Nombre d'employés par département",
+      "instructions": "Affichez le **nombre d'employés** pour chaque département de la table `employees`.",
+      "requiredKeywords": ["select", "department", "count", "*", "from", "employees", "group by", "department"],
+      "validationType": "keywords",
+      "correction": "SELECT department, COUNT(*) AS nb_employes FROM employees GROUP BY department;",
+      "explanation": "`GROUP BY department` crée un groupe par département. `COUNT(*)` compte les lignes de chaque groupe. Sans `GROUP BY`, `COUNT(*)` retournerait le total global."
+    },
+    {
+      "id": "ex-sql-l2-m2-2",
+      "order": 2,
+      "title": "Salaire moyen par département",
+      "instructions": "Calculez le **salaire moyen** pour chaque département, trié par moyenne décroissante.",
+      "requiredKeywords": ["select", "department", "avg", "salary", "from", "employees", "group by", "department", "order by"],
+      "validationType": "keywords",
+      "correction": "SELECT department, AVG(salary) AS salaire_moyen FROM employees GROUP BY department ORDER BY salaire_moyen DESC;",
+      "explanation": "On peut utiliser l'alias `salaire_moyen` dans `ORDER BY`. L'agrégation est calculée pour chaque groupe, puis les résultats sont triés."
+    },
+    {
+      "id": "ex-sql-l2-m2-3",
+      "order": 3,
+      "title": "Départements avec plus de 3 employés",
+      "instructions": "Listez les **départements qui ont plus de 3 employés**.",
+      "requiredKeywords": ["select", "department", "count", "from", "employees", "group by", "department", "having", "3"],
+      "validationType": "keywords",
+      "correction": "SELECT department, COUNT(*) AS nb FROM employees GROUP BY department HAVING COUNT(*) > 3;",
+      "explanation": "`HAVING COUNT(*) > 3` s'applique sur les groupes — après que `COUNT(*)` a été calculé pour chaque département. `WHERE COUNT(*) > 3` serait une erreur car `WHERE` s'évalue avant l'agrégation."
+    },
+    {
+      "id": "ex-sql-l2-m2-4",
+      "order": 4,
+      "title": "Salaire max par département",
+      "instructions": "Affichez le **salaire maximum** de chaque département.",
+      "requiredKeywords": ["select", "department", "max", "salary", "from", "employees", "group by", "department"],
+      "validationType": "keywords",
+      "correction": "SELECT department, MAX(salary) AS max_salaire FROM employees GROUP BY department;",
+      "explanation": "`MAX(salary)` retourne la valeur maximale de `salary` dans chaque groupe formé par `GROUP BY department`. C'est utile pour identifier le mieux payé de chaque département."
+    },
+    {
+      "id": "ex-sql-l2-m2-5",
+      "order": 5,
+      "title": "Requête complète avec HAVING et ORDER BY",
+      "instructions": "Affichez les départements dont le **salaire moyen dépasse 55000**, triés par moyenne décroissante.",
+      "requiredKeywords": ["select", "department", "avg", "salary", "from", "employees", "group by", "having", "55000", "order by"],
+      "validationType": "keywords",
+      "correction": "SELECT department, AVG(salary) AS moy FROM employees GROUP BY department HAVING AVG(salary) > 55000 ORDER BY moy DESC;",
+      "explanation": "Ordre d'exécution : 1) `FROM employees` → 2) `GROUP BY department` → 3) `HAVING AVG(salary) > 55000` (filtre les groupes) → 4) `ORDER BY moy DESC` (trie le résultat)."
+    }
+  ]
+}

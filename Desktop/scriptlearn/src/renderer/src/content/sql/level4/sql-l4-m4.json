@@ -1,0 +1,74 @@
+{
+  "id": "sql-l4-m4",
+  "title": "Transactions — COMMIT et ROLLBACK",
+  "level": "sql-l4",
+  "lang": "sql",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'une transaction ?",
+      "content": "Une **transaction** est un bloc de requêtes qui s'exécutent **toutes ou pas du tout** — principe ACID :\n\n- **A**tomicité : tout ou rien\n- **C**ohérence : la base reste dans un état valide\n- **I**solation : les transactions concurrentes ne se voient pas\n- **D**urabilité : les données commitées survivent aux pannes\n\n```sql\nBEGIN;                               -- Démarrer la transaction\n  UPDATE comptes SET solde = solde - 500 WHERE id = 1;\n  UPDATE comptes SET solde = solde + 500 WHERE id = 2;\nCOMMIT;                              -- Valider\n```\n\nSi une erreur survient entre les deux `UPDATE`, `ROLLBACK` annule tout — le virement est intact."
+    },
+    {
+      "title": "COMMIT, ROLLBACK, SAVEPOINT",
+      "content": "```sql\nBEGIN;\n  INSERT INTO orders (customer_id, total) VALUES (1, 250);\n  UPDATE stock SET qty = qty - 1 WHERE product_id = 5;\n  -- Vérification\n  SELECT qty FROM stock WHERE product_id = 5;\n  -- Si stock insuffisant :\nROLLBACK;  -- Annuler tout\n  -- Sinon :\nCOMMIT;    -- Valider\n```\n\n**SAVEPOINT** — point de sauvegarde intermédiaire :\n```sql\nBEGIN;\n  INSERT INTO logs VALUES ('étape 1');\n  SAVEPOINT etape1;\n  INSERT INTO logs VALUES ('étape 2');\n  -- Annuler seulement l'étape 2\n  ROLLBACK TO SAVEPOINT etape1;\nCOMMIT;\n```"
+    },
+    {
+      "title": "Auto-commit et bonnes pratiques",
+      "content": "Par défaut, la plupart des SGBD fonctionnent en **auto-commit** : chaque instruction est une transaction implicite. Pour les opérations critiques, toujours utiliser une transaction explicite.\n\n```sql\n-- Pattern sécurisé pour les mises à jour critiques\nBEGIN;\n  -- 1. Vérifier l'état avant\n  SELECT * FROM employees WHERE id = 5;\n  \n  -- 2. Effectuer la modification\n  UPDATE employees SET salary = 95000 WHERE id = 5;\n  \n  -- 3. Vérifier le résultat\n  SELECT * FROM employees WHERE id = 5;\n  \n  -- 4. Valider si tout est correct\nCOMMIT;\n-- ou ROLLBACK si quelque chose ne va pas\n```\n\nRègle d'or : les `UPDATE`, `DELETE`, et `INSERT` critiques doivent toujours être dans une transaction."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l4-m4-1",
+      "order": 1,
+      "title": "Transaction de virement",
+      "instructions": "Écrivez une transaction qui débite `500` du compte `id=1` et crédite `500` au compte `id=2` dans la table `comptes`.",
+      "requiredKeywords": ["begin", "update", "comptes", "set", "solde", "500", "where", "id", "=", "1", "update", "comptes", "set", "solde", "500", "where", "id", "=", "2", "commit"],
+      "validationType": "keywords",
+      "correction": "BEGIN; UPDATE comptes SET solde = solde - 500 WHERE id = 1; UPDATE comptes SET solde = solde + 500 WHERE id = 2; COMMIT;",
+      "explanation": "`BEGIN` ouvre la transaction. Les deux `UPDATE` sont atomiques — soit les deux réussissent, soit aucun. `COMMIT` valide définitivement. Sans transaction, si le second `UPDATE` échoue, le premier serait quand même appliqué — l'argent disparaîtrait !"
+    },
+    {
+      "id": "ex-sql-l4-m4-2",
+      "order": 2,
+      "title": "ROLLBACK en cas d'erreur",
+      "instructions": "Écrivez le squelette d'une transaction sur `orders` qui effectue un `INSERT`, puis fait un `ROLLBACK` si la commande est invalide.",
+      "requiredKeywords": ["begin", "insert into", "orders", "rollback"],
+      "validationType": "keywords",
+      "correction": "BEGIN; INSERT INTO orders (customer_id, total) VALUES (1, 250); -- Vérification : SELECT total FROM orders WHERE customer_id = 1; ROLLBACK;",
+      "explanation": "`ROLLBACK` annule TOUTES les modifications depuis le `BEGIN`. Les données reviennent exactement à leur état précédent — comme si la transaction n'avait jamais eu lieu."
+    },
+    {
+      "id": "ex-sql-l4-m4-3",
+      "order": 3,
+      "title": "SAVEPOINT",
+      "instructions": "Créez un `SAVEPOINT` nommé `step1` dans une transaction.",
+      "requiredKeywords": ["begin", "savepoint", "step1"],
+      "validationType": "keywords",
+      "correction": "BEGIN; INSERT INTO logs VALUES ('étape 1'); SAVEPOINT step1; INSERT INTO logs VALUES ('étape 2'); ROLLBACK TO SAVEPOINT step1; COMMIT;",
+      "explanation": "`SAVEPOINT` crée un point de retour intermédiaire. `ROLLBACK TO SAVEPOINT step1` annule uniquement les opérations depuis ce point, pas toute la transaction. Le `COMMIT` final valide ce qui reste."
+    },
+    {
+      "id": "ex-sql-l4-m4-4",
+      "order": 4,
+      "title": "Transaction DELETE sécurisée",
+      "instructions": "Écrivez une transaction qui supprime les employés avec `salary < 20000`, puis valide.",
+      "requiredKeywords": ["begin", "delete from", "employees", "where", "salary", "<", "20000", "commit"],
+      "validationType": "keywords",
+      "correction": "BEGIN; DELETE FROM employees WHERE salary < 20000; COMMIT;",
+      "explanation": "Envelopper un `DELETE` dans une transaction permet de vérifier (`SELECT COUNT(*) WHERE salary < 20000`) avant de `COMMIT`. Si le résultat est surprenant, `ROLLBACK` annule sans dommage."
+    },
+    {
+      "id": "ex-sql-l4-m4-5",
+      "order": 5,
+      "title": "Annuler une transaction entière",
+      "instructions": "Quelle commande **annule toutes les modifications** d'une transaction en cours ?",
+      "requiredKeywords": ["rollback"],
+      "validationType": "keywords",
+      "correction": "ROLLBACK;",
+      "explanation": "`ROLLBACK` est le filet de sécurité du SQL. Il annule toutes les modifications non commitées et libère les verrous. Disponible dans tous les SGBD supportant les transactions (SQLite, MySQL, PostgreSQL, SQL Server)."
+    }
+  ]
+}

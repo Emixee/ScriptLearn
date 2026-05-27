@@ -1,0 +1,74 @@
+{
+  "id": "kql-l2-m1",
+  "title": "Agrégations avancées — summarize et extend",
+  "level": "kql-l2",
+  "lang": "kql",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "summarize — agrégations multiples",
+      "content": "```kql\n// Statistiques complètes d'un incident\nSecurityEvent\n| where TimeGenerated > ago(7d)\n| where EventID == 4625\n| summarize\n    TotalFailures  = count(),\n    TargetedUsers  = dcount(Account),\n    TargetedHosts  = dcount(Computer),\n    FirstAttempt   = min(TimeGenerated),\n    LastAttempt    = max(TimeGenerated),\n    IPsUsed        = make_set(IpAddress),\n    UniqueIPs      = dcount(IpAddress)\n  by AttackerIP = IpAddress\n| where TotalFailures > 10\n| sort by TotalFailures desc\n\n// arg_max / arg_min — ligne avec la valeur max\nSigninLogs\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\n// Retourne la DERNIÈRE connexion de chaque utilisateur (avec toutes les colonnes)\n\n// Percentile\nSigninLogs\n| summarize p50=percentile(DurationMs, 50),\n            p95=percentile(DurationMs, 95),\n            p99=percentile(DurationMs, 99)\n```"
+    },
+    {
+      "title": "extend avec iff() et case()",
+      "content": "Créer des colonnes conditionnelles avec `iff` (if-then-else) et `case` (switch) :\n\n```kql\n// iff — condition binaire\nSigninLogs\n| extend\n    IsRisky = iff(RiskLevelDuringSignIn == \"high\", true, false),\n    Location = iff(LocationDetails contains \"France\", \"FR\", \"Abroad\")\n\n// case — conditions multiples (comme switch)\nSecurityEvent\n| extend EventType = case(\n    EventID == 4624, \"Logon Success\",\n    EventID == 4625, \"Logon Failure\",\n    EventID == 4648, \"Logon with Explicit Creds\",\n    EventID == 4720, \"Account Created\",\n    EventID == 4726, \"Account Deleted\",\n    \"Other\"\n  )\n\n// Calculer durée entre deux timestamps\nAzureActivity\n| extend DurationMin = datetime_diff('minute', ActivityStatusValue, TimeGenerated)\n\n// Tranche horaire de la journée\n| extend Period = case(\n    hourofday(TimeGenerated) between (8 .. 18), \"Business Hours\",\n    hourofday(TimeGenerated) between (0 .. 7),  \"Night\",\n    \"Evening\"\n  )\n```"
+    },
+    {
+      "title": "mv-expand — exploser des tableaux",
+      "content": "`mv-expand` transforme un tableau en lignes séparées :\n\n```kql\n// make_set puis mv-expand pour analyser\nSigninLogs\n| summarize IPList = make_set(IPAddress) by UserPrincipalName\n| mv-expand IPList  // Une ligne par IP\n| extend IP = tostring(IPList)\n\n// Cas d'usage : colonnes multi-valeurs\n// SecurityAlert peut avoir un champ Entities (tableau JSON)\nSecurityAlert\n| where TimeGenerated > ago(1d)\n| mv-expand Entities  // Une ligne par entité\n| where Entities.Type == \"ip\"\n| extend AlertIP = tostring(Entities.Address)\n\n// Combiner avec parse_json pour les champs dynamiques\nSigninLogs\n| extend DeviceDetail = parse_json(DeviceDetail)\n| extend OS = tostring(DeviceDetail.operatingSystem)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l2-m1-1",
+      "order": 1,
+      "title": "Statistiques complètes par IP",
+      "instructions": "Pour les échecs de connexion (EventID 4625) des dernières 48h, calculez par `IpAddress` : nombre total (`count()`), nombre de comptes ciblés (`dcount(Account)`), première et dernière tentative.",
+      "requiredKeywords": ["summarize", "count()", "dcount(account)", "min(timegenerated)", "by ipaddress"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(48h)\n| where EventID == 4625\n| summarize Total=count(), Targets=dcount(Account), First=min(TimeGenerated), Last=max(TimeGenerated) by IpAddress\n| sort by Total desc",
+      "explanation": "Combiner `count()`, `dcount()`, `min()`, `max()` dans un seul `summarize` est efficace — KQL fait un seul passage sur les données. Une IP ciblant beaucoup de comptes (`dcount(Account)` élevé) est caractéristique d'un credential stuffing."
+    },
+    {
+      "id": "ex-kql-l2-m1-2",
+      "order": 2,
+      "title": "arg_max — dernière connexion",
+      "instructions": "Trouvez la **dernière connexion** de chaque utilisateur dans `SigninLogs` avec `arg_max(TimeGenerated, *)` groupé par `UserPrincipalName`.",
+      "requiredKeywords": ["summarize", "arg_max(timegenerated", "by userprincipalname"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(30d)\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName",
+      "explanation": "`arg_max(TimeGenerated, *)` retourne la ligne avec la valeur maximale de `TimeGenerated` pour chaque groupe. Le `*` préserve toutes les autres colonnes de cette ligne. Idéal pour trouver le dernier état connu d'une entité."
+    },
+    {
+      "id": "ex-kql-l2-m1-3",
+      "order": 3,
+      "title": "case() — labelliser les EventIDs",
+      "instructions": "Ajoutez une colonne `EventLabel` à `SecurityEvent` avec `case()` : 4624 = 'Logon Success', 4625 = 'Logon Failure', 4720 = 'Account Created', default = 'Other'.",
+      "requiredKeywords": ["extend", "case(", "4624", "4625", "eventlabel"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1h)\n| extend EventLabel = case(EventID == 4624, 'Logon Success', EventID == 4625, 'Logon Failure', EventID == 4720, 'Account Created', 'Other')",
+      "explanation": "`case(cond1, val1, cond2, val2, ..., default)` est l'équivalent KQL du `switch/case`. La dernière valeur sans condition est la valeur par défaut. Utile pour créer des libellés lisibles dans les tableaux de bord Sentinel."
+    },
+    {
+      "id": "ex-kql-l2-m1-4",
+      "order": 4,
+      "title": "iff() — flag connexion risquée",
+      "instructions": "Dans `SigninLogs`, ajoutez une colonne booléenne `IsHighRisk` avec `iff()` qui vaut `true` si `RiskLevelDuringSignIn == \"high\"`.",
+      "requiredKeywords": ["extend", "iff(", "risklevelduringSignin", "ishighrisk"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1d)\n| extend IsHighRisk = iff(RiskLevelDuringSignIn == \"high\", true, false)\n| where IsHighRisk == true",
+      "explanation": "`iff(condition, valeur_si_vrai, valeur_si_faux)` est le ternaire KQL. Pour un booléen simple, `iff(condition, true, false)` peut être simplifié : la condition elle-même retourne un booléen. Mais la forme explicite `iff()` est plus lisible."
+    },
+    {
+      "id": "ex-kql-l2-m1-5",
+      "order": 5,
+      "title": "make_set — collecter les IPs par utilisateur",
+      "instructions": "Créez pour chaque utilisateur `SigninLogs` l'ensemble des IPs utilisées (`make_set(IPAddress)`) sur 7 jours, filtrez ceux avec plus de 5 IPs distinctes.",
+      "requiredKeywords": ["summarize", "make_set(ipaddress)", "dcount(ipaddress)", "> 5"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(7d)\n| summarize IPSet=make_set(IPAddress), UniqueIPs=dcount(IPAddress) by UserPrincipalName\n| where UniqueIPs > 5\n| sort by UniqueIPs desc",
+      "explanation": "`make_set()` crée un tableau de valeurs uniques (comme un Set). Utile pour avoir la liste complète des IPs dans un résultat compact. `dcount()` dans le même `summarize` donne le nombre — les deux sont calculés en un seul passage."
+    }
+  ]
+}

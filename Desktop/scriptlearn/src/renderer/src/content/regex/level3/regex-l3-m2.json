@@ -1,0 +1,74 @@
+{
+  "id": "regex-l3-m2",
+  "title": "Performance et anti-patterns",
+  "level": "regex-l3",
+  "lang": "regex",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Catastrophic Backtracking",
+      "content": "Le **catastrophic backtracking** est le piège majeur des regex — il peut bloquer une application :\n\n```\nPattern : (a+)+b\nChaîne  : aaaaaaaaaaaaaaac  (pas de 'b' à la fin)\n\nLe moteur essaie TOUTES les combinaisons de a+ :\n(a)(a)(a)(a)...(a) puis recule, essaie (aa)(a)(a)...\npuis (aaa)(a)(a)... → 2^n essais !\n```\n\n**Patterns dangereux :**\n```\n(a+)+     → imbrication de quantificateurs\n(a|a)+    → alternance redondante\n([a-z]+)* → caractères qui se chevauchent\n```\n\n**Solutions :**\n```\n1. Remplacer par pattern atomique : (?>a+)a\n2. Utiliser possessif : a++b\n3. Supprimer l'imbrication : a+b  (si équivalent)\n4. Tester avec ReDoS checker avant déploiement\n```\n\n⚠️ **ReDoS** (Regular Expression Denial of Service) : un attaquant envoie une chaîne déclenchant le backtracking pour saturer le CPU."
+    },
+    {
+      "title": "Anti-patterns courants",
+      "content": "Erreurs fréquentes à éviter :\n\n**1. `.+` quand un caractère spécifique suffit :**\n```\n# Mauvais — greedy, peut déborder\n\"(.+)\"    sur '\"a\" puis \"b\"' → '\"a\" puis \"b\"'\n\n# Bon — exclure le délimiteur\n\"([^\"]+)\"  ou  \"(.+?)\"    (lazy)\n```\n\n**2. Ancres oubliées :**\n```\n# Sans ancres — correspond n'importe où\n\\d{4}-\\d{2}-\\d{2}  → match dans \"foo2024-05-15bar\"\n\n# Avec word boundary\n\\b\\d{4}-\\d{2}-\\d{2}\\b\n```\n\n**3. Point sans échappement :**\n```\n192.168.1.1  → correspond à '192X168Y1Z1'\n192\\.168\\.1\\.1  → IP exacte seulement\n```\n\n**4. Regex trop permissive pour la validation :**\n```\n# IP trop permissive — accepte 999.999.999.999\n\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\n\n# Meilleure validation (0-255 par octet)\n(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\n```"
+    },
+    {
+      "title": "Optimisation des performances",
+      "content": "Bonnes pratiques pour des regex rapides :\n\n**1. Compilation — toujours compiler si réutilisé**\n```python\n# Rapide\npattern = re.compile(r'\\d+')\nfor line in big_file:  # 10M lignes\n    pattern.findall(line)\n\n# Lent — recompile à chaque itération\nfor line in big_file:\n    re.findall(r'\\d+', line)\n```\n\n**2. Préférer `\\d` à `[0-9]` — plus lisible et aussi performant**\n\n**3. Alternatives — ordonner du plus probable au moins probable**\n```\n(ERROR|INFO|DEBUG|TRACE)  # ERROR plus fréquent → en premier\n```\n\n**4. `re.search` vs `re.match`**\n```python\n# re.match ancre automatiquement au début → plus rapide\n# pour les patterns de début de ligne\nre.match(r'ERROR', line)   # plus rapide que\nre.search(r'^ERROR', line) # (même résultat)\n```\n\n**5. Éviter les captures inutiles**\n```\n(?: ...)  plutôt que  (...)  si on n'utilise pas le groupe\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l3-m2-1",
+      "order": 1,
+      "title": "Identifier un pattern dangereux",
+      "instructions": "Le pattern `(\\w+\\s*)+$` est vulnérable au ReDoS. Pourquoi ? Réécrivez-le de manière sûre pour valider une ligne de mots séparés par des espaces.",
+      "requiredKeywords": ["\\w+", "(?:\\s+\\w+)*"],
+      "validationType": "keywords",
+      "correction": "^\\w+(?:\\s+\\w+)*$",
+      "explanation": "`(\\w+\\s*)+$` a une imbrication de quantificateurs (`+` dans `+`) et un backtracking catastrophique sur les fins de chaîne non-correspondantes. La version sûre `^\\w+(?:\\s+\\w+)*$` sépare clairement un premier mot et des mots suivants, sans imbrication."
+    },
+    {
+      "id": "ex-regex-l3-m2-2",
+      "order": 2,
+      "title": "Fixer le point non-échappé",
+      "instructions": "Le pattern `192.168.1.1` a un bug : le `.` n'est pas échappé. Corrigez-le pour correspondre uniquement à l'IP exacte.",
+      "requiredKeywords": ["192\\.168\\.1\\.1"],
+      "validationType": "keywords",
+      "correction": "192\\.168\\.1\\.1",
+      "explanation": "Sans échappement, `.` correspond à n'importe quel caractère : `192X168Y1Z1` serait un match valide. `\\.` correspond au point littéral. Règle : toujours échapper les caractères spéciaux quand on veut leur sens littéral."
+    },
+    {
+      "id": "ex-regex-l3-m2-3",
+      "order": 3,
+      "title": "Greedy vs délimiteur exclusif",
+      "instructions": "Corrigez le pattern `\"(.+)\"` pour ne pas déborder sur plusieurs guillemets — utilisez une classe négative.",
+      "requiredKeywords": ["\"([^\"]+)\""],
+      "validationType": "keywords",
+      "correction": "\"([^\"]+)\"",
+      "explanation": "`\"(.+)\"` est greedy : sur `\"a\" et \"b\"`, il capture `a\" et \"b`. `\"([^\"]+)\"` exclut le guillemet du contenu — s'arrête au premier `\"` fermant. Plus précis et plus rapide (pas de backtracking)."
+    },
+    {
+      "id": "ex-regex-l3-m2-4",
+      "order": 4,
+      "title": "Groupes non-capturants pour la performance",
+      "instructions": "Réécrivez `(ERROR|WARN|INFO)(:\\s+)(.+)` en remplaçant les groupes non-nécessaires par des groupes non-capturants `(?:...)`, en gardant uniquement le groupe du message.",
+      "requiredKeywords": ["(?:ERROR|WARN|INFO)", "(?::\\s+)", "(.+)"],
+      "validationType": "keywords",
+      "correction": "(?:ERROR|WARN|INFO)(?::\\s+)(.+)",
+      "explanation": "Les groupes non-capturants `(?:...)` évitent de stocker les captures inutiles en mémoire. Ici, seul le message (3e groupe) est utile — les deux premiers deviennent `(?:...)`. Réduit légèrement la mémoire et clarifie l'intention."
+    },
+    {
+      "id": "ex-regex-l3-m2-5",
+      "order": 5,
+      "title": "Validation IP rigoureuse",
+      "instructions": "Le pattern `\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}` accepte `999.999.999.999`. Écrivez la version correcte validant chaque octet entre 0 et 255.",
+      "requiredKeywords": ["25[0-5]", "2[0-4]\\d", "[01]?\\d\\d?"],
+      "validationType": "keywords",
+      "correction": "\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b",
+      "explanation": "Validation rigoureuse par octet : `25[0-5]` (250-255), `2[0-4]\\d` (200-249), `[01]?\\d\\d?` (0-199). Les trois alternatives couvrent 0-255 sans autoriser 256+. Exemple de regex où la précision prime sur la concision."
+    }
+  ]
+}

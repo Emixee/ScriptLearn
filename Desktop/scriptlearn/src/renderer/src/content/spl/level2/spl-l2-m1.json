@@ -1,0 +1,74 @@
+{
+  "id": "spl-l2-m1",
+  "title": "Extraction de champs — eval, rex, spath",
+  "level": "spl-l2",
+  "lang": "spl",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "eval — transformations et calculs",
+      "content": "```spl\n// eval crée ou modifie un champ\n\n// Calculs arithmétiques\n| eval duration_min = round(duration / 60, 2)\n| eval bytes_mb = bytes / 1024 / 1024\n\n// Concaténation\n| eval full_path = directory + \"\\\\\" + filename\n| eval user_host = user + \"@\" + host\n\n// Conditions\n| eval risk = case(\n    failures > 100, \"Critical\",\n    failures > 50,  \"High\",\n    failures > 10,  \"Medium\",\n    1==1,           \"Low\"  // else\n  )\n\n// Fonctions de chaîne\n| eval upper_cmd = upper(cmd)\n| eval lower_host = lower(host)\n| eval host_short = substr(host, 1, 8)  // 8 premiers chars\n| eval at_pos = index(email, \"@\")         // Position du @\n| eval domain = substr(email, at_pos+1)   // Domaine extrait\n\n// Fonctions mathématiques\n| eval log_count = log(count, 10)   // log base 10\n| eval sqrt_bytes = sqrt(bytes)\n\n// Temps\n| eval human_time = strftime(_time, \"%Y-%m-%d %H:%M:%S\")\n| eval epoch = strptime(\"2024-05-15\", \"%Y-%m-%d\")\n```"
+    },
+    {
+      "title": "rex — extraction par regex",
+      "content": "`rex` extrait des champs depuis les données brutes (`_raw`) ou un champ spécifique :\n\n```spl\n// Extraction depuis _raw (défaut)\nindex=syslog\n| rex \"src=(?P<src_ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"\n// Crée le champ src_ip\n\n// Extraction depuis un champ spécifique\n| rex field=uri \"(?P<page>[^?]+)(?:\\\\?(?P<query_string>.*))?$\"\n\n// Extraction depuis les logs Apache\n| rex \"(?P<client_ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}) .+ \\\"(?P<method>\\w+) (?P<url>\\S+) .+\\\" (?P<status>\\d{3}) (?P<bytes>\\d+)\"\n\n// Mode sed — remplacer (mode=sed)\n| rex mode=sed \"s/password=\\S+/password=[REDACTED]/g\"\n\n// rex peut créer plusieurs champs en une passe\n| rex \"user=(?P<username>\\w+) action=(?P<action>\\w+)\"\n// Crée username et action\n```"
+    },
+    {
+      "title": "spath — extraire des données JSON/XML",
+      "content": "```spl\n// spath extrait automatiquement les champs JSON/XML de _raw\nindex=main sourcetype=json\n| spath\n// Tous les champs JSON deviennent des colonnes\n\n// Accéder à un champ spécifique\n| spath input=_raw output=user_id path=user.id\n| spath output=country path=location.country\n\n// Tableau JSON — accès par index\n| spath output=first_tag path=tags{0}\n| spath output=all_tags  path=tags{}\n\n// JSON imbriqué\n| spath output=city path=address.city\n\n// Combiner spath et eval\nindex=cloudtrail\n| spath output=event_name path=eventName\n| spath output=src_ip     path=sourceIPAddress\n| spath output=user       path=userIdentity.userName\n| eval risk = if(event_name == \"DeleteBucket\", \"Critical\", \"Info\")\n| table _time, user, event_name, src_ip, risk\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l2-m1-1",
+      "order": 1,
+      "title": "eval — convertir des bytes en MB",
+      "instructions": "Depuis `index=web`, créez un champ `bytes_mb` qui convertit `bytes` en mégaoctets (arrondi à 2 décimales avec `round()`).",
+      "requiredKeywords": ["| eval bytes_mb=round(bytes/1024/1024", "2)"],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-1h\n| eval bytes_mb=round(bytes/1024/1024, 2)\n| table _time, host, uri, bytes, bytes_mb",
+      "explanation": "`eval` avec `round(valeur, décimales)` arrondit. La chaîne de divisions `bytes/1024/1024` convertit en MB. SPL fait de la division entière si les deux opérandes sont entiers — `bytes/1024.0/1024.0` force le mode décimal si nécessaire."
+    },
+    {
+      "id": "ex-spl-l2-m1-2",
+      "order": 2,
+      "title": "eval case() — classification de risque",
+      "instructions": "Avec `eval` et `case()`, classifiez les événements : `failures > 100` → `'Critical'`, `> 50` → `'High'`, `> 10` → `'Medium'`, sinon `'Low'`.",
+      "requiredKeywords": ["| eval risk=case(", "failures > 100", "\"critical\"", "1==1"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-1h\n| stats count AS failures BY src_ip\n| eval risk=case(failures > 100, \"Critical\", failures > 50, \"High\", failures > 10, \"Medium\", 1==1, \"Low\")\n| sort -failures",
+      "explanation": "`case(cond1, val1, cond2, val2, ..., else_cond, else_val)` évalue les conditions dans l'ordre. `1==1` est toujours vrai — c'est le `else` par défaut. Équivalent du `case()` KQL ou du `case` SQL."
+    },
+    {
+      "id": "ex-spl-l2-m1-3",
+      "order": 3,
+      "title": "rex — extraire une IP depuis les logs",
+      "instructions": "Utilisez `rex` pour extraire l'adresse IP source depuis `_raw` avec le pattern `\"src=(?P<src_ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"`.",
+      "requiredKeywords": ["| rex \"src=(?P<src_ip>", "\\d{1,3}\\."],
+      "validationType": "keywords",
+      "correction": "index=firewall earliest=-1h\n| rex \"src=(?P<src_ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"\n| where isnotnull(src_ip)\n| stats count BY src_ip\n| sort -count",
+      "explanation": "`rex` utilise des groupes nommés Python `(?P<nom>...)` pour créer des champs. Le champ `src_ip` est disponible pour les commandes suivantes. `rex` travaille sur `_raw` par défaut — utiliser `field=autrechamp` pour travailler sur un autre champ."
+    },
+    {
+      "id": "ex-spl-l2-m1-4",
+      "order": 4,
+      "title": "rex mode=sed — masquer des mots de passe",
+      "instructions": "Utilisez `rex mode=sed` pour remplacer les mots de passe dans les logs (`password=VALEUR`) par `password=[REDACTED]`.",
+      "requiredKeywords": ["| rex mode=sed \"s/password=\\S+/password=[REDACTED]/g\""],
+      "validationType": "keywords",
+      "correction": "index=app earliest=-1h\n| rex mode=sed \"s/password=\\S+/password=[REDACTED]/g\"\n| table _time, host, _raw",
+      "explanation": "`rex mode=sed` applique une substitution regex style `sed` sur `_raw`. `\\S+` = un ou plusieurs caractères non-espace (le mot de passe). Le flag `g` remplace toutes les occurrences. Crucial pour anonymiser des logs avant stockage ou partage."
+    },
+    {
+      "id": "ex-spl-l2-m1-5",
+      "order": 5,
+      "title": "spath — parser un log JSON",
+      "instructions": "Depuis `index=cloudtrail sourcetype=json`, utilisez `spath` pour extraire `eventName` et `sourceIPAddress`, puis listez les événements avec leur IP source.",
+      "requiredKeywords": ["| spath output=event_name path=eventname", "| spath output=src_ip path=sourceipaddress"],
+      "validationType": "keywords",
+      "correction": "index=cloudtrail sourcetype=json earliest=-1h\n| spath output=event_name path=eventName\n| spath output=src_ip path=sourceIPAddress\n| table _time, src_ip, event_name",
+      "explanation": "`spath output=nouveau_champ path=chemin.json` extrait une valeur JSON dans un nouveau champ. Le `path` correspond à la structure JSON (avec `.` pour les objets imbriqués). Alternative : utiliser `spath` sans arguments pour aplatir tout le JSON en colonnes."
+    }
+  ]
+}

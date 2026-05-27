@@ -7,8 +7,11 @@ const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git',
 const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
 
-// Construire l'index de recherche une seule fois
+// Construire l'index de recherche une seule fois au chargement du module
+// L'index couvre TOUS les contenus : niveaux standard + langages complémentaires
 const SEARCH_INDEX = []
+
+// ── Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6) ──────────────
 for (const level of contentIndex.levels) {
   for (const lang of ALL_LANGS) {
     for (const ref of (level.languages[lang] ?? [])) {
@@ -34,6 +37,42 @@ for (const level of contentIndex.levels) {
             levelName: level.name,
             moduleTitle: ref.title,
             url: `/exercise/${lang}/${level.id}/${ref.id}/${i + 1}`
+          })
+        }
+      }
+    }
+  }
+}
+
+// ── Langages complémentaires (SQL, Git, Regex, KQL, SPL, YAML) ───────────────
+// levelName affiché sous forme "SQL — N1", "KQL — N2", etc.
+const compTracks = contentIndex.complementary?.tracks ?? {}
+for (const [trackKey, track] of Object.entries(compTracks)) {
+  for (const level of track.levels) {
+    const levelName = `${track.name} — ${level.name}`
+    for (const modRef of level.modules) {
+      SEARCH_INDEX.push({
+        type: 'module',
+        id: modRef.id,
+        title: modRef.title,
+        lang: trackKey,
+        levelId: level.id,
+        levelName,
+        url: `/course/${trackKey}/${level.id}/${modRef.id}`
+      })
+      const mod = getModule(modRef.id)
+      if (mod) {
+        for (let i = 0; i < mod.exercises.length; i++) {
+          const ex = mod.exercises[i]
+          SEARCH_INDEX.push({
+            type: 'exercise',
+            id: ex.id,
+            title: ex.title,
+            lang: trackKey,
+            levelId: level.id,
+            levelName,
+            moduleTitle: modRef.title,
+            url: `/exercise/${trackKey}/${level.id}/${modRef.id}/${i + 1}`
           })
         }
       }

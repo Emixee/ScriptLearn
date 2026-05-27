@@ -197,61 +197,272 @@
           { "id": "ps-l6-m6", "title": "Intégration Microsoft Defender / Sentinel",  "order": 6, "estimatedMinutes": 70 }
         ]
       }
-    },
-    {
-      "id": 7,
-      "name": "KQL / Sentinel",
-      "description": "Kusto Query Language pour Microsoft Sentinel — requêtes, détection et règles analytiques.",
-      "color": "#e879f9",
-      "locked": false,
-      "languages": {
-        "kql": [
-          { "id": "kql-m1", "title": "Introduction à KQL et Microsoft Sentinel",    "order": 1, "estimatedMinutes": 50 },
-          { "id": "kql-m2", "title": "Opérateurs fondamentaux KQL",                 "order": 2, "estimatedMinutes": 55 },
-          { "id": "kql-m3", "title": "Analyse des logs de sécurité Windows",        "order": 3, "estimatedMinutes": 60 },
-          { "id": "kql-m4", "title": "Détection de menaces avec KQL",               "order": 4, "estimatedMinutes": 60 },
-          { "id": "kql-m5", "title": "Requêtes avancées et optimisation",           "order": 5, "estimatedMinutes": 60 },
-          { "id": "kql-m6", "title": "Création de règles analytiques Sentinel",     "order": 6, "estimatedMinutes": 65 }
+    }
+  ],
+  "complementary": {
+    "sectionName": "Langages complémentaires",
+    "tracks": {
+      "sql": {
+        "name": "SQL",
+        "icon": "🗄️",
+        "color": "#3b82f6",
+        "description": "Bases de données relationnelles — de SELECT à CTEs, transactions et optimisation.",
+        "levels": [
+          {
+            "id": "sql-l1",
+            "name": "SQL Débutant",
+            "order": 1,
+            "modules": [
+              { "id": "sql-l1-m1", "title": "SELECT, FROM et DISTINCT",        "order": 1, "estimatedMinutes": 40 },
+              { "id": "sql-l1-m2", "title": "WHERE et opérateurs logiques",     "order": 2, "estimatedMinutes": 40 },
+              { "id": "sql-l1-m3", "title": "ORDER BY, LIKE et LIMIT",          "order": 3, "estimatedMinutes": 40 },
+              { "id": "sql-l1-m4", "title": "INSERT, UPDATE et DELETE",         "order": 4, "estimatedMinutes": 40 }
+            ]
+          },
+          {
+            "id": "sql-l2",
+            "name": "SQL Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "sql-l2-m1", "title": "Fonctions d'agrégation",           "order": 1, "estimatedMinutes": 45 },
+              { "id": "sql-l2-m2", "title": "GROUP BY et HAVING",               "order": 2, "estimatedMinutes": 45 },
+              { "id": "sql-l2-m3", "title": "INNER JOIN et jointures multiples","order": 3, "estimatedMinutes": 45 },
+              { "id": "sql-l2-m4", "title": "LEFT, RIGHT et FULL JOIN",         "order": 4, "estimatedMinutes": 45 }
+            ]
+          },
+          {
+            "id": "sql-l3",
+            "name": "SQL Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "sql-l3-m1", "title": "Sous-requêtes",                    "order": 1, "estimatedMinutes": 50 },
+              { "id": "sql-l3-m2", "title": "EXISTS, UNION et ensembles",       "order": 2, "estimatedMinutes": 50 },
+              { "id": "sql-l3-m3", "title": "Vues (VIEW)",                      "order": 3, "estimatedMinutes": 45 },
+              { "id": "sql-l3-m4", "title": "Schéma et DDL",                    "order": 4, "estimatedMinutes": 50 }
+            ]
+          },
+          {
+            "id": "sql-l4",
+            "name": "SQL Expert",
+            "order": 4,
+            "modules": [
+              { "id": "sql-l4-m1", "title": "CTEs et requêtes récursives",      "order": 1, "estimatedMinutes": 55 },
+              { "id": "sql-l4-m2", "title": "Fonctions fenêtrées — Ranking",    "order": 2, "estimatedMinutes": 55 },
+              { "id": "sql-l4-m3", "title": "Fonctions fenêtrées — Analytics",  "order": 3, "estimatedMinutes": 55 },
+              { "id": "sql-l4-m4", "title": "Transactions et ACID",             "order": 4, "estimatedMinutes": 50 }
+            ]
+          },
+          {
+            "id": "sql-l5",
+            "name": "SQL Maîtrise",
+            "order": 5,
+            "modules": [
+              { "id": "sql-l5-m1", "title": "Index et optimisation",            "order": 1, "estimatedMinutes": 55 },
+              { "id": "sql-l5-m2", "title": "Procédures, fonctions et triggers","order": 2, "estimatedMinutes": 60 },
+              { "id": "sql-l5-m3", "title": "Normalisation et modélisation",    "order": 3, "estimatedMinutes": 55 },
+              { "id": "sql-l5-m4", "title": "UPSERT, CASE et fonctions avancées","order": 4, "estimatedMinutes": 55 }
+            ]
+          }
         ]
-      }
-    },
-    {
-      "id": 8,
-      "name": "Outils & Données",
-      "description": "SQL pour les bases de données, Regex pour la recherche de patterns, Git pour le versioning, SPL pour Splunk.",
-      "color": "#34d399",
-      "locked": false,
-      "languages": {
-        "sql": [
-          { "id": "sql-m1", "title": "Introduction à SQL",              "order": 1, "estimatedMinutes": 50 },
-          { "id": "sql-m2", "title": "Filtrage et tri des données",     "order": 2, "estimatedMinutes": 50 },
-          { "id": "sql-m3", "title": "Jointures et agrégations",        "order": 3, "estimatedMinutes": 55 },
-          { "id": "sql-m4", "title": "Sous-requêtes et vues",           "order": 4, "estimatedMinutes": 55 }
-        ],
-        "regex": [
-          { "id": "regex-m1", "title": "Introduction aux expressions régulières",            "order": 1, "estimatedMinutes": 45 },
-          { "id": "regex-m2", "title": "Quantificateurs, groupes et alternance",            "order": 2, "estimatedMinutes": 50 },
-          { "id": "regex-m3", "title": "Regex avancées : lookahead et lookbehind",          "order": 3, "estimatedMinutes": 55 },
-          { "id": "regex-m4", "title": "Applications pratiques des regex",                  "order": 4, "estimatedMinutes": 55 }
-        ],
-        "git": [
-          { "id": "git-m1", "title": "Introduction à Git",                           "order": 1, "estimatedMinutes": 45 },
-          { "id": "git-m2", "title": "Branches et fusion",                           "order": 2, "estimatedMinutes": 50 },
-          { "id": "git-m3", "title": "Dépôts distants et collaboration",             "order": 3, "estimatedMinutes": 55 },
-          { "id": "git-m4", "title": "Git avancé — stash, rebase et tags",           "order": 4, "estimatedMinutes": 55 }
-        ],
-        "spl": [
-          { "id": "spl-m1", "title": "Introduction à SPL et Splunk",      "order": 1, "estimatedMinutes": 50 },
-          { "id": "spl-m2", "title": "Filtrage et transformation SPL",    "order": 2, "estimatedMinutes": 55 },
-          { "id": "spl-m3", "title": "Statistiques et visualisations SPL","order": 3, "estimatedMinutes": 55 }
-        ],
-        "yaml": [
-          { "id": "yaml-m1", "title": "Syntaxe YAML de base",                      "order": 1, "estimatedMinutes": 40 },
-          { "id": "yaml-m2", "title": "Listes et structures imbriquées",            "order": 2, "estimatedMinutes": 45 },
-          { "id": "yaml-m3", "title": "YAML en pratique — Docker & CI/CD",         "order": 3, "estimatedMinutes": 55 },
-          { "id": "yaml-m4", "title": "Ancres, alias et YAML avancé",              "order": 4, "estimatedMinutes": 50 }
+      },
+      "git": {
+        "name": "Git",
+        "icon": "🌿",
+        "color": "#f97316",
+        "description": "Contrôle de version — du commit quotidien au workflow d'équipe et aux opérations avancées.",
+        "levels": [
+          {
+            "id": "git-l1",
+            "name": "Git Débutant",
+            "order": 1,
+            "modules": [
+              { "id": "git-l1-m1", "title": "Init, add, commit, log",           "order": 1, "estimatedMinutes": 40 },
+              { "id": "git-l1-m2", "title": "Config, .gitignore et rm",         "order": 2, "estimatedMinutes": 40 },
+              { "id": "git-l1-m3", "title": "log, diff, show et blame",         "order": 3, "estimatedMinutes": 40 },
+              { "id": "git-l1-m4", "title": "restore, reset et amend",          "order": 4, "estimatedMinutes": 45 }
+            ]
+          },
+          {
+            "id": "git-l2",
+            "name": "Git Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "git-l2-m1", "title": "Branches, switch et merge",        "order": 1, "estimatedMinutes": 45 },
+              { "id": "git-l2-m2", "title": "Résolution de conflits",           "order": 2, "estimatedMinutes": 45 },
+              { "id": "git-l2-m3", "title": "Stash, revert et undo",            "order": 3, "estimatedMinutes": 45 },
+              { "id": "git-l2-m4", "title": "Commits atomiques et best practices","order": 4, "estimatedMinutes": 50 }
+            ]
+          },
+          {
+            "id": "git-l3",
+            "name": "Git Collaboration",
+            "order": 3,
+            "modules": [
+              { "id": "git-l3-m1", "title": "Remote, clone, push et fetch",     "order": 1, "estimatedMinutes": 45 },
+              { "id": "git-l3-m2", "title": "Fork, upstream et Pull Requests",  "order": 2, "estimatedMinutes": 50 },
+              { "id": "git-l3-m3", "title": "Tags, SemVer et releases",         "order": 3, "estimatedMinutes": 45 },
+              { "id": "git-l3-m4", "title": "Workflows d'équipe",               "order": 4, "estimatedMinutes": 50 }
+            ]
+          },
+          {
+            "id": "git-l4",
+            "name": "Git Avancé",
+            "order": 4,
+            "modules": [
+              { "id": "git-l4-m1", "title": "rebase et rebase interactif",      "order": 1, "estimatedMinutes": 50 },
+              { "id": "git-l4-m2", "title": "cherry-pick, bisect et reflog",    "order": 2, "estimatedMinutes": 50 },
+              { "id": "git-l4-m3", "title": "Hooks et intégration CI",          "order": 3, "estimatedMinutes": 50 },
+              { "id": "git-l4-m4", "title": "Submodules, worktrees et archive", "order": 4, "estimatedMinutes": 50 }
+            ]
+          }
+        ]
+      },
+      "regex": {
+        "name": "Regex",
+        "icon": "🔍",
+        "color": "#8b5cf6",
+        "description": "Expressions régulières — du pattern de base aux regex de sécurité et détection d'IOCs.",
+        "levels": [
+          {
+            "id": "regex-l1",
+            "name": "Regex Fondamentaux",
+            "order": 1,
+            "modules": [
+              { "id": "regex-l1-m1", "title": "Métacaractères et ancres",        "order": 1, "estimatedMinutes": 40 },
+              { "id": "regex-l1-m2", "title": "Quantificateurs",                 "order": 2, "estimatedMinutes": 40 },
+              { "id": "regex-l1-m3", "title": "Groupes et alternance",           "order": 3, "estimatedMinutes": 40 },
+              { "id": "regex-l1-m4", "title": "Regex en pratique — grep et sed", "order": 4, "estimatedMinutes": 40 }
+            ]
+          },
+          {
+            "id": "regex-l2",
+            "name": "Regex Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "regex-l2-m1", "title": "Lookahead et lookbehind",         "order": 1, "estimatedMinutes": 45 },
+              { "id": "regex-l2-m2", "title": "Groupes nommés et backreferences","order": 2, "estimatedMinutes": 40 },
+              { "id": "regex-l2-m3", "title": "Flags et modes",                  "order": 3, "estimatedMinutes": 35 },
+              { "id": "regex-l2-m4", "title": "Regex en Python — module re",     "order": 4, "estimatedMinutes": 45 }
+            ]
+          },
+          {
+            "id": "regex-l3",
+            "name": "Regex Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "regex-l3-m1", "title": "Patterns complexes et logs",      "order": 1, "estimatedMinutes": 50 },
+              { "id": "regex-l3-m2", "title": "Performance et anti-patterns",    "order": 2, "estimatedMinutes": 45 },
+              { "id": "regex-l3-m3", "title": "Regex en sécurité",               "order": 3, "estimatedMinutes": 50 },
+              { "id": "regex-l3-m4", "title": "Projet final — extraction d'IOCs","order": 4, "estimatedMinutes": 55 }
+            ]
+          }
+        ]
+      },
+      "kql": {
+        "name": "KQL",
+        "icon": "🛡️",
+        "color": "#e879f9",
+        "description": "Kusto Query Language pour Microsoft Sentinel — du SELECT aux règles analytiques et threat hunting.",
+        "levels": [
+          {
+            "id": "kql-l1",
+            "name": "KQL Débutant",
+            "order": 1,
+            "modules": [
+              { "id": "kql-l1-m1", "title": "Introduction à KQL et Sentinel",   "order": 1, "estimatedMinutes": 35 },
+              { "id": "kql-l1-m2", "title": "where, project et extend",         "order": 2, "estimatedMinutes": 40 },
+              { "id": "kql-l1-m3", "title": "sort, count et summarize",         "order": 3, "estimatedMinutes": 40 },
+              { "id": "kql-l1-m4", "title": "search, contains et has",          "order": 4, "estimatedMinutes": 35 }
+            ]
+          },
+          {
+            "id": "kql-l2",
+            "name": "KQL Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "kql-l2-m1", "title": "Agrégations avancées",             "order": 1, "estimatedMinutes": 45 },
+              { "id": "kql-l2-m2", "title": "Jointures — join et lookup",       "order": 2, "estimatedMinutes": 45 },
+              { "id": "kql-l2-m3", "title": "Analyse de logs Windows",          "order": 3, "estimatedMinutes": 50 },
+              { "id": "kql-l2-m4", "title": "Fonctions temporelles",            "order": 4, "estimatedMinutes": 45 }
+            ]
+          },
+          {
+            "id": "kql-l3",
+            "name": "KQL Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "kql-l3-m1", "title": "Fonctions et requêtes réutilisables","order": 1, "estimatedMinutes": 50 },
+              { "id": "kql-l3-m2", "title": "Détection d'anomalies et UEBA",    "order": 2, "estimatedMinutes": 55 },
+              { "id": "kql-l3-m3", "title": "Règles analytiques et Threat Hunting","order": 3, "estimatedMinutes": 55 }
+            ]
+          }
+        ]
+      },
+      "spl": {
+        "name": "SPL",
+        "icon": "🔎",
+        "color": "#10b981",
+        "description": "Search Processing Language pour Splunk — recherche, statistiques, alertes et dashboards.",
+        "levels": [
+          {
+            "id": "spl-l1",
+            "name": "SPL Débutant",
+            "order": 1,
+            "modules": [
+              { "id": "spl-l1-m1", "title": "Introduction à SPL et Splunk",     "order": 1, "estimatedMinutes": 35 },
+              { "id": "spl-l1-m2", "title": "Filtrer et sélectionner",          "order": 2, "estimatedMinutes": 40 },
+              { "id": "spl-l1-m3", "title": "stats, top et rare",               "order": 3, "estimatedMinutes": 40 }
+            ]
+          },
+          {
+            "id": "spl-l2",
+            "name": "SPL Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "spl-l2-m1", "title": "eval, rex et spath",               "order": 1, "estimatedMinutes": 45 },
+              { "id": "spl-l2-m2", "title": "Sous-recherches et append",        "order": 2, "estimatedMinutes": 45 },
+              { "id": "spl-l2-m3", "title": "Lookup et enrichissement",         "order": 3, "estimatedMinutes": 40 }
+            ]
+          },
+          {
+            "id": "spl-l3",
+            "name": "SPL Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "spl-l3-m1", "title": "Macros, tstats et optimisation",   "order": 1, "estimatedMinutes": 50 },
+              { "id": "spl-l3-m2", "title": "Alertes, dashboards et rapports",  "order": 2, "estimatedMinutes": 50 }
+            ]
+          }
+        ]
+      },
+      "yaml": {
+        "name": "YAML",
+        "icon": "📄",
+        "color": "#f59e0b",
+        "description": "YAML pour la configuration — syntaxe, Docker Compose, GitHub Actions CI/CD.",
+        "levels": [
+          {
+            "id": "yaml-l1",
+            "name": "YAML Fondamentaux",
+            "order": 1,
+            "modules": [
+              { "id": "yaml-l1-m1", "title": "Syntaxe YAML de base",            "order": 1, "estimatedMinutes": 35 },
+              { "id": "yaml-l1-m2", "title": "Listes et mappings imbriqués",    "order": 2, "estimatedMinutes": 35 },
+              { "id": "yaml-l1-m3", "title": "Types avancés et multilignes",    "order": 3, "estimatedMinutes": 35 }
+            ]
+          },
+          {
+            "id": "yaml-l2",
+            "name": "YAML Pratique",
+            "order": 2,
+            "modules": [
+              { "id": "yaml-l2-m1", "title": "Ancres et alias",                 "order": 1, "estimatedMinutes": 40 },
+              { "id": "yaml-l2-m2", "title": "Docker Compose",                  "order": 2, "estimatedMinutes": 45 },
+              { "id": "yaml-l2-m3", "title": "GitHub Actions CI/CD",            "order": 3, "estimatedMinutes": 50 }
+            ]
+          }
         ]
       }
     }
-  ]
+  }
 }

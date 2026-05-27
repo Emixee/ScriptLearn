@@ -1,0 +1,74 @@
+{
+  "id": "spl-l3-m2",
+  "title": "Alertes, dashboards et rapports",
+  "level": "spl-l3",
+  "lang": "spl",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Alertes Splunk — configuration et déclenchement",
+      "content": "Une alerte Splunk exécute une recherche périodiquement et déclenche des actions si des résultats sont trouvés :\n\n```spl\n// Requête d'alerte — brute force sur un admin\nindex=security EventCode=4625\n| where match(Account, \"(?i)admin\")\n| stats count AS failures BY src_ip, Account\n| where failures > 20\n// Déclenche si le nombre de résultats > 0\n\n// Alerte avec score de sévérité\nindex=security EventCode=4625 earliest=-5m latest=now\n| stats count AS failures BY src_ip\n| where failures > 50\n| eval severity=\"high\"\n| eval alert_message=src_ip+\" : \"+tostring(failures)+\" failures in 5 min\"\n| fields src_ip, failures, severity, alert_message\n\n// Configuration dans Splunk :\n// - Fréquence : toutes les 5 minutes\n// - Fenêtre : 5 minutes (earliest=-5m)\n// - Condition de déclenchement : Number of results > 0\n// - Actions : Email, Webhook, créer un ticket\n// - Throttle : Ne pas déclencher plus d'1x par heure pour la même IP\n```"
+    },
+    {
+      "title": "Tableaux de bord — visualisations",
+      "content": "```spl\n// Graphe temporel — évolution des erreurs\nindex=security EventCode=4625 earliest=-24h\n| timechart count BY host span=30m\n// Utilisé dans un panel 'Line Chart'\n\n// Camembert — distribution des EventCodes\nindex=security earliest=-1d\n| stats count BY EventCode\n| sort -count\n// Utilisé dans un panel 'Pie Chart'\n\n// Carte géographique — connexions par pays\nindex=web earliest=-1h\n| lookup geo_lookup.csv ip AS clientip OUTPUT country, lat, lon\n| stats count BY country, lat, lon\n| geostats latfield=lat longfield=lon count\n// Utilisé dans un panel 'Cluster Map'\n\n// Tableau top IPs avec sparkline\nindex=web status>=400 earliest=-24h\n| stats count AS errors sparkline BY clientip\n| sort -errors\n| head 20\n// sparkline ajoute un mini-graphe inline\n\n// Gauge — métrique avec seuil\nindex=security EventCode=4625 earliest=-1h\n| stats count AS total_failures\n// Utilisé dans un panel 'Gauge' avec seuils colorés\n```"
+    },
+    {
+      "title": "Recherches planifiées et rapports",
+      "content": "```spl\n// Rapport quotidien — top 10 IPs d'attaque\n// Planifié à 08h00 chaque jour, fenêtre : dernières 24h\nindex=security EventCode=4625 earliest=-24h latest=now\n| stats\n    count AS failures,\n    dc(Account) AS targeted_accounts,\n    min(_time) AS first_seen,\n    max(_time) AS last_seen\n  BY src_ip\n| sort -failures\n| head 10\n| eval first_seen=strftime(first_seen, \"%Y-%m-%d %H:%M\")\n| eval last_seen=strftime(last_seen, \"%Y-%m-%d %H:%M\")\n| table src_ip, failures, targeted_accounts, first_seen, last_seen\n\n// sendresults — envoyer par email (dans une alert action)\n// Configuré via l'interface Splunk, pas dans la requête SPL\n\n// Exporter en CSV depuis une requête\nindex=security EventCode=4625 earliest=-7d\n| stats count BY src_ip, Account\n| outputcsv weekly_auth_failures.csv\n// Fichier disponible dans Splunk > Lookups\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l3-m2-1",
+      "order": 1,
+      "title": "Requête d'alerte — brute force",
+      "instructions": "Écrivez la requête pour une alerte brute force : EventCode=4625 sur les **5 dernières minutes**, compter par `src_ip`, déclencher si `failures > 50`.",
+      "requiredKeywords": ["eventcode=4625", "earliest=-5m", "stats count as failures by src_ip", "> 50"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-5m latest=now\n| stats count AS failures BY src_ip\n| where failures > 50",
+      "explanation": "Les alertes Splunk utilisent des fenêtres courtes (`earliest=-5m`) pour une détection rapide. `latest=now` est explicite mais optionnel. La condition de déclenchement dans l'interface est 'Number of results > 0' — la requête filtre déjà les cas pertinents avec `where failures > 50`."
+    },
+    {
+      "id": "ex-spl-l3-m2-2",
+      "order": 2,
+      "title": "timechart — graphe temporel pour dashboard",
+      "instructions": "Créez un graphe temporel des échecs de connexion (`EventCode=4625`) par `host` sur 24h avec des tranches de **1 heure**.",
+      "requiredKeywords": ["eventcode=4625", "timechart count by host", "span=1h"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-24h\n| timechart count BY host span=1h",
+      "explanation": "`timechart count BY host` crée une colonne par valeur de `host`. Dans Splunk, ce résultat s'affiche directement en graphe linéaire multicolore dans un dashboard. Chaque machine est une courbe distincte — facile de repérer visuellement une machine anormalement active."
+    },
+    {
+      "id": "ex-spl-l3-m2-3",
+      "order": 3,
+      "title": "sparkline — tableau avec mini-graphe",
+      "instructions": "Depuis `index=web status>=400` (24h), affichez un tableau avec `clientip`, `errors` et une `sparkline` de l'évolution temporelle.",
+      "requiredKeywords": ["stats count as errors sparkline by clientip", "sort -errors"],
+      "validationType": "keywords",
+      "correction": "index=web status>=400 earliest=-24h\n| stats count AS errors sparkline BY clientip\n| sort -errors\n| head 20",
+      "explanation": "`sparkline` dans `stats` ajoute une mini-visualisation de l'évolution temporelle des événements pour chaque groupe. Très utile dans les tableaux de bord Splunk pour voir en un coup d'œil si une IP a eu une activité régulière ou un pic soudain."
+    },
+    {
+      "id": "ex-spl-l3-m2-4",
+      "order": 4,
+      "title": "strftime — formater les timestamps",
+      "instructions": "Dans un rapport, formatez `_time` avec `eval` et `strftime` en format lisible `YYYY-MM-DD HH:MM:SS`.",
+      "requiredKeywords": ["eval", "strftime(_time", "\"%Y-%m-%d %H:%M:%S\")"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-1h\n| stats min(_time) AS first_attempt, max(_time) AS last_attempt, count AS failures BY src_ip\n| eval first_attempt=strftime(first_attempt, \"%Y-%m-%d %H:%M:%S\")\n| eval last_attempt=strftime(last_attempt, \"%Y-%m-%d %H:%M:%S\")\n| sort -failures",
+      "explanation": "`strftime(epoch, format)` formate un timestamp Unix en chaîne lisible. `%Y` = année 4 chiffres, `%m` = mois, `%d` = jour, `%H:%M:%S` = heure. Les timestamps Splunk (`_time`) sont des epochs Unix — toujours les formater pour la lisibilité dans les rapports."
+    },
+    {
+      "id": "ex-spl-l3-m2-5",
+      "order": 5,
+      "title": "outputcsv — exporter un rapport hebdomadaire",
+      "instructions": "Exportez les statistiques d'échecs d'auth des **7 derniers jours** (par IP et compte) vers `weekly_report.csv` avec `outputcsv`.",
+      "requiredKeywords": ["earliest=-7d", "stats count by src_ip, account", "| outputcsv weekly_report.csv"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-7d\n| stats count AS failures BY src_ip, Account\n| sort -failures\n| outputcsv weekly_report.csv",
+      "explanation": "`outputcsv fichier.csv` écrit le résultat dans un fichier CSV accessible dans Splunk > Settings > Lookups. Différent de `outputlookup` : `outputcsv` crée toujours un nouveau fichier, `outputlookup` peut append. Le fichier peut ensuite être téléchargé ou utilisé dans un `inputlookup`."
+    }
+  ]
+}

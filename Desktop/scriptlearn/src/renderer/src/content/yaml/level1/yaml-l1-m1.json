@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l1-m1",
+  "title": "Syntaxe YAML de base",
+  "level": "yaml-l1",
+  "lang": "yaml",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Qu'est-ce que YAML ?",
+      "content": "**YAML** (YAML Ain't Markup Language) est un format de sérialisation lisible par l'humain, utilisé pour les fichiers de configuration.\n\n**Cas d'usage :**\n- Docker Compose (`docker-compose.yml`)\n- GitHub Actions (`.github/workflows/*.yml`)\n- Kubernetes manifests\n- Ansible playbooks\n- Configuration d'outils (ESLint, Jest, Helm...)\n\n**Règles fondamentales :**\n- **Indentation avec des espaces** (jamais des tabulations !)\n- Sensible à l'indentation — 2 espaces est la convention\n- Les clés et valeurs sont séparées par `: ` (colon + espace)\n- Les commentaires commencent par `#`\n\n```yaml\n# Commentaire\nnom: Alice          # Clé: valeur\nage: 30\nemail: alice@example.com\n```"
+    },
+    {
+      "title": "Scalaires — types de valeurs",
+      "content": "YAML supporte plusieurs types de valeurs :\n\n```yaml\n# Chaînes (string)\nnom: Alice\nmessage: 'guillemets simples pour le texte littéral'\ndescription: \"guillemets doubles pour \\n les séquences d'échappement\"\n\n# Entiers et flottants\nport: 8080\nversion: 1.2\nnombre_negatif: -42\n\n# Booléens\nactivé: true\ndisabled: false\ndebug: yes   # aussi valide\nverbose: no  # aussi valide\n\n# Null\nvaleur: null\nautrevaleur: ~  # alias de null\n\n# Chaîne multi-lignes sur une ligne\ncommande: \"git commit -m 'message'\"\n\n# Types automatiques — ATTENTION !\n# 'true', 'yes', 'on' → boolean true (en YAML 1.1)\n# Pour forcer string : 'true' en guillemets ou \"true\"\n```"
+    },
+    {
+      "title": "Structure d'un document YAML",
+      "content": "```yaml\n# Début de document (optionnel)\n---\n\napp_name: mon-application\nversion: \"1.0.0\"\ndebug: false\n\n# Clés imbriquées (objet/mapping)\nserveur:\n  hote: localhost\n  port: 3000\n  protocole: http\n\n# Clé avec tiret est valide\nbase-url: https://api.example.com\n\n# Clé avec espaces (guillemets obligatoires)\n\"clé avec espaces\": valeur\n\n# Fin de document (optionnel)\n...\n\n# Plusieurs documents dans un fichier\n---\nnom: document1\n---\nnom: document2\n```\n\n⚠️ **Erreurs classiques :**\n```yaml\n# INCORRECT — tabulation\nserveur:\n\thote: localhost  # Erreur !\n\n# CORRECT — espaces\nserveur:\n  hote: localhost  # 2 espaces\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l1-m1-1",
+      "order": 1,
+      "title": "Paire clé-valeur basique",
+      "instructions": "Écrivez un fichier YAML avec 3 clés : `name: webapp`, `version: 2`, `debug: false`.",
+      "requiredKeywords": ["name:", "version:", "debug:"],
+      "validationType": "keywords",
+      "correction": "name: webapp\nversion: 2\ndebug: false",
+      "explanation": "En YAML, chaque paire clé-valeur est sur sa propre ligne. Le `: ` (colon suivi d'un espace) sépare la clé de la valeur. Pas besoin de guillemets pour les chaînes simples, les entiers ou les booléens."
+    },
+    {
+      "id": "ex-yaml-l1-m1-2",
+      "order": 2,
+      "title": "Types de valeurs",
+      "instructions": "Écrivez un YAML avec `port: 8080` (entier), `active: true` (booléen) et `description: 'mon serveur'` (chaîne entre guillemets simples).",
+      "requiredKeywords": ["port: 8080", "active: true", "description: 'mon serveur'"],
+      "validationType": "keywords",
+      "correction": "port: 8080\nactive: true\ndescription: 'mon serveur'",
+      "explanation": "YAML infère automatiquement les types : `8080` → entier, `true/false` → booléen. Les guillemets simples `'...'` forcent le type string — utile pour éviter qu'une valeur comme `'true'` soit interprétée comme booléen."
+    },
+    {
+      "id": "ex-yaml-l1-m1-3",
+      "order": 3,
+      "title": "Objet imbriqué",
+      "instructions": "Créez une clé `server` avec des sous-clés `host: localhost` et `port: 3000` (2 espaces d'indentation).",
+      "requiredKeywords": ["server:", "  host: localhost", "  port: 3000"],
+      "validationType": "keywords",
+      "correction": "server:\n  host: localhost\n  port: 3000",
+      "explanation": "Les objets YAML (mappings) s'indentent avec des espaces. 2 espaces est la convention. L'indentation définit la hiérarchie — `host` et `port` sont des propriétés de `server`. Ne jamais mélanger espaces et tabulations."
+    },
+    {
+      "id": "ex-yaml-l1-m1-4",
+      "order": 4,
+      "title": "Null et chaîne vide",
+      "instructions": "Écrivez `password: null` (valeur nulle) et `description: ''` (chaîne vide).",
+      "requiredKeywords": ["password: null", "description: ''"],
+      "validationType": "keywords",
+      "correction": "password: null\ndescription: ''",
+      "explanation": "`null` (ou `~`) représente l'absence de valeur. `''` est une chaîne vide — différent de `null`. En Python, `null` YAML devient `None`, en JavaScript `null`. Important dans les configs : omettre un champ vs le mettre à null peuvent avoir des comportements différents."
+    },
+    {
+      "id": "ex-yaml-l1-m1-5",
+      "order": 5,
+      "title": "Document YAML complet",
+      "instructions": "Écrivez un fichier YAML avec un marqueur `---`, les clés `app: myapp`, `version: '1.0.0'` et un objet `database` avec `host: db.local` et `port: 5432`.",
+      "requiredKeywords": ["---", "app: myapp", "version:", "database:", "  host:", "  port:"],
+      "validationType": "keywords",
+      "correction": "---\napp: myapp\nversion: '1.0.0'\ndatabase:\n  host: db.local\n  port: 5432",
+      "explanation": "`---` marque le début d'un document YAML (optionnel mais convention). `version: '1.0.0'` : guillemets forcent le type string car `1.0.0` sans guillemets serait invalide (float ne peut pas avoir deux points). Toujours mettre les versions en string."
+    }
+  ]
+}

@@ -18,7 +18,7 @@ const CAREER_PATHS = {
       { label: 'Bash intermédiaire', ids: ['bash-l2-m1', 'bash-l2-m2', 'bash-l2-m3', 'bash-l2-m4', 'bash-l2-m5', 'bash-l2-m6'] },
       { label: 'PowerShell', ids: ['ps-l1-m1', 'ps-l1-m2', 'ps-l1-m3', 'ps-l1-m4', 'ps-l2-m1', 'ps-l2-m2', 'ps-l2-m5'] },
       { label: 'Automatisation avancée', ids: ['bash-l3-m1', 'bash-l3-m2', 'bash-l3-m3', 'bash-l3-m4', 'bash-l3-m5'] },
-      { label: 'Git & YAML', ids: ['git-m1', 'git-m2', 'yaml-m1', 'yaml-m2', 'yaml-m3'] },
+      { label: 'Git & YAML', ids: ['git-l1-m1', 'git-l2-m1', 'yaml-l1-m1', 'yaml-l1-m2', 'yaml-l2-m2'] },
     ]
   },
   devops: {
@@ -28,8 +28,8 @@ const CAREER_PATHS = {
     desc: 'CI/CD, Infrastructure as Code, conteneurs, automatisation',
     phases: [
       { label: 'Shell fondations', ids: ['bash-l1-m1', 'bash-l1-m4', 'bash-l1-m5', 'bash-l2-m2'] },
-      { label: 'Git', ids: ['git-m1', 'git-m2', 'git-m3', 'git-m4'] },
-      { label: 'YAML', ids: ['yaml-m1', 'yaml-m2', 'yaml-m3', 'yaml-m4'] },
+      { label: 'Git', ids: ['git-l1-m1', 'git-l2-m1', 'git-l3-m1', 'git-l4-m1'] },
+      { label: 'YAML', ids: ['yaml-l1-m1', 'yaml-l1-m2', 'yaml-l1-m3', 'yaml-l2-m1', 'yaml-l2-m2', 'yaml-l2-m3'] },
       { label: 'Bash avancé', ids: ['bash-l3-m3', 'bash-l3-m5', 'bash-l4-m1', 'bash-l4-m5'] },
       { label: 'PowerShell IaC', ids: ['ps-l4-m6', 'ps-l3-m3', 'ps-l4-m2'] },
     ]
@@ -41,8 +41,8 @@ const CAREER_PATHS = {
     desc: 'Détection de menaces, analyse de logs, threat hunting',
     phases: [
       { label: 'Fondations shell', ids: ['bash-l1-m1', 'bash-l1-m2', 'bash-l1-m6'] },
-      { label: 'KQL / Sentinel', ids: ['kql-m1', 'kql-m2', 'kql-m3', 'kql-m4', 'kql-m5', 'kql-m6'] },
-      { label: 'SPL / Splunk', ids: ['spl-m1', 'spl-m2', 'spl-m3'] },
+      { label: 'KQL / Sentinel', ids: ['kql-l1-m1', 'kql-l1-m2', 'kql-l1-m3', 'kql-l2-m2', 'kql-l2-m3', 'kql-l3-m3'] },
+      { label: 'SPL / Splunk', ids: ['spl-l1-m1', 'spl-l2-m1', 'spl-l3-m2'] },
       { label: 'Python sécurité', ids: ['py-l3-m1', 'py-l3-m2', 'py-l4-m1', 'py-l4-m2', 'py-l4-m3'] },
       { label: 'SOC avancé', ids: ['bash-l6-m1', 'bash-l6-m3', 'ps-l6-m1', 'ps-l6-m2'] },
     ]
@@ -55,9 +55,9 @@ const CAREER_PATHS = {
     phases: [
       { label: 'Python fondations', ids: ['py-l1-m1', 'py-l1-m2', 'py-l1-m3', 'py-l1-m4', 'py-l1-m5', 'py-l1-m6'] },
       { label: 'Python données', ids: ['py-l2-m1', 'py-l2-m2', 'py-l2-m3', 'py-l2-m4', 'py-l2-m5'] },
-      { label: 'SQL', ids: ['sql-m1', 'sql-m2', 'sql-m3', 'sql-m4'] },
-      { label: 'Expressions régulières', ids: ['regex-m1', 'regex-m2', 'regex-m3', 'regex-m4'] },
-      { label: 'Git', ids: ['git-m1', 'git-m2', 'yaml-m1'] },
+      { label: 'SQL', ids: ['sql-l1-m1', 'sql-l1-m2', 'sql-l2-m1', 'sql-l2-m3'] },
+      { label: 'Expressions régulières', ids: ['regex-l1-m1', 'regex-l1-m2', 'regex-l2-m1', 'regex-l2-m4'] },
+      { label: 'Git', ids: ['git-l1-m1', 'git-l2-m1', 'yaml-l1-m1'] },
     ]
   },
   developer: {
@@ -67,10 +67,10 @@ const CAREER_PATHS = {
     desc: 'Scripting, versioning, automatisation de build',
     phases: [
       { label: 'Python fondations', ids: ['py-l1-m1', 'py-l1-m2', 'py-l1-m3', 'py-l1-m4'] },
-      { label: 'Git', ids: ['git-m1', 'git-m2', 'git-m3', 'git-m4'] },
-      { label: 'Regex', ids: ['regex-m1', 'regex-m2', 'regex-m3'] },
+      { label: 'Git', ids: ['git-l1-m1', 'git-l2-m1', 'git-l3-m1', 'git-l4-m1'] },
+      { label: 'Regex', ids: ['regex-l1-m1', 'regex-l1-m2', 'regex-l2-m1'] },
       { label: 'Bash & automatisation', ids: ['bash-l1-m1', 'bash-l2-m2', 'bash-l3-m5'] },
-      { label: 'YAML & CI/CD', ids: ['yaml-m1', 'yaml-m2', 'yaml-m3', 'yaml-m4'] },
+      { label: 'YAML & CI/CD', ids: ['yaml-l1-m1', 'yaml-l1-m2', 'yaml-l2-m2', 'yaml-l2-m3'] },
     ]
   },
   general: {
@@ -82,17 +82,27 @@ const CAREER_PATHS = {
       { label: 'Bash', ids: ['bash-l1-m1', 'bash-l1-m2', 'bash-l1-m3', 'bash-l1-m4', 'bash-l1-m5', 'bash-l1-m6'] },
       { label: 'Python', ids: ['py-l1-m1', 'py-l1-m2', 'py-l1-m3', 'py-l1-m4'] },
       { label: 'PowerShell', ids: ['ps-l1-m1', 'ps-l1-m2', 'ps-l1-m3', 'ps-l1-m4'] },
-      { label: 'SQL & Regex', ids: ['sql-m1', 'sql-m2', 'regex-m1', 'regex-m2'] },
-      { label: 'Git & YAML', ids: ['git-m1', 'git-m2', 'yaml-m1', 'yaml-m2'] },
+      { label: 'SQL & Regex', ids: ['sql-l1-m1', 'sql-l1-m2', 'regex-l1-m1', 'regex-l1-m2'] },
+      { label: 'Git & YAML', ids: ['git-l1-m1', 'git-l2-m1', 'yaml-l1-m1', 'yaml-l1-m2'] },
     ]
   }
 }
 
 function findModuleMeta(moduleId) {
+  // Recherche dans les niveaux standard (Bash, Python, PowerShell, niveaux 1-6)
   for (const level of contentIndex.levels) {
     for (const [lang, refs] of Object.entries(level.languages)) {
       const ref = refs.find(r => r.id === moduleId)
       if (ref) return { lang, levelId: level.id, ref }
+    }
+  }
+  // Recherche dans les langages complémentaires (SQL, Git, Regex, KQL, SPL, YAML)
+  // Les IDs de modules complémentaires suivent le pattern {lang}-l{level}-m{num}
+  const tracks = contentIndex.complementary?.tracks ?? {}
+  for (const [trackKey, track] of Object.entries(tracks)) {
+    for (const level of track.levels) {
+      const mod = level.modules.find(m => m.id === moduleId)
+      if (mod) return { lang: trackKey, levelId: level.id, ref: mod }
     }
   }
   return null

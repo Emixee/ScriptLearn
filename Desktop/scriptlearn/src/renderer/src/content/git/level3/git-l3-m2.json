@@ -1,0 +1,74 @@
+{
+  "id": "git-l3-m2",
+  "title": "Fork, Pull Request et code review",
+  "level": "git-l3",
+  "lang": "git",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Fork et workflow open source",
+      "content": "Un **fork** est une copie personnelle d'un dépôt sur GitHub.\n\n```bash\n# 1. Forker sur GitHub (bouton Fork)\n\n# 2. Cloner son fork\ngit clone https://github.com/moi/projet.git\n\n# 3. Ajouter le dépôt original comme remote\ngit remote add upstream https://github.com/original/projet.git\n\n# 4. Synchroniser avec l'original\ngit fetch upstream\ngit switch main\ngit merge upstream/main\ngit push origin main  # mettre à jour son fork\n\n# Convention : origin = son fork, upstream = l'original\n```"
+    },
+    {
+      "title": "Créer une Pull Request",
+      "content": "Workflow complet pour contribuer :\n\n```bash\n# 1. Mettre à jour sa copie de main\ngit fetch upstream && git merge upstream/main\n\n# 2. Créer une branche pour la feature\ngit switch -c feature/correction-bug\n\n# 3. Développer + commiter\ngit add . && git commit -m \"fix: corriger le calcul de TVA\"\n\n# 4. Pousser sur son fork\ngit push -u origin feature/correction-bug\n\n# 5. Ouvrir une PR sur GitHub\n#    (bouton \"Compare & pull request\" apparaît)\n\n# Via GitHub CLI\ngh pr create --title \"fix: corriger TVA\" --body \"Closes #42\"\n```"
+    },
+    {
+      "title": "Mettre à jour une PR et résoudre les reviews",
+      "content": "```bash\n# Après retours du reviewer :\ngit add . && git commit -m \"fix: appliquer les retours review\"\ngit push  # la PR se met à jour automatiquement\n\n# Intégrer les derniers changements de main dans la PR\ngit fetch upstream\ngit rebase upstream/main\ngit push --force-with-lease  # pousser après rebase\n\n# Squash avant merge (nettoyer les commits WIP)\ngit rebase -i HEAD~3  # regrouper les commits\ngit push --force-with-lease\n\n# Après merge de la PR\ngit switch main\ngit fetch upstream && git merge upstream/main\ngit branch -d feature/correction-bug\ngit push origin --delete feature/correction-bug\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l3-m2-1",
+      "order": 1,
+      "title": "Ajouter upstream",
+      "instructions": "Après avoir forké et cloné, ajoutez le dépôt original `https://github.com/original/projet.git` comme remote nommé `upstream`.",
+      "requiredKeywords": ["git remote add", "upstream", "https://github.com/original/projet.git"],
+      "validationType": "keywords",
+      "correction": "git remote add upstream https://github.com/original/projet.git",
+      "explanation": "La convention `upstream` pour le dépôt original et `origin` pour son fork est universelle. Elle permet de garder son fork synchronisé avec `git fetch upstream && git merge upstream/main`."
+    },
+    {
+      "id": "ex-git-l3-m2-2",
+      "order": 2,
+      "title": "Synchroniser son fork",
+      "instructions": "Récupérez les derniers changements de `upstream` et fusionnez-les dans votre `main` local.",
+      "requiredKeywords": ["git fetch", "upstream", "git merge", "upstream/main"],
+      "validationType": "keywords",
+      "correction": "git fetch upstream && git merge upstream/main",
+      "explanation": "`git fetch upstream` télécharge les nouveaux commits de l'original. `git merge upstream/main` les intègre dans `main` local. Ensuite `git push origin main` met à jour votre fork sur GitHub."
+    },
+    {
+      "id": "ex-git-l3-m2-3",
+      "order": 3,
+      "title": "Préparer une branche de PR",
+      "instructions": "Créez une branche `fix/login-timeout` et poussez-la sur `origin` avec tracking.",
+      "requiredKeywords": ["git switch", "-c", "fix/login-timeout", "git push", "-u", "origin"],
+      "validationType": "keywords",
+      "correction": "git switch -c fix/login-timeout && git push -u origin fix/login-timeout",
+      "explanation": "La convention `type/description` pour les noms de branches de PR. Le `git push -u` crée le tracking — les commandes `git push` suivantes fonctionnent sans arguments."
+    },
+    {
+      "id": "ex-git-l3-m2-4",
+      "order": 4,
+      "title": "Pousser après un rebase",
+      "instructions": "Après un `git rebase upstream/main`, poussez votre branche sur `origin` de façon **sécurisée** (pas de force brut).",
+      "requiredKeywords": ["git push", "--force-with-lease"],
+      "validationType": "keywords",
+      "correction": "git push --force-with-lease",
+      "explanation": "`--force-with-lease` est plus sûr que `--force` : il refuse de pousser si quelqu'un d'autre a poussé depuis votre dernier fetch. Protège contre l'écrasement accidentel du travail d'un collègue."
+    },
+    {
+      "id": "ex-git-l3-m2-5",
+      "order": 5,
+      "title": "Nettoyer après merge de PR",
+      "instructions": "Après le merge de la PR, supprimez la branche `fix/login-timeout` localement ET sur `origin`.",
+      "requiredKeywords": ["git branch", "-d", "fix/login-timeout", "git push", "origin", "--delete"],
+      "validationType": "keywords",
+      "correction": "git branch -d fix/login-timeout && git push origin --delete fix/login-timeout",
+      "explanation": "Nettoyer les branches après merge est une bonne hygiène. `-d` (pas `-D`) vérifie que la branche a bien été fusionnée avant de la supprimer."
+    }
+  ]
+}

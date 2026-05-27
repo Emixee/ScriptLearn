@@ -1,0 +1,74 @@
+{
+  "id": "sql-l3-m3",
+  "title": "Vues — CREATE VIEW",
+  "level": "sql-l3",
+  "lang": "sql",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'une vue ?",
+      "content": "Une **vue** est une requête sauvegardée sous un nom, utilisable comme une table :\n\n```sql\n-- Créer une vue\nCREATE VIEW v_it_employees AS\nSELECT name, salary, department\nFROM employees\nWHERE department = 'IT';\n\n-- Utiliser la vue comme une table\nSELECT * FROM v_it_employees;\nSELECT name FROM v_it_employees WHERE salary > 70000;\n```\n\n**Avantages** :\n- Simplifier des requêtes complexes\n- Masquer la complexité du schéma\n- Restreindre l'accès à certaines colonnes (sécurité)\n- Réutiliser la logique sans duplication"
+    },
+    {
+      "title": "Modifier et supprimer une vue",
+      "content": "```sql\n-- Remplacer la définition d'une vue\nCREATE OR REPLACE VIEW v_it_employees AS\nSELECT name, salary, department, hire_date\nFROM employees\nWHERE department = 'IT' AND active = 1;\n\n-- Supprimer une vue\nDROP VIEW v_it_employees;\nDROP VIEW IF EXISTS v_it_employees; -- sans erreur si n'existe pas\n```\n\nUne vue ne stocke pas les données — elle exécute la requête à chaque appel. Pour stocker les résultats, utiliser une **vue matérialisée** (disponible dans PostgreSQL)."
+    },
+    {
+      "title": "Vues complexes",
+      "content": "Les vues peuvent contenir des jointures, agrégations et sous-requêtes :\n\n```sql\n-- Vue avec jointure\nCREATE VIEW v_employee_details AS\nSELECT e.name, e.salary, d.name AS dept, d.city\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.id;\n\n-- Vue avec agrégation\nCREATE VIEW v_dept_stats AS\nSELECT department,\n  COUNT(*) AS nb_employes,\n  AVG(salary) AS moy_salaire,\n  MAX(salary) AS max_salaire\nFROM employees\nGROUP BY department;\n\n-- Utilisation\nSELECT * FROM v_dept_stats WHERE nb_employes > 5;\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l3-m3-1",
+      "order": 1,
+      "title": "Créer une vue simple",
+      "instructions": "Créez une vue `v_high_salaries` qui affiche le `name` et `salary` des employés avec un salaire supérieur à `80000`.",
+      "requiredKeywords": ["create view", "v_high_salaries", "as", "select", "name", "salary", "from", "employees", "where", "salary", "80000"],
+      "validationType": "keywords",
+      "correction": "CREATE VIEW v_high_salaries AS SELECT name, salary FROM employees WHERE salary > 80000;",
+      "explanation": "`CREATE VIEW nom AS SELECT ...` sauvegarde la requête. La vue est maintenant accessible comme une table. La requête est ré-exécutée à chaque utilisation — les données sont toujours à jour."
+    },
+    {
+      "id": "ex-sql-l3-m3-2",
+      "order": 2,
+      "title": "Utiliser une vue",
+      "instructions": "Sélectionnez **tous les enregistrements** de la vue `v_high_salaries`.",
+      "requiredKeywords": ["select", "*", "from", "v_high_salaries"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM v_high_salaries;",
+      "explanation": "Une vue s'utilise exactement comme une table. On peut y ajouter un `WHERE`, `ORDER BY`, `LIMIT` — la vue sera imbriquée dans une sous-requête implicitement."
+    },
+    {
+      "id": "ex-sql-l3-m3-3",
+      "order": 3,
+      "title": "Vue avec jointure",
+      "instructions": "Créez une vue `v_emp_dept` qui affiche le `name` de l'employé (`employees`) et le `name` du département (`departments`) avec un `INNER JOIN`.",
+      "requiredKeywords": ["create view", "v_emp_dept", "as", "select", "from", "employees", "inner join", "departments", "on"],
+      "validationType": "keywords",
+      "correction": "CREATE VIEW v_emp_dept AS SELECT e.name, d.name AS dept FROM employees e INNER JOIN departments d ON e.dept_id = d.id;",
+      "explanation": "Une vue peut encapsuler une jointure complexe. Les utilisateurs de la vue n'ont pas besoin de connaître la structure des tables sous-jacentes — ils voient simplement `name` et `dept`."
+    },
+    {
+      "id": "ex-sql-l3-m3-4",
+      "order": 4,
+      "title": "Modifier une vue",
+      "instructions": "Modifiez la vue `v_high_salaries` pour inclure aussi la colonne `department` (en plus de `name` et `salary`).",
+      "requiredKeywords": ["create or replace view", "v_high_salaries", "as", "select", "name", "salary", "department", "from", "employees", "where", "80000"],
+      "validationType": "keywords",
+      "correction": "CREATE OR REPLACE VIEW v_high_salaries AS SELECT name, salary, department FROM employees WHERE salary > 80000;",
+      "explanation": "`CREATE OR REPLACE VIEW` modifie une vue existante sans la supprimer et recréer. Si la vue n'existait pas, elle serait créée normalement."
+    },
+    {
+      "id": "ex-sql-l3-m3-5",
+      "order": 5,
+      "title": "Supprimer une vue",
+      "instructions": "Supprimez la vue `v_high_salaries` **sans générer d'erreur** si elle n'existe pas.",
+      "requiredKeywords": ["drop view", "if exists", "v_high_salaries"],
+      "validationType": "keywords",
+      "correction": "DROP VIEW IF EXISTS v_high_salaries;",
+      "explanation": "`IF EXISTS` évite une erreur si la vue n'existe pas — utile dans les scripts de migration où on ne sait pas toujours l'état de la base."
+    }
+  ]
+}

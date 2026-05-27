@@ -38,34 +38,63 @@ export function computeStats(progress, activityDates = []) {
   const langsSet = new Set()
   let perfectModules = 0
 
+  // Fonction interne : traite tous les exercices d'un module et cumule les stats
+  // Factorisée car appelée à la fois pour les niveaux standard et les tracks complémentaires
+  function processModuleRef(refId, lang) {
+    const mod = getModule(refId)
+    if (!mod) return
+    let modDone = 0, modTotal = mod.exercises.length, modPerfect = true
+    for (const ex of mod.exercises) {
+      const entry = progress[ex.id]
+      if (entry?.completed) {
+        totalDone++
+        modDone++
+        langsSet.add(lang)
+        if (entry.firstAttemptSuccess) firstTryCount++
+        if ((entry.attempts ?? 0) > maxAttempts) maxAttempts = entry.attempts
+        completedByLang[lang] = (completedByLang[lang] ?? 0) + 1
+      }
+      if (!entry?.firstAttemptSuccess) modPerfect = false
+    }
+    if (modTotal > 0 && modDone === modTotal && modPerfect) perfectModules++
+  }
+
+  // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)
   for (const level of contentIndex.levels) {
     for (const lang of ALL_LANGS) {
       for (const ref of (level.languages[lang] ?? [])) {
-        const mod = getModule(ref.id)
-        if (!mod) continue
-        let modDone = 0, modTotal = mod.exercises.length, modPerfect = true
-        for (const ex of mod.exercises) {
-          const entry = progress[ex.id]
-          if (entry?.completed) {
-            totalDone++
-            modDone++
-            langsSet.add(lang)
-            if (entry.firstAttemptSuccess) firstTryCount++
-            if ((entry.attempts ?? 0) > maxAttempts) maxAttempts = entry.attempts
-            completedByLang[lang] = (completedByLang[lang] ?? 0) + 1
-          }
-          if (!entry?.firstAttemptSuccess) modPerfect = false
-        }
-        if (modTotal > 0 && modDone === modTotal && modPerfect) perfectModules++
+        processModuleRef(ref.id, lang)
       }
     }
   }
 
-  const totalExercises = contentIndex.levels.reduce((s, l) =>
-    s + ALL_LANGS.reduce((a, lang) => {
-      const refs = l.languages[lang] ?? []
-      return a + refs.reduce((b, r) => b + (getModule(r.id)?.exercises?.length ?? 0), 0)
-    }, 0), 0)
+  // Langages complémentaires (SQL, Git, Regex, KQL, SPL, YAML — structure tracks)
+  // Les deux sections sont traitées identiquement pour les badges de progression
+  const tracks = contentIndex.complementary?.tracks ?? {}
+  for (const [trackKey, track] of Object.entries(tracks)) {
+    for (const level of track.levels) {
+      for (const mod of level.modules) {
+        processModuleRef(mod.id, trackKey)
+      }
+    }
+  }
+
+  // Total exercices = standard + complémentaires — utilisé pour le badge "all_done"
+  let totalExercises = 0
+  for (const level of contentIndex.levels) {
+    for (const lang of ALL_LANGS) {
+      for (const ref of (level.languages[lang] ?? [])) {
+        totalExercises += getModule(ref.id)?.exercises?.length ?? 0
+      }
+    }
+  }
+  for (const [, track] of Object.entries(contentIndex.complementary?.tracks ?? {})) {
+    for (const level of track.levels) {
+      for (const mod of level.modules) {
+        totalExercises += getModule(mod.id)?.exercises?.length ?? 0
+      }
+    }
+  }
 
   const streak = computeStreak(activityDates)
 

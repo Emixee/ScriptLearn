@@ -1,0 +1,74 @@
+{
+  "id": "git-l2-m4",
+  "title": "Bonnes pratiques de commit",
+  "level": "git-l2",
+  "lang": "git",
+  "order": 4,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Conventional Commits",
+      "content": "Le standard **Conventional Commits** structure les messages pour automatiser changelogs et versioning :\n\n```\ntype(scope): description courte\n\n[corps optionnel]\n\n[notes de bas de page]\n```\n\nTypes courants :\n| Type | Quand l'utiliser |\n|---|---|\n| `feat` | Nouvelle fonctionnalité |\n| `fix` | Correction de bug |\n| `docs` | Documentation |\n| `style` | Formatage (pas de logique) |\n| `refactor` | Refactoring sans ajout de feature |\n| `test` | Ajout/modification de tests |\n| `chore` | Maintenance (deps, CI, config) |\n| `perf` | Amélioration de performance |\n\nExemples : `feat(auth): ajouter la connexion SSO` · `fix: corriger le timeout de session`"
+    },
+    {
+      "title": "Commits atomiques",
+      "content": "Un **commit atomique** encapsule **un seul changement logique** :\n\n```bash\n# ❌ Mauvais : tout dans un seul commit\ngit commit -m \"fix bug, add feature, update docs, refactor\"\n\n# ✅ Bon : un commit par logique\ngit commit -m \"fix: corriger le calcul TVA\"\ngit commit -m \"feat: ajouter l'export PDF\"\ngit commit -m \"docs: mettre à jour le README\"\n```\n\n**Staging partiel** — commiter seulement une partie d'un fichier :\n```bash\ngit add -p fichier.js\n# Affiche chaque \"hunk\" (bloc de diff)\n# y/n/s pour inclure/exclure/diviser\n```\n\nPourquoi ? Un historique propre permet de :\n- Comprendre chaque changement en isolation\n- Utiliser `git bisect` efficacement\n- Faire des reverts ciblés"
+    },
+    {
+      "title": "git commit --amend et squash",
+      "content": "**Amend** — corriger le dernier commit avant de pusher :\n```bash\ngit add fichier-oublie.js\ngit commit --amend --no-edit  # ajoute sans changer le message\n\ngit commit --amend -m \"fix(auth): corriger la validation JWT\"\n```\n\n**Squash** — regrouper plusieurs commits en un :\n```bash\n# Rebase interactif sur les 3 derniers commits\ngit rebase -i HEAD~3\n# Dans l'éditeur : marquer les commits à fusionner avec 's' (squash)\n# Ex:\n# pick abc1234 feat: début de la feature\n# s   def5678 wip: suite\n# s   ghi9012 wip: fin\n```\n\nUse case : des commits WIP pendant le développement → un seul commit propre avant la PR."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l2-m4-1",
+      "order": 1,
+      "title": "Commit avec Conventional Commits",
+      "instructions": "Créez un commit pour une nouvelle feature d'authentification Google, en suivant le format Conventional Commits.",
+      "requiredKeywords": ["git commit", "-m", "feat", "auth", "google"],
+      "validationType": "keywords",
+      "correction": "git commit -m \"feat(auth): ajouter la connexion via Google\"",
+      "explanation": "Format : `type(scope): description`. `feat` pour une nouvelle feature, `(auth)` pour le scope (optionnel), puis une description claire en minuscules. Ce format permet d'automatiser la génération de changelogs."
+    },
+    {
+      "id": "ex-git-l2-m4-2",
+      "order": 2,
+      "title": "Commit de correction de bug",
+      "instructions": "Créez un commit de correction du bug #142 lié à la validation du formulaire de contact.",
+      "requiredKeywords": ["git commit", "-m", "fix", "142"],
+      "validationType": "keywords",
+      "correction": "git commit -m \"fix: corriger la validation du formulaire contact (#142)\"",
+      "explanation": "Les corrections de bug utilisent `fix`. Référencer le numéro d'issue `(#142)` permet à GitHub de lier automatiquement le commit à l'issue et de la fermer si on utilise `fixes #142`."
+    },
+    {
+      "id": "ex-git-l2-m4-3",
+      "order": 3,
+      "title": "Staging partiel",
+      "instructions": "Ajoutez **interactivement** seulement certains hunks de `src/app.js` au staging.",
+      "requiredKeywords": ["git add", "-p", "src/app.js"],
+      "validationType": "keywords",
+      "correction": "git add -p src/app.js",
+      "explanation": "`-p` (--patch) présente chaque bloc de diff un par un. Répondre `y` pour inclure, `n` pour exclure, `s` pour diviser un bloc. Permet des commits atomiques même quand plusieurs changements sont dans un même fichier."
+    },
+    {
+      "id": "ex-git-l2-m4-4",
+      "order": 4,
+      "title": "Amend sans changer le message",
+      "instructions": "Ajoutez le fichier `tests/auth.test.js` au **dernier commit** sans modifier son message.",
+      "requiredKeywords": ["git add", "tests/auth.test.js", "git commit", "--amend", "--no-edit"],
+      "validationType": "keywords",
+      "correction": "git add tests/auth.test.js && git commit --amend --no-edit",
+      "explanation": "`--no-edit` conserve le message existant. Le hash du commit change (c'est techniquement un nouveau commit). Ne pas utiliser après `git push` — réécrire un commit partagé crée des problèmes pour les collègues."
+    },
+    {
+      "id": "ex-git-l2-m4-5",
+      "order": 5,
+      "title": "Lancer un rebase interactif",
+      "instructions": "Ouvrez le **rebase interactif** pour modifier les 4 derniers commits.",
+      "requiredKeywords": ["git rebase", "-i", "head~4"],
+      "validationType": "keywords",
+      "correction": "git rebase -i HEAD~4",
+      "explanation": "`git rebase -i HEAD~4` ouvre un éditeur listant les 4 derniers commits. On peut : `pick` (garder), `squash`/`s` (fusionner), `reword`/`r` (changer le message), `drop`/`d` (supprimer)."
+    }
+  ]
+}

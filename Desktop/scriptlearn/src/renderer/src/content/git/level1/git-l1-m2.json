@@ -1,0 +1,74 @@
+{
+  "id": "git-l1-m2",
+  "title": "Configurer Git et .gitignore",
+  "level": "git-l1",
+  "lang": "git",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Configurer son identité Git",
+      "content": "Git enregistre **qui** fait chaque commit. Il faut configurer son identité une fois :\n\n```bash\n# Identité globale (tous les dépôts)\ngit config --global user.name \"Prénom Nom\"\ngit config --global user.email \"email@exemple.com\"\n\n# Éditeur par défaut pour les messages de commit\ngit config --global core.editor \"code --wait\"  # VS Code\ngit config --global core.editor \"nano\"          # Nano\n\n# Voir toute la configuration\ngit config --list\n\n# Voir une valeur précise\ngit config user.email\n```\n\nAvec `--local` au lieu de `--global`, la config ne s'applique qu'au dépôt courant."
+    },
+    {
+      "title": "Le fichier .gitignore",
+      "content": "`.gitignore` liste les fichiers que Git doit **ignorer** (ne jamais versionner) :\n\n```bash\n# Exemple .gitignore\nnode_modules/      # Dossier entier\n*.log              # Tous les fichiers .log\n.env               # Variables d'environnement (secrets !)\ndist/              # Dossier de build\n*.pyc              # Fichiers compilés Python\n.DS_Store          # Fichier macOS\n\n# Exception : suivre ce fichier même si *.log est ignoré\n!important.log\n```\n\nRègles :\n- `*` = n'importe quels caractères\n- `/` en fin = répertoire\n- `!` en début = exception\n- `#` = commentaire"
+    },
+    {
+      "title": "Vérifier et déboguer .gitignore",
+      "content": "```bash\n# Lister les fichiers ignorés\ngit status --ignored\n\n# Vérifier pourquoi un fichier est ignoré\ngit check-ignore -v mon-fichier.log\n# Sortie : .gitignore:3:*.log  mon-fichier.log\n# (ligne 3 de .gitignore correspond)\n\n# Forcer l'ajout d'un fichier ignoré\ngit add -f fichier-ignore.log\n\n# Arrêter de suivre un fichier déjà versionné\ngit rm --cached .env\n# Puis ajouter .env dans .gitignore\n```\n\n⚠️ Si `.env` a déjà été commité, `git rm --cached` le retire de Git sans supprimer le fichier local — puis commiter ce changement."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l1-m2-1",
+      "order": 1,
+      "title": "Configurer le nom d'utilisateur",
+      "instructions": "Configurez votre **nom d'utilisateur Git global** avec la valeur `\"Jean Dupont\"`.",
+      "requiredKeywords": ["git config", "--global", "user.name", "jean dupont"],
+      "validationType": "keywords",
+      "correction": "git config --global user.name \"Jean Dupont\"",
+      "explanation": "Cette configuration est stockée dans `~/.gitconfig`. Elle s'applique à tous les dépôts de la machine. Sans elle, certains dépôts refusent les commits ou utilisent un nom par défaut peu parlant."
+    },
+    {
+      "id": "ex-git-l1-m2-2",
+      "order": 2,
+      "title": "Configurer l'email",
+      "instructions": "Configurez votre **email Git global** avec `\"jean@exemple.com\"`.",
+      "requiredKeywords": ["git config", "--global", "user.email", "jean@exemple.com"],
+      "validationType": "keywords",
+      "correction": "git config --global user.email \"jean@exemple.com\"",
+      "explanation": "L'email identifie l'auteur sur GitHub/GitLab. Si votre email correspond à votre compte GitHub, votre avatar apparaît sur les commits. C'est aussi utilisé pour les statistiques de contribution."
+    },
+    {
+      "id": "ex-git-l1-m2-3",
+      "order": 3,
+      "title": "Afficher la configuration",
+      "instructions": "Affichez **toute la configuration Git** active.",
+      "requiredKeywords": ["git config", "--list"],
+      "validationType": "keywords",
+      "correction": "git config --list",
+      "explanation": "`--list` affiche toutes les valeurs (globales + locales + système). Si une clé apparaît en double, la valeur locale écrase la globale."
+    },
+    {
+      "id": "ex-git-l1-m2-4",
+      "order": 4,
+      "title": "Arrêter de suivre un fichier",
+      "instructions": "Retirez le fichier `.env` du suivi Git **sans le supprimer** du disque.",
+      "requiredKeywords": ["git rm", "--cached", ".env"],
+      "validationType": "keywords",
+      "correction": "git rm --cached .env",
+      "explanation": "`git rm --cached` retire le fichier de l'index Git sans toucher au fichier local. Après ça, ajouter `.env` dans `.gitignore` et commiter — le fichier ne sera plus jamais versionné."
+    },
+    {
+      "id": "ex-git-l1-m2-5",
+      "order": 5,
+      "title": "Vérifier l'ignoration",
+      "instructions": "Vérifiez **pourquoi** le fichier `debug.log` est ignoré par Git.",
+      "requiredKeywords": ["git check-ignore", "-v", "debug.log"],
+      "validationType": "keywords",
+      "correction": "git check-ignore -v debug.log",
+      "explanation": "`-v` (verbose) affiche quelle ligne du `.gitignore` correspond au fichier. Très utile quand un fichier est ignoré sans raison apparente — permet d'identifier la règle responsable."
+    }
+  ]
+}

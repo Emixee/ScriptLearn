@@ -1,0 +1,74 @@
+{
+  "id": "sql-l4-m3",
+  "title": "OVER, SUM/AVG cumulatifs, LAG/LEAD",
+  "level": "sql-l4",
+  "lang": "sql",
+  "order": 3,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Agrégats en fenêtre avec OVER",
+      "content": "On peut utiliser `SUM()`, `AVG()`, `COUNT()` comme fonctions de fenêtre avec `OVER` :\n\n```sql\n-- Salaire de chaque employé + salaire moyen du département\nSELECT name, department, salary,\n  AVG(salary) OVER (PARTITION BY department) AS moy_dept,\n  salary - AVG(salary) OVER (PARTITION BY department) AS ecart\nFROM employees;\n```\n\nLa différence avec `GROUP BY + AVG` : chaque ligne reste visible. On peut calculer l'écart à la moyenne dans une seule requête."
+    },
+    {
+      "title": "Somme et moyenne cumulatives",
+      "content": "Avec `ORDER BY` dans `OVER`, les agrégats deviennent **cumulatifs** :\n\n```sql\n-- Total cumulatif des salaires par ordre d'embauche\nSELECT name, hire_date, salary,\n  SUM(salary) OVER (\n    ORDER BY hire_date\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS cumul_salaires\nFROM employees;\n```\n\n`ROWS BETWEEN ... AND CURRENT ROW` définit la **frame** — les lignes incluses dans le calcul.\n\nCas d'usage : totaux cumulatifs, moyennes glissantes, analyse de séries temporelles."
+    },
+    {
+      "title": "LAG et LEAD — accéder aux lignes voisines",
+      "content": "`LAG(col, n)` accède à la ligne **n positions avant** ; `LEAD(col, n)` accède à la ligne **n positions après** :\n\n```sql\nSELECT name, hire_date, salary,\n  LAG(salary, 1) OVER (ORDER BY hire_date) AS salaire_precedent,\n  salary - LAG(salary, 1) OVER (ORDER BY hire_date) AS evolution\nFROM employees;\n```\n\nRésultat :\n```\nAlice  | 2020-01 | 60000 | NULL  | NULL\nBob    | 2021-03 | 70000 | 60000 | +10000\nCarla  | 2022-06 | 65000 | 70000 | -5000\n```\n\nUtile pour : calcul de variations, comparaison période sur période, détection d'anomalies."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l4-m3-1",
+      "order": 1,
+      "title": "Moyenne par département sans GROUP BY",
+      "instructions": "Pour chaque employé, affichez son `name`, `salary`, et le **salaire moyen de son département** en utilisant `AVG() OVER (PARTITION BY department)`.",
+      "requiredKeywords": ["select", "name", "salary", "avg", "salary", "over", "partition by", "department", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, department, salary, AVG(salary) OVER (PARTITION BY department) AS moy_dept FROM employees;",
+      "explanation": "Sans `GROUP BY`, toutes les lignes restent visibles. `AVG(salary) OVER (PARTITION BY department)` répète la moyenne du département sur chaque ligne de ce département — utile pour calculer des écarts."
+    },
+    {
+      "id": "ex-sql-l4-m3-2",
+      "order": 2,
+      "title": "Total cumulatif",
+      "instructions": "Calculez le **cumul des salaires** dans l'ordre croissant de `salary`, avec `SUM() OVER (ORDER BY salary)`.",
+      "requiredKeywords": ["select", "name", "salary", "sum", "salary", "over", "order by", "salary", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, salary, SUM(salary) OVER (ORDER BY salary) AS cumul FROM employees;",
+      "explanation": "Avec `ORDER BY` dans `OVER`, `SUM()` devient cumulatif : chaque ligne contient la somme de toutes les lignes précédentes + elle-même. Parfait pour les totaux progressifs."
+    },
+    {
+      "id": "ex-sql-l4-m3-3",
+      "order": 3,
+      "title": "Écart à la moyenne",
+      "instructions": "Pour chaque employé, calculez **l'écart entre son salaire et la moyenne de son département**.",
+      "requiredKeywords": ["select", "name", "salary", "salary", "-", "avg", "salary", "over", "partition by", "department", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, department, salary, salary - AVG(salary) OVER (PARTITION BY department) AS ecart FROM employees;",
+      "explanation": "Calculer `salary - AVG(...) OVER (...)` dans un seul `SELECT` serait impossible avec `GROUP BY` (qui agrège et efface les lignes individuelles). Les fonctions de fenêtre permettent de combiner les deux niveaux de granularité."
+    },
+    {
+      "id": "ex-sql-l4-m3-4",
+      "order": 4,
+      "title": "LAG — salaire précédent",
+      "instructions": "Affichez pour chaque employé (trié par `hire_date`) son salaire et le salaire de l'employé **embauché juste avant**.",
+      "requiredKeywords": ["select", "name", "salary", "lag", "salary", "1", "over", "order by", "hire_date", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, hire_date, salary, LAG(salary, 1) OVER (ORDER BY hire_date) AS salaire_precedent FROM employees;",
+      "explanation": "`LAG(salary, 1)` récupère la valeur de `salary` de la ligne précédente (dans l'ordre `hire_date`). La première ligne retourne `NULL` car il n'y a pas de précédent."
+    },
+    {
+      "id": "ex-sql-l4-m3-5",
+      "order": 5,
+      "title": "LEAD — prochain salaire",
+      "instructions": "Affichez pour chaque employé son salaire et le salaire de l'employé **embauché juste après** (trié par `hire_date`).",
+      "requiredKeywords": ["select", "name", "salary", "lead", "salary", "1", "over", "order by", "hire_date", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, hire_date, salary, LEAD(salary, 1) OVER (ORDER BY hire_date) AS prochain_salaire FROM employees;",
+      "explanation": "`LEAD` est le miroir de `LAG` — il regarde vers l'avant. La dernière ligne retourne `NULL`. On peut ajouter une valeur par défaut : `LEAD(salary, 1, 0)` pour remplacer `NULL` par 0."
+    }
+  ]
+}

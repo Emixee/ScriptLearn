@@ -1,0 +1,74 @@
+{
+  "id": "spl-l1-m2",
+  "title": "Filtrer et sélectionner — where, fields, search",
+  "level": "spl-l1",
+  "lang": "spl",
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "search et where — différences",
+      "content": "SPL offre deux façons de filtrer :\n\n```spl\n// search — cherche dans les champs AND dans les données brutes (_raw)\n// Utilisable en première position ou après |  \nindex=main | search error\nindex=main | search \"failed login\"\nindex=main | search host=web01 OR host=web02\n\n// where — filtre sur des expressions (plus puissant)\n// Ne peut pas être en première position\nindex=main\n| where status==200\n| where len(username) > 10\n| where like(username, \"%admin%\")  // SQL LIKE dans where\n| where match(ip, \"^10\\\\.0\\\\.\")\n\n// Opérateurs where\n| where status IN (404, 500, 503)\n| where NOT (status==200)\n| where isnull(username)\n| where isnotnull(session_id)\n\n// Comparaisons\n| where _time > relative_time(now(), \"-2h\")\n```"
+    },
+    {
+      "title": "fields, rename, table",
+      "content": "```spl\n// fields — inclure des champs (garder)\n| fields host, src_ip, dest_ip, action\n\n// fields - — exclure des champs (supprimer)\n| fields - _raw, _indextime, linecount\n\n// rename — renommer\n| rename src_ip AS source, dest_ip AS destination\n\n// table — comme fields mais formate en tableau\n| table _time, host, src_ip, action, bytes\n// Différence : table réordonne les colonnes selon l'ordre spécifié\n\n// eval — créer des champs calculés (équivalent extend KQL)\n| eval severity=if(status>=500, \"critical\", if(status>=400, \"warning\", \"ok\"))\n| eval duration_min=round(duration/60, 2)\n| eval full_host=host+\".\"+domain\n| eval is_admin=if(match(username, \"admin\"), 1, 0)\n```"
+    },
+    {
+      "title": "Opérateurs de comparaison de chaînes en SPL",
+      "content": "```spl\n// match() — regex dans where\n| where match(src_ip, \"^192\\\\.168\\\\.\")\n| where match(filename, \"\\\\.(exe|dll|bat)$\")\n\n// like() — pattern SQL\n| where like(username, \"%admin%\")  // contient admin\n| where like(filename, \"%.exe\")     // se termine par .exe\n| where like(host, \"DC%\")           // commence par DC\n\n// cidrmatch() — adresse dans un sous-réseau\n| where cidrmatch(\"10.0.0.0/8\", src_ip)\n| where NOT cidrmatch(\"192.168.0.0/16\", src_ip)\n\n// Wildcards dans la recherche de base (pas dans where)\nindex=main sourcetype=access* host=web*\n\n// Chercher une phrase exacte (guillemets)\nindex=main \"access denied\"\n\n// Opérateur NOT (exclure)\nindex=main NOT host=monitor-* NOT sourcetype=heartbeat\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l1-m2-1",
+      "order": 1,
+      "title": "where avec IN",
+      "instructions": "Filtrez les événements `index=security` où `EventCode IN (4624, 4625, 4648)` des dernières 2 heures.",
+      "requiredKeywords": ["index=security", "| where eventcode in (4624, 4625, 4648)", "earliest=-2h"],
+      "validationType": "keywords",
+      "correction": "index=security earliest=-2h\n| where EventCode IN (4624, 4625, 4648)",
+      "explanation": "`IN (liste)` dans `where` est équivalent à `EventCode=4624 OR EventCode=4625 OR EventCode=4648`. Plus lisible et légèrement plus performant. Attention : en SPL, les noms de champs sont sensibles à la casse."
+    },
+    {
+      "id": "ex-spl-l1-m2-2",
+      "order": 2,
+      "title": "match() — adresses IP privées",
+      "instructions": "Filtrez les événements où `src_ip` correspond à une IP privée (`10.`, `172.16.`, `192.168.`) avec `match()`.",
+      "requiredKeywords": ["| where match(src_ip", "10\\\\.", "192\\\\.168\\\\."],
+      "validationType": "keywords",
+      "correction": "index=network earliest=-1h\n| where match(src_ip, \"^(10\\.|172\\.1[6-9]\\.|172\\.2[0-9]\\.|172\\.3[01]\\.|192\\.168\\.)\")",
+      "explanation": "`match(champ, regex)` applique une regex. Dans SPL, les backslashes dans les regex sont doublés dans les chaînes. `cidrmatch(\"10.0.0.0/8\", src_ip)` serait plus élégant pour les réseaux privés — mais `match()` montre la syntaxe regex."
+    },
+    {
+      "id": "ex-spl-l1-m2-3",
+      "order": 3,
+      "title": "eval — classification de statut HTTP",
+      "instructions": "Depuis `index=web`, créez une colonne `severity` avec `eval` : `status >= 500` → `'critical'`, `>= 400` → `'warning'`, sinon `'ok'`.",
+      "requiredKeywords": ["| eval severity=if(status>=500", "if(status>=400", "\"warning\""],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-1h\n| eval severity=if(status>=500, \"critical\", if(status>=400, \"warning\", \"ok\"))\n| table _time, host, status, severity",
+      "explanation": "`eval` crée ou remplace un champ. `if(condition, vrai, faux)` est le ternaire SPL — équivalent de `iff()` en KQL. Les `if()` imbriqués simulent un if-elseif-else. `eval` est très puissant : calculs, transformations, concaténations."
+    },
+    {
+      "id": "ex-spl-l1-m2-4",
+      "order": 4,
+      "title": "fields - — exclure des champs verbeux",
+      "instructions": "Depuis `index=main`, excluez les champs `_raw`, `_indextime` et `linecount` du résultat avec `fields -`.",
+      "requiredKeywords": ["| fields - _raw", "_indextime", "linecount"],
+      "validationType": "keywords",
+      "correction": "index=main earliest=-1h\n| fields - _raw, _indextime, linecount",
+      "explanation": "`fields -` (avec tiret) exclut les champs listés et garde tous les autres. `fields` sans tiret fait l'inverse (liste blanche). `_raw` contient l'événement brut entier — l'exclure réduit significativement la bande passante du résultat."
+    },
+    {
+      "id": "ex-spl-l1-m2-5",
+      "order": 5,
+      "title": "cidrmatch() — sous-réseau",
+      "instructions": "Filtrez les connexions `index=network` dont `src_ip` est dans le sous-réseau `10.0.0.0/8` avec `cidrmatch()`.",
+      "requiredKeywords": ["| where cidrmatch(\"10.0.0.0/8\"", "src_ip)"],
+      "validationType": "keywords",
+      "correction": "index=network earliest=-1h\n| where cidrmatch(\"10.0.0.0/8\", src_ip)",
+      "explanation": "`cidrmatch(\"réseau/masque\", champ_ip)` vérifie si une IP appartient à un sous-réseau CIDR. Bien plus précis et lisible que `match()` avec une regex pour les plages d'adresses. Fondamental pour identifier les flux réseau internes vs externes."
+    }
+  ]
+}

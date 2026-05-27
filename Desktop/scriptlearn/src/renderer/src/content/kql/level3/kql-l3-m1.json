@@ -1,0 +1,74 @@
+{
+  "id": "kql-l3-m1",
+  "title": "Fonctions KQL et requêtes réutilisables",
+  "level": "kql-l3",
+  "lang": "kql",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "let — variables et fonctions scalaires",
+      "content": "```kql\n// Variable scalaire\nlet Threshold = 10;\nlet TimeWindow = 2h;\n\nSecurityEvent\n| where TimeGenerated > ago(TimeWindow)\n| where EventID == 4625\n| summarize Count=count() by Account\n| where Count > Threshold\n\n// Fonction inline\nlet IsAdmin = (account:string) {\n    account in~ (\"Administrator\", \"Domain Admins\", \"sysadmin\")\n};\n\nSecurityEvent\n| where IsAdmin(Account)\n\n// Fonction avec calcul\nlet SeverityScore = (failures:long, targets:long) {\n    failures * 0.5 + targets * 2.0\n};\n\n// Lambda (fonction anonyme)\nlet Classify = (score:real) {\n    iff(score > 10, \"Critical\", iff(score > 5, \"High\", \"Low\"))\n};\n```"
+    },
+    {
+      "title": "Fonctions sauvegardées dans Sentinel",
+      "content": "Dans Microsoft Sentinel, les fonctions KQL peuvent être sauvegardées et réutilisées :\n\n```kql\n// Fonction sauvegardée comme \"GetSuspiciousLogins\"\n// Dans Sentinel : Logs → Fonctions → Enregistrer\n// Exemple de fonction réutilisable\nlet GetSuspiciousLogins = (timeWindow:timespan, failThreshold:int) {\n    SecurityEvent\n    | where TimeGenerated > ago(timeWindow)\n    | where EventID == 4625\n    | summarize Failures=count() by Account, IpAddress\n    | where Failures > failThreshold\n    | sort by Failures desc\n};\n\n// Appel de la fonction\nGetSuspiciousLogins(4h, 5)\n\n// Fonctions enrichissement\nlet EnrichWithGeoIP = (ipColumn:string) {\n    SigninLogs\n    | extend Country = tostring(LocationDetails.countryOrRegion)\n    | extend City    = tostring(LocationDetails.city)\n};\n```"
+    },
+    {
+      "title": "parse et parse_json — extraire des champs",
+      "content": "```kql\n// parse — extraire des champs depuis du texte structuré\nSyslog\n| where TimeGenerated > ago(1h)\n| parse SyslogMessage with\n    * \"src=\" SourceIP:string\n    \" dst=\" DestIP:string\n    \" port=\" Port:int\n    *\n\n// parse_json — parser un champ JSON\nSigninLogs\n| extend DevDetail = parse_json(DeviceDetail)\n| extend OS      = tostring(DevDetail.operatingSystem),\n         Browser = tostring(DevDetail.browser),\n         IsManaged = tobool(DevDetail.isManaged)\n\n// parse avec regex — extract()\nCommonSecurityLog\n| extend\n    FileName = extract(@\"file=([^;]+)\", 1, AdditionalExtensions),\n    FileHash = extract(@\"hash=([0-9a-fA-F]{64})\", 1, AdditionalExtensions)\n\n// Bag_unpack — aplatir un objet dynamic en colonnes\nSigninLogs\n| extend Props = pack('OS', OS, 'Browser', Browser)\n| evaluate bag_unpack(Props)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l3-m1-1",
+      "order": 1,
+      "title": "Variable let pour un seuil",
+      "instructions": "Définissez avec `let` une variable `Threshold = 5` et `Window = 2h`, puis listez les comptes avec plus de `Threshold` échecs (EventID 4625) dans la fenêtre `Window`.",
+      "requiredKeywords": ["let threshold", "let window", "ago(window)", "> threshold"],
+      "validationType": "keywords",
+      "correction": "let Threshold = 5;\nlet Window = 2h;\nSecurityEvent\n| where TimeGenerated > ago(Window)\n| where EventID == 4625\n| summarize Count=count() by Account\n| where Count > Threshold",
+      "explanation": "Les variables `let` rendent les requêtes paramétrables et lisibles. Pour modifier le seuil ou la fenêtre, on change une seule valeur en haut. Essentiel pour les règles d'analytique Sentinel où les paramètres peuvent être ajustés sans toucher à la logique."
+    },
+    {
+      "id": "ex-kql-l3-m1-2",
+      "order": 2,
+      "title": "Fonction inline de classification",
+      "instructions": "Créez une fonction `let Severity = (count:long)` qui retourne `'Critical'` si count > 100, `'High'` si > 20, sinon `'Low'`, avec `iff()` imbriqués.",
+      "requiredKeywords": ["let severity", "(count:long)", "iff(count > 100", "iff(count > 20"],
+      "validationType": "keywords",
+      "correction": "let Severity = (count:long) { iff(count > 100, 'Critical', iff(count > 20, 'High', 'Low')) };\nSecurityEvent\n| where TimeGenerated > ago(1h)\n| where EventID == 4625\n| summarize Count=count() by Account\n| extend Level = Severity(Count)",
+      "explanation": "Les fonctions inline `let f = (params) { ... }` sont appelées comme des fonctions. `iff()` imbriqués simulent un if-elseif-else. Cette approche centralise la logique de classification et évite de la dupliquer dans plusieurs requêtes."
+    },
+    {
+      "id": "ex-kql-l3-m1-3",
+      "order": 3,
+      "title": "parse_json — extraire le système d'exploitation",
+      "instructions": "Parsez le champ JSON `DeviceDetail` de `SigninLogs` pour extraire `operatingSystem` dans une colonne `OS`.",
+      "requiredKeywords": ["parse_json(devicedetail)", "tostring(", "operatingsystem"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1h)\n| extend DevDetail = parse_json(DeviceDetail)\n| extend OS = tostring(DevDetail.operatingSystem)\n| summarize Count=count() by OS\n| sort by Count desc",
+      "explanation": "`parse_json()` convertit une chaîne JSON en objet `dynamic`. On accède aux propriétés avec `.nom`. `tostring()` convertit la valeur dynamic en string utilisable. Permet d'analyser des connexions par OS pour détecter des accès depuis des appareils non gérés."
+    },
+    {
+      "id": "ex-kql-l3-m1-4",
+      "order": 4,
+      "title": "parse — extraire des champs Syslog",
+      "instructions": "Depuis `Syslog`, utilisez `parse` pour extraire `src=IP` et `dst=IP` depuis `SyslogMessage`.",
+      "requiredKeywords": ["parse syslogmessage with", "\"src=\"", "\"dst=\""],
+      "validationType": "keywords",
+      "correction": "Syslog\n| where TimeGenerated > ago(1h)\n| parse SyslogMessage with * \"src=\" SourceIP:string \" dst=\" DestIP:string *\n| where isnotempty(SourceIP)",
+      "explanation": "`parse ... with` utilise une syntaxe de pattern textuel. `*` correspond à n'importe quelle chaîne (wildcard). `\"src=\"` est un délimiteur littéral. Le type `:string` est optionnel. Plus simple que `extract()` pour des formats structurés réguliers."
+    },
+    {
+      "id": "ex-kql-l3-m1-5",
+      "order": 5,
+      "title": "extract() — extraire un hash depuis AdditionalExtensions",
+      "instructions": "Depuis `CommonSecurityLog`, extrayez un hash SHA256 (64 chars hex) depuis `AdditionalExtensions` avec `extract()` et le pattern `@\"hash=([0-9a-fA-F]{64})\"`.",
+      "requiredKeywords": ["extract(", "hash=", "[0-9a-fA-F]{64}", "additionalextensions"],
+      "validationType": "keywords",
+      "correction": "CommonSecurityLog\n| where TimeGenerated > ago(1h)\n| extend FileHash = extract(@\"hash=([0-9a-fA-F]{64})\", 1, AdditionalExtensions)\n| where isnotempty(FileHash)\n| project TimeGenerated, DeviceName, FileName, FileHash",
+      "explanation": "`extract(regex, groupe, source)` : groupe `1` = premier groupe capturant. Le préfixe `@` est une raw-string (backslashes non doublés). SHA256 = 64 chars hex. Ce hash peut ensuite être soumis à VirusTotal ou comparé avec une base de Threat Intel."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "regex-l2-m3",
+  "title": "Flags et modes de correspondance",
+  "level": "regex-l2",
+  "lang": "regex",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Les flags essentiels",
+      "content": "Les **flags** modifient le comportement global d'une regex :\n\n| Flag | Lettre | Signification |\n|---|---|---|\n| `re.IGNORECASE` | `i` | Insensible à la casse |\n| `re.MULTILINE` | `m` | `^` et `$` sur chaque ligne |\n| `re.DOTALL` | `s` | `.` inclut les sauts de ligne |\n| `re.VERBOSE` | `x` | Espaces et commentaires ignorés |\n| `re.GLOBAL` | `g` | Trouver toutes les occurrences (JS) |\n\n```python\nimport re\n\n# Insensible à la casse\nre.findall(r'error', log, re.IGNORECASE)\n\n# Combinaison de flags\nre.findall(r'^ERROR', text, re.MULTILINE | re.IGNORECASE)\n\n# En ligne : (?i) (?m) (?s) (?x) au début du pattern\nr'(?i)error'   # insensible à la casse\nr'(?ms)^.+$'   # multiline + dotall\n```"
+    },
+    {
+      "title": "re.MULTILINE — ^ et $ sur chaque ligne",
+      "content": "Sans `MULTILINE`, `^` et `$` ancrent au **début/fin de la chaîne entière**.\nAvec `MULTILINE`, ils ancrent au **début/fin de chaque ligne** :\n\n```python\ntext = '''ERROR: connexion perdue\nINFO: tentative...\nERROR: timeout'''\n\n# Sans MULTILINE : 1 match (début de chaîne)\nre.findall(r'^ERROR', text)\n# → ['ERROR']  (seul le premier)\n\n# Avec MULTILINE : 2 matches\nre.findall(r'^ERROR', text, re.MULTILINE)\n# → ['ERROR', 'ERROR']\n```\n\nUtile pour traiter des **fichiers de logs ligne par ligne** avec Python."
+    },
+    {
+      "title": "re.VERBOSE — regex commentées",
+      "content": "Le mode `VERBOSE` (`x`) permet d'écrire des regex **lisibles avec commentaires** :\n\n```python\npattern = re.compile(r'''\n    (?P<year>\\d{4})    # Année sur 4 chiffres\n    -                   # Séparateur\n    (?P<month>\\d{2})   # Mois sur 2 chiffres\n    -                   # Séparateur\n    (?P<day>\\d{2})     # Jour sur 2 chiffres\n''', re.VERBOSE)\n\n# Équivalent compact (même pattern) :\npattern = re.compile(r'(?P<year>\\d{4})-(?P<month>\\d{2})-(?P<day>\\d{2})')\n```\n\nLes espaces dans le pattern sont ignorés (sauf `\\ ` ou dans `[...]`). Les commentaires `#` vont jusqu'en fin de ligne.\n\nRecommandé pour les patterns complexes en production."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l2-m3-1",
+      "order": 1,
+      "title": "Flag insensible à la casse",
+      "instructions": "Écrivez l'appel `re.findall` pour chercher `error` dans `log` de façon **insensible à la casse** avec le flag approprié.",
+      "requiredKeywords": ["re.findall", "re.IGNORECASE"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'error', log, re.IGNORECASE)",
+      "explanation": "`re.IGNORECASE` (ou `re.I`) rend la recherche insensible à la casse. Correspond à `error`, `Error`, `ERROR`, `eRrOr`... Équivalent inline : `r'(?i)error'`."
+    },
+    {
+      "id": "ex-regex-l2-m3-2",
+      "order": 2,
+      "title": "Flag MULTILINE",
+      "instructions": "Écrivez l'appel `re.findall` pour extraire toutes les lignes commençant par `ERROR` dans un texte multi-lignes avec `re.MULTILINE`.",
+      "requiredKeywords": ["re.findall", "^ERROR", "re.MULTILINE"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'^ERROR.*', text, re.MULTILINE)",
+      "explanation": "Sans `re.MULTILINE`, `^` ancre au début de toute la chaîne — seule la 1ère ligne est testée. Avec `re.MULTILINE`, `^` correspond au début de chaque ligne, permettant de filtrer les lignes d'erreur."
+    },
+    {
+      "id": "ex-regex-l2-m3-3",
+      "order": 3,
+      "title": "Flags combinés",
+      "instructions": "Combinez `re.MULTILINE` et `re.IGNORECASE` dans un seul appel `re.findall` pour chercher `^error` sur chaque ligne sans se soucier de la casse.",
+      "requiredKeywords": ["re.MULTILINE", "re.IGNORECASE"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'^error', text, re.MULTILINE | re.IGNORECASE)",
+      "explanation": "Les flags se combinent avec `|` (OU binaire). `re.MULTILINE | re.IGNORECASE` active les deux. Peut aussi s'écrire `re.M | re.I` (noms courts)."
+    },
+    {
+      "id": "ex-regex-l2-m3-4",
+      "order": 4,
+      "title": "Flag DOTALL",
+      "instructions": "Avec `re.DOTALL`, écrivez un pattern qui capture tout le contenu entre `<script>` et `</script>`, **même sur plusieurs lignes**.",
+      "requiredKeywords": ["re.DOTALL", "<script>", "</script>"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'<script>.*?</script>', html, re.DOTALL)",
+      "explanation": "Sans `re.DOTALL`, `.` ne correspond pas au saut de ligne `\\n`. Avec `re.DOTALL`, `.` correspond à **tout** caractère. `.*?` (lazy) s'arrête au premier `</script>` plutôt que le dernier."
+    },
+    {
+      "id": "ex-regex-l2-m3-5",
+      "order": 5,
+      "title": "Flag inline",
+      "instructions": "Réécrivez `re.search(r'error', text, re.IGNORECASE)` en utilisant le **flag inline** `(?i)` directement dans le pattern.",
+      "requiredKeywords": ["(?i)", "error"],
+      "validationType": "keywords",
+      "correction": "re.search(r'(?i)error', text)",
+      "explanation": "Les flags inline s'écrivent au début du pattern. `(?i)` = `re.IGNORECASE`, `(?m)` = `re.MULTILINE`, `(?s)` = `re.DOTALL`. Utile quand on ne peut pas passer de flag à la fonction (ex: dans grep, sed)."
+    }
+  ]
+}

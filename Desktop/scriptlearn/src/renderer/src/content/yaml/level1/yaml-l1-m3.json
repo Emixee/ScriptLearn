@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l1-m3",
+  "title": "Types avancés — chaînes multilignes et types spéciaux",
+  "level": "yaml-l1",
+  "lang": "yaml",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Chaînes multilignes — | et >",
+      "content": "YAML offre deux styles pour les chaînes multilignes :\n\n```yaml\n# | — Literal Block — préserve les sauts de ligne\ndescription: |\n  Première ligne.\n  Deuxième ligne.\n  Troisième ligne.\n# Résultat : \"Première ligne.\\nDeuxième ligne.\\nTroisième ligne.\\n\"\n\n# > — Folded Block — remplace les sauts par des espaces\nmessage: >\n  Cette longue description est\n  repliée en une seule ligne\n  lors du parsing.\n# Résultat : \"Cette longue description est repliée en une seule ligne lors du parsing.\\n\"\n\n# Modificateurs de fin de ligne :\n# | ou >    → garde 1 saut de ligne final\n# |-  ou >- → supprime le saut de ligne final (strip)\n# |+ ou >+  → garde TOUS les sauts de ligne finaux (keep)\n\nscript: |-\n  #!/bin/bash\n  echo \"Hello\"\n  exit 0\n# Résultat : \"#!/bin/bash\\necho \\\"Hello\\\"\\nexit 0\" (sans \\n final)\n```"
+    },
+    {
+      "title": "Types spéciaux et conversions",
+      "content": "```yaml\n# YAML 1.1 — valeurs qui peuvent surprendre\nbooleen_piege:\n  vrai: true       # bool\n  faux: false      # bool\n  oui: yes         # bool (YAML 1.1 seulement)\n  non: no          # bool (YAML 1.1 seulement)\n  on: on           # bool (YAML 1.1 seulement)\n\n# Forcer le type string\nvaleur_forcee: \"true\"    # string \"true\", pas booléen\nversion: \"1.0\"           # string, pas float\ncle: \"null\"              # string, pas null\n\n# Entiers dans différentes bases\noctal: 0o755      # 493 en décimal (permissions fichier)\nhex:   0xFF       # 255\nbinaire: 0b1010   # 10\n\n# Dates et timestamps (parsés automatiquement en Python)\ndate: 2024-05-15                    # date\ndatetime: 2024-05-15T13:30:00Z      # datetime UTC\n\n# Nombre avec underscore (lisibilité)\ngrande_valeur: 1_000_000   # 1000000\n\n# Utiliser !!str pour forcer le type explicitement\nforce_string: !!str 42    # \"42\" pas 42\n```"
+    },
+    {
+      "title": "Indentation et bonnes pratiques",
+      "content": "```yaml\n# ✅ Bonnes pratiques\n---\n# 1. Marqueur de début de document\n# 2. 2 espaces d'indentation\n# 3. Clés en minuscules avec tirets (kebab-case)\napp-name: mon-app\napi-version: v1\n\n# 4. Guillemets pour les chaînes ambiguës\nversion: \"1.0.0\"      # Pas 1.0.0 (invalide sans guillemets)\nis-enabled: \"yes\"     # Pas yes (serait bool en YAML 1.1)\n\n# 5. Null explicite\noptional-field: null  # Pas juste une ligne vide\n\n# ❌ Pièges courants\nbad_example:\n  # Tabulation au lieu d'espaces — erreur !\n  # key: value  ← tabulation\n\n  # Pas d'espace après le colon — erreur !\n  # key:value   ← manque l'espace\n\n  # Guillemets non fermés — erreur !\n  # message: 'hello\n\n# Valider avec Python :\n# python -c \"import yaml; yaml.safe_load(open('config.yml'))\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l1-m3-1",
+      "order": 1,
+      "title": "Chaîne multiligne avec |",
+      "instructions": "Créez une clé `script` avec une chaîne multiligne (pipe `|`) contenant deux lignes : `echo hello` et `exit 0`.",
+      "requiredKeywords": ["script: |", "  echo hello", "  exit 0"],
+      "validationType": "keywords",
+      "correction": "script: |\n  echo hello\n  exit 0",
+      "explanation": "`|` (Literal Block) préserve les sauts de ligne. Chaque ligne du bloc est indentée sous la clé. Utilisé pour les scripts shell dans GitHub Actions, les configurations cloud-init, les templates Helm. Le résultat est `\"echo hello\\nexit 0\\n\"`."
+    },
+    {
+      "id": "ex-yaml-l1-m3-2",
+      "order": 2,
+      "title": "Chaîne multiligne avec >",
+      "instructions": "Créez une clé `description` avec un bloc `>` (folded) contenant 2 lignes qui seront jointes en une seule phrase.",
+      "requiredKeywords": ["description: >", "  "],
+      "validationType": "keywords",
+      "correction": "description: >\n  Cette application gère\n  les connexions utilisateurs.",
+      "explanation": "`>` (Folded Block) remplace les sauts de ligne par des espaces — les deux lignes forment une phrase. Utile pour les longues descriptions lisibles dans le fichier YAML mais qui doivent être sur une ligne en mémoire."
+    },
+    {
+      "id": "ex-yaml-l1-m3-3",
+      "order": 3,
+      "title": "Forcer le type string",
+      "instructions": "Écrivez `enabled: \"true\"` (string) et `version: \"2.0\"` (string) avec les guillemets pour éviter la conversion automatique.",
+      "requiredKeywords": ["enabled: \"true\"", "version: \"2.0\""],
+      "validationType": "keywords",
+      "correction": "enabled: \"true\"\nversion: \"2.0\"",
+      "explanation": "Sans guillemets, `true` serait un booléen et `2.0` un float. Les guillemets doubles forcent le type string. Règle : toujours mettre entre guillemets les valeurs qui ressemblent à des types YAML (true/false, null, nombres, dates) quand on veut une chaîne."
+    },
+    {
+      "id": "ex-yaml-l1-m3-4",
+      "order": 4,
+      "title": "Script shell sans saut de ligne final",
+      "instructions": "Utilisez `|-` (literal block strip) pour un script shell `#!/bin/bash\\necho done` sans saut de ligne final.",
+      "requiredKeywords": ["script: |-", "  #!/bin/bash", "  echo done"],
+      "validationType": "keywords",
+      "correction": "script: |-\n  #!/bin/bash\n  echo done",
+      "explanation": "`|-` = literal block + strip (supprimer le saut de ligne final). Pour les scripts shell embarqués dans YAML (GitHub Actions `run:`, cloud-init...), le saut de ligne final est souvent indésirable. `|` garderait `\\n` à la fin, `|-` l'enlève."
+    },
+    {
+      "id": "ex-yaml-l1-m3-5",
+      "order": 5,
+      "title": "Octal pour les permissions",
+      "instructions": "Créez `file_permissions: 0o755` (octal) et `max_connections: 1_000` (entier lisible) en YAML.",
+      "requiredKeywords": ["file_permissions: 0o755", "max_connections: 1_000"],
+      "validationType": "keywords",
+      "correction": "file_permissions: 0o755\nmax_connections: 1_000",
+      "explanation": "`0o755` = notation octale YAML 1.2 (en YAML 1.1 c'était `0755`). `1_000` = 1000 avec underscore pour la lisibilité (comme en Python). Ces types spéciaux sont transparents à l'utilisation — YAML les convertit automatiquement en entiers."
+    }
+  ]
+}

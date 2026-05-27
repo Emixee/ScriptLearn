@@ -1,0 +1,74 @@
+{
+  "id": "git-l4-m2",
+  "title": "Cherry-pick, bisect et reflog",
+  "level": "git-l4",
+  "lang": "git",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "git cherry-pick — appliquer un commit précis",
+      "content": "`git cherry-pick` copie un commit spécifique d'une branche vers la branche courante :\n\n```bash\n# Appliquer un commit précis\ngit cherry-pick abc1234\n\n# Appliquer plusieurs commits\ngit cherry-pick abc1234 def5678\n\n# Appliquer une plage de commits\ngit cherry-pick A..B  # commits de A (exclu) à B (inclus)\n\n# Sans créer de commit (laisser en staging)\ngit cherry-pick --no-commit abc1234\n\n# En cas de conflit\ngit cherry-pick --continue   # après résolution\ngit cherry-pick --abort      # annuler\n```\n\nCas d'usage : appliquer un hotfix sur plusieurs branches, porter une feature vers une release précise."
+    },
+    {
+      "title": "git bisect — trouver le commit cassant",
+      "content": "`git bisect` fait une **recherche dichotomique** dans l'historique pour trouver quel commit a introduit un bug :\n\n```bash\n# Démarrer\ngit bisect start\ngit bisect bad           # le commit actuel est cassé\ngit bisect good v1.0.0   # ce tag fonctionnait\n\n# Git checkout au milieu de l'historique\n# Tester si le bug est présent...\ngit bisect bad   # ce commit est cassé\n# ou\ngit bisect good  # ce commit fonctionne\n\n# Git continue la dichotomie jusqu'à isoler le commit\n# Résultat : \"abc1234 is the first bad commit\"\n\n# Terminer\ngit bisect reset  # revenir à HEAD\n```"
+    },
+    {
+      "title": "git reflog — la bouée de sauvetage",
+      "content": "`git reflog` enregistre **tous les mouvements de HEAD** — même après un `reset --hard` :\n\n```bash\ngit reflog\n# HEAD@{0}: reset: moving to HEAD~2\n# HEAD@{1}: commit: feat: ajout authentification\n# HEAD@{2}: commit: fix: correction bug login\n\n# Récupérer des commits perdus\ngit reset --hard HEAD@{1}  # revenir avant le reset\n\n# Récupérer une branche supprimée\ngit reflog  # trouver le hash de la branche\ngit switch -c branche-recuperee abc1234\n\n# Le reflog expire après 90 jours par défaut\n```\n\n⚠️ Le reflog est **local** — il ne se pousse pas. Pas de récupération possible sur un dépôt cloné."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l4-m2-1",
+      "order": 1,
+      "title": "Cherry-pick un commit",
+      "instructions": "Appliquez le commit `f3a9b12` sur la branche courante.",
+      "requiredKeywords": ["git cherry-pick", "f3a9b12"],
+      "validationType": "keywords",
+      "correction": "git cherry-pick f3a9b12",
+      "explanation": "`git cherry-pick` copie le commit avec son contenu mais crée un **nouveau hash** (le parent est différent). L'auteur original est conservé."
+    },
+    {
+      "id": "ex-git-l4-m2-2",
+      "order": 2,
+      "title": "Démarrer une bisection",
+      "instructions": "Démarrez une bisection : le HEAD actuel est cassé, et le tag `v2.0.0` fonctionnait.",
+      "requiredKeywords": ["git bisect", "start", "git bisect", "bad", "git bisect", "good", "v2.0.0"],
+      "validationType": "keywords",
+      "correction": "git bisect start && git bisect bad && git bisect good v2.0.0",
+      "explanation": "`git bisect` fait une recherche dichotomique (O(log n)) dans l'historique. Entre 100 et 1000 commits, il faut au max 10 tests pour trouver le commit cassant."
+    },
+    {
+      "id": "ex-git-l4-m2-3",
+      "order": 3,
+      "title": "Finir la bisection",
+      "instructions": "Terminez la bisection et **revenez à HEAD**.",
+      "requiredKeywords": ["git bisect", "reset"],
+      "validationType": "keywords",
+      "correction": "git bisect reset",
+      "explanation": "`git bisect reset` remet HEAD à son état d'avant la bisection. Sans ça, on resterait sur le commit de test de la dernière étape."
+    },
+    {
+      "id": "ex-git-l4-m2-4",
+      "order": 4,
+      "title": "Consulter le reflog",
+      "instructions": "Affichez le reflog de HEAD pour voir tous les mouvements récents.",
+      "requiredKeywords": ["git reflog"],
+      "validationType": "keywords",
+      "correction": "git reflog",
+      "explanation": "`git reflog` est la dernière chance de récupérer un travail perdu après `git reset --hard` ou suppression de branche. Il conserve 90 jours d'historique des mouvements de HEAD."
+    },
+    {
+      "id": "ex-git-l4-m2-5",
+      "order": 5,
+      "title": "Récupérer après reset --hard",
+      "instructions": "Après un `git reset --hard HEAD~3` accidentel, récupérez le commit perdu `HEAD@{1}` du reflog.",
+      "requiredKeywords": ["git reset", "--hard", "head@{1}"],
+      "validationType": "keywords",
+      "correction": "git reset --hard HEAD@{1}",
+      "explanation": "`HEAD@{1}` est l'état de HEAD juste avant la dernière opération. `git reset --hard HEAD@{1}` annule le reset accidentel. Toujours vérifier avec `git reflog` avant de récupérer."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "regex-l1-m3",
+  "title": "Groupes de capture et alternance",
+  "level": "regex-l1",
+  "lang": "regex",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Groupes de capture ()",
+      "content": "Les **parenthèses** créent un groupe qui :\n1. Permet de quantifier plusieurs caractères ensemble\n2. **Capture** la portion correspondante pour la réutiliser\n\n```\n(\\d{4})-(\\d{2})-(\\d{2})   → date : groupe 1=année, 2=mois, 3=jour\n(https?://)?(www\\.)?\\w+   → URL avec parties optionnelles\n```\n\n**Référencer un groupe capturé** :\n- `\\1`, `\\2`… dans le pattern (backreference)\n- `$1`, `$2`… dans la substitution\n\n```\n# Swap prénom/nom\n(\\w+) (\\w+)  →  $2, $1\n\"Alice Dupont\" → \"Dupont, Alice\"\n```"
+    },
+    {
+      "title": "Alternance avec |",
+      "content": "`|` signifie **OU** dans les regex :\n\n```\ncat|dog         → \"cat\" ou \"dog\"\n(jpg|png|gif)$  → extension image\nfail|error|warn → mots dans les logs\n```\n\n⚠️ `|` a la priorité la plus faible — utiliser des groupes :\n```\ncat|dog food  → (\"cat\") ou (\"dog food\")\n(cat|dog) food → (\"cat food\") ou (\"dog food\")\n```\n\n**Alternance dans les logs** :\n```\n(ERROR|WARN|CRITICAL): .+  → lignes d'alerte\n```"
+    },
+    {
+      "title": "Groupes non-capturants (?:...)",
+      "content": "`(?:...)` groupe **sans capturer** — utile pour grouper sans numéroter :\n\n```\n(?:https?://)?(\\w+\\.\\w+)\n# Groupe 1 = domaine (sans le protocol)\n# Le protocol est groupé mais non capturé\n```\n\nComparaison :\n```\n(https?://)  → groupe capturant (numéroté \\1)\n(?:https?://)→ groupe non-capturant (pas de numéro)\n```\n\nAvantages :\n- Simplifie la numérotation des groupes capturants\n- Légèrement plus performant (pas de stockage)\n- Clarifie l'intention (grouper pour quantifier, pas pour capturer)"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l1-m3-1",
+      "order": 1,
+      "title": "Capturer une date",
+      "instructions": "Écrivez un pattern qui capture séparément l'**année**, le **mois** et le **jour** d'une date `YYYY-MM-DD` avec 3 groupes.",
+      "requiredKeywords": ["(\\d{4})", "(\\d{2})", "(\\d{2})"],
+      "validationType": "keywords",
+      "correction": "(\\d{4})-(\\d{2})-(\\d{2})",
+      "explanation": "3 groupes capturants. Groupe 1 = année `\\d{4}`, groupe 2 = mois `\\d{2}`, groupe 3 = jour `\\d{2}`. On peut les référencer en remplacement avec `$1/$2/$3` pour reformater."
+    },
+    {
+      "id": "ex-regex-l1-m3-2",
+      "order": 2,
+      "title": "Alternance simple",
+      "instructions": "Écrivez un pattern qui correspond à `cat` **ou** `dog`.",
+      "requiredKeywords": ["cat|dog"],
+      "validationType": "keywords",
+      "correction": "cat|dog",
+      "explanation": "`|` est l'opérateur d'alternance. Il correspond à tout ce qui est à gauche OU à droite. Sur de grandes listes, préférer une classe de caractères `[abc]` pour des caractères uniques, `|` pour des mots."
+    },
+    {
+      "id": "ex-regex-l1-m3-3",
+      "order": 3,
+      "title": "Extension de fichier image",
+      "instructions": "Écrivez un pattern qui correspond aux fichiers se terminant par `.jpg`, `.png` ou `.gif` (ancre de fin).",
+      "requiredKeywords": ["jpg|png|gif", "$"],
+      "validationType": "keywords",
+      "correction": "\\.(jpg|png|gif)$",
+      "explanation": "Le groupe `(jpg|png|gif)` avec `$` ancre en fin de chaîne. Le `\\.` assure qu'on a un vrai point avant l'extension."
+    },
+    {
+      "id": "ex-regex-l1-m3-4",
+      "order": 4,
+      "title": "Groupe non-capturant",
+      "instructions": "Réécrivez `(https?://)` en **groupe non-capturant** (sans stocker la capture).",
+      "requiredKeywords": ["(?:https?://)"],
+      "validationType": "keywords",
+      "correction": "(?:https?://)",
+      "explanation": "`(?:...)` groupe sans créer de capture numérotée. Quand on n'a pas besoin de réutiliser le contenu du groupe, c'est la bonne pratique — clarifie l'intention et préserve la numérotation des vrais groupes capturants."
+    },
+    {
+      "id": "ex-regex-l1-m3-5",
+      "order": 5,
+      "title": "Pattern pour lignes de log",
+      "instructions": "Écrivez un pattern qui correspond aux lignes de log commençant par `ERROR`, `WARN` ou `CRITICAL`.",
+      "requiredKeywords": ["^", "error|warn|critical"],
+      "validationType": "keywords",
+      "correction": "^(ERROR|WARN|CRITICAL): ",
+      "explanation": "`^` ancre au début de ligne. Le groupe `(ERROR|WARN|CRITICAL)` avec `:` après assure qu'on a le format `TYPE: message`. En grep : `grep -E '^(ERROR|WARN|CRITICAL): ' app.log`."
+    }
+  ]
+}

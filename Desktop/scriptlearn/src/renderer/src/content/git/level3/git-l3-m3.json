@@ -1,0 +1,74 @@
+{
+  "id": "git-l3-m3",
+  "title": "Tags et releases",
+  "level": "git-l3",
+  "lang": "git",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Tags — marquer les versions",
+      "content": "Un **tag** est un pointeur permanent vers un commit, utilisé pour marquer les versions :\n\n```bash\n# Tag léger (juste un pointeur)\ngit tag v1.0.0\n\n# Tag annoté (recommandé : stocke auteur + date + message)\ngit tag -a v1.0.0 -m \"Version 1.0.0 — Release initiale\"\n\n# Lister les tags\ngit tag\ngit tag -l \"v1.*\"  # filtrer\n\n# Voir les détails d'un tag annoté\ngit show v1.0.0\n\n# Créer un tag sur un commit passé\ngit tag -a v0.9.0 abc1234 -m \"Version 0.9.0\"\n\n# Supprimer un tag\ngit tag -d v1.0.0\n```"
+    },
+    {
+      "title": "Pousser et synchroniser les tags",
+      "content": "```bash\n# git push ne pousse PAS les tags par défaut !\n\n# Pousser un tag précis\ngit push origin v1.0.0\n\n# Pousser TOUS les tags\ngit push origin --tags\n\n# Pousser les tags annotés seulement (recommandé)\ngit push origin --follow-tags\n\n# Supprimer un tag sur le remote\ngit push origin --delete v1.0.0\n# ou\ngit push origin :refs/tags/v1.0.0\n\n# Récupérer les tags du remote\ngit fetch --tags\n```"
+    },
+    {
+      "title": "SemVer et workflow de release",
+      "content": "**Semantic Versioning** : `MAJEUR.MINEUR.PATCH`\n\n| Version | Quand |\n|---|---|\n| `1.0.0 → 2.0.0` | Breaking change |\n| `1.0.0 → 1.1.0` | Nouvelle feature |\n| `1.0.0 → 1.0.1` | Bugfix |\n\n**Workflow de release type** :\n```bash\n# 1. Finaliser main\ngit switch main && git pull\n\n# 2. Créer et pousser le tag\ngit tag -a v1.2.0 -m \"Release 1.2.0\"\ngit push origin --follow-tags\n\n# 3. GitHub crée automatiquement une Release\n#    depuis le tag — ajouter les release notes\n\n# Via GitHub CLI\ngh release create v1.2.0 --title \"v1.2.0\" \\\n  --notes \"## Nouveautés\\n- Feature A\\n- Fix B\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l3-m3-1",
+      "order": 1,
+      "title": "Créer un tag annoté",
+      "instructions": "Créez un **tag annoté** `v2.0.0` avec le message `\"Version 2.0.0\"`.",
+      "requiredKeywords": ["git tag", "-a", "v2.0.0", "-m", "version 2.0.0"],
+      "validationType": "keywords",
+      "correction": "git tag -a v2.0.0 -m \"Version 2.0.0\"",
+      "explanation": "Un tag annoté (avec `-a`) stocke le tagger, la date et le message — contrairement au tag léger qui est juste un pointeur. Les tags annotés apparaissent correctement dans les releases GitHub."
+    },
+    {
+      "id": "ex-git-l3-m3-2",
+      "order": 2,
+      "title": "Pousser les tags",
+      "instructions": "Poussez tous les tags annotés vers `origin`.",
+      "requiredKeywords": ["git push", "origin", "--follow-tags"],
+      "validationType": "keywords",
+      "correction": "git push origin --follow-tags",
+      "explanation": "`--follow-tags` pousse les tags annotés qui pointent vers des commits déjà poussés. Plus sélectif que `--tags` (qui pousse absolument tous les tags, y compris les tags légers de travail)."
+    },
+    {
+      "id": "ex-git-l3-m3-3",
+      "order": 3,
+      "title": "Lister les tags",
+      "instructions": "Listez tous les tags commençant par `v1.`",
+      "requiredKeywords": ["git tag", "-l", "v1.*"],
+      "validationType": "keywords",
+      "correction": "git tag -l \"v1.*\"",
+      "explanation": "`-l` avec un pattern glob filtre les tags. Utile sur les dépôts avec beaucoup de versions pour ne voir que les releases d'une branche majeure."
+    },
+    {
+      "id": "ex-git-l3-m3-4",
+      "order": 4,
+      "title": "Tag sur un commit passé",
+      "instructions": "Créez le tag `v1.1.0` sur le commit `a3b4c5d` (commit passé).",
+      "requiredKeywords": ["git tag", "-a", "v1.1.0", "a3b4c5d", "-m"],
+      "validationType": "keywords",
+      "correction": "git tag -a v1.1.0 a3b4c5d -m \"Version 1.1.0\"",
+      "explanation": "On peut tagger n'importe quel commit passé en passant son hash. Utile quand on a oublié de tagger au moment du déploiement."
+    },
+    {
+      "id": "ex-git-l3-m3-5",
+      "order": 5,
+      "title": "Supprimer un tag local et distant",
+      "instructions": "Supprimez le tag `v0.9.0` **localement** puis sur le **remote** `origin`.",
+      "requiredKeywords": ["git tag", "-d", "v0.9.0", "git push", "origin", "--delete", "v0.9.0"],
+      "validationType": "keywords",
+      "correction": "git tag -d v0.9.0 && git push origin --delete v0.9.0",
+      "explanation": "La suppression doit se faire en deux étapes : d'abord localement (`git tag -d`), puis sur le remote (`git push origin --delete`). Les deux sont indépendants."
+    }
+  ]
+}

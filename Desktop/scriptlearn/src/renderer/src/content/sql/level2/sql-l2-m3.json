@@ -1,0 +1,74 @@
+{
+  "id": "sql-l2-m3",
+  "title": "INNER JOIN — combiner des tables",
+  "level": "sql-l2",
+  "lang": "sql",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Pourquoi joindre des tables ?",
+      "content": "Dans une base de données relationnelle, les données sont réparties entre plusieurs tables pour éviter la redondance. On joint les tables pour recombiner les informations :\n\n```\nTable employees :        Table departments :\nid | name    | dept_id   id | name    | city\n1  | Alice   | 2         1  | Sec     | Paris\n2  | Bob     | 1         2  | IT      | Lyon\n```\n\nSans jointure, on ne voit pas `city` pour chaque employé.\n\nLa **clé étrangère** (`dept_id`) pointe vers la **clé primaire** (`id`) de l'autre table. C'est le lien qui permet la jointure."
+    },
+    {
+      "title": "INNER JOIN — l'intersection",
+      "content": "`INNER JOIN` retourne uniquement les lignes qui ont une **correspondance dans les deux tables** :\n\n```sql\nSELECT employees.name, departments.name AS dept, departments.city\nFROM employees\nINNER JOIN departments ON employees.dept_id = departments.id;\n```\n\nSyntaxe simplifiée avec alias de tables :\n```sql\nSELECT e.name, d.name AS dept, d.city\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.id;\n```\n\nLes lignes sans correspondance (ex. un employé sans département) sont **exclues** du résultat."
+    },
+    {
+      "title": "Jointures multiples et filtres",
+      "content": "On peut joindre plusieurs tables en chaîne :\n\n```sql\nSELECT e.name, d.name AS dept, p.title AS poste\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.id\nINNER JOIN positions p ON e.position_id = p.id\nWHERE d.city = 'Paris';\n```\n\nAvec `GROUP BY` sur une jointure :\n```sql\n-- Nombre d'employés par ville\nSELECT d.city, COUNT(*) AS nb\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.id\nGROUP BY d.city\nORDER BY nb DESC;\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l2-m3-1",
+      "order": 1,
+      "title": "Jointure basique",
+      "instructions": "Joignez `employees` et `departments` pour afficher le **nom de l'employé** et le **nom de son département**.\n\nLien : `employees.dept_id = departments.id`.",
+      "requiredKeywords": ["select", "from", "employees", "inner join", "departments", "on", "dept_id", "departments.id"],
+      "validationType": "keywords",
+      "correction": "SELECT employees.name, departments.name AS dept FROM employees INNER JOIN departments ON employees.dept_id = departments.id;",
+      "explanation": "`INNER JOIN ... ON` précise quelle colonne relie les deux tables. Sans `ON`, SQL ferait un produit cartésien (toutes les combinaisons) — souvent des millions de lignes inutiles."
+    },
+    {
+      "id": "ex-sql-l2-m3-2",
+      "order": 2,
+      "title": "Jointure avec alias de tables",
+      "instructions": "Réécrivez la même jointure en utilisant les alias `e` pour `employees` et `d` pour `departments`.",
+      "requiredKeywords": ["select", "from", "employees", "e", "inner join", "departments", "d", "on", "e.", "d."],
+      "validationType": "keywords",
+      "correction": "SELECT e.name, d.name AS dept FROM employees e INNER JOIN departments d ON e.dept_id = d.id;",
+      "explanation": "Les alias (`employees e`, `departments d`) raccourcissent l'écriture des colonnes. Indispensables quand plusieurs tables ont des colonnes de même nom (ex. `name`) : `e.name` vs `d.name`."
+    },
+    {
+      "id": "ex-sql-l2-m3-3",
+      "order": 3,
+      "title": "Filtrer après jointure",
+      "instructions": "Affichez les **employés basés à Paris** (colonne `city` dans `departments`).",
+      "requiredKeywords": ["select", "from", "employees", "inner join", "departments", "on", "where", "city", "paris"],
+      "validationType": "keywords",
+      "correction": "SELECT e.name, d.name AS dept FROM employees e INNER JOIN departments d ON e.dept_id = d.id WHERE d.city = 'Paris';",
+      "explanation": "Le `WHERE` s'applique après la jointure. On peut filtrer sur n'importe quelle colonne des deux tables — ici `d.city` qui vient de `departments`."
+    },
+    {
+      "id": "ex-sql-l2-m3-4",
+      "order": 4,
+      "title": "Compter par département",
+      "instructions": "Comptez le **nombre d'employés par département** en affichant le nom du département.",
+      "requiredKeywords": ["select", "d.name", "count", "from", "employees", "inner join", "departments", "on", "group by"],
+      "validationType": "keywords",
+      "correction": "SELECT d.name AS dept, COUNT(*) AS nb FROM employees e INNER JOIN departments d ON e.dept_id = d.id GROUP BY d.name;",
+      "explanation": "La combinaison `JOIN` + `GROUP BY` est très courante. On joint d'abord pour avoir accès aux colonnes des deux tables, puis on regroupe sur le nom du département."
+    },
+    {
+      "id": "ex-sql-l2-m3-5",
+      "order": 5,
+      "title": "Salaire moyen par ville",
+      "instructions": "Calculez le **salaire moyen** par `city` (depuis `departments`), trié par moyenne décroissante.",
+      "requiredKeywords": ["select", "city", "avg", "salary", "from", "employees", "inner join", "departments", "on", "group by", "city", "order by"],
+      "validationType": "keywords",
+      "correction": "SELECT d.city, AVG(e.salary) AS moy FROM employees e INNER JOIN departments d ON e.dept_id = d.id GROUP BY d.city ORDER BY moy DESC;",
+      "explanation": "En joignant les tables, on peut agréger sur des colonnes qui n'existent pas dans la table principale. Ici `city` vient de `departments`, mais `salary` vient de `employees`."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "sql-l1-m4",
+  "title": "INSERT, UPDATE, DELETE",
+  "level": "sql-l1",
+  "lang": "sql",
+  "order": 4,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Insérer des données — INSERT INTO",
+      "content": "`INSERT INTO` ajoute une ou plusieurs lignes dans une table :\n\n```sql\n-- Insérer une ligne (toutes les colonnes)\nINSERT INTO employees (name, department, salary)\nVALUES ('Alice Martin', 'IT', 75000);\n\n-- Insérer plusieurs lignes d'un coup\nINSERT INTO employees (name, department, salary)\nVALUES\n  ('Bob Dupont', 'Dev', 68000),\n  ('Carla Noel', 'Sec', 72000);\n```\n\nBonnes pratiques :\n- Toujours préciser les colonnes (ne pas dépendre de l'ordre)\n- Les colonnes omises reçoivent leur valeur `DEFAULT` ou `NULL`"
+    },
+    {
+      "title": "Modifier des données — UPDATE",
+      "content": "`UPDATE` modifie des lignes existantes :\n\n```sql\n-- Modifier un employé précis\nUPDATE employees SET salary = 80000 WHERE id = 5;\n\n-- Modifier plusieurs colonnes\nUPDATE employees\nSET salary = 85000, department = 'Lead'\nWHERE name = 'Alice Martin';\n\n-- Modification calculée\nUPDATE employees SET salary = salary * 1.10\nWHERE department = 'IT';\n-- Augmentation de 10% pour tout le département IT\n```\n\n⚠️ **Règle critique** : toujours mettre un `WHERE` avec `UPDATE`. Sans `WHERE`, TOUTES les lignes sont modifiées !"
+    },
+    {
+      "title": "Supprimer des données — DELETE",
+      "content": "`DELETE FROM` supprime des lignes :\n\n```sql\n-- Supprimer un employé précis\nDELETE FROM employees WHERE id = 12;\n\n-- Supprimer selon une condition\nDELETE FROM employees WHERE department = 'Temp';\n\n-- Supprimer TOUTES les lignes (dangereux !)\nDELETE FROM employees;\n-- TRUNCATE employees; -- plus rapide, irrécupérable\n```\n\n⚠️ Toujours tester avec un `SELECT` avant un `DELETE` :\n```sql\n-- Vérifier d'abord ce qui sera supprimé\nSELECT * FROM employees WHERE department = 'Temp';\n-- Puis supprimer si le résultat est correct\nDELETE FROM employees WHERE department = 'Temp';\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l1-m4-1",
+      "order": 1,
+      "title": "Insérer un employé",
+      "instructions": "Insérez un nouvel employé dans `employees` : nom `'David Luc'`, département `'IT'`, salaire `65000`.",
+      "requiredKeywords": ["insert into", "employees", "values", "david luc", "it", "65000"],
+      "validationType": "keywords",
+      "correction": "INSERT INTO employees (name, department, salary) VALUES ('David Luc', 'IT', 65000);",
+      "explanation": "Il est indispensable de préciser les colonnes `(name, department, salary)` pour que la requête soit robuste si la table change de structure. Les chaînes vont entre guillemets simples, les nombres sans guillemets."
+    },
+    {
+      "id": "ex-sql-l1-m4-2",
+      "order": 2,
+      "title": "Mettre à jour un salaire",
+      "instructions": "Augmentez le salaire de l'employé ayant l'`id = 3` à `90000`.",
+      "requiredKeywords": ["update", "employees", "set", "salary", "90000", "where", "id", "3"],
+      "validationType": "keywords",
+      "correction": "UPDATE employees SET salary = 90000 WHERE id = 3;",
+      "explanation": "`SET salary = 90000` définit la nouvelle valeur. `WHERE id = 3` cible uniquement cet employé. Sans le `WHERE`, tous les employés auraient leur salaire mis à 90000 — une erreur irréversible sans transaction."
+    },
+    {
+      "id": "ex-sql-l1-m4-3",
+      "order": 3,
+      "title": "Augmentation collective",
+      "instructions": "Augmentez de **10%** le salaire de tous les employés du département `'Dev'`.",
+      "requiredKeywords": ["update", "employees", "set", "salary", "salary", "1.1", "where", "department", "dev"],
+      "validationType": "keywords",
+      "correction": "UPDATE employees SET salary = salary * 1.10 WHERE department = 'Dev';",
+      "explanation": "`salary * 1.10` calcule 110% du salaire actuel — une augmentation de 10%. On peut référencer la valeur actuelle d'une colonne dans le calcul de la mise à jour."
+    },
+    {
+      "id": "ex-sql-l1-m4-4",
+      "order": 4,
+      "title": "Supprimer un employé",
+      "instructions": "Supprimez l'employé ayant l'`id = 7`.",
+      "requiredKeywords": ["delete from", "employees", "where", "id", "7"],
+      "validationType": "keywords",
+      "correction": "DELETE FROM employees WHERE id = 7;",
+      "explanation": "`DELETE FROM` supprime les lignes correspondant au `WHERE`. Sans `WHERE`, toute la table est vidée. Bonne pratique : toujours vérifier avec un `SELECT` identique avant le `DELETE`."
+    },
+    {
+      "id": "ex-sql-l1-m4-5",
+      "order": 5,
+      "title": "Supprimer par condition",
+      "instructions": "Supprimez tous les employés dont le `salary` est inférieur à `30000`.",
+      "requiredKeywords": ["delete from", "employees", "where", "salary", "30000"],
+      "validationType": "keywords",
+      "correction": "DELETE FROM employees WHERE salary < 30000;",
+      "explanation": "Le `WHERE` avec une condition numérique fonctionne exactement comme dans un `SELECT`. Avant d'exécuter, toujours faire `SELECT * FROM employees WHERE salary < 30000` pour voir ce qui sera supprimé."
+    }
+  ]
+}

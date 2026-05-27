@@ -1,0 +1,74 @@
+{
+  "id": "sql-l1-m3",
+  "title": "ORDER BY, LIKE et LIMIT",
+  "level": "sql-l1",
+  "lang": "sql",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Trier avec ORDER BY",
+      "content": "`ORDER BY` trie les résultats selon une ou plusieurs colonnes :\n\n```sql\n-- Tri croissant (défaut)\nSELECT * FROM employees ORDER BY salary;\n\n-- Tri décroissant\nSELECT * FROM employees ORDER BY salary DESC;\n\n-- Tri alphabétique\nSELECT * FROM employees ORDER BY name ASC;\n\n-- Tri multi-colonnes\nSELECT * FROM employees ORDER BY department ASC, salary DESC;\n-- Trie d'abord par département, puis par salaire décroissant dans chaque département\n```\n\n`ASC` (ascendant) est la valeur par défaut — on peut l'omettre."
+    },
+    {
+      "title": "Recherche de texte avec LIKE",
+      "content": "`LIKE` recherche un motif dans une chaîne. Deux caractères jokers :\n\n| Joker | Signification | Exemple |\n|---|---|---|\n| `%` | N'importe quel nombre de caractères | `'J%'` → commence par J |\n| `_` | Exactement un caractère | `'J_n'` → Jan, Jon, Jun |\n\n```sql\n-- Commence par 'Mar'\nSELECT * FROM employees WHERE name LIKE 'Mar%';\n\n-- Contient 'admin'\nSELECT * FROM employees WHERE role LIKE '%admin%';\n\n-- Deuxième lettre est 'a'\nSELECT * FROM employees WHERE name LIKE '_a%';\n```\n\nPour la casse : MySQL/SQLite = insensible par défaut. PostgreSQL : utilisez `ILIKE`."
+    },
+    {
+      "title": "Combiner ORDER BY et LIMIT",
+      "content": "`ORDER BY` + `LIMIT` est un duo très courant pour les **top N** :\n\n```sql\n-- Les 5 employés les mieux payés\nSELECT name, salary FROM employees\nORDRE BY salary DESC\nLIMIT 5;\n\n-- La 2e page (pagination)\nSELECT * FROM employees\nORDER BY id\nLIMIT 10 OFFSET 10;  -- sauter les 10 premiers\n```\n\nOrdre d'écriture SQL :\n```\nSELECT → FROM → WHERE → ORDER BY → LIMIT\n```\n\nSQL exécute les clauses dans cet ordre même si on les écrit différemment."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l1-m3-1",
+      "order": 1,
+      "title": "Trier par salaire décroissant",
+      "instructions": "Affichez tous les employés triés du **salaire le plus élevé au plus bas**.",
+      "requiredKeywords": ["select", "from", "employees", "order by", "salary", "desc"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees ORDER BY salary DESC;",
+      "explanation": "`ORDER BY salary DESC` trie de la valeur la plus haute à la plus basse. `DESC` = descending (décroissant). Sans `DESC`, le tri serait croissant (`ASC`)."
+    },
+    {
+      "id": "ex-sql-l1-m3-2",
+      "order": 2,
+      "title": "Top 3 des mieux payés",
+      "instructions": "Affichez les **3 employés les mieux payés** (nom et salaire).",
+      "requiredKeywords": ["select", "name", "salary", "from", "employees", "order by", "desc", "limit", "3"],
+      "validationType": "keywords",
+      "correction": "SELECT name, salary FROM employees ORDER BY salary DESC LIMIT 3;",
+      "explanation": "Le duo `ORDER BY ... DESC LIMIT n` est le pattern classique pour les \"top N\". L'ordre de tri est appliqué avant la limitation — on trie tout, puis on garde les 3 premiers."
+    },
+    {
+      "id": "ex-sql-l1-m3-3",
+      "order": 3,
+      "title": "Recherche par préfixe",
+      "instructions": "Sélectionnez les employés dont le **nom commence par 'A'**.",
+      "requiredKeywords": ["select", "from", "employees", "where", "name", "like", "a%"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees WHERE name LIKE 'A%';",
+      "explanation": "`LIKE 'A%'` correspond à tout nom commençant par A, suivi de n'importe quoi. Le `%` est le joker pour \"zéro ou plusieurs caractères\"."
+    },
+    {
+      "id": "ex-sql-l1-m3-4",
+      "order": 4,
+      "title": "Recherche de texte partiel",
+      "instructions": "Sélectionnez les employés dont le nom **contient 'son'** (n'importe où dans le nom).",
+      "requiredKeywords": ["select", "from", "employees", "where", "name", "like", "%son%"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees WHERE name LIKE '%son%';",
+      "explanation": "`LIKE '%son%'` — le `%` de chaque côté signifie que 'son' peut apparaître n'importe où : 'Jason', 'Anderson', 'Wilson', etc."
+    },
+    {
+      "id": "ex-sql-l1-m3-5",
+      "order": 5,
+      "title": "Tri multi-colonnes",
+      "instructions": "Affichez les employés triés par **département (A→Z)** puis par **salaire décroissant** au sein de chaque département.",
+      "requiredKeywords": ["select", "from", "employees", "order by", "department", "asc", "salary", "desc"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees ORDER BY department ASC, salary DESC;",
+      "explanation": "Le tri multi-colonnes s'applique dans l'ordre : d'abord par `department` (alphabétique), puis par `salary DESC` pour les lignes ayant le même département."
+    }
+  ]
+}

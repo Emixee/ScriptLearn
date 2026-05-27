@@ -1,0 +1,74 @@
+{
+  "id": "sql-l3-m2",
+  "title": "EXISTS et UNION",
+  "level": "sql-l3",
+  "lang": "sql",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "EXISTS — tester l'existence",
+      "content": "`EXISTS` vérifie si une sous-requête retourne **au moins une ligne** :\n\n```sql\n-- Clients ayant passé au moins une commande\nSELECT name FROM customers c\nWHERE EXISTS (\n  SELECT 1 FROM orders o WHERE o.customer_id = c.id\n);\n\n-- Clients N'ayant PAS passé de commande\nSELECT name FROM customers c\nWHERE NOT EXISTS (\n  SELECT 1 FROM orders o WHERE o.customer_id = c.id\n);\n```\n\n`EXISTS` est souvent plus performant que `IN` sur de grandes tables car il s'arrête dès la première correspondance trouvée. `SELECT 1` est idiomatique (peu importe ce qu'on sélectionne)."
+    },
+    {
+      "title": "UNION — combiner des résultats",
+      "content": "`UNION` empile verticalement les résultats de deux requêtes :\n\n```sql\n-- Employés IT OU Dev (sans doublons)\nSELECT name, 'IT' AS source FROM employees WHERE department = 'IT'\nUNION\nSELECT name, 'Dev' AS source FROM employees WHERE department = 'Dev';\n```\n\n**UNION vs UNION ALL** :\n- `UNION` : supprime les doublons (plus lent)\n- `UNION ALL` : garde tous les résultats (plus rapide)\n\n```sql\n-- Garder les doublons\nSELECT email FROM customers\nUNION ALL\nSELECT email FROM leads;\n```\n\n⚠️ Les deux requêtes doivent avoir le même nombre de colonnes et des types compatibles."
+    },
+    {
+      "title": "INTERSECT et EXCEPT",
+      "content": "**INTERSECT** — lignes présentes dans les deux requêtes :\n```sql\nSELECT email FROM customers\nINTERSECT\nSELECT email FROM newsletter_subscribers;\n-- Clients qui sont aussi abonnés\n```\n\n**EXCEPT** (ou `MINUS` en Oracle) — lignes de la première non présentes dans la seconde :\n```sql\nSELECT email FROM customers\nEXCEPT\nSELECT email FROM unsubscribed;\n-- Clients qui ne se sont pas désabonnés\n```\n\n⚠️ MySQL ne supporte pas `INTERSECT` / `EXCEPT` nativement — simuler avec `JOIN` ou `NOT IN`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l3-m2-1",
+      "order": 1,
+      "title": "EXISTS — clients avec commandes",
+      "instructions": "Sélectionnez les **clients qui ont passé au moins une commande**.\n\nUtilisez `EXISTS` avec une sous-requête sur la table `orders`.",
+      "requiredKeywords": ["select", "from", "customers", "where", "exists", "select", "from", "orders", "where", "customer_id"],
+      "validationType": "keywords",
+      "correction": "SELECT name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
+      "explanation": "`EXISTS` retourne vrai dès qu'une ligne est trouvée dans la sous-requête — il n'a pas besoin de tout parcourir. `SELECT 1` est une convention : la valeur sélectionnée n'a pas d'importance."
+    },
+    {
+      "id": "ex-sql-l3-m2-2",
+      "order": 2,
+      "title": "NOT EXISTS — sans correspondance",
+      "instructions": "Sélectionnez les **clients sans aucune commande** avec `NOT EXISTS`.",
+      "requiredKeywords": ["select", "from", "customers", "where", "not exists", "select", "from", "orders", "where", "customer_id"],
+      "validationType": "keywords",
+      "correction": "SELECT name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
+      "explanation": "`NOT EXISTS` s'inverse : vrai si la sous-requête ne retourne aucune ligne. C'est souvent plus clair que `LEFT JOIN ... WHERE IS NULL` pour les débutants."
+    },
+    {
+      "id": "ex-sql-l3-m2-3",
+      "order": 3,
+      "title": "UNION de deux listes",
+      "instructions": "Combinez avec `UNION` les noms des employés IT et les noms des employés Dev en **une seule liste sans doublons**.",
+      "requiredKeywords": ["select", "name", "from", "employees", "where", "department", "it", "union", "select", "name", "from", "employees", "where", "department", "dev"],
+      "validationType": "keywords",
+      "correction": "SELECT name FROM employees WHERE department = 'IT' UNION SELECT name FROM employees WHERE department = 'Dev';",
+      "explanation": "`UNION` combine les résultats et supprime les doublons. Si un employé apparaissait dans les deux (impossible ici mais pas en général), il ne serait affiché qu'une fois."
+    },
+    {
+      "id": "ex-sql-l3-m2-4",
+      "order": 4,
+      "title": "UNION ALL — garder les doublons",
+      "instructions": "Listez tous les emails des tables `customers` et `leads` avec `UNION ALL` (conserver les doublons).",
+      "requiredKeywords": ["select", "email", "from", "customers", "union all", "select", "email", "from", "leads"],
+      "validationType": "keywords",
+      "correction": "SELECT email FROM customers UNION ALL SELECT email FROM leads;",
+      "explanation": "`UNION ALL` est plus rapide que `UNION` car il ne vérifie pas les doublons. Préférer `UNION ALL` quand les doublons sont impossibles ou intentionnels."
+    },
+    {
+      "id": "ex-sql-l3-m2-5",
+      "order": 5,
+      "title": "EXCEPT — différence",
+      "instructions": "Trouvez les emails présents dans `customers` mais **absents** de `unsubscribed`.",
+      "requiredKeywords": ["select", "email", "from", "customers", "except", "select", "email", "from", "unsubscribed"],
+      "validationType": "keywords",
+      "correction": "SELECT email FROM customers EXCEPT SELECT email FROM unsubscribed;",
+      "explanation": "`EXCEPT` retourne les lignes du premier SELECT qui n'ont pas de correspondance dans le second. Idéal pour les exclusions — équivalent à `WHERE email NOT IN (SELECT email FROM unsubscribed)`."
+    }
+  ]
+}

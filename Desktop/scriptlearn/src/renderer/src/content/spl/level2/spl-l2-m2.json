@@ -1,0 +1,74 @@
+{
+  "id": "spl-l2-m2",
+  "title": "Sous-recherches et append",
+  "level": "spl-l2",
+  "lang": "spl",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Sous-recherches — [search ...]",
+      "content": "Une **sous-recherche** est une requête imbriquée dont le résultat est utilisé par la requête externe :\n\n```spl\n// Syntaxe : [recherche interne]\n// La sous-recherche retourne des valeurs filtrées par la requête externe\n\n// Exemple : IPs avec echecs d'auth dans les logs firewall\nindex=firewall\n| search\n    src_ip IN\n    [search index=security EventCode=4625 earliest=-1h | stats count BY src_ip | where count > 10 | fields src_ip]\n\n// La sous-recherche construit une liste de valeurs\n// Le [ ] est remplacé par ses résultats sous forme de OR\n// eq: search src_ip=1.2.3.4 OR src_ip=5.6.7.8 ...\n\n// Sous-recherche avec return — contrôler le champ retourné\nindex=web uri!=\"/healthcheck\"\n| search\n    clientip IN\n    [\n        search index=threat_intel malicious=true\n        | return 100 clientip  // Retourner jusqu'à 100 valeurs du champ clientip\n    ]\n```"
+    },
+    {
+      "title": "appendcols et join",
+      "content": "```spl\n// append — combiner deux jeux de résultats (UNION)\nindex=security EventCode=4625 earliest=-1h\n| stats count AS failures BY Account\n|\nappend\n    [search index=security EventCode=4624 earliest=-1h\n     | stats count AS successes BY Account]\n\n// Résultat : lignes des deux recherches (failures + successes)\n// Mais les lignes sont séparées, pas jointes par Account\n\n// appendcols — ajouter des colonnes depuis une 2ème recherche\nindex=security EventCode=4625 earliest=-1h\n| stats count AS failures BY Account\n| appendcols\n    [search index=security EventCode=4624 earliest=-1h\n     | stats count AS successes BY Account\n     | fields successes]\n\n// join — jointure explicite\nindex=security EventCode=4625 earliest=-1h\n| stats count AS failures BY src_ip\n| join src_ip\n    [search index=network action=blocked earliest=-1h\n     | stats count AS blocked BY src_ip]\n| where isnotnull(blocked)\n```"
+    },
+    {
+      "title": "transaction — grouper des événements liés",
+      "content": "`transaction` regroupe des événements reliés en une seule ligne :\n\n```spl\n// Grouper par session\nindex=web\n| transaction sessionid maxspan=30m maxpause=5m\n// Regroupe tous les événements du même sessionid\n// maxspan : durée max de la transaction\n// maxpause : pause max entre événements\n\n// Résultat : une ligne par transaction avec :\n// duration : durée de la transaction\n// eventcount : nombre d'événements\n// _raw : tous les événements concaténés\n\n// Détecter des séquences d'événements\nindex=security\n| transaction src_ip startswith=\"EventCode=4625\" endswith=\"EventCode=4624\"\n// Brute force réussi : commence par des échecs, finit par un succès\n| where duration < 300  // En moins de 5 minutes\n| table src_ip, duration, eventcount\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l2-m2-1",
+      "order": 1,
+      "title": "Sous-recherche — IPs malveillantes",
+      "instructions": "Cherchez dans `index=web` les connexions dont `clientip` est dans la liste des IPs avec plus de 10 échecs d'auth (`index=security EventCode=4625`).",
+      "requiredKeywords": ["index=web", "clientip IN [", "index=security eventcode=4625"],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-1h\n| search clientip IN\n    [search index=security EventCode=4625 earliest=-1h\n     | stats count BY src_ip\n     | where count > 10\n     | fields src_ip]",
+      "explanation": "La sous-recherche `[...]` est évaluée d'abord et retourne une liste de valeurs. La requête externe filtre ses résultats sur cette liste. Limité à 10 000 valeurs par défaut dans Splunk. Pour de grandes listes, préférer `lookup` ou `inputlookup`."
+    },
+    {
+      "id": "ex-spl-l2-m2-2",
+      "order": 2,
+      "title": "append — union de deux recherches",
+      "instructions": "Combinez avec `append` les erreurs 4xx (`status>=400`) et les erreurs 5xx (`status>=500`) depuis `index=web` des dernières 2 heures.",
+      "requiredKeywords": ["index=web", "| append [", "status>=500"],
+      "validationType": "keywords",
+      "correction": "index=web status>=400 status<500 earliest=-2h\n| eval error_type=\"4xx\"\n| append\n    [search index=web status>=500 earliest=-2h\n     | eval error_type=\"5xx\"]\n| stats count BY error_type, status\n| sort status",
+      "explanation": "`append` combine les lignes de deux recherches (comme `UNION ALL` en SQL). Les deux recherches doivent retourner des colonnes compatibles. Ajouter `eval error_type` avant `append` permet de distinguer les deux sources après union."
+    },
+    {
+      "id": "ex-spl-l2-m2-3",
+      "order": 3,
+      "title": "join — corréler firewall et auth",
+      "instructions": "Joignez `index=security EventCode=4625` avec `index=firewall action=blocked` sur `src_ip` pour trouver les IPs qui ont à la fois des échecs d'auth ET sont bloquées par le firewall.",
+      "requiredKeywords": ["| join src_ip [", "index=firewall action=blocked"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-1h\n| stats count AS auth_failures BY src_ip\n| join src_ip\n    [search index=firewall action=blocked earliest=-1h\n     | stats count AS blocked_attempts BY src_ip]\n| table src_ip, auth_failures, blocked_attempts",
+      "explanation": "`join champ [sous-recherche]` est l'équivalent SPL d'un `join kind=inner` KQL sur le champ spécifié. Par défaut, c'est un inner join. Les IPs présentes dans les deux sources sont la corrélation la plus intéressante — elles tentent de s'authentifier ET sont actives sur le réseau."
+    },
+    {
+      "id": "ex-spl-l2-m2-4",
+      "order": 4,
+      "title": "transaction — durée de session",
+      "instructions": "Groupez les événements de `index=web` par `sessionid` avec `transaction`, limite `maxspan=30m`, et affichez les sessions les plus longues.",
+      "requiredKeywords": ["| transaction sessionid", "maxspan=30m", "duration"],
+      "validationType": "keywords",
+      "correction": "index=web earliest=-4h\n| transaction sessionid maxspan=30m maxpause=5m\n| table sessionid, duration, eventcount, clientip\n| sort -duration",
+      "explanation": "`transaction` regroupe les événements du même `sessionid` en une ligne. `duration` est ajoutée automatiquement (en secondes). `eventcount` = nombre d'événements dans la transaction. Utile pour analyser les sessions utilisateur et détecter des sessions anormalement longues."
+    },
+    {
+      "id": "ex-spl-l2-m2-5",
+      "order": 5,
+      "title": "transaction — brute force réussi",
+      "instructions": "Utilisez `transaction src_ip` avec `startswith` et `endswith` pour détecter les séquences de connexions échouées (EventCode=4625) **suivies** d'un succès (EventCode=4624).",
+      "requiredKeywords": ["transaction src_ip", "startswith=\"eventcode=4625\"", "endswith=\"eventcode=4624\""],
+      "validationType": "keywords",
+      "correction": "index=security earliest=-2h\n| transaction src_ip maxspan=10m startswith=\"EventCode=4625\" endswith=\"EventCode=4624\"\n| where eventcount > 5\n| table src_ip, duration, eventcount",
+      "explanation": "`startswith` et `endswith` dans `transaction` définissent le début et la fin de la séquence. Une transaction commençant par des échecs (4625) et finissant par un succès (4624) est un brute force réussi. `eventcount > 5` filtre les transactions avec plusieurs tentatives."
+    }
+  ]
+}

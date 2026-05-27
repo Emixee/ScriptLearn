@@ -1,0 +1,74 @@
+{
+  "id": "git-l2-m3",
+  "title": "Stash — mettre le travail en pause",
+  "level": "git-l2",
+  "lang": "git",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "git stash — empiler les modifications",
+      "content": "`git stash` sauvegarde temporairement les modifications non commitées pour nettoyer le Working Directory :\n\n```bash\n# Empiler toutes les modifications (staged + unstaged)\ngit stash\ngit stash push -m \"work in progress: feature login\"\n\n# Voir la pile de stash\ngit stash list\n# stash@{0}: On main: work in progress: feature login\n# stash@{1}: On feature: fix temporaire\n\n# Restaurer et supprimer le dernier stash\ngit stash pop\n\n# Restaurer sans supprimer\ngit stash apply\ngit stash apply stash@{1}  # un stash précis\n\n# Supprimer un stash\ngit stash drop stash@{0}\ngit stash clear  # vider toute la pile\n```"
+    },
+    {
+      "title": "Options avancées du stash",
+      "content": "```bash\n# Inclure les fichiers non suivis (untracked)\ngit stash -u\ngit stash --include-untracked\n\n# Stash partiel — seulement certains fichiers\ngit stash push -m \"fix partiel\" -- src/module.js\n\n# Créer une branche à partir d'un stash\ngit stash branch nouvelle-branche stash@{0}\n# Crée la branche, applique le stash, le supprime\n\n# Voir le contenu d'un stash\ngit stash show -p stash@{0}\n```\n\n**Cas d'usage typique** : on est en plein travail, une urgence arrive. `git stash` → corriger l'urgence → `git stash pop` pour reprendre."
+    },
+    {
+      "title": "git revert — annulation publique",
+      "content": "`git revert` crée un commit qui **annule** les effets d'un commit précédent — sans réécrire l'historique :\n\n```bash\n# Annuler le dernier commit (crée un commit d'inversion)\ngit revert HEAD\n\n# Annuler un commit précis par son hash\ngit revert a1b2c3d\n\n# Annuler sans ouvrir l'éditeur de message\ngit revert --no-edit a1b2c3d\n\n# Préparer le revert sans le commiter\ngit revert --no-commit a1b2c3d\n```\n\n**Revert vs Reset :**\n- `git revert` = ajoute un commit d'annulation → **sûr sur branches partagées**\n- `git reset --hard` = supprime des commits → **dangereux sur branches partagées**"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l2-m3-1",
+      "order": 1,
+      "title": "Empiler les modifications",
+      "instructions": "Mettez en pause les modifications courantes avec un message `\"wip: refactoring login\"`.",
+      "requiredKeywords": ["git stash", "push", "-m", "wip: refactoring login"],
+      "validationType": "keywords",
+      "correction": "git stash push -m \"wip: refactoring login\"",
+      "explanation": "Le message `-m` rend le stash identifiable dans `git stash list`. Sans message, le stash reçoit automatiquement un nom basé sur la branche et le dernier commit."
+    },
+    {
+      "id": "ex-git-l2-m3-2",
+      "order": 2,
+      "title": "Voir la liste des stash",
+      "instructions": "Affichez **tous les stash** enregistrés.",
+      "requiredKeywords": ["git stash list"],
+      "validationType": "keywords",
+      "correction": "git stash list",
+      "explanation": "`git stash list` affiche la pile avec les références `stash@{0}`, `stash@{1}`, etc. Le plus récent est toujours `stash@{0}`."
+    },
+    {
+      "id": "ex-git-l2-m3-3",
+      "order": 3,
+      "title": "Restaurer et supprimer",
+      "instructions": "Restaurez les modifications du dernier stash et **supprimez-le** de la pile.",
+      "requiredKeywords": ["git stash pop"],
+      "validationType": "keywords",
+      "correction": "git stash pop",
+      "explanation": "`pop` = `apply` + `drop`. Restaure le stash le plus récent et le supprime de la pile. Si un conflit survient, résoudre et `git stash drop stash@{0}` manuellement."
+    },
+    {
+      "id": "ex-git-l2-m3-4",
+      "order": 4,
+      "title": "Annuler proprement avec revert",
+      "instructions": "Annulez le commit `f3a9b12` de façon **non destructive** (crée un commit d'inversion).",
+      "requiredKeywords": ["git revert", "f3a9b12"],
+      "validationType": "keywords",
+      "correction": "git revert f3a9b12",
+      "explanation": "`git revert` crée un **nouveau commit** qui inverse les changements du commit ciblé. L'historique reste intact — essentiel sur les branches partagées pour ne pas perturber les collègues."
+    },
+    {
+      "id": "ex-git-l2-m3-5",
+      "order": 5,
+      "title": "Inclure les fichiers non suivis",
+      "instructions": "Stashez toutes les modifications **y compris les fichiers non suivis** (untracked files).",
+      "requiredKeywords": ["git stash", "-u"],
+      "validationType": "keywords",
+      "correction": "git stash -u",
+      "explanation": "Par défaut, `git stash` ignore les fichiers untracked. `-u` (--include-untracked) les inclut aussi. `-a` (--all) va encore plus loin en incluant les fichiers ignorés par `.gitignore`."
+    }
+  ]
+}

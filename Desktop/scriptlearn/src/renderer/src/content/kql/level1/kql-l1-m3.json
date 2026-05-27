@@ -1,0 +1,74 @@
+{
+  "id": "kql-l1-m3",
+  "title": "Trier, compter et agréger — sort, count, summarize",
+  "level": "kql-l1",
+  "lang": "kql",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "sort, top et order",
+      "content": "Trier les résultats pour mettre en avant les événements les plus pertinents :\n\n```kql\n// Tri décroissant (plus récent en premier)\nSecurityEvent\n| where TimeGenerated > ago(1h)\n| sort by TimeGenerated desc\n\n// Top N — trier et limiter en une opération\nSecurityEvent\n| where TimeGenerated > ago(1d)\n| top 10 by TimeGenerated desc\n\n// Tri sur plusieurs colonnes\nSigninLogs\n| sort by UserPrincipalName asc, TimeGenerated desc\n\n// order by = alias de sort by\n| order by TimeGenerated desc\n\n// Gérer les nulls\n| sort by EventID desc nulls last\n```\n\n**Différence `top` vs `sort | take` :**\n- `top 10 by X` : optimisé, ne trie que pour trouver les 10 plus grands\n- `sort by X | take 10` : trie tout puis prend 10 (moins performant sur grands volumes)"
+    },
+    {
+      "title": "count et summarize count()",
+      "content": "Compter des événements pour détecter des anomalies de volume :\n\n```kql\n// Compter toutes les lignes\nSecurityEvent\n| where TimeGenerated > ago(1h)\n| count\n\n// Compter par groupe\nSecurityEvent\n| where TimeGenerated > ago(1d)\n| summarize Count=count() by EventID\n| sort by Count desc\n\n// Compter par compte ET par machine\nSecurityEvent\n| where EventID == 4625\n| summarize FailedLogins=count() by Account, Computer\n| where FailedLogins > 5  // Seuil d'alerte\n\n// Compter des valeurs distinctes\nSigninLogs\n| summarize UniqueIPs=dcount(IPAddress) by UserPrincipalName\n| where UniqueIPs > 3  // Connexion depuis de nombreuses IPs\n```"
+    },
+    {
+      "title": "summarize — agrégations avancées",
+      "content": "```kql\n// Fonctions d'agrégation disponibles\nSecurityEvent\n| summarize\n    Total       = count(),\n    FirstSeen   = min(TimeGenerated),\n    LastSeen    = max(TimeGenerated),\n    UniqueHosts = dcount(Computer),\n    ErrorCodes  = make_set(EventID),     // ensemble des valeurs uniques\n    IpList      = make_list(IpAddress)   // liste de toutes les valeurs\n  by Account\n\n// Regrouper par tranches de temps (bin)\nSigninLogs\n| where TimeGenerated > ago(7d)\n| summarize LoginCount=count() by bin(TimeGenerated, 1h)\n| render timechart  // Afficher comme graphe temporel\n\n// Regrouper par heure de la journée\nSigninLogs\n| summarize Count=count() by hourofday(TimeGenerated)\n| render barchart\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l1-m3-1",
+      "order": 1,
+      "title": "Compter les échecs de connexion",
+      "instructions": "Comptez le **nombre total** d'événements `EventID == 4625` dans `SecurityEvent` des dernières 24 heures.",
+      "requiredKeywords": ["securityevent", "eventid == 4625", "count"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)\n| where EventID == 4625\n| count",
+      "explanation": "`count` (sans opérateur `summarize`) retourne simplement le nombre total de lignes après filtrage. Un seul chiffre comme résultat. À comparer avec la période précédente pour détecter une anomalie de volume."
+    },
+    {
+      "id": "ex-kql-l1-m3-2",
+      "order": 2,
+      "title": "Top 10 comptes avec le plus d'échecs",
+      "instructions": "Listez les **10 comptes** avec le plus d'échecs de connexion (EventID 4625) des dernières 48h, triés par nombre décroissant.",
+      "requiredKeywords": ["summarize", "count()", "by account", "top 10"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(48h)\n| where EventID == 4625\n| summarize FailedLogins=count() by Account\n| top 10 by FailedLogins desc",
+      "explanation": "`summarize count() by Account` groupe et compte par compte. `top 10 by FailedLogins desc` retourne les 10 comptes les plus ciblés. Ce pattern détecte les tentatives de brute force ciblant des comptes spécifiques."
+    },
+    {
+      "id": "ex-kql-l1-m3-3",
+      "order": 3,
+      "title": "Connexions depuis plusieurs IPs",
+      "instructions": "Trouvez les utilisateurs `SigninLogs` qui se sont connectés depuis **plus de 3 IPs distinctes** en 24h (utiliser `dcount`).",
+      "requiredKeywords": ["signinlogs", "dcount(ipaddress)", "by userprincipalname", "> 3"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(24h)\n| summarize UniqueIPs=dcount(IPAddress) by UserPrincipalName\n| where UniqueIPs > 3\n| sort by UniqueIPs desc",
+      "explanation": "`dcount()` (distinct count) compte les valeurs uniques. Un utilisateur légitime utilise rarement plus de 2-3 IPs en 24h. Plus de 3 IPs distinctes peut indiquer un compte compromis, un VPN qui change d'IP, ou une attaque credential stuffing."
+    },
+    {
+      "id": "ex-kql-l1-m3-4",
+      "order": 4,
+      "title": "Timeline avec bin()",
+      "instructions": "Visualisez le nombre de connexions `SigninLogs` par tranches de **1 heure** sur les 7 derniers jours avec `bin()` et `render timechart`.",
+      "requiredKeywords": ["summarize", "bin(timegenerated, 1h)", "render timechart"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(7d)\n| summarize Count=count() by bin(TimeGenerated, 1h)\n| render timechart",
+      "explanation": "`bin(TimeGenerated, 1h)` arrondit chaque timestamp à l'heure (ex: 13:47 → 13:00). `render timechart` affiche le résultat comme graphe temporel dans Sentinel. Permet de visualiser des pics d'activité inhabituels."
+    },
+    {
+      "id": "ex-kql-l1-m3-5",
+      "order": 5,
+      "title": "Première et dernière occurrence",
+      "instructions": "Pour chaque machine (`Computer`) dans `SecurityEvent`, trouvez la **première** et la **dernière** connexion réussie (EventID 4624) avec `min()` et `max()`.",
+      "requiredKeywords": ["summarize", "min(timegenerated)", "max(timegenerated)", "by computer"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(7d)\n| where EventID == 4624\n| summarize FirstLogin=min(TimeGenerated), LastLogin=max(TimeGenerated) by Computer\n| sort by LastLogin desc",
+      "explanation": "`min(TimeGenerated)` = première occurrence, `max(TimeGenerated)` = dernière. Utile pour identifier des machines inactives depuis longtemps (LastLogin ancienne) ou des machines qui viennent d'apparaître sur le réseau (FirstLogin récente)."
+    }
+  ]
+}

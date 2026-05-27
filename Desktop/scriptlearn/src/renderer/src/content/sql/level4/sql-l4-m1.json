@@ -1,0 +1,74 @@
+{
+  "id": "sql-l4-m1",
+  "title": "CTEs — Common Table Expressions",
+  "level": "sql-l4",
+  "lang": "sql",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'une CTE ?",
+      "content": "Une **CTE** (Common Table Expression) est une sous-requête nommée déclarée avec `WITH`, réutilisable dans la requête principale :\n\n```sql\nWITH hauts_salaires AS (\n  SELECT name, salary, department\n  FROM employees\n  WHERE salary > 80000\n)\nSELECT * FROM hauts_salaires\nORDER BY salary DESC;\n```\n\n**Avantages sur les sous-requêtes imbriquées :**\n- Plus lisible (la logique est déclarée en haut)\n- Réutilisable plusieurs fois dans la même requête\n- Plus facile à déboguer (tester la CTE seule)"
+    },
+    {
+      "title": "CTEs multiples",
+      "content": "On peut chaîner plusieurs CTEs avec des virgules :\n\n```sql\nWITH\n  dept_stats AS (\n    SELECT department, AVG(salary) AS moy, COUNT(*) AS nb\n    FROM employees\n    GROUP BY department\n  ),\n  grands_depts AS (\n    SELECT * FROM dept_stats WHERE nb > 3\n  )\nSELECT e.name, e.salary, g.moy AS moy_dept\nFROM employees e\nINNER JOIN grands_depts g ON e.department = g.department\nWHERE e.salary > g.moy;\n```\n\nChaque CTE peut référencer les CTEs précédentes — c'est une chaîne de transformations lisible."
+    },
+    {
+      "title": "CTEs récursives",
+      "content": "Une **CTE récursive** se référence elle-même — utile pour les hiérarchies :\n\n```sql\nWITH RECURSIVE hierarchy AS (\n  -- Ancre : le PDG (sans manager)\n  SELECT id, name, manager_id, 0 AS niveau\n  FROM employees\n  WHERE manager_id IS NULL\n\n  UNION ALL\n\n  -- Récursion : les subordonnés\n  SELECT e.id, e.name, e.manager_id, h.niveau + 1\n  FROM employees e\n  INNER JOIN hierarchy h ON e.manager_id = h.id\n)\nSELECT name, niveau FROM hierarchy ORDER BY niveau, name;\n```\n\nCas d'usage : organigrammes, arborescences de fichiers, hiérarchies de catégories."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l4-m1-1",
+      "order": 1,
+      "title": "CTE simple",
+      "instructions": "Avec une CTE nommée `it_team`, sélectionnez les employés du département `'IT'`, puis listez ceux dont le salaire dépasse `70000`.",
+      "requiredKeywords": ["with", "it_team", "as", "select", "from", "employees", "where", "department", "it", "select", "from", "it_team", "salary", "70000"],
+      "validationType": "keywords",
+      "correction": "WITH it_team AS (SELECT name, salary FROM employees WHERE department = 'IT') SELECT * FROM it_team WHERE salary > 70000;",
+      "explanation": "La CTE `it_team` isole la logique de filtrage. La requête principale est ensuite simple. Tester la CTE seule (`SELECT * FROM it_team`) facilite le débogage."
+    },
+    {
+      "id": "ex-sql-l4-m1-2",
+      "order": 2,
+      "title": "CTE d'agrégation",
+      "instructions": "Créez une CTE `dept_avg` calculant le salaire moyen par département, puis listez les départements dont la moyenne dépasse `60000`.",
+      "requiredKeywords": ["with", "dept_avg", "as", "select", "department", "avg", "salary", "from", "employees", "group by", "select", "from", "dept_avg", "where", "60000"],
+      "validationType": "keywords",
+      "correction": "WITH dept_avg AS (SELECT department, AVG(salary) AS moy FROM employees GROUP BY department) SELECT * FROM dept_avg WHERE moy > 60000;",
+      "explanation": "Ici la CTE remplace une table dérivée dans `FROM`. L'avantage : la logique d'agrégation est clairement séparée du filtre final — chaque partie peut être lue et testée indépendamment."
+    },
+    {
+      "id": "ex-sql-l4-m1-3",
+      "order": 3,
+      "title": "Deux CTEs chaînées",
+      "instructions": "Créez deux CTEs : `seniors` (employés avec plus de 10 ans d'ancienneté) et `riches` (salaire > 75000). Puis sélectionnez les employés présents dans les deux.",
+      "requiredKeywords": ["with", "seniors", "as", "select", "riches", "as", "select", "from", "seniors", "where", "name", "in", "select", "name", "from", "riches"],
+      "validationType": "keywords",
+      "correction": "WITH seniors AS (SELECT name FROM employees WHERE years_exp > 10), riches AS (SELECT name FROM employees WHERE salary > 75000) SELECT name FROM seniors WHERE name IN (SELECT name FROM riches);",
+      "explanation": "Les CTEs se déclarent séparées par des virgules après `WITH`. La seconde CTE peut référencer la première. Ensemble, elles forment une chaîne de transformation lisible."
+    },
+    {
+      "id": "ex-sql-l4-m1-4",
+      "order": 4,
+      "title": "CTE vs sous-requête",
+      "instructions": "Réécrivez avec une CTE la requête suivante :\n```sql\nSELECT name FROM (SELECT name, salary FROM employees WHERE salary > 80000) sub WHERE name LIKE 'A%';\n```",
+      "requiredKeywords": ["with", "as", "select", "name", "salary", "from", "employees", "where", "salary", "80000", "select", "name", "from", "where", "like", "a%"],
+      "validationType": "keywords",
+      "correction": "WITH sub AS (SELECT name, salary FROM employees WHERE salary > 80000) SELECT name FROM sub WHERE name LIKE 'A%';",
+      "explanation": "La CTE rend la sous-requête nommée et lisible. On lit d'abord `sub` (sa définition), puis la requête principale qui l'utilise. La table dérivée anonyme `(SELECT ...) sub` est équivalente mais moins claire."
+    },
+    {
+      "id": "ex-sql-l4-m1-5",
+      "order": 5,
+      "title": "CTE récursive simple",
+      "instructions": "Écrivez une CTE récursive `compteur` qui génère les nombres de 1 à 5.\n\nAncre : `SELECT 1 AS n`. Récursion : `SELECT n + 1 FROM compteur WHERE n < 5`.",
+      "requiredKeywords": ["with recursive", "compteur", "as", "select", "1", "union all", "select", "n", "+", "1", "from", "compteur", "where", "n", "<", "5"],
+      "validationType": "keywords",
+      "correction": "WITH RECURSIVE compteur AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM compteur WHERE n < 5) SELECT n FROM compteur;",
+      "explanation": "La CTE récursive a deux parties : l'ancre (`SELECT 1`) qui initialise, et la récursion (`SELECT n+1`) qui s'appelle elle-même jusqu'à ce que `WHERE n < 5` soit faux. Utile pour générer des séries ou naviguer des hiérarchies."
+    }
+  ]
+}

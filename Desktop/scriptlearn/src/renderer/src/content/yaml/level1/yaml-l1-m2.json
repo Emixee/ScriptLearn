@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l1-m2",
+  "title": "Listes et mappings imbriqués",
+  "level": "yaml-l1",
+  "lang": "yaml",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Listes (séquences)",
+      "content": "En YAML, les listes utilisent le tiret `-` :\n\n```yaml\n# Liste simple\nfruits:\n  - pomme\n  - banane\n  - cerise\n\n# Liste en ligne (flow style)\ncouleurs: [rouge, vert, bleu]\n\n# Liste de nombres\nports:\n  - 80\n  - 443\n  - 8080\n\n# Liste mixte\nvaleurs:\n  - texte\n  - 42\n  - true\n  - null\n\n# Liste à la racine\n- premier\n- deuxième\n- troisième\n```\n\n**Accès en Python :**\n```python\nimport yaml\ndata = yaml.safe_load(content)\ndata['fruits']       # ['pomme', 'banane', 'cerise']\ndata['fruits'][0]    # 'pomme'\ndata['ports']        # [80, 443, 8080]\n```"
+    },
+    {
+      "title": "Listes d'objets",
+      "content": "Combiner listes et mappings pour des structures complexes :\n\n```yaml\n# Liste d'objets\nutilisateurs:\n  - nom: Alice\n    age: 30\n    role: admin\n  - nom: Bob\n    age: 25\n    role: user\n  - nom: Charlie\n    age: 28\n    role: user\n\n# Configuration Docker Compose — exemple réaliste\nservices:\n  webapp:\n    image: nginx:latest\n    ports:\n      - \"80:80\"\n      - \"443:443\"\n    volumes:\n      - ./html:/usr/share/nginx/html\n    environment:\n      - NODE_ENV=production\n      - API_URL=https://api.example.com\n```"
+    },
+    {
+      "title": "Mappings imbriqués profonds",
+      "content": "```yaml\n# Plusieurs niveaux d'imbrication\ninfrastructure:\n  production:\n    database:\n      host: db-prod.example.com\n      port: 5432\n      credentials:\n        user: app_user\n        password: \"${DB_PASSWORD}\"  # Variable d'env\n    cache:\n      host: redis-prod.example.com\n      port: 6379\n  staging:\n    database:\n      host: db-staging.example.com\n      port: 5432\n\n# GitHub Actions — exemple de structure multi-niveaux\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n      - name: Setup Node\n        uses: actions/setup-node@v4\n        with:\n          node-version: '20'\n          cache: 'npm'\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l1-m2-1",
+      "order": 1,
+      "title": "Liste simple",
+      "instructions": "Créez une clé `tags` contenant une liste de 3 valeurs : `security`, `monitoring`, `automation`.",
+      "requiredKeywords": ["tags:", "  - security", "  - monitoring", "  - automation"],
+      "validationType": "keywords",
+      "correction": "tags:\n  - security\n  - monitoring\n  - automation",
+      "explanation": "Chaque élément de liste commence par `- ` (tiret + espace), indenté sous la clé parent. L'indentation du tiret définit l'appartenance à la liste. En JSON équivalent : `{\"tags\": [\"security\", \"monitoring\", \"automation\"]}`."
+    },
+    {
+      "id": "ex-yaml-l1-m2-2",
+      "order": 2,
+      "title": "Liste en flow style",
+      "instructions": "Écrivez les ports `[80, 443, 8080]` en **flow style** (format inline sur une ligne).",
+      "requiredKeywords": ["ports: [80, 443, 8080]"],
+      "validationType": "keywords",
+      "correction": "ports: [80, 443, 8080]",
+      "explanation": "Le flow style `[a, b, c]` est équivalent au bloc style avec tirets mais plus compact. Préférer le flow style pour les petites listes simples, le bloc style pour les longues listes ou les listes d'objets. Les deux sont valides YAML."
+    },
+    {
+      "id": "ex-yaml-l1-m2-3",
+      "order": 3,
+      "title": "Liste d'objets",
+      "instructions": "Créez une clé `servers` contenant une liste de 2 objets : `{name: web1, ip: 10.0.0.1}` et `{name: web2, ip: 10.0.0.2}`.",
+      "requiredKeywords": ["servers:", "  - name: web1", "    ip: 10.0.0.1", "  - name: web2"],
+      "validationType": "keywords",
+      "correction": "servers:\n  - name: web1\n    ip: 10.0.0.1\n  - name: web2\n    ip: 10.0.0.2",
+      "explanation": "Les listes d'objets : le tiret `-` définit un élément, les propriétés de l'objet sont indentées **au même niveau** que le texte après le tiret (4 espaces en tout si la liste est à 2 espaces). Pattern très courant dans Docker Compose et Kubernetes."
+    },
+    {
+      "id": "ex-yaml-l1-m2-4",
+      "order": 4,
+      "title": "Mapping imbriqué à 3 niveaux",
+      "instructions": "Créez `app > database > host: localhost` avec 3 niveaux d'imbrication (2 espaces chaque niveau).",
+      "requiredKeywords": ["app:", "  database:", "    host: localhost"],
+      "validationType": "keywords",
+      "correction": "app:\n  database:\n    host: localhost\n    port: 5432",
+      "explanation": "Chaque niveau d'imbrication ajoute 2 espaces. `app` → niveau 0, `database` → 2 espaces, `host` → 4 espaces. YAML n'a pas de limite de profondeur. Attention : une indentation inconsistante est l'erreur la plus courante — utiliser un éditeur avec visualisation YAML."
+    },
+    {
+      "id": "ex-yaml-l1-m2-5",
+      "order": 5,
+      "title": "Configuration services Docker-like",
+      "instructions": "Écrivez une clé `services` avec un service `api` ayant : `image: node:20`, `ports: ['3000:3000']`, `environment: [NODE_ENV=production]`.",
+      "requiredKeywords": ["services:", "  api:", "    image: node:20", "    ports:", "    environment:"],
+      "validationType": "keywords",
+      "correction": "services:\n  api:\n    image: node:20\n    ports:\n      - '3000:3000'\n    environment:\n      - NODE_ENV=production",
+      "explanation": "Structure typique Docker Compose. `ports` et `environment` sont des listes sous une clé de service. `'3000:3000'` entre guillemets : YAML interpréterait `3000:3000` comme du YAML invalide sans guillemets. Toujours tester la validité avec `docker compose config` ou un validateur YAML en ligne."
+    }
+  ]
+}

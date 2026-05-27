@@ -1,0 +1,74 @@
+{
+  "id": "git-l1-m4",
+  "title": "Corriger les erreurs — restore et reset",
+  "level": "git-l1",
+  "lang": "git",
+  "order": 4,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Annuler des modifications non commitées",
+      "content": "```bash\n# Annuler les modifications d'un fichier (Working Dir → état du dernier commit)\ngit restore fichier.js\ngit restore .              # tous les fichiers\n\n# Retirer un fichier du staging (sans perdre les modifications)\ngit restore --staged fichier.js\n\n# Ancienne syntaxe (toujours valide)\ngit checkout -- fichier.js       # équivalent restore\ngit reset HEAD fichier.js        # équivalent restore --staged\n```\n\n⚠️ `git restore fichier.js` **supprime définitivement** les modifications non commitées — elles ne vont pas dans la corbeille !"
+    },
+    {
+      "title": "Modifier le dernier commit",
+      "content": "```bash\n# Modifier le message du dernier commit\ngit commit --amend -m \"Nouveau message correct\"\n\n# Ajouter un fichier oublié au dernier commit\ngit add fichier-oublie.js\ngit commit --amend --no-edit  # garde le même message\n\n# Voir l'état avant/après\ngit log --oneline\n```\n\n⚠️ `--amend` réécrit l'historique — ne jamais amender un commit déjà poussé sur un remote partagé. Cela forcerait les collègues à faire un `git pull --force`."
+    },
+    {
+      "title": "git reset — annuler des commits",
+      "content": "```bash\n# Annuler le dernier commit en GARDANT les fichiers en staging\ngit reset --soft HEAD~1\n\n# Annuler le dernier commit en VIDANT le staging (Working Dir intact)\ngit reset HEAD~1\ngit reset --mixed HEAD~1  # même chose\n\n# Annuler le dernier commit + EFFACER les modifications (DESTRUCTIF)\ngit reset --hard HEAD~1\n\n# Revenir à un commit précis\ngit reset --hard abc1234\n```\n\nMnémonique :\n- `--soft` : déplace HEAD, garde staging + working dir\n- `--mixed` : déplace HEAD + vide staging, garde working dir\n- `--hard` : déplace HEAD + vide tout (⚠️ irréversible sans reflog)"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l1-m4-1",
+      "order": 1,
+      "title": "Annuler des modifications",
+      "instructions": "Annulez toutes les modifications non stagées du fichier `app.js`.",
+      "requiredKeywords": ["git restore", "app.js"],
+      "validationType": "keywords",
+      "correction": "git restore app.js",
+      "explanation": "`git restore` remplace le fichier par sa version au dernier commit. Les modifications non commitées sont **perdues définitivement**. Utilisez `git stash` à la place si vous voulez les garder."
+    },
+    {
+      "id": "ex-git-l1-m4-2",
+      "order": 2,
+      "title": "Retirer du staging",
+      "instructions": "Retirez le fichier `config.js` du staging **sans perdre ses modifications**.",
+      "requiredKeywords": ["git restore", "--staged", "config.js"],
+      "validationType": "keywords",
+      "correction": "git restore --staged config.js",
+      "explanation": "`--staged` retire le fichier de l'index sans toucher au Working Directory. Le fichier reste modifié localement, il n'est juste plus dans la prochaine release."
+    },
+    {
+      "id": "ex-git-l1-m4-3",
+      "order": 3,
+      "title": "Corriger le dernier message de commit",
+      "instructions": "Modifiez le message du dernier commit en `\"fix: corriger le calcul du total\"`.",
+      "requiredKeywords": ["git commit", "--amend", "-m", "fix: corriger le calcul du total"],
+      "validationType": "keywords",
+      "correction": "git commit --amend -m \"fix: corriger le calcul du total\"",
+      "explanation": "`--amend` remplace le dernier commit par un nouveau — même contenu, message différent. Le hash du commit change. À n'utiliser que sur des commits locaux non partagés."
+    },
+    {
+      "id": "ex-git-l1-m4-4",
+      "order": 4,
+      "title": "Annuler le dernier commit (garder les fichiers)",
+      "instructions": "Annulez le dernier commit en **gardant les modifications dans le staging area**.",
+      "requiredKeywords": ["git reset", "--soft", "head~1"],
+      "validationType": "keywords",
+      "correction": "git reset --soft HEAD~1",
+      "explanation": "`--soft` annule le commit mais laisse tous les fichiers en staging — prêts à être recommités avec un meilleur message ou après avoir ajouté des modifications."
+    },
+    {
+      "id": "ex-git-l1-m4-5",
+      "order": 5,
+      "title": "Annuler 2 commits (reset hard)",
+      "instructions": "Annulez les **2 derniers commits** ET toutes leurs modifications (retour complet à HEAD~2).",
+      "requiredKeywords": ["git reset", "--hard", "head~2"],
+      "validationType": "keywords",
+      "correction": "git reset --hard HEAD~2",
+      "explanation": "`--hard` est l'option la plus destructive : les 2 derniers commits et toutes leurs modifications disparaissent. Irréversible sans le `git reflog` — une bouée de sauvetage avancée."
+    }
+  ]
+}

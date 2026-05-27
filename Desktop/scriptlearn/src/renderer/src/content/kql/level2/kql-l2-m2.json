@@ -1,0 +1,74 @@
+{
+  "id": "kql-l2-m2",
+  "title": "Jointures — join et lookup",
+  "level": "kql-l2",
+  "lang": "kql",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "join — corréler deux tables",
+      "content": "L'opérateur `join` corrèle les lignes de deux tables sur une colonne commune :\n\n```kql\n// Syntaxe de base\nTableGauche\n| join kind=inner TableDroite on ColonneCommune\n\n// Corréler SigninLogs avec SecurityAlert sur l'IP\nlet SuspiciousIPs =\n    SecurityAlert\n    | where TimeGenerated > ago(1d)\n    | mv-expand Entities\n    | where Entities.Type == \"ip\"\n    | project AlertIP = tostring(Entities.Address), AlertName;\n\nSigninLogs\n| where TimeGenerated > ago(1d)\n| join kind=inner SuspiciousIPs on $left.IPAddress == $right.AlertIP\n| project TimeGenerated, UserPrincipalName, IPAddress, AlertName\n```\n\n**Kinds de join :**\n| Kind | Description |\n|---|---|\n| `inner` | Intersection (lignes communes) |\n| `leftouter` | Toutes les lignes gauche + matches droite |\n| `rightouter` | Toutes les lignes droite + matches gauche |\n| `fullouter` | Toutes les lignes des deux côtés |\n| `anti` | Lignes gauche SANS correspondance droite |\n| `innerunique` | Inner avec dédoublonnage gauche (défaut) |"
+    },
+    {
+      "title": "lookup — enrichissement depuis une table de référence",
+      "content": "`lookup` est optimisé pour enrichir depuis une petite table de référence :\n\n```kql\n// Table de référence : IPs malveillantes connues\nlet ThreatIntel = datatable(MaliciousIP:string, ThreatType:string)\n[\n    \"185.234.219.1\", \"C2 Server\",\n    \"45.33.32.156\",  \"Scanner\",\n    \"192.241.220.125\", \"Exploit Kit\"\n];\n\n// Enrichir les connexions avec la Threat Intel\nSigninLogs\n| where TimeGenerated > ago(24h)\n| lookup kind=leftouter ThreatIntel on $left.IPAddress == $right.MaliciousIP\n| where isnotempty(ThreatType)  // Garder seulement les matchs\n| project TimeGenerated, UserPrincipalName, IPAddress, ThreatType\n\n// lookup vs join :\n// lookup est plus rapide quand la table droite est petite\n// join est plus général (supports tous les kinds)\n```"
+    },
+    {
+      "title": "Jointures multiples et let pour la lisibilité",
+      "content": "```kql\n// Variables avec let pour des sous-requêtes réutilisables\nlet FailedLogins =\n    SecurityEvent\n    | where TimeGenerated > ago(1h)\n    | where EventID == 4625\n    | summarize FailCount=count() by AttackerIP=IpAddress;\n\nlet SuccessfulLogins =\n    SecurityEvent\n    | where TimeGenerated > ago(1h)\n    | where EventID == 4624\n    | summarize SuccessCount=count() by VictimIP=IpAddress;\n\n// Corréler : IPs avec beaucoup d'échecs suivis d'un succès\n// (signe d'un brute force réussi)\nFailedLogins\n| join kind=inner SuccessfulLogins\n    on $left.AttackerIP == $right.VictimIP\n| where FailCount > 10 and SuccessCount >= 1\n| project IP=AttackerIP, FailCount, SuccessCount\n| sort by FailCount desc\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l2-m2-1",
+      "order": 1,
+      "title": "join inner — corréler connexions et alertes",
+      "instructions": "Joignez `SigninLogs` (dernières 24h) avec une table `SuspiciousIPs` (variable `let` contenant des IPs suspectes) sur `IPAddress`, avec un `join kind=inner`.",
+      "requiredKeywords": ["let", "join kind=inner", "on $left.ipaddress"],
+      "validationType": "keywords",
+      "correction": "let SuspiciousIPs = datatable(IP:string) [\"10.0.0.1\", \"192.168.1.100\"];\nSigninLogs\n| where TimeGenerated > ago(24h)\n| join kind=inner SuspiciousIPs on $left.IPAddress == $right.IP",
+      "explanation": "`let` définit une variable réutilisable. `join kind=inner` garde seulement les lignes avec correspondance des deux côtés. `$left.IPAddress == $right.IP` spécifie les colonnes de jointure quand elles ont des noms différents."
+    },
+    {
+      "id": "ex-kql-l2-m2-2",
+      "order": 2,
+      "title": "join anti — IPs non vues dans la Threat Intel",
+      "instructions": "Trouvez les connexions `SigninLogs` (1h) dont l'IP **n'est pas** dans la liste de IPs de confiance (`TrustedIPs` datatable) — utiliser `join kind=anti`.",
+      "requiredKeywords": ["join kind=anti", "on $left.ipaddress", "datatable"],
+      "validationType": "keywords",
+      "correction": "let TrustedIPs = datatable(IP:string) [\"10.0.0.0\", \"172.16.0.1\"];\nSigninLogs\n| where TimeGenerated > ago(1h)\n| join kind=anti TrustedIPs on $left.IPAddress == $right.IP",
+      "explanation": "`kind=anti` (anti-join) retourne les lignes gauche **sans** correspondance dans la table droite. Ici : connexions depuis des IPs inconnues / non-approuvées. Utile pour détecter des accès depuis des sources non référencées."
+    },
+    {
+      "id": "ex-kql-l2-m2-3",
+      "order": 3,
+      "title": "lookup — enrichir avec la Threat Intel",
+      "instructions": "Créez une `datatable` `ThreatIntel` avec 2 IPs malveillantes et leur type, puis utilisez `lookup` pour enrichir `SigninLogs` (24h).",
+      "requiredKeywords": ["datatable", "lookup", "leftouter", "threattype"],
+      "validationType": "keywords",
+      "correction": "let ThreatIntel = datatable(MaliciousIP:string, ThreatType:string) [\"1.2.3.4\", \"C2\", \"5.6.7.8\", \"Scanner\"];\nSigninLogs\n| where TimeGenerated > ago(24h)\n| lookup kind=leftouter ThreatIntel on $left.IPAddress == $right.MaliciousIP\n| where isnotempty(ThreatType)",
+      "explanation": "`datatable(col:type)[]` crée une table inline. `lookup` est optimisé pour les petites tables de référence. `kind=leftouter` garde toutes les connexions — ensuite `where isnotempty(ThreatType)` filtre sur les matchs."
+    },
+    {
+      "id": "ex-kql-l2-m2-4",
+      "order": 4,
+      "title": "Brute force réussi — join corrélation",
+      "instructions": "Avec deux variables `let`, identifiez les IPs avec **plus de 5 échecs** (EventID 4625) ET **au moins 1 succès** (EventID 4624) en 1 heure.",
+      "requiredKeywords": ["let", "eventid == 4625", "eventid == 4624", "join kind=inner", "> 5"],
+      "validationType": "keywords",
+      "correction": "let Failures = SecurityEvent | where TimeGenerated > ago(1h) | where EventID == 4625 | summarize FailCount=count() by IP=IpAddress;\nlet Successes = SecurityEvent | where TimeGenerated > ago(1h) | where EventID == 4624 | summarize SuccessCount=count() by IP=IpAddress;\nFailures | join kind=inner Successes on IP | where FailCount > 5",
+      "explanation": "Ce pattern détecte un brute force réussi : beaucoup d'échecs suivis d'un succès. Les deux `let` permettent de réutiliser les sous-requêtes. `join kind=inner` sur `IP` garde seulement les IPs présentes dans les deux tables."
+    },
+    {
+      "id": "ex-kql-l2-m2-5",
+      "order": 5,
+      "title": "leftouter — connexions avec et sans alerte",
+      "instructions": "Joignez `SigninLogs` (1h) avec `SecurityAlert` (1h) sur l'IP en `leftouter` pour voir toutes les connexions, avec ou sans alerte associée.",
+      "requiredKeywords": ["join kind=leftouter", "securityalert", "signinlogs"],
+      "validationType": "keywords",
+      "correction": "let Alerts = SecurityAlert | where TimeGenerated > ago(1h) | project AlertIP=tostring(Entities), AlertName;\nSigninLogs\n| where TimeGenerated > ago(1h)\n| join kind=leftouter Alerts on $left.IPAddress == $right.AlertIP\n| project TimeGenerated, UserPrincipalName, IPAddress, AlertName",
+      "explanation": "`kind=leftouter` garde toutes les lignes de la table gauche (SigninLogs), avec les données de la table droite (alertes) quand elles existent et null sinon. Permet de voir en un coup d'œil quelles connexions ont une alerte associée."
+    }
+  ]
+}

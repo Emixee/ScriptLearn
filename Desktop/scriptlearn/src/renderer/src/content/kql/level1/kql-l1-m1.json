@@ -1,0 +1,74 @@
+{
+  "id": "kql-l1-m1",
+  "title": "Introduction à KQL et Microsoft Sentinel",
+  "level": "kql-l1",
+  "lang": "kql",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Qu'est-ce que KQL ?",
+      "content": "**KQL** (Kusto Query Language) est le langage de requête de Microsoft Sentinel, Azure Monitor, et Azure Data Explorer. Il permet d'analyser des volumes massifs de logs de sécurité.\n\n**Architecture pipeline** : les opérateurs se chaînent avec `|` :\n```kql\nTableSource\n| opérateur1\n| opérateur2\n| opérateur3\n```\n\n**Principes fondamentaux :**\n- Lecture de gauche à droite, de haut en bas\n- Chaque `|` passe le résultat à l'opérateur suivant\n- Les colonnes non sélectionnées sont préservées par défaut\n- Insensible à la casse pour les noms de tables/colonnes\n\n```kql\n// Requête minimale : lire une table\nSigninLogs\n\n// Avec limite de résultats\nSigninLogs\n| take 10\n```"
+    },
+    {
+      "title": "Tables principales dans Microsoft Sentinel",
+      "content": "Les tables les plus utilisées en SOC :\n\n| Table | Contenu |\n|---|---|\n| `SigninLogs` | Authentifications Azure AD |\n| `AuditLogs` | Modifications d'objets Azure AD |\n| `SecurityEvent` | Événements Windows (ID 4624, 4625...) |\n| `Syslog` | Logs Linux |\n| `CommonSecurityLog` | Logs CEF (firewalls, IDS...) |\n| `AzureActivity` | Actions sur ressources Azure |\n| `OfficeActivity` | Actions Office 365 |\n| `DeviceEvents` | Événements Microsoft Defender |\n| `NetworkAnalytics` | Flux réseau NSG |\n\n```kql\n// Explorer le schéma d'une table\nSecurityEvent\n| getschema\n\n// Voir les premières lignes\nSecurityEvent\n| take 5\n```"
+    },
+    {
+      "title": "Structure d'une requête KQL",
+      "content": "Les éléments constitutifs d'une requête complète :\n\n```kql\n// Commentaire sur une ligne\n\n// 1. Table source\nSecurityEvent\n\n// 2. Filtre temporel (toujours en premier pour la performance !)\n| where TimeGenerated > ago(24h)\n\n// 3. Filtres sur colonnes\n| where EventID == 4625  // Échec de connexion\n\n// 4. Projection (sélectionner les colonnes)\n| project TimeGenerated, Account, Computer, IpAddress\n\n// 5. Tri\n| sort by TimeGenerated desc\n\n// 6. Limite\n| take 100\n```\n\n**Conventions :**\n- `==` pour l'égalité (pas `=`)\n- `!=` pour la différence\n- `>`, `<`, `>=`, `<=` pour les comparaisons numériques\n- Les chaînes sont entre guillemets simples `'valeur'` ou doubles `\"valeur\"`\n- `//` pour les commentaires (pas `#`)"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l1-m1-1",
+      "order": 1,
+      "title": "Première requête KQL",
+      "instructions": "Écrivez la requête KQL qui affiche les **10 premières lignes** de la table `SigninLogs`.",
+      "requiredKeywords": ["signinlogs", "take 10"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| take 10",
+      "explanation": "`take N` (alias : `limit N`) retourne N lignes dans l'ordre de stockage (non trié). Idéal pour explorer rapidement le schéma d'une table. Pour une exploration reproductible, préférer `top N by TimeGenerated desc`."
+    },
+    {
+      "id": "ex-kql-l1-m1-2",
+      "order": 2,
+      "title": "Explorer le schéma d'une table",
+      "instructions": "Écrivez la requête pour afficher le **schéma** (colonnes et types) de la table `SecurityEvent`.",
+      "requiredKeywords": ["securityevent", "getschema"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| getschema",
+      "explanation": "`getschema` retourne la liste de toutes les colonnes avec leur type de données (string, datetime, int, etc.). Indispensable pour découvrir les champs disponibles avant d'écrire une requête de détection."
+    },
+    {
+      "id": "ex-kql-l1-m1-3",
+      "order": 3,
+      "title": "Requête avec filtre temporel",
+      "instructions": "Affichez les 100 dernières lignes de `SecurityEvent` des **dernières 24 heures**, triées par `TimeGenerated` décroissant.",
+      "requiredKeywords": ["securityevent", "where timegenerated", "ago(24h)", "sort by timegenerated desc"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)\n| sort by TimeGenerated desc\n| take 100",
+      "explanation": "`ago(24h)` retourne le datetime d'il y a 24 heures. `where TimeGenerated > ago(24h)` est le filtre temporel standard. Toujours placer ce filtre en premier — il réduit massivement le volume scanné et améliore les performances."
+    },
+    {
+      "id": "ex-kql-l1-m1-4",
+      "order": 4,
+      "title": "Filtrer par EventID",
+      "instructions": "Listez les événements Windows de la table `SecurityEvent` avec `EventID == 4625` (échec de connexion) des dernières 4 heures.",
+      "requiredKeywords": ["securityevent", "eventid == 4625", "ago(4h)"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(4h)\n| where EventID == 4625",
+      "explanation": "EventID 4625 = échec d'authentification Windows. `==` est l'opérateur d'égalité KQL (pas `=`). Les deux `where` peuvent être combinés : `| where TimeGenerated > ago(4h) and EventID == 4625`."
+    },
+    {
+      "id": "ex-kql-l1-m1-5",
+      "order": 5,
+      "title": "Sélectionner des colonnes avec project",
+      "instructions": "Pour les connexions échouées (`EventID == 4625`) des dernières 2 heures, affichez uniquement `TimeGenerated`, `Account`, `Computer` et `IpAddress`.",
+      "requiredKeywords": ["project", "timegenerated", "account", "computer"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(2h)\n| where EventID == 4625\n| project TimeGenerated, Account, Computer, IpAddress",
+      "explanation": "`project` sélectionne et réordonne les colonnes — équivalent du SELECT en SQL. Les colonnes non listées sont supprimées. `project-away` fait l'inverse (supprime les colonnes listées et garde toutes les autres)."
+    }
+  ]
+}

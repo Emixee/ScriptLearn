@@ -1,0 +1,74 @@
+{
+  "id": "sql-l2-m4",
+  "title": "LEFT JOIN, RIGHT JOIN et FULL JOIN",
+  "level": "sql-l2",
+  "lang": "sql",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "LEFT JOIN — garder toutes les lignes de gauche",
+      "content": "`LEFT JOIN` retourne **toutes les lignes de la table de gauche**, plus les correspondances de droite (NULL si aucune) :\n\n```sql\n-- Tous les employés, même ceux sans département\nSELECT e.name, d.name AS dept\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id;\n```\n\nSi un employé n'a pas de département, `dept` vaut `NULL`.\n\n**Cas d'usage typique** : trouver les lignes sans correspondance :\n```sql\n-- Employés SANS département assigné\nSELECT e.name\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id\nWHERE d.id IS NULL;\n```"
+    },
+    {
+      "title": "RIGHT JOIN et FULL JOIN",
+      "content": "**RIGHT JOIN** — toutes les lignes de droite (rare, `LEFT JOIN` avec ordre inversé est préféré) :\n```sql\nSELECT e.name, d.name AS dept\nFROM employees e\nRIGHT JOIN departments d ON e.dept_id = d.id;\n-- Tous les départements, même vides\n```\n\n**FULL JOIN** (FULL OUTER JOIN) — toutes les lignes des deux tables :\n```sql\nSELECT e.name, d.name AS dept\nFROM employees e\nFULL JOIN departments d ON e.dept_id = d.id;\n-- Employés sans département ET départements sans employés\n```\n\n⚠️ MySQL ne supporte pas `FULL JOIN` — simuler avec `LEFT JOIN UNION RIGHT JOIN`."
+    },
+    {
+      "title": "Choisir le bon JOIN",
+      "content": "Guide visuel (diagramme de Venn) :\n\n```\nINNER JOIN :  [  A ∩ B  ]    — intersection seulement\nLEFT JOIN  :  [A ∩ B] + [A]  — tout A, même sans B\nRIGHT JOIN :  [A ∩ B] + [B]  — tout B, même sans A\nFULL JOIN  :  [A] + [A∩B] + [B] — tout\n```\n\n**Règle pratique** :\n- Utiliser `INNER JOIN` quand les deux côtés doivent exister\n- Utiliser `LEFT JOIN` quand la table de gauche est la principale et que la droite est optionnelle\n- `RIGHT JOIN` s'évite (inverser l'ordre des tables + `LEFT JOIN` = même résultat)\n\n```sql\n-- Ces deux requêtes sont équivalentes\nSELECT * FROM A RIGHT JOIN B ON ...\nSELECT * FROM B LEFT JOIN A ON ...\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l2-m4-1",
+      "order": 1,
+      "title": "LEFT JOIN — tous les employés",
+      "instructions": "Affichez **tous les employés** avec leur département si disponible, sinon NULL.\n\nUtilisez `LEFT JOIN` entre `employees` et `departments`.",
+      "requiredKeywords": ["select", "from", "employees", "left join", "departments", "on"],
+      "validationType": "keywords",
+      "correction": "SELECT e.name, d.name AS dept FROM employees e LEFT JOIN departments d ON e.dept_id = d.id;",
+      "explanation": "`LEFT JOIN` garantit que toutes les lignes de `employees` (gauche) apparaissent, même si `dept_id` ne correspond à rien dans `departments`. La colonne `dept` sera NULL pour ces lignes."
+    },
+    {
+      "id": "ex-sql-l2-m4-2",
+      "order": 2,
+      "title": "Trouver les orphelins",
+      "instructions": "Trouvez les **employés sans département** assigné (avec `LEFT JOIN` + `WHERE ... IS NULL`).",
+      "requiredKeywords": ["select", "from", "employees", "left join", "departments", "on", "where", "is null"],
+      "validationType": "keywords",
+      "correction": "SELECT e.name FROM employees e LEFT JOIN departments d ON e.dept_id = d.id WHERE d.id IS NULL;",
+      "explanation": "Pattern classique : `LEFT JOIN ... WHERE right_table.id IS NULL` détecte les lignes sans correspondance. La condition `WHERE d.id IS NULL` filtre uniquement les employés qui n'ont pas de département."
+    },
+    {
+      "id": "ex-sql-l2-m4-3",
+      "order": 3,
+      "title": "Tous les départements",
+      "instructions": "Affichez **tous les départements** avec le nombre d'employés qu'ils contiennent (0 si vide).\n\nIndice : utilisez `RIGHT JOIN` ou `LEFT JOIN` en inversant les tables.",
+      "requiredKeywords": ["select", "d.name", "count", "from", "departments", "left join", "employees", "on", "group by"],
+      "validationType": "keywords",
+      "correction": "SELECT d.name, COUNT(e.id) AS nb_employes FROM departments d LEFT JOIN employees e ON d.id = e.dept_id GROUP BY d.name;",
+      "explanation": "`COUNT(e.id)` (et non `COUNT(*)`) compte les non-NULL dans `e.id`. Pour un département vide, `e.id` est NULL donc `COUNT(e.id) = 0`. `COUNT(*)` retournerait 1 (une ligne avec NULL)."
+    },
+    {
+      "id": "ex-sql-l2-m4-4",
+      "order": 4,
+      "title": "Comparer INNER vs LEFT JOIN",
+      "instructions": "Écrivez une requête avec `LEFT JOIN` entre `orders` et `customers` pour afficher **toutes les commandes** même celles sans client associé (`customer_id` peut être NULL).",
+      "requiredKeywords": ["select", "from", "orders", "left join", "customers", "on", "customer_id"],
+      "validationType": "keywords",
+      "correction": "SELECT o.id, o.total, c.name AS client FROM orders o LEFT JOIN customers c ON o.customer_id = c.id;",
+      "explanation": "Avec `INNER JOIN`, les commandes sans client seraient perdues. Avec `LEFT JOIN`, elles apparaissent avec `NULL` comme nom de client — utile pour auditer des incohérences de données."
+    },
+    {
+      "id": "ex-sql-l2-m4-5",
+      "order": 5,
+      "title": "Synthèse des jointures",
+      "instructions": "Quelle jointure retourne **uniquement les lignes ayant une correspondance dans les deux tables** ?\n\nÉcrivez la clause de jointure (ex: `INNER JOIN`, `LEFT JOIN`…).",
+      "requiredKeywords": ["inner join"],
+      "validationType": "keywords",
+      "correction": "INNER JOIN",
+      "explanation": "`INNER JOIN` est l'intersection des deux ensembles — seules les lignes qui ont une correspondance dans les deux tables sont retournées. C'est la jointure par défaut et la plus restrictive."
+    }
+  ]
+}

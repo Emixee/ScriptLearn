@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l2-m1",
+  "title": "Ancres, alias et fragments réutilisables",
+  "level": "yaml-l2",
+  "lang": "yaml",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Ancres & et alias *",
+      "content": "Les **ancres** et **alias** permettent de réutiliser des valeurs sans duplication :\n\n```yaml\n# Ancre : &nom_ancre  — définit une valeur réutilisable\n# Alias : *nom_ancre  — réutilise la valeur\n\n# Valeur commune\ndefault_timeout: &timeout 30\n\nservices:\n  api:\n    timeout: *timeout    # 30\n  worker:\n    timeout: *timeout    # 30\n  cache:\n    timeout: *timeout    # 30\n\n# Ancre sur un objet entier\ndefault_config: &defaults\n  retries: 3\n  timeout: 30\n  log_level: info\n\nservices:\n  api:\n    <<: *defaults        # Merge — hérite de defaults\n    port: 3000           # Propriété spécifique\n  worker:\n    <<: *defaults        # Hérite aussi\n    concurrency: 5       # Propriété spécifique\n```\n\n`<<:` est l'opérateur de merge — fusionne le contenu de l'alias dans l'objet courant. Les propriétés locales **écrasent** celles de l'ancre."
+    },
+    {
+      "title": "Merge keys — DRY en YAML",
+      "content": "```yaml\n# Configuration de base commune\nx-common: &common\n  restart: unless-stopped\n  logging:\n    driver: json-file\n    options:\n      max-size: '10m'\n      max-file: '3'\n  networks:\n    - app-network\n\n# Docker Compose avec merge keys\nservices:\n  frontend:\n    <<: *common\n    image: nginx:alpine\n    ports:\n      - '80:80'\n\n  backend:\n    <<: *common\n    image: node:20-alpine\n    ports:\n      - '3000:3000'\n    environment:\n      NODE_ENV: production\n\n  worker:\n    <<: *common\n    image: node:20-alpine\n    command: ['node', 'worker.js']\n\n# Sans ancres, les clés restart, logging, networks\n# seraient répétées dans chaque service — erreur-prone\n```"
+    },
+    {
+      "title": "Limites des ancres et alternatives",
+      "content": "```yaml\n# ⚠️ Limites des ancres YAML :\n# 1. Les ancres ne fonctionnent que dans le MÊME fichier\n# 2. Pas d'ancres cross-fichiers en YAML natif\n# 3. Certains parseurs YAML ne supportent pas <<: (merge)\n\n# Cas problématique — ancre avant utilisation obligatoire\n# INCORRECT :\nservices:\n  api:\n    timeout: *timeout  # Erreur : ancre pas encore définie\ntimeout: &timeout 30\n\n# CORRECT :\ntimeout: &timeout 30\nservices:\n  api:\n    timeout: *timeout\n\n# Alternative : variables d'environnement\ndatabase:\n  host: ${DB_HOST:-localhost}\n  port: ${DB_PORT:-5432}\n  password: ${DB_PASSWORD}    # Sans défaut — obligatoire\n\n# Alternative : Helm values (Kubernetes)\n# values.yaml définit les defaults\n# helm install -f custom-values.yaml les écrase\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l2-m1-1",
+      "order": 1,
+      "title": "Ancre et alias simple",
+      "instructions": "Définissez une ancre `&default_port 8080` et utilisez-la avec un alias `*default_port` dans deux services.",
+      "requiredKeywords": ["&default_port", "*default_port"],
+      "validationType": "keywords",
+      "correction": "default_port: &default_port 8080\nservices:\n  api:\n    port: *default_port\n  admin:\n    port: *default_port",
+      "explanation": "`&nom` définit une ancre sur une valeur. `*nom` réutilise cette valeur. Si la valeur doit changer, un seul endroit à modifier. Utile pour les timeouts, ports, versions d'images partagés entre plusieurs services."
+    },
+    {
+      "id": "ex-yaml-l2-m1-2",
+      "order": 2,
+      "title": "Merge key — hériter d'une configuration",
+      "instructions": "Définissez une ancre `&base` avec `retry: 3` et `timeout: 30`, puis créez un service `api` qui hérite avec `<<: *base` et ajoute `port: 3000`.",
+      "requiredKeywords": ["&base", "retry: 3", "<<: *base", "port: 3000"],
+      "validationType": "keywords",
+      "correction": "base_config: &base\n  retry: 3\n  timeout: 30\n\nservices:\n  api:\n    <<: *base\n    port: 3000",
+      "explanation": "`<<: *ancre` fusionne toutes les clés de l'ancre dans l'objet courant. `port: 3000` est une clé locale qui s'y ajoute. Si une clé est présente dans l'ancre ET localement, la valeur locale prend la priorité — permet de surcharger des valeurs par défaut."
+    },
+    {
+      "id": "ex-yaml-l2-m1-3",
+      "order": 3,
+      "title": "Fragment Docker Compose",
+      "instructions": "Créez un fragment `x-defaults` avec `restart: unless-stopped` et `networks: [app-net]`, puis utilisez-le dans deux services `web` et `api` avec merge.",
+      "requiredKeywords": ["x-defaults: &defaults", "<<: *defaults", "restart: unless-stopped"],
+      "validationType": "keywords",
+      "correction": "x-defaults: &defaults\n  restart: unless-stopped\n  networks:\n    - app-net\n\nservices:\n  web:\n    <<: *defaults\n    image: nginx:latest\n  api:\n    <<: *defaults\n    image: node:20",
+      "explanation": "La convention `x-` (clé custom) est ignorée par Docker Compose — permet de définir des fragments YAML sans que Docker Compose les interprète comme des services. `<<: *defaults` hérite des propriétés communes. Pattern DRY (Don't Repeat Yourself) recommandé pour les fichiers Docker Compose complexes."
+    },
+    {
+      "id": "ex-yaml-l2-m1-4",
+      "order": 4,
+      "title": "Surcharger une valeur héritée",
+      "instructions": "Depuis une ancre `&base` avec `log_level: info` et `timeout: 30`, créez un service `debug-api` qui hérite mais **surcharge** `log_level: debug`.",
+      "requiredKeywords": ["<<: *base", "log_level: debug"],
+      "validationType": "keywords",
+      "correction": "base: &base\n  log_level: info\n  timeout: 30\n\nservices:\n  prod-api:\n    <<: *base\n  debug-api:\n    <<: *base\n    log_level: debug",
+      "explanation": "Quand une clé est présente dans l'alias ET définie localement, la valeur **locale** prend la priorité. `debug-api` hérite `timeout: 30` de l'ancre mais surcharge `log_level: debug`. Principe du override pattern : définir des defaults centraux et surcharger localement."
+    },
+    {
+      "id": "ex-yaml-l2-m1-5",
+      "order": 5,
+      "title": "Variables d'environnement avec défaut",
+      "instructions": "Écrivez une config `database` avec `host: ${DB_HOST:-localhost}` (défaut localhost) et `password: ${DB_PASSWORD}` (obligatoire, sans défaut).",
+      "requiredKeywords": ["${db_host:-localhost}", "${db_password}"],
+      "validationType": "keywords",
+      "correction": "database:\n  host: \"${DB_HOST:-localhost}\"\n  port: 5432\n  password: \"${DB_PASSWORD}\"",
+      "explanation": "`${VAR:-default}` est la syntaxe shell pour une variable avec valeur par défaut. Docker Compose, Helm et d'autres outils interprètent ces substitutions. `${DB_HOST:-localhost}` : utilise `$DB_HOST` si défini, sinon `localhost`. `${DB_PASSWORD}` sans défaut : erreur si non défini — force l'explicitation des secrets."
+    }
+  ]
+}

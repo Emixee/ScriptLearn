@@ -50,9 +50,12 @@ export default function Stats() {
   const xpInfo  = useMemo(() => xpLevelInfo(xpTotal), [xpTotal])
   const badges  = useMemo(() => getUnlockedBadges(stats), [stats])
 
-  // Exercices par langage totaux
+  // Exercices par langage totaux (niveaux standard + langages complémentaires)
   const exByLang = useMemo(() => {
-    const res = { bash: 0, python: 0, powershell: 0, kql: 0 }
+    // Initialiser tous les langages à 0 pour éviter les undefined dans rateByLang
+    const res = Object.fromEntries(ALL_LANGS.map(l => [l, 0]))
+
+    // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)
     for (const level of contentIndex.levels) {
       for (const lang of ALL_LANGS) {
         for (const ref of (level.languages[lang] ?? [])) {
@@ -61,10 +64,22 @@ export default function Stats() {
         }
       }
     }
+
+    // Langages complémentaires (SQL, Git, Regex, KQL, SPL, YAML)
+    const tracks = contentIndex.complementary?.tracks ?? {}
+    for (const [trackKey, track] of Object.entries(tracks)) {
+      for (const level of track.levels) {
+        for (const modRef of level.modules) {
+          const mod = getModule(modRef.id)
+          if (mod) res[trackKey] = (res[trackKey] ?? 0) + mod.exercises.length
+        }
+      }
+    }
+
     return res
   }, [])
 
-  // Total exercices
+  // Total exercices (inclut les deux sections)
   const totalExercises = Object.values(exByLang).reduce((a, b) => a + b, 0)
 
   // Taux de réussite par langage
@@ -78,9 +93,11 @@ export default function Stats() {
     return res
   }, [stats, exByLang])
 
-  // Exercices avec le plus de tentatives
+  // Exercices avec le plus de tentatives (standard + complémentaires)
   const hardExercises = useMemo(() => {
     const list = []
+
+    // Niveaux standard
     for (const level of contentIndex.levels) {
       for (const lang of ALL_LANGS) {
         for (const ref of (level.languages[lang] ?? [])) {
@@ -95,6 +112,24 @@ export default function Stats() {
         }
       }
     }
+
+    // Langages complémentaires — même logique, on cherche les exercices difficiles partout
+    const tracks = contentIndex.complementary?.tracks ?? {}
+    for (const [trackKey, track] of Object.entries(tracks)) {
+      for (const level of track.levels) {
+        for (const modRef of level.modules) {
+          const mod = getModule(modRef.id)
+          if (!mod) continue
+          for (const ex of mod.exercises) {
+            const entry = progress[ex.id]
+            if (entry && (entry.attempts ?? 0) > 1) {
+              list.push({ ex, attempts: entry.attempts, completed: entry.completed, lang: trackKey })
+            }
+          }
+        }
+      }
+    }
+
     return list.sort((a, b) => b.attempts - a.attempts).slice(0, 5)
   }, [progress])
 

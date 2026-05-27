@@ -1,0 +1,74 @@
+{
+  "id": "spl-l1-m3",
+  "title": "Statistiques de base — stats, top, rare",
+  "level": "spl-l1",
+  "lang": "spl",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "stats — agrégation de données",
+      "content": "`stats` est la commande d'agrégation principale de SPL (équivalent de `summarize` en KQL) :\n\n```spl\n// Compter les événements\nindex=security EventCode=4625\n| stats count\n\n// Compter par groupe\nindex=security EventCode=4625\n| stats count AS failures BY src_ip\n| sort -failures\n\n// Agrégations multiples\nindex=security EventCode=4625\n| stats\n    count AS total_failures,\n    dc(Account) AS targeted_users,\n    min(_time) AS first_attempt,\n    max(_time) AS last_attempt,\n    values(Account) AS accounts_list\n  BY src_ip\n| where total_failures > 10\n\n// Fonctions stats disponibles\n// count, dc (distinct count), sum, avg, min, max\n// values (liste valeurs uniques), list (liste toutes valeurs)\n// range, stdev, var, median, mode, perc50\n```"
+    },
+    {
+      "title": "top et rare",
+      "content": "```spl\n// top — valeurs les plus fréquentes (avec % automatique)\nindex=main\n| top 10 src_ip\n// Résultat : src_ip | count | percent\n\n// top sur plusieurs champs\nindex=security EventCode=4625\n| top 5 src_ip BY Account\n// Top 5 IPs par compte ciblé\n\n// Désactiver le pourcentage\n| top 10 src_ip showperc=false\n\n// rare — valeurs les plus rares (inverse de top)\nindex=main\n| rare 5 command\n// Commandes les moins utilisées = potentiellement suspectes\n\n// timechart — statistiques dans le temps\nindex=security EventCode=4625\n| timechart count BY EventCode span=1h\n// Graphe : un axe par valeur d'EventCode, span=1h = tranches horaires\n\nindex=main status>=400\n| timechart count span=30m\n```"
+    },
+    {
+      "title": "chart et sort",
+      "content": "```spl\n// sort — trier les résultats\nindex=security EventCode=4625\n| stats count BY src_ip\n| sort -count         // Décroissant (-)\n| sort +count         // Croissant (+)\n| sort 10 -count      // Top 10 décroissant\n\n// chart — tableau croisé\nindex=security\n| chart count BY EventCode, host\n// Lignes = EventCode, colonnes = host\n\n// Combiner stats + where + sort\nindex=web sourcetype=access_combined\n| stats\n    count AS total,\n    dc(clientip) AS unique_visitors,\n    sum(bytes) AS total_bytes\n  BY host\n| eval total_mb=round(total_bytes/1024/1024, 2)\n| sort -total\n| head 20\n\n// eventstats — stats sans regrouper les événements\nindex=web\n| eventstats avg(response_time) AS avg_response\n| eval slow=if(response_time > avg_response*2, 1, 0)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l1-m3-1",
+      "order": 1,
+      "title": "stats count — top IPs d'attaque",
+      "instructions": "Depuis `index=security EventCode=4625` (dernières 24h), comptez les échecs par `src_ip` et triez par count décroissant.",
+      "requiredKeywords": ["stats count", "by src_ip", "sort -count"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-24h\n| stats count AS failures BY src_ip\n| sort -failures",
+      "explanation": "`stats count BY champ` groupe et compte. `sort -` = décroissant, `sort +` = croissant. L'alias `AS failures` donne un nom lisible à la colonne de comptage. Comparer avec `top 10 src_ip` qui fait la même chose en une commande mais moins flexible."
+    },
+    {
+      "id": "ex-spl-l1-m3-2",
+      "order": 2,
+      "title": "top — commandes les plus utilisées",
+      "instructions": "Affichez les **10 commandes les plus utilisées** dans `index=main` des dernières 12 heures avec `top`.",
+      "requiredKeywords": ["index=main", "| top 10 command", "earliest=-12h"],
+      "validationType": "keywords",
+      "correction": "index=main earliest=-12h\n| top 10 command",
+      "explanation": "`top N champ` retourne les N valeurs les plus fréquentes avec count et percent. Plus rapide que `stats count BY champ | sort -count | head N` pour les cas simples. Utile pour identifier les activités dominantes."
+    },
+    {
+      "id": "ex-spl-l1-m3-3",
+      "order": 3,
+      "title": "rare — commandes inhabituelles",
+      "instructions": "Trouvez les **5 commandes les plus rares** dans `index=security` des dernières 48h — potentiellement suspectes.",
+      "requiredKeywords": ["| rare 5 command"],
+      "validationType": "keywords",
+      "correction": "index=security earliest=-48h\n| rare 5 command",
+      "explanation": "`rare` est l'inverse de `top` — les valeurs les moins fréquentes. En sécurité, les événements rares (commandes peu utilisées, ports inhabituels, processus inconnus) sont souvent plus intéressants que les événements courants."
+    },
+    {
+      "id": "ex-spl-l1-m3-4",
+      "order": 4,
+      "title": "timechart — évolution temporelle",
+      "instructions": "Visualisez le nombre d'échecs de connexion (EventCode=4625) par **tranches de 30 minutes** sur les dernières 6 heures avec `timechart`.",
+      "requiredKeywords": ["timechart count", "span=30m"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-6h\n| timechart count span=30m",
+      "explanation": "`timechart count span=30m` génère automatiquement l'axe temporel avec des tranches de 30 minutes. Équivalent SPL du `summarize count() by bin(TimeGenerated, 30m) | render timechart` KQL. Splunk affiche directement en graphe."
+    },
+    {
+      "id": "ex-spl-l1-m3-5",
+      "order": 5,
+      "title": "stats dc() — utilisateurs distincts ciblés",
+      "instructions": "Pour chaque `src_ip` dans `index=security EventCode=4625` (24h), calculez le nombre **d'utilisateurs distincts** ciblés avec `dc(Account)`.",
+      "requiredKeywords": ["stats dc(account)", "by src_ip"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-24h\n| stats count AS total, dc(Account) AS targeted_users BY src_ip\n| where targeted_users > 3\n| sort -total",
+      "explanation": "`dc(champ)` (distinct count) compte les valeurs uniques — équivalent de `dcount()` en KQL. Une IP ciblant de nombreux utilisateurs distincts est caractéristique d'un credential stuffing (teste des listes de credentials volés)."
+    }
+  ]
+}

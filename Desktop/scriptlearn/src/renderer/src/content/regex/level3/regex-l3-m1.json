@@ -1,0 +1,74 @@
+{
+  "id": "regex-l3-m1",
+  "title": "Patterns complexes et analyse de logs",
+  "level": "regex-l3",
+  "lang": "regex",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Anatomie d'une ligne de log",
+      "content": "Une ligne de log Apache/Nginx suit un format standard qu'on peut décomposer avec des groupes :\n\n```\n192.168.1.1 - alice [10/May/2024:13:55:36 +0200] \"GET /api/users HTTP/1.1\" 200 1234\n```\n\n```python\nlog_pattern = re.compile(r'''\n    (?P<ip>\\d{1,3}(?:\\.\\d{1,3}){3})  # IP source\n    \\s-\\s                              # tiret\n    (?P<user>\\S+)                      # utilisateur\n    \\s\\[(?P<datetime>[^\\]]+)\\]\\s      # [date/heure]\n    \"(?P<method>\\w+)\\s                 # méthode HTTP\n    (?P<path>\\S+)\\s                    # chemin\n    HTTP/\\d\\.\\d\"                       # version HTTP\n    \\s(?P<status>\\d{3})                # code statut\n    \\s(?P<bytes>\\d+)                   # octets\n''', re.VERBOSE)\n\nm = log_pattern.match(ligne)\nm.group('ip')     # '192.168.1.1'\nm.group('status') # '200'\n```"
+    },
+    {
+      "title": "Patterns pour la détection de menaces",
+      "content": "Regex courantes en analyse de sécurité (SOC) :\n\n```python\n# Détection de tentatives d'injection SQL\nSQL_INJECTION = re.compile(\n    r\"(?i)(union|select|insert|update|delete|drop|'|--|;\\s*--)\"\n)\n\n# Path traversal (directory traversal)\nPATH_TRAVERSAL = re.compile(\n    r'(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e/)',\n    re.IGNORECASE\n)\n\n# Scan de ports (nombreux SYN vers différents ports)\nPORT_SCAN = re.compile(\n    r'(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?SYN.*?port\\s+(\\d{1,5})'\n)\n\n# Credential stuffing (nombreuses authentifications ratées)\nFAILED_AUTH = re.compile(\n    r'(?i)(failed|invalid|incorrect)\\s+(login|password|credential|authentication)'\n)\n\n# Exfiltration DNS (sous-domaines anormalement longs)\nDNS_EXFIL = re.compile(\n    r'([a-z0-9]{20,})\\.example\\.com'  # sous-domaine > 20 cars\n)\n```"
+    },
+    {
+      "title": "Extraction et corrélation multi-champs",
+      "content": "Analyser plusieurs champs simultanément pour détecter des anomalies :\n\n```python\nimport re\nfrom collections import defaultdict\n\n# Compter les erreurs 4xx par IP\nerror_pattern = re.compile(\n    r'(?P<ip>\\d{1,3}(?:\\.\\d{1,3}){3}).*?\"\\s(?P<status>[45]\\d{2})'\n)\n\nip_errors = defaultdict(int)\nfor line in access_log:\n    m = error_pattern.search(line)\n    if m:\n        ip_errors[m.group('ip')] += 1\n\n# IPs avec plus de 100 erreurs = potentiel scan/attaque\nsuspect_ips = {ip for ip, count in ip_errors.items() if count > 100}\n\n# Extraire paires (timestamp, niveau_log) pour timeline\nlog_entry = re.compile(\n    r'(?P<ts>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})\\s+'\n    r'(?P<level>ERROR|WARN|INFO|DEBUG)\\s+'\n    r'(?P<msg>.+)'\n)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l3-m1-1",
+      "order": 1,
+      "title": "Parser une ligne de log Apache",
+      "instructions": "Écrivez un pattern (avec groupes nommés) pour extraire l'**IP** et le **code HTTP** d'une ligne Apache : `192.168.1.1 ... \"GET /path HTTP/1.1\" 404 ...`",
+      "requiredKeywords": ["(?P<ip>", "(?P<status>", "\\d{3}"],
+      "validationType": "keywords",
+      "correction": "re.search(r'(?P<ip>\\d{1,3}(?:\\.\\d{1,3}){3}).*\"\\s(?P<status>\\d{3})', ligne)",
+      "explanation": "Les groupes nommés `ip` et `status` permettent d'accéder aux valeurs par `m.group('ip')`. `(?:\\.\\d{1,3}){3}` répète les octets sans créer de captures superflues. `.*` absorbe la partie entre l'IP et le statut."
+    },
+    {
+      "id": "ex-regex-l3-m1-2",
+      "order": 2,
+      "title": "Détection d'injection SQL",
+      "instructions": "Écrivez un pattern insensible à la casse détectant les mots-clés SQL `UNION`, `SELECT`, `DROP` dans une requête.",
+      "requiredKeywords": ["(?i)", "union|select|drop"],
+      "validationType": "keywords",
+      "correction": "re.search(r'(?i)(union|select|drop)', requete)",
+      "explanation": "`(?i)` rend la recherche insensible à la casse — détecte `union`, `UNION`, `UnIoN`. Les tentatives d'injection SQL utilisent souvent des variantes de casse pour contourner les filtres simples."
+    },
+    {
+      "id": "ex-regex-l3-m1-3",
+      "order": 3,
+      "title": "Détection de path traversal",
+      "instructions": "Écrivez un pattern pour détecter les tentatives de **directory traversal** (`../`, `..\\`) et leur équivalent URL-encodé `%2e%2e`.",
+      "requiredKeywords": ["\\.\\.[\\\\/]", "(?i)"],
+      "validationType": "keywords",
+      "correction": "re.search(r'(?i)(\\.\\./|\\.\\.\\\\ |%2e%2e)', url)",
+      "explanation": "`\\.\\./` détecte `../` (Unix). `\\.\\.\\ \\\\` détecte `..\\` (Windows). `%2e%2e` est l'encodage URL des deux points. Le flag `(?i)` couvre les variantes de casse dans l'encodage (`%2E%2E`)."
+    },
+    {
+      "id": "ex-regex-l3-m1-4",
+      "order": 4,
+      "title": "Compter les erreurs par IP",
+      "instructions": "Utilisez `re.findall` avec un groupe pour extraire **toutes les IPs** des lignes d'erreur (status 4xx) d'un log.",
+      "requiredKeywords": ["re.findall", "\\d{1,3}\\.\\d{1,3}", "[45]\\d{2}"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?\"\\s[45]\\d{2}', log)",
+      "explanation": "`[45]\\d{2}` correspond aux codes 4xx et 5xx. Le groupe capturant autour de l'IP fait que `findall` retourne la liste des IPs (pas les matches complets). Enchaîner avec `Counter(ips)` pour compter les occurrences par IP."
+    },
+    {
+      "id": "ex-regex-l3-m1-5",
+      "order": 5,
+      "title": "Extraction de timestamp ISO",
+      "instructions": "Écrivez un pattern pour extraire un timestamp ISO 8601 complet `2024-05-15T13:55:36` dans une ligne de log.",
+      "requiredKeywords": ["\\d{4}-\\d{2}-\\d{2}", "T", "\\d{2}:\\d{2}:\\d{2}"],
+      "validationType": "keywords",
+      "correction": "re.search(r'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}', ligne)",
+      "explanation": "Le format ISO 8601 : `YYYY-MM-DD` + `T` + `HH:MM:SS`. Pattern: `\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}`. Pour inclure le fuseau horaire optionnel : `(Z|[+-]\\d{2}:\\d{2})?` en fin de pattern."
+    }
+  ]
+}

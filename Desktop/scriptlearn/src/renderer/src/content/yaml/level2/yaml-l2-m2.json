@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l2-m2",
+  "title": "Docker Compose — configuration complète",
+  "level": "yaml-l2",
+  "lang": "yaml",
+  "order": 2,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Structure d'un docker-compose.yml",
+      "content": "```yaml\n---\n# Version du format (Docker Compose v3)\nversion: '3.9'\n\nservices:\n  # Service frontend\n  frontend:\n    image: nginx:alpine\n    container_name: app-frontend\n    ports:\n      - '80:80'       # host:container\n      - '443:443'\n    volumes:\n      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # :ro = read-only\n      - static_files:/var/www/html\n    depends_on:\n      - backend\n    restart: unless-stopped\n\n  # Service backend\n  backend:\n    build:\n      context: ./backend\n      dockerfile: Dockerfile\n      args:\n        NODE_ENV: production\n    environment:\n      - DATABASE_URL=postgresql://db:5432/app\n      - JWT_SECRET=${JWT_SECRET}  # Depuis .env\n    env_file:\n      - .env\n    ports:\n      - '3000:3000'\n    depends_on:\n      db:\n        condition: service_healthy\n    healthcheck:\n      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']\n      interval: 30s\n      timeout: 10s\n      retries: 3\n```"
+    },
+    {
+      "title": "Volumes, réseaux et healthchecks",
+      "content": "```yaml\n  # Base de données\n  db:\n    image: postgres:16\n    environment:\n      POSTGRES_DB: myapp\n      POSTGRES_USER: appuser\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro\n    healthcheck:\n      test: ['CMD-SHELL', 'pg_isready -U appuser -d myapp']\n      interval: 10s\n      timeout: 5s\n      retries: 5\n      start_period: 30s\n    networks:\n      - backend-net\n\n# Volumes nommés (persistance des données)\nvolumes:\n  pgdata:\n    driver: local\n  static_files:\n\n# Réseaux isolés (sécurité)\nnetworks:\n  frontend-net:\n    driver: bridge\n  backend-net:\n    driver: bridge\n    internal: true  # Pas d'accès internet direct\n```"
+    },
+    {
+      "title": "Profils et override",
+      "content": "```yaml\n# Profiles — services activés selon l'environnement\nservices:\n  app:\n    image: myapp\n    profiles: ['']  # Toujours actif\n\n  debug-tools:\n    image: busybox\n    profiles: ['debug']  # Seulement: docker compose --profile debug up\n\n  monitoring:\n    image: grafana/grafana\n    profiles: ['monitoring']\n\n# docker-compose.override.yml — surcharge auto en dev\n# Ce fichier est fusionné automatiquement avec docker-compose.yml\n# en développement :\nservices:\n  backend:\n    volumes:\n      - ./src:/app/src   # Hot reload en dev\n    environment:\n      - NODE_ENV=development\n      - DEBUG=*\n    command: npm run dev  # Override la commande de prod\n\n  db:\n    ports:\n      - '5432:5432'   # Exposer en dev pour accès direct\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l2-m2-1",
+      "order": 1,
+      "title": "Service simple avec ports",
+      "instructions": "Définissez un service `nginx` avec `image: nginx:alpine`, le port `80:80` et `restart: unless-stopped`.",
+      "requiredKeywords": ["services:", "  nginx:", "    image: nginx:alpine", "    ports:", "      - '80:80'", "    restart: unless-stopped"],
+      "validationType": "keywords",
+      "correction": "services:\n  nginx:\n    image: nginx:alpine\n    ports:\n      - '80:80'\n    restart: unless-stopped",
+      "explanation": "Structure Docker Compose minimale. `ports` est une liste — chaque mapping `'host:container'` est un élément. `restart: unless-stopped` redémarre le conteneur si il plante, mais pas si arrêté manuellement. Mettre les ports entre guillemets évite l'ambiguïté YAML avec les entiers."
+    },
+    {
+      "id": "ex-yaml-l2-m2-2",
+      "order": 2,
+      "title": "Service avec variables d'environnement",
+      "instructions": "Créez un service `postgres` avec `image: postgres:16`, et les variables d'environnement `POSTGRES_DB: mydb`, `POSTGRES_USER: user`, `POSTGRES_PASSWORD: ${DB_PASS}`.",
+      "requiredKeywords": ["image: postgres:16", "environment:", "postgres_db: mydb", "${db_pass}"],
+      "validationType": "keywords",
+      "correction": "services:\n  postgres:\n    image: postgres:16\n    environment:\n      POSTGRES_DB: mydb\n      POSTGRES_USER: user\n      POSTGRES_PASSWORD: ${DB_PASS}",
+      "explanation": "`environment` accepte deux formats : mapping (`KEY: value`) ou liste (`- KEY=value`). Le mapping est préféré pour la lisibilité. `${DB_PASS}` est remplacé par la variable d'environnement du host ou depuis le fichier `.env`. Ne jamais écrire les mots de passe en clair."
+    },
+    {
+      "id": "ex-yaml-l2-m2-3",
+      "order": 3,
+      "title": "depends_on avec healthcheck",
+      "instructions": "Créez un service `api` qui dépend de `db` avec `condition: service_healthy` (pas juste `depends_on: - db`).",
+      "requiredKeywords": ["depends_on:", "  db:", "    condition: service_healthy"],
+      "validationType": "keywords",
+      "correction": "services:\n  api:\n    image: myapi\n    depends_on:\n      db:\n        condition: service_healthy\n  db:\n    image: postgres:16\n    healthcheck:\n      test: ['CMD', 'pg_isready']\n      interval: 10s\n      retries: 5",
+      "explanation": "`depends_on: - db` attend juste que le conteneur soit démarré — pas qu'il soit prêt. `condition: service_healthy` attend que le healthcheck passe. Essentiel pour les bases de données qui prennent du temps à s'initialiser — sans ça, l'API démarre avant que Postgres soit prêt."
+    },
+    {
+      "id": "ex-yaml-l2-m2-4",
+      "order": 4,
+      "title": "Volume nommé pour la persistance",
+      "instructions": "Définissez un service `db` avec un volume nommé `pgdata` monté sur `/var/lib/postgresql/data`, et déclarez ce volume à la racine.",
+      "requiredKeywords": ["volumes:", "      - pgdata:/var/lib/postgresql/data", "volumes:\n  pgdata:"],
+      "validationType": "keywords",
+      "correction": "services:\n  db:\n    image: postgres:16\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n\nvolumes:\n  pgdata:",
+      "explanation": "Les volumes nommés (`pgdata:`) persistent les données entre les recreations de conteneurs (`docker compose down` puis `up`). Contrairement aux bind mounts (`./local:/container`), les volumes nommés sont gérés par Docker. La section `volumes:` à la racine déclare les volumes partagés."
+    },
+    {
+      "id": "ex-yaml-l2-m2-5",
+      "order": 5,
+      "title": "Réseau interne isolé",
+      "instructions": "Créez deux réseaux : `frontend-net` (bridge normal) et `backend-net` (bridge `internal: true` sans accès internet). Rattachez le service `api` aux deux réseaux.",
+      "requiredKeywords": ["networks:", "  backend-net:", "    internal: true", "api:", "networks:\n      - frontend-net\n      - backend-net"],
+      "validationType": "keywords",
+      "correction": "services:\n  api:\n    image: myapi\n    networks:\n      - frontend-net\n      - backend-net\n\nnetworks:\n  frontend-net:\n    driver: bridge\n  backend-net:\n    driver: bridge\n    internal: true",
+      "explanation": "`internal: true` isole le réseau d'internet — les conteneurs sur ce réseau ne peuvent communiquer qu'entre eux. Pattern de sécurité : la base de données est sur `backend-net` (interne), l'API sur les deux (bridge entre frontend et DB), le frontend sur `frontend-net` (exposé)."
+    }
+  ]
+}

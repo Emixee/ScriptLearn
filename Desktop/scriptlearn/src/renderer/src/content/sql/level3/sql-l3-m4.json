@@ -1,0 +1,74 @@
+{
+  "id": "sql-l3-m4",
+  "title": "CREATE TABLE et contraintes",
+  "level": "sql-l3",
+  "lang": "sql",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Créer une table — CREATE TABLE",
+      "content": "```sql\nCREATE TABLE employees (\n  id         INTEGER PRIMARY KEY AUTOINCREMENT,\n  name       TEXT NOT NULL,\n  email      TEXT UNIQUE,\n  salary     REAL DEFAULT 0,\n  dept_id    INTEGER,\n  hire_date  TEXT DEFAULT CURRENT_DATE,\n  FOREIGN KEY (dept_id) REFERENCES departments(id)\n);\n```\n\nTypes courants :\n| Type | SQLite | MySQL | PostgreSQL |\n|---|---|---|---|\n| Entier | `INTEGER` | `INT` | `INTEGER` |\n| Décimal | `REAL` | `DECIMAL` | `NUMERIC` |\n| Texte | `TEXT` | `VARCHAR(n)` | `VARCHAR(n)` |\n| Date | `TEXT` | `DATE` | `DATE` |"
+    },
+    {
+      "title": "Contraintes d'intégrité",
+      "content": "Les contraintes protègent la qualité des données :\n\n```sql\nCREATE TABLE products (\n  id       INTEGER PRIMARY KEY,\n  name     TEXT NOT NULL,           -- jamais NULL\n  price    REAL NOT NULL CHECK (price >= 0),  -- doit être positif\n  sku      TEXT UNIQUE,             -- valeur unique\n  stock    INTEGER DEFAULT 0        -- valeur par défaut\n);\n```\n\n| Contrainte | Rôle |\n|---|---|\n| `PRIMARY KEY` | Identifiant unique + non NULL |\n| `NOT NULL` | Valeur obligatoire |\n| `UNIQUE` | Pas de doublon |\n| `DEFAULT val` | Valeur si non fournie |\n| `CHECK (expr)` | Condition personnalisée |\n| `FOREIGN KEY` | Intégrité référentielle |"
+    },
+    {
+      "title": "ALTER TABLE et DROP TABLE",
+      "content": "**Modifier une table existante** :\n```sql\n-- Ajouter une colonne\nALTER TABLE employees ADD COLUMN phone TEXT;\n\n-- Renommer une colonne (SQLite 3.25+)\nALTER TABLE employees RENAME COLUMN phone TO mobile;\n\n-- Renommer la table\nALTER TABLE employees RENAME TO staff;\n```\n\n**Supprimer une table** :\n```sql\n-- Suppression définitive\nDROP TABLE employees;\n\n-- Sécurisée\nDROP TABLE IF EXISTS employees;\n\n-- Vider sans supprimer la structure\nDELETE FROM employees;\n-- ou (plus rapide, irrécupérable) :\nTRUNCATE TABLE employees;  -- MySQL/PostgreSQL\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l3-m4-1",
+      "order": 1,
+      "title": "Créer une table simple",
+      "instructions": "Créez une table `projects` avec les colonnes :\n- `id` : clé primaire entière auto-incrémentée\n- `name` : texte, non NULL\n- `budget` : réel, valeur par défaut `0`",
+      "requiredKeywords": ["create table", "projects", "id", "integer", "primary key", "name", "text", "not null", "budget", "default"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE projects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, budget REAL DEFAULT 0);",
+      "explanation": "`AUTOINCREMENT` (SQLite) génère automatiquement l'ID. `NOT NULL` interdit les projets sans nom. `DEFAULT 0` permet d'insérer un projet sans préciser le budget."
+    },
+    {
+      "id": "ex-sql-l3-m4-2",
+      "order": 2,
+      "title": "Contrainte CHECK",
+      "instructions": "Créez une table `ratings` avec un champ `score` entier, contraint à être **entre 1 et 5**.",
+      "requiredKeywords": ["create table", "ratings", "score", "integer", "check", "1", "5"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE ratings (id INTEGER PRIMARY KEY, score INTEGER CHECK (score >= 1 AND score <= 5));",
+      "explanation": "`CHECK (expr)` est une contrainte personnalisée. Si on tente d'insérer `score = 6`, la base rejette la ligne. C'est la couche de validation côté base de données — plus fiable que la validation applicative seule."
+    },
+    {
+      "id": "ex-sql-l3-m4-3",
+      "order": 3,
+      "title": "Clé étrangère",
+      "instructions": "Créez une table `tasks` avec un champ `project_id` qui référence la clé primaire de la table `projects`.",
+      "requiredKeywords": ["create table", "tasks", "project_id", "integer", "foreign key", "project_id", "references", "projects"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL, project_id INTEGER, FOREIGN KEY (project_id) REFERENCES projects(id));",
+      "explanation": "`FOREIGN KEY ... REFERENCES` crée un lien d'intégrité référentielle : on ne peut pas insérer un `project_id` qui n'existe pas dans `projects`. Protège contre les données orphelines."
+    },
+    {
+      "id": "ex-sql-l3-m4-4",
+      "order": 4,
+      "title": "Ajouter une colonne",
+      "instructions": "Ajoutez une colonne `email` de type `TEXT` à la table `employees`.",
+      "requiredKeywords": ["alter table", "employees", "add column", "email", "text"],
+      "validationType": "keywords",
+      "correction": "ALTER TABLE employees ADD COLUMN email TEXT;",
+      "explanation": "`ALTER TABLE ... ADD COLUMN` modifie la structure d'une table existante. La nouvelle colonne reçoit `NULL` pour toutes les lignes existantes (sauf si `DEFAULT` est spécifié)."
+    },
+    {
+      "id": "ex-sql-l3-m4-5",
+      "order": 5,
+      "title": "Supprimer une table en sécurité",
+      "instructions": "Supprimez la table `temp_cache` **sans erreur si elle n'existe pas**.",
+      "requiredKeywords": ["drop table", "if exists", "temp_cache"],
+      "validationType": "keywords",
+      "correction": "DROP TABLE IF EXISTS temp_cache;",
+      "explanation": "`IF EXISTS` est indispensable dans les scripts SQL (migrations, déploiements) pour éviter une erreur si la table a déjà été supprimée ou n'a jamais été créée."
+    }
+  ]
+}

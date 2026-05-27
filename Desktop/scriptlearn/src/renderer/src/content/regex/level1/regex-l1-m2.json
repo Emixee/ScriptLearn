@@ -1,0 +1,74 @@
+{
+  "id": "regex-l1-m2",
+  "title": "Quantificateurs",
+  "level": "regex-l1",
+  "lang": "regex",
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Les quantificateurs de base",
+      "content": "Les **quantificateurs** précisent combien de fois un élément peut apparaître :\n\n| Quantificateur | Signification |\n|---|---|\n| `?` | 0 ou 1 fois (optionnel) |\n| `*` | 0 ou plusieurs fois |\n| `+` | 1 ou plusieurs fois |\n| `{n}` | Exactement n fois |\n| `{n,}` | Au moins n fois |\n| `{n,m}` | Entre n et m fois |\n\n```\ncolou?r     → \"color\" ou \"colour\"  (u optionnel)\nca*t        → \"ct\", \"cat\", \"caat\", \"caaat\"...\nca+t        → \"cat\", \"caat\"... (pas \"ct\")\n\\d{4}       → exactement 4 chiffres\n\\d{2,4}     → 2, 3 ou 4 chiffres\n```"
+    },
+    {
+      "title": "Greedy vs Lazy",
+      "content": "Par défaut, les quantificateurs sont **greedy** (gourmands) — ils consomment le maximum possible.\n\n`.*` sur la chaîne `<a>texte</a><b>autre</b>` :\n- Greedy `<.*>` → `<a>texte</a><b>autre</b>` (toute la chaîne !)\n- Lazy `<.*?>` → `<a>` et `</a>` et `<b>` et `</b>` (le minimum)\n\nAjouter `?` après un quantificateur le rend **lazy** (paresseux) :\n```\n*?   → 0 ou plus, minimum\n+?   → 1 ou plus, minimum\n{n,m}? → entre n et m, minimum\n```\n\nRègle pratique : utiliser lazy (`.*?`) pour les patterns entre délimiteurs."
+    },
+    {
+      "title": "Quantificateurs sur des groupes",
+      "content": "On peut quantifier un **groupe** entier avec `(...)` :\n\n```\n(ab)+       → \"ab\", \"abab\", \"ababab\"...\n(\\d{2}\\.){3}\\d{2}  → IP simplifiée : \"12.34.56.78\"\n(https?://)? → URL avec ou sans protocol\n```\n\nExemples pratiques :\n```\n[A-Z][a-z]+         → mot capitalisé : \"Bonjour\"\n\\b\\d{4}-\\d{2}-\\d{2}\\b  → date ISO : \"2024-05-15\"\n[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}  → email\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l1-m2-1",
+      "order": 1,
+      "title": "Chiffres variables",
+      "instructions": "Écrivez un pattern qui correspond à **un ou plusieurs chiffres** consécutifs.",
+      "requiredKeywords": ["\\d+"],
+      "validationType": "keywords",
+      "correction": "\\d+",
+      "explanation": "`+` = 1 ou plus. `\\d+` correspond à \"1\", \"42\", \"12345\"… mais pas à \"\" (chaîne vide). Pour 0 ou plus : `\\d*`."
+    },
+    {
+      "id": "ex-regex-l1-m2-2",
+      "order": 2,
+      "title": "Élément optionnel",
+      "instructions": "Écrivez un pattern qui correspond à `color` et `colour` (le `u` est optionnel).",
+      "requiredKeywords": ["colou?r"],
+      "validationType": "keywords",
+      "correction": "colou?r",
+      "explanation": "`?` rend l'élément précédent optionnel (0 ou 1 occurrence). `u?` = u absent ou présent une fois."
+    },
+    {
+      "id": "ex-regex-l1-m2-3",
+      "order": 3,
+      "title": "Exactement N chiffres",
+      "instructions": "Écrivez un pattern qui correspond à **exactement 4 chiffres** (code PIN).",
+      "requiredKeywords": ["\\d{4}"],
+      "validationType": "keywords",
+      "correction": "\\d{4}",
+      "explanation": "`{n}` = exactement n occurrences. `\\d{4}` correspond à \"1234\" mais pas \"123\" ni \"12345\". Pour une plage : `\\d{4,6}` = 4 à 6 chiffres."
+    },
+    {
+      "id": "ex-regex-l1-m2-4",
+      "order": 4,
+      "title": "Pattern lazy",
+      "instructions": "Dans la chaîne `<b>gras</b>`, écrivez un pattern **lazy** qui correspond uniquement à `<b>`.",
+      "requiredKeywords": ["<.+?>"],
+      "validationType": "keywords",
+      "correction": "<.+?>",
+      "explanation": "`<.+?>` avec `?` après `+` est lazy : il s'arrête dès que possible. `<.+>` (greedy) capturerait `<b>gras</b>` en entier si d'autres balises suivent."
+    },
+    {
+      "id": "ex-regex-l1-m2-5",
+      "order": 5,
+      "title": "Pattern d'email simplifié",
+      "instructions": "Écrivez un pattern simplifié pour un email : `un ou plusieurs caractères \\w`, `@`, `un ou plusieurs \\w`, `.`, `2 à 4 lettres`.",
+      "requiredKeywords": ["\\w+", "@", "\\w+", "\\.", "[a-z]{2,4}"],
+      "validationType": "keywords",
+      "correction": "\\w+@\\w+\\.[a-z]{2,4}",
+      "explanation": "`\\w+` couvre les caractères alphanumériques + underscore. `\\.` est le point littéral. `[a-z]{2,4}` correspond aux TLD comme `.fr`, `.com`, `.info`."
+    }
+  ]
+}

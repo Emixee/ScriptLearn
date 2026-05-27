@@ -1,0 +1,74 @@
+{
+  "id": "regex-l3-m3",
+  "title": "Regex en sécurité — validation et détection",
+  "level": "regex-l3",
+  "lang": "regex",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Validation d'entrées utilisateur",
+      "content": "Les regex sont cruciales pour valider les données côté serveur :\n\n```python\nimport re\n\n# Email — RFC 5322 simplifié (version pratique)\nEMAIL = re.compile(\n    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n)\n\n# Mot de passe fort :\n# 8+ chars, 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial\nPASSWORD = re.compile(\n    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,}$'\n)\n\n# Numéro de téléphone FR (formats multiples)\nPHONE_FR = re.compile(\n    r'^(?:\\+33|0033|0)[1-9](?:[0-9]{8})$'\n)\n\n# Identifiant sûr (alphanumérique + tiret + underscore)\nSAFE_ID = re.compile(\n    r'^[a-zA-Z0-9_-]{3,64}$'\n)\n\n# Vérification\ndef validate(pattern, value):\n    return bool(pattern.match(value))\n\nvalidate(EMAIL, 'user@example.com')  # True\nvalidate(EMAIL, 'pas-un-email')       # False\n```"
+    },
+    {
+      "title": "Détection de patterns malveillants",
+      "content": "Regex pour identifier des attaques courantes dans des logs ou requêtes :\n\n```python\n# XSS — script injection\nXSS = re.compile(\n    r'<script|javascript:|on\\w+\\s*=|<iframe|<object',\n    re.IGNORECASE\n)\n\n# Command injection\nCMD_INJECT = re.compile(\n    r'[;&|`$]|\\bexec\\b|\\beval\\b|\\bsystem\\b|\\bpopen\\b',\n    re.IGNORECASE\n)\n\n# LDAP injection\nLDAP_INJECT = re.compile(\n    r'[\\*\\(\\)\\\\\\x00]'\n)\n\n# Tentative d'accès à des fichiers sensibles\nSENSITIVE_FILES = re.compile(\n    r'(?:etc/passwd|etc/shadow|\\.\\.+/|win\\.ini|web\\.config)',\n    re.IGNORECASE\n)\n\n# User-agents de scanners connus\nSCANNERS = re.compile(\n    r'(?:nikto|nmap|sqlmap|masscan|dirbuster|gobuster)',\n    re.IGNORECASE\n)\n```\n\n⚠️ Ces patterns sont des **indicateurs**, pas des preuves. Toujours corréler avec d'autres signaux."
+    },
+    {
+      "title": "Extraction d'IOCs (Indicators of Compromise)",
+      "content": "En analyse forensique, extraire les IOCs automatiquement :\n\n```python\nIOC_PATTERNS = {\n    'ipv4': re.compile(\n        r'\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b'\n    ),\n    'ipv6': re.compile(\n        r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}'\n    ),\n    'domain': re.compile(\n        r'\\b(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}\\b'\n    ),\n    'email': re.compile(\n        r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'\n    ),\n    'md5': re.compile(\n        r'\\b[0-9a-fA-F]{32}\\b'\n    ),\n    'sha256': re.compile(\n        r'\\b[0-9a-fA-F]{64}\\b'\n    ),\n    'url': re.compile(\n        r'https?://[\\w./?=&%#-]+'\n    ),\n    'cve': re.compile(\n        r'CVE-\\d{4}-\\d{4,7}'\n    )\n}\n\ndef extract_iocs(text):\n    return {\n        ioc_type: pattern.findall(text)\n        for ioc_type, pattern in IOC_PATTERNS.items()\n    }\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l3-m3-1",
+      "order": 1,
+      "title": "Validation mot de passe fort",
+      "instructions": "Écrivez un pattern (avec lookaheads) pour valider qu'un mot de passe contient au moins : 8 caractères, 1 majuscule, 1 chiffre.",
+      "requiredKeywords": ["^", "(?=.*[A-Z])", "(?=.*\\d)", ".{8,}$"],
+      "validationType": "keywords",
+      "correction": "^(?=.*[A-Z])(?=.*\\d).{8,}$",
+      "explanation": "Trois conditions depuis `^` : `(?=.*[A-Z])` vérifie au moins une majuscule, `(?=.*\\d)` au moins un chiffre, `.{8,}$` impose 8+ caractères. Les lookaheads testent la chaîne entière sans la consommer."
+    },
+    {
+      "id": "ex-regex-l3-m3-2",
+      "order": 2,
+      "title": "Détection XSS basique",
+      "instructions": "Écrivez un pattern insensible à la casse pour détecter `<script` ou `javascript:` dans une entrée utilisateur.",
+      "requiredKeywords": ["(?i)", "<script|javascript:"],
+      "validationType": "keywords",
+      "correction": "re.search(r'(?i)<script|javascript:', user_input)",
+      "explanation": "`(?i)` couvre les variantes `<SCRIPT>`, `JavaScript:` etc. Les attaquants encodent en majuscules/minuscules mélangées pour contourner les filtres case-sensitive. Ce pattern est un premier filtre — compléter avec une sanitisation HTML complète."
+    },
+    {
+      "id": "ex-regex-l3-m3-3",
+      "order": 3,
+      "title": "Extraction de hash MD5",
+      "instructions": "Écrivez un pattern pour extraire tous les **hashes MD5** (32 caractères hexadécimaux) d'un rapport d'incident.",
+      "requiredKeywords": ["\\b", "[0-9a-fA-F]{32}", "\\b"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'\\b[0-9a-fA-F]{32}\\b', rapport)",
+      "explanation": "`[0-9a-fA-F]{32}` : exactement 32 caractères hexadécimaux. `\\b` assure qu'on ne capture pas un sous-ensemble d'un hash plus long (SHA256 = 64 chars). Utilisé en threat intelligence pour corréler des malwares avec des bases IOC."
+    },
+    {
+      "id": "ex-regex-l3-m3-4",
+      "order": 4,
+      "title": "Extraction d'identifiants CVE",
+      "instructions": "Écrivez un pattern pour extraire les **identifiants CVE** (format `CVE-YYYY-NNNNN`) d'un bulletin de sécurité.",
+      "requiredKeywords": ["CVE-", "\\d{4}-", "\\d{4,7}"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'CVE-\\d{4}-\\d{4,7}', bulletin)",
+      "explanation": "`CVE-` est littéral. `\\d{4}` = l'année (4 chiffres). `\\d{4,7}` = le numéro (4 à 7 chiffres selon la base NVD). Exemple : `CVE-2024-12345`. Utilisé pour parser automatiquement des bulletins de sécurité et les mapper à des vulnérabilités connues."
+    },
+    {
+      "id": "ex-regex-l3-m3-5",
+      "order": 5,
+      "title": "Détection de command injection",
+      "instructions": "Écrivez un pattern pour détecter des caractères de command injection dans une URL (`; | & ` $ `).",
+      "requiredKeywords": ["[;&|`$]"],
+      "validationType": "keywords",
+      "correction": "re.search(r'[;&|`$]', url)",
+      "explanation": "Ces caractères permettent de chaîner des commandes shell : `;` sépare, `|` pipe, `&` background, `\\`` exécute, `$` variables. Leur présence dans une URL ou paramètre est suspecte. Compléter avec `exec|system|eval` pour les injections PHP/Python."
+    }
+  ]
+}

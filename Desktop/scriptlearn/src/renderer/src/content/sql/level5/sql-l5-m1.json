@@ -1,0 +1,74 @@
+{
+  "id": "sql-l5-m1",
+  "title": "Index et performance",
+  "level": "sql-l5",
+  "lang": "sql",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Pourquoi les index ?",
+      "content": "Sans index, une requête `WHERE` parcourt toute la table (**full scan**) — O(n). Un index crée une structure B-tree qui permet une recherche O(log n) :\n\n```sql\n-- Créer un index sur une colonne\nCREATE INDEX idx_employees_dept ON employees(department);\n\n-- Index unique (garantit l'unicité + accélère)\nCREATE UNIQUE INDEX idx_employees_email ON employees(email);\n\n-- Index composite (plusieurs colonnes)\nCREATE INDEX idx_emp_dept_salary ON employees(department, salary);\n\n-- Supprimer un index\nDROP INDEX idx_employees_dept;\n```\n\nLes colonnes dans `WHERE`, `JOIN ON`, `ORDER BY` et `GROUP BY` sont les candidates à l'indexation."
+    },
+    {
+      "title": "EXPLAIN — comprendre le plan d'exécution",
+      "content": "`EXPLAIN` affiche comment le moteur SQL exécute une requête :\n\n```sql\nEXPLAIN SELECT * FROM employees WHERE department = 'IT';\n-- Sans index : Seq Scan (parcours séquentiel)\n\n-- Après CREATE INDEX idx_emp_dept ON employees(department)\nEXPLAIN SELECT * FROM employees WHERE department = 'IT';\n-- Avec index : Index Scan\n```\n\nPostgreSQL : `EXPLAIN ANALYZE` exécute et mesure réellement :\n```sql\nEXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 1;\n-- Affiche : actual time, rows, Planning Time, Execution Time\n```\n\n**Signes d'alerte** : `Seq Scan` sur grande table, `Hash Join` évitable, `Sort` coûteux."
+    },
+    {
+      "title": "Règles d'optimisation",
+      "content": "**Ce qui ralentit les requêtes :**\n```sql\n-- ❌ Fonction sur colonne indexée (désactive l'index)\nWHERE UPPER(name) = 'ALICE'\n-- ✅ Stocker en majuscules ou utiliser COLLATE\n\n-- ❌ SELECT * avec jointures\nSELECT * FROM employees e INNER JOIN departments d...\n-- ✅ Sélectionner seulement les colonnes nécessaires\n\n-- ❌ Sous-requête N+1 (corrélée sur grande table)\nWHERE salary > (SELECT AVG(salary) FROM employees WHERE department = e.department)\n-- ✅ Remplacer par JOIN ou CTE avec pré-calcul\n```\n\n**Bonnes pratiques :**\n- Index sur colonnes de filtrage (`WHERE`), jointure (`ON`) et tri (`ORDER BY`)\n- Éviter les index sur colonnes très peu sélectives (ex. colonne booléenne)\n- `ANALYZE` / `VACUUM` (PostgreSQL) pour mettre à jour les statistiques"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l5-m1-1",
+      "order": 1,
+      "title": "Créer un index simple",
+      "instructions": "Créez un index `idx_emp_dept` sur la colonne `department` de la table `employees`.",
+      "requiredKeywords": ["create index", "idx_emp_dept", "on", "employees", "department"],
+      "validationType": "keywords",
+      "correction": "CREATE INDEX idx_emp_dept ON employees(department);",
+      "explanation": "Cet index accélère toutes les requêtes `WHERE department = '...'` et `GROUP BY department`. Le coût : l'espace disque et un léger ralentissement des INSERT/UPDATE/DELETE (l'index doit être maintenu)."
+    },
+    {
+      "id": "ex-sql-l5-m1-2",
+      "order": 2,
+      "title": "Index unique",
+      "instructions": "Créez un **index unique** `idx_emp_email` sur la colonne `email` de `employees`.",
+      "requiredKeywords": ["create unique index", "idx_emp_email", "on", "employees", "email"],
+      "validationType": "keywords",
+      "correction": "CREATE UNIQUE INDEX idx_emp_email ON employees(email);",
+      "explanation": "Un index unique remplit deux rôles : accélérer les recherches par email ET garantir qu'aucun doublon ne peut être inséré. C'est l'alternative à `UNIQUE` dans `CREATE TABLE` pour les tables existantes."
+    },
+    {
+      "id": "ex-sql-l5-m1-3",
+      "order": 3,
+      "title": "Index composite",
+      "instructions": "Créez un index composite `idx_dept_salary` sur `(department, salary)` pour accélérer les requêtes filtrant par département ET triant par salaire.",
+      "requiredKeywords": ["create index", "idx_dept_salary", "on", "employees", "department", "salary"],
+      "validationType": "keywords",
+      "correction": "CREATE INDEX idx_dept_salary ON employees(department, salary);",
+      "explanation": "Un index composite sur `(department, salary)` sert aux requêtes `WHERE department = ... ORDER BY salary`. La règle du préfixe : l'index sert aussi pour `WHERE department = ...` seul, mais pas pour `WHERE salary = ...` seul."
+    },
+    {
+      "id": "ex-sql-l5-m1-4",
+      "order": 4,
+      "title": "EXPLAIN",
+      "instructions": "Utilisez `EXPLAIN` pour analyser le plan d'exécution d'une requête `SELECT * FROM employees WHERE department = 'IT'`.",
+      "requiredKeywords": ["explain", "select", "*", "from", "employees", "where", "department", "it"],
+      "validationType": "keywords",
+      "correction": "EXPLAIN SELECT * FROM employees WHERE department = 'IT';",
+      "explanation": "`EXPLAIN` affiche le plan d'exécution sans exécuter la requête. On cherche `Index Scan` (index utilisé, rapide) vs `Seq Scan` (parcours complet, lent sur grandes tables). Si `Seq Scan`, envisager un index sur `department`."
+    },
+    {
+      "id": "ex-sql-l5-m1-5",
+      "order": 5,
+      "title": "Supprimer un index",
+      "instructions": "Supprimez l'index `idx_emp_dept`.",
+      "requiredKeywords": ["drop index", "idx_emp_dept"],
+      "validationType": "keywords",
+      "correction": "DROP INDEX idx_emp_dept;",
+      "explanation": "On supprime un index pour récupérer de l'espace ou si on constate qu'il n'est plus utilisé (vérifiable avec `pg_stat_user_indexes` en PostgreSQL). Un index inutilisé consomme de l'espace et ralentit les écritures sans bénéfice."
+    }
+  ]
+}

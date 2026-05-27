@@ -1,0 +1,74 @@
+{
+  "id": "kql-l1-m4",
+  "title": "Recherche dans les chaînes — search, contains, has",
+  "level": "kql-l1",
+  "lang": "kql",
+  "order": 4,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "search — recherche globale",
+      "content": "`search` cherche dans **toutes les colonnes** d'une ou plusieurs tables :\n\n```kql\n// Chercher dans toutes les colonnes de toutes les tables\nsearch \"mimikatz\"\n\n// Chercher dans une table spécifique\nsearch in (SecurityEvent) \"failed\"\n\n// Chercher dans plusieurs tables\nsearch in (SecurityEvent, Syslog) \"error\"\n\n// Avec filtre temporel (obligatoire en production !)\nsearch in (SigninLogs) TimeGenerated > ago(1h) and \"suspicious\"\n\n// Résultats : $table indique la table source\nsearch \"192.168.1.100\"\n| project $table, TimeGenerated, $raw\n```\n\n⚠️ `search` est **très lent** sur des grandes tables — utiliser `where` sur une table ciblée quand on connaît la colonne. `search` est utile pour l'exploration initiale."
+    },
+    {
+      "title": "Opérateurs de chaînes — contains, has, startswith",
+      "content": "KQL offre plusieurs opérateurs de comparaison de chaînes :\n\n| Opérateur | Description | Sensible casse |\n|---|---|---|\n| `contains` | sous-chaîne n'importe où | Non |\n| `contains_cs` | sous-chaîne, sensible casse | Oui |\n| `has` | mot entier (délimiteurs) | Non |\n| `has_cs` | mot entier, sensible casse | Oui |\n| `startswith` | commence par | Non |\n| `endswith` | se termine par | Non |\n| `matches regex` | expression régulière | Par défaut non |\n| `!contains` | ne contient PAS | Non |\n\n```kql\n// has vs contains :\n// \"error\" has \"err\"          → false (\"err\" n'est pas un mot)\n// \"error\" contains \"err\"     → true\n// \"error code\" has \"error\"   → true (mot complet)\n\nSecurityEvent\n| where Computer has \"DC\"\n| where Account !startswith \"SVC\"  // exclure les comptes de service\n```"
+    },
+    {
+      "title": "Fonctions de manipulation de chaînes",
+      "content": "```kql\n// split — découper une chaîne\nextend Parts = split(Account, \"\\\\\")\n| extend Domain = tostring(Parts[0]),\n         User   = tostring(Parts[1])\n\n// strcat — concaténer\nextend FullPath = strcat(Computer, \"\\\\\", Account)\n\n// substring — extraire\nextend Short = substring(Account, 0, 8)  // 8 premiers chars\n\n// indexof — position d'une sous-chaîne\nextend AtPos = indexof(UserPrincipalName, \"@\")\n\n// replace_string — remplacer\nextend Cleaned = replace_string(Account, \"DOMAIN\\\\\", \"\")\n\n// toupper / tolower\nextend LowerUser = tolower(Account)\n\n// strlen — longueur\nextend NameLen = strlen(Account)\n| where NameLen > 20  // Noms de compte anormalement longs\n\n// extract — regex dans une chaîne\nextend IP = extract(@\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\", 1, RawData)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l1-m4-1",
+      "order": 1,
+      "title": "Recherche globale avec search",
+      "instructions": "Utilisez `search` pour chercher `\"powershell\"` dans la table `SecurityEvent` des dernières 2 heures.",
+      "requiredKeywords": ["search in (securityevent)", "powershell", "ago(2h)"],
+      "validationType": "keywords",
+      "correction": "search in (SecurityEvent) TimeGenerated > ago(2h) and \"powershell\"",
+      "explanation": "`search in (Table)` limite la recherche à une table pour la performance. Sans `in (...)`, `search` scanne toutes les tables — très lent. Utile pour une exploration initiale quand on ne sait pas dans quelle colonne se trouve la valeur."
+    },
+    {
+      "id": "ex-kql-l1-m4-2",
+      "order": 2,
+      "title": "has vs contains",
+      "instructions": "Filtrez `SecurityEvent` pour les lignes où `Account` **contient le mot entier** `admin` (insensible à la casse, mot complet avec `has`).",
+      "requiredKeywords": ["securityevent", "account has \"admin\""],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1h)\n| where Account has \"admin\"",
+      "explanation": "`has` correspond à un mot entier : `account has \"admin\"` retourne `admin`, `Admin`, `ADMIN` mais pas `administrator` (sauf si c'est un token KQL qui le détecte comme sous-mot). `contains` retournerait aussi `administrator`. `has` est plus précis et plus performant."
+    },
+    {
+      "id": "ex-kql-l1-m4-3",
+      "order": 3,
+      "title": "Extraire le domaine avec split()",
+      "instructions": "Depuis `SecurityEvent`, extrayez le **domaine** (avant `\\`) et le **nom d'utilisateur** (après `\\`) depuis la colonne `Account` (format `DOMAIN\\User`).",
+      "requiredKeywords": ["extend", "split(account", "tostring("],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1h)\n| extend Parts = split(Account, \"\\\\\")\n| extend Domain = tostring(Parts[0]), User = tostring(Parts[1])",
+      "explanation": "`split(Account, \"\\\\\\\\\")` découpe sur le backslash. Le double backslash `\\\\` est nécessaire car le backslash est un caractère d'échappement dans les chaînes KQL. `Parts[0]` = domaine, `Parts[1]` = utilisateur. `tostring()` convertit depuis dynamic."
+    },
+    {
+      "id": "ex-kql-l1-m4-4",
+      "order": 4,
+      "title": "Exclure des comptes avec !startswith",
+      "instructions": "Affichez les échecs de connexion (EventID 4625) en excluant les comptes commençant par `SVC` ou `SVC_` (comptes de service).",
+      "requiredKeywords": ["eventid == 4625", "!startswith \"svc\""],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1d)\n| where EventID == 4625\n| where Account !startswith \"SVC\"",
+      "explanation": "`!startswith` est la négation de `startswith`. Exclure les comptes de service des alertes de brute force réduit les faux positifs — les services redémarrent souvent et génèrent des échecs d'authentification légitimes."
+    },
+    {
+      "id": "ex-kql-l1-m4-5",
+      "order": 5,
+      "title": "extract() avec regex",
+      "instructions": "Utilisez `extract()` pour extraire une **adresse IP** depuis la colonne `CommandLine` dans `SecurityEvent` avec le pattern `@\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"`.",
+      "requiredKeywords": ["extract(", "\\d{1,3}\\.\\d{1,3}", "commandline"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(1h)\n| where isnotempty(CommandLine)\n| extend ExtractedIP = extract(@\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\", 1, CommandLine)\n| where isnotempty(ExtractedIP)",
+      "explanation": "`extract(regex, groupe, chaîne)` applique une regex et retourne le groupe capturant spécifié (1 = premier groupe). Le préfixe `@` crée une raw-string (les backslashes ne sont pas doublés). Utile pour parser des commandes PowerShell contenant des IPs."
+    }
+  ]
+}

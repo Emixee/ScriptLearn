@@ -1,0 +1,74 @@
+{
+  "id": "kql-l1-m2",
+  "title": "Filtrer et projeter — where, project, extend",
+  "level": "kql-l1",
+  "lang": "kql",
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "L'opérateur where — filtres avancés",
+      "content": "L'opérateur `where` filtre les lignes avec des conditions diverses :\n\n```kql\n// Égalité et comparaison\n| where EventID == 4625\n| where TimeGenerated > ago(1h)\n\n// Opérateurs logiques\n| where EventID == 4625 or EventID == 4624\n| where EventID in (4624, 4625, 4648)\n| where EventID !in (4624, 4625)  // exclusion\n\n// Chaînes — contains (insensible à la casse)\n| where Computer contains \"dc\"\n| where Account startswith \"admin\"\n| where Account endswith \"$\"  // comptes machine\n\n// Regex\n| where Computer matches regex @\"^DC-\\d+\"\n\n// Valeurs nulles\n| where isnotempty(IpAddress)\n| where isnull(ResultType)\n\n// NOT\n| where not (EventID == 4624)\n```"
+    },
+    {
+      "title": "project, project-away, project-rename",
+      "content": "Manipuler les colonnes du résultat :\n\n```kql\n// Sélectionner des colonnes (comme SELECT)\n| project TimeGenerated, Account, Computer\n\n// Renommer lors de la projection\n| project Timestamp=TimeGenerated, User=Account, Host=Computer\n\n// Créer une nouvelle colonne dans project\n| project TimeGenerated, Account,\n          Domain = tostring(split(Account, \"\\\\\")[0]),\n          User   = tostring(split(Account, \"\\\\\")[1])\n\n// Supprimer des colonnes (garder toutes sauf...)\n| project-away TenantId, _ResourceId, _SubscriptionId\n\n// Renommer sans supprimer les autres colonnes\n| project-rename User=Account, Host=Computer\n```\n\n**Règle de performance :** projecter le plus tôt possible dans le pipeline pour réduire le volume de données traité par les opérateurs suivants."
+    },
+    {
+      "title": "extend — ajouter des colonnes calculées",
+      "content": "`extend` ajoute de nouvelles colonnes sans supprimer les existantes :\n\n```kql\nSigninLogs\n| where TimeGenerated > ago(1d)\n| extend\n    // Extraire le domaine depuis UPN\n    Domain = tostring(split(UserPrincipalName, \"@\")[1]),\n    // Heure de la journée\n    HourOfDay = hourofday(TimeGenerated),\n    // Flag connexion hors-heures\n    OffHours = hourofday(TimeGenerated) < 8 or hourofday(TimeGenerated) > 18,\n    // Condition\n    RiskLabel = iff(RiskLevelDuringSignIn == \"high\", \"ALERTE\", \"Normal\")\n\n// Fonctions utiles dans extend :\n// tostring(), toint(), todouble()\n// toupper(), tolower()\n// strlen(), substring(), indexof()\n// split(), strcat()\n// bin(TimeGenerated, 1h)  → arrondir à l'heure\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l1-m2-1",
+      "order": 1,
+      "title": "Filtrer avec in()",
+      "instructions": "Filtrez `SecurityEvent` pour les EventIDs `4624`, `4625` et `4648` des dernières 6 heures avec l'opérateur `in`.",
+      "requiredKeywords": ["securityevent", "eventid in (4624, 4625, 4648)", "ago(6h)"],
+      "validationType": "keywords",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(6h)\n| where EventID in (4624, 4625, 4648)",
+      "explanation": "`in (liste)` est plus lisible que plusieurs `or`. `4624` = connexion réussie, `4625` = échec, `4648` = connexion avec credentials explicites. Ces trois EventIDs ensemble permettent d'analyser les patterns d'authentification."
+    },
+    {
+      "id": "ex-kql-l1-m2-2",
+      "order": 2,
+      "title": "Filtrer les comptes non vides",
+      "instructions": "Affichez les lignes de `SigninLogs` des dernières 2 heures où `UserPrincipalName` **n'est pas vide**.",
+      "requiredKeywords": ["signinlogs", "isnotempty(userprincipalname)", "ago(2h)"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(2h)\n| where isnotempty(UserPrincipalName)",
+      "explanation": "`isnotempty()` vérifie que la valeur n'est ni null ni chaîne vide. `isnotnull()` vérifie uniquement non-null. Dans les logs Sentinel, certains champs peuvent être vides ou null — toujours filtrer pour éviter des faux positifs."
+    },
+    {
+      "id": "ex-kql-l1-m2-3",
+      "order": 3,
+      "title": "project-rename pour lisibilité",
+      "instructions": "Depuis `SigninLogs`, sélectionnez `TimeGenerated` (renommé `Timestamp`), `UserPrincipalName` (renommé `User`) et `IPAddress` (renommé `IP`).",
+      "requiredKeywords": ["project", "timestamp=timegenerated", "user=userprincipalname"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1h)\n| project Timestamp=TimeGenerated, User=UserPrincipalName, IP=IPAddress",
+      "explanation": "Dans `project`, `NewName=OldName` renomme la colonne en même temps qu'on la sélectionne. Utile pour produire un résultat propre dans un tableau de bord ou une alerte."
+    },
+    {
+      "id": "ex-kql-l1-m2-4",
+      "order": 4,
+      "title": "extend — heure de connexion",
+      "instructions": "Ajoutez une colonne `HourOfDay` à `SigninLogs` avec la fonction `hourofday(TimeGenerated)` et filtrez les connexions hors-heures (avant 8h ou après 18h).",
+      "requiredKeywords": ["extend", "hourofday(timegenerated)", "< 8 or", "> 18"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1d)\n| extend HourOfDay = hourofday(TimeGenerated)\n| where HourOfDay < 8 or HourOfDay > 18",
+      "explanation": "`hourofday()` retourne l'heure (0-23). `extend` ajoute la colonne calculée sans supprimer les autres. Le filtre `< 8 or > 18` identifie les connexions hors des heures de bureau — signal potentiel d'activité malveillante."
+    },
+    {
+      "id": "ex-kql-l1-m2-5",
+      "order": 5,
+      "title": "extend — extraire le domaine",
+      "instructions": "Depuis `SigninLogs`, extrayez le domaine de `UserPrincipalName` (partie après `@`) dans une colonne `Domain` avec `split()` et `tostring()`.",
+      "requiredKeywords": ["extend", "split(userprincipalname", "tostring("],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1h)\n| extend Domain = tostring(split(UserPrincipalName, \"@\")[1])",
+      "explanation": "`split(colonne, délimiteur)` retourne un tableau. `[1]` prend le deuxième élément (index 0 = partie avant @, index 1 = domaine). `tostring()` convertit car `split` retourne un type dynamic. Utile pour grouper des connexions par domaine."
+    }
+  ]
+}

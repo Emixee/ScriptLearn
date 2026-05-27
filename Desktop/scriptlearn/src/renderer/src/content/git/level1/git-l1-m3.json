@@ -1,0 +1,74 @@
+{
+  "id": "git-l1-m3",
+  "title": "Visualiser l'historique",
+  "level": "git-l1",
+  "lang": "git",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "git log — explorer l'historique",
+      "content": "```bash\n# Historique complet\ngit log\n\n# Condensé : hash + message\ngit log --oneline\n\n# Graphe ASCII des branches\ngit log --oneline --graph --all\n\n# Les N derniers commits\ngit log -5\n\n# Commits par auteur\ngit log --author=\"Alice\"\n\n# Commits depuis une date\ngit log --since=\"2024-01-01\"\n\n# Commits contenant un mot dans le message\ngit log --grep=\"fix\"\n\n# Commits qui ont modifié une fonction/ligne précise\ngit log -S \"nom_de_fonction\"\n```"
+    },
+    {
+      "title": "git diff — comparer les modifications",
+      "content": "```bash\n# Modifications non stagées (Working Dir vs Staging)\ngit diff\n\n# Modifications stagées (Staging vs dernier commit)\ngit diff --staged\n\n# Comparer deux commits\ngit diff abc1234..def5678\n\n# Comparer deux branches\ngit diff main..feature/login\n\n# Voir uniquement les fichiers modifiés\ngit diff --name-only\ngit diff --stat  # avec nombre de lignes\n```\n\nMnémonique :\n- `git diff` = ce qui n'est pas encore stagé\n- `git diff --staged` = ce qui est en staging (prêt à commiter)"
+    },
+    {
+      "title": "git show et git blame",
+      "content": "```bash\n# Voir le contenu d'un commit précis\ngit show abc1234\ngit show HEAD     # dernier commit\ngit show HEAD~2   # 2 commits avant HEAD\n\n# Voir seulement les fichiers modifiés par un commit\ngit show --name-only abc1234\n\n# git blame — qui a écrit chaque ligne ?\ngit blame fichier.js\n# Affiche : hash | auteur | date | ligne\n\n# blame d'une plage de lignes\ngit blame -L 10,20 fichier.js  # lignes 10 à 20\n```\n\n`git blame` est précieux pour comprendre **pourquoi** une ligne de code a été écrite — on retrouve le commit, puis on lit son message ou son PR associé."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l1-m3-1",
+      "order": 1,
+      "title": "Log condensé et graphe",
+      "instructions": "Affichez l'historique en **une ligne par commit** avec le graphe ASCII de toutes les branches.",
+      "requiredKeywords": ["git log", "--oneline", "--graph", "--all"],
+      "validationType": "keywords",
+      "correction": "git log --oneline --graph --all",
+      "explanation": "Cette combinaison est l'une des plus utilisées. `--oneline` condense, `--graph` dessine les embranchements, `--all` inclut toutes les branches locales et distantes."
+    },
+    {
+      "id": "ex-git-l1-m3-2",
+      "order": 2,
+      "title": "Voir les 3 derniers commits",
+      "instructions": "Affichez les **3 derniers commits** en format condensé.",
+      "requiredKeywords": ["git log", "-3", "--oneline"],
+      "validationType": "keywords",
+      "correction": "git log -3 --oneline",
+      "explanation": "`-n` (ou juste `-3`) limite le nombre de commits affichés. Utile pour voir rapidement les dernières modifications sans parcourir tout l'historique."
+    },
+    {
+      "id": "ex-git-l1-m3-3",
+      "order": 3,
+      "title": "Voir les modifications non stagées",
+      "instructions": "Affichez les **modifications non stagées** (différence entre le Working Directory et le Staging Area).",
+      "requiredKeywords": ["git diff"],
+      "validationType": "keywords",
+      "correction": "git diff",
+      "explanation": "`git diff` sans argument compare le Working Directory avec l'index. Si vous avez fait `git add`, utilisez `git diff --staged` pour voir ce qui est en staging."
+    },
+    {
+      "id": "ex-git-l1-m3-4",
+      "order": 4,
+      "title": "Voir le contenu d'un commit",
+      "instructions": "Affichez le contenu détaillé du **dernier commit** (modifications incluses).",
+      "requiredKeywords": ["git show", "head"],
+      "validationType": "keywords",
+      "correction": "git show HEAD",
+      "explanation": "`git show HEAD` affiche le message du commit + le diff complet de tous les fichiers modifiés. `HEAD` est un pointeur vers le commit le plus récent de la branche courante."
+    },
+    {
+      "id": "ex-git-l1-m3-5",
+      "order": 5,
+      "title": "Identifier l'auteur d'une ligne",
+      "instructions": "Affichez **qui a modifié chaque ligne** du fichier `src/main.js` avec la date et le commit.",
+      "requiredKeywords": ["git blame", "src/main.js"],
+      "validationType": "keywords",
+      "correction": "git blame src/main.js",
+      "explanation": "`git blame` annoте chaque ligne avec le hash du commit, l'auteur et la date. Essentiel pour comprendre le contexte d'un bout de code — puis `git show <hash>` pour lire le commit complet."
+    }
+  ]
+}

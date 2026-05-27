@@ -1,0 +1,74 @@
+{
+  "id": "git-l2-m2",
+  "title": "Résoudre les conflits de fusion",
+  "level": "git-l2",
+  "lang": "git",
+  "order": 2,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'un conflit ?",
+      "content": "Un **conflit** survient quand deux branches ont modifié les **mêmes lignes** d'un même fichier. Git marque les zones conflictuelles :\n\n```\n<<<<<<< HEAD\nconst title = 'Bienvenue';        ← version branche courante\n=======\nconst title = 'Bonjour le monde'; ← version à fusionner\n>>>>>>> feature/accueil\n```\n\nGit interrompt le merge et attend que vous résolvez manuellement chaque conflit."
+    },
+    {
+      "title": "Résoudre un conflit — étapes",
+      "content": "```bash\n# 1. Voir les fichiers en conflit\ngit status\n# both modified: src/app.js\n\n# 2. Ouvrir et éditer chaque fichier en conflit\n# (choisir une version, combiner, ou réécrire)\n\n# 3. Marquer comme résolu\ngit add src/app.js\n\n# 4. Finaliser le merge\ngit commit  # Git propose un message de merge\n\n# Annuler le merge en cours (revenir à avant)\ngit merge --abort\n```\n\n**Outils visuels** :\n```bash\n# Lancer l'outil de merge configuré\ngit mergetool\n\n# Configurer VS Code comme outil de merge\ngit config --global merge.tool vscode\ngit config --global mergetool.vscode.cmd 'code --wait $MERGED'\n```"
+    },
+    {
+      "title": "Stratégies pour éviter les conflits",
+      "content": "```bash\n# Mettre à jour sa branche avant de fusionner\ngit switch feature/login\ngit merge main  # intégrer les derniers changements de main\n# Résoudre les conflits sur sa propre branche\n# puis faire la PR — merge dans main sera clean\n\n# Voir si un conflit est probable\ngit diff main..feature/login\n\n# Merge en simulant (dry-run) — vérifier avant de faire\ngit merge --no-commit --no-ff feature/login\n# Voir l'état, puis annuler\ngit merge --abort\n```\n\nBonne pratique : **synchroniser souvent** sa branche avec `main` pour éviter que les divergences s'accumulent."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l2-m2-1",
+      "order": 1,
+      "title": "Identifier les conflits",
+      "instructions": "Après un merge conflictuel, quelle commande affiche les **fichiers en conflit** ?",
+      "requiredKeywords": ["git status"],
+      "validationType": "keywords",
+      "correction": "git status",
+      "explanation": "Après un merge partiel, `git status` liste les fichiers `both modified`. C'est le point de départ pour la résolution : ouvrir ces fichiers, choisir la bonne version, puis `git add`."
+    },
+    {
+      "id": "ex-git-l2-m2-2",
+      "order": 2,
+      "title": "Marquer un conflit résolu",
+      "instructions": "Après avoir édité et résolu le conflit dans `src/components/Header.jsx`, marquez-le comme résolu.",
+      "requiredKeywords": ["git add", "src/components/header.jsx"],
+      "validationType": "keywords",
+      "correction": "git add src/components/Header.jsx",
+      "explanation": "`git add fichier` après résolution de conflit signifie : \"j'ai résolu ce fichier\". Une fois tous les fichiers résolus (plus aucun `both modified` dans `git status`), on peut `git commit` pour finaliser."
+    },
+    {
+      "id": "ex-git-l2-m2-3",
+      "order": 3,
+      "title": "Annuler un merge en cours",
+      "instructions": "Annulez le merge en cours et **revenez à l'état avant le merge**.",
+      "requiredKeywords": ["git merge", "--abort"],
+      "validationType": "keywords",
+      "correction": "git merge --abort",
+      "explanation": "`--abort` annule tout le merge et restaure le dépôt à son état d'avant `git merge`. Utile quand les conflits sont trop nombreux ou complexes — on reprend à tête reposée."
+    },
+    {
+      "id": "ex-git-l2-m2-4",
+      "order": 4,
+      "title": "Mettre à jour sa branche",
+      "instructions": "Depuis la branche `feature/auth`, intégrez les derniers changements de `main` pour réduire les futurs conflits.",
+      "requiredKeywords": ["git switch", "feature/auth", "git merge", "main"],
+      "validationType": "keywords",
+      "correction": "git switch feature/auth && git merge main",
+      "explanation": "Fusionner `main` dans sa feature branch régulièrement = \"se synchroniser\". Cela réduit la divergence et les conflits futurs lors du merge de retour dans `main`."
+    },
+    {
+      "id": "ex-git-l2-m2-5",
+      "order": 5,
+      "title": "Merge en simulation",
+      "instructions": "Testez un merge de `feature/new-ui` sans finaliser (`--no-commit --no-ff`), puis annulez.",
+      "requiredKeywords": ["git merge", "--no-commit", "--no-ff", "feature/new-ui"],
+      "validationType": "keywords",
+      "correction": "git merge --no-commit --no-ff feature/new-ui && git merge --abort",
+      "explanation": "`--no-commit` applique le merge mais ne crée pas le commit. `--no-ff` force un merge commit (même si fast-forward possible). On peut inspecter l'état avant de décider de `git commit` ou `git merge --abort`."
+    }
+  ]
+}

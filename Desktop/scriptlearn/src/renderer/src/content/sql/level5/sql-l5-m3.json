@@ -1,0 +1,74 @@
+{
+  "id": "sql-l5-m3",
+  "title": "Normalisation et schéma relationnel",
+  "level": "sql-l5",
+  "lang": "sql",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Les formes normales",
+      "content": "La **normalisation** organise les données pour éviter la redondance et les anomalies.\n\n**1NF** — chaque cellule contient une valeur atomique (pas de listes) :\n```sql\n-- ❌ Non normalisé\n| id | name  | phones          |\n| 1  | Alice | 06..., 07...    |\n\n-- ✅ 1NF\n| id | name  |     | id | person_id | phone |\n| 1  | Alice |     | 1  | 1         | 06... |\n                   | 2  | 1         | 07... |\n```\n\n**2NF** — chaque colonne dépend de toute la clé primaire (pas d'une partie).\n\n**3NF** — chaque colonne dépend directement de la clé primaire (pas d'une autre colonne non-clé)."
+    },
+    {
+      "title": "Schéma en étoile vs OLTP",
+      "content": "**OLTP** (transactionnel) — base normalisée pour les opérations quotidiennes :\n```\norders → order_items → products\n       → customers\n```\n\n**OLAP / Data Warehouse** — schéma en étoile pour l'analyse :\n```\n          fact_sales\n         /    |    \\\ndim_date  dim_product  dim_customer\n```\n\nLa table de faits contient les mesures (quantité, montant). Les dimensions fournissent le contexte.\n\n```sql\n-- Requête analytique sur schéma en étoile\nSELECT d.year, p.category, SUM(f.revenue) AS ca\nFROM fact_sales f\nJOIN dim_date d ON f.date_id = d.id\nJOIN dim_product p ON f.product_id = p.id\nGROUP BY d.year, p.category;\n```"
+    },
+    {
+      "title": "Patterns anti-redondance",
+      "content": "```sql\n-- Problème : duplication du nom de département\nCREATE TABLE employees_mauvais (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  department_name TEXT  -- ❌ répété pour chaque employé\n);\n\n-- Solution : table séparée + clé étrangère\nCREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT);\nCREATE TABLE employees (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  dept_id INTEGER REFERENCES departments(id)  -- ✅\n);\n```\n\n**Avantages** :\n- Renommer un département = 1 UPDATE dans `departments`\n- Pas de désynchronisation entre lignes\n- Intégrité référentielle via `FOREIGN KEY`"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l5-m3-1",
+      "order": 1,
+      "title": "Identifier une violation de 1NF",
+      "instructions": "Une colonne `tags` contient `'sql,python,data'`. Quelle action corrige la violation de 1NF ?\n\nÉcrivez la clause SQL pour créer une table `user_tags` avec `user_id` et `tag`.",
+      "requiredKeywords": ["create table", "user_tags", "user_id", "tag"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE user_tags (user_id INTEGER REFERENCES users(id), tag TEXT, PRIMARY KEY (user_id, tag));",
+      "explanation": "1NF interdit les listes dans une cellule. La solution : une table de jonction `user_tags` avec une ligne par combinaison (utilisateur, tag). La clé primaire composite `(user_id, tag)` évite les doublons."
+    },
+    {
+      "id": "ex-sql-l5-m3-2",
+      "order": 2,
+      "title": "Clé primaire composite",
+      "instructions": "Créez une table de liaison `project_members` avec les colonnes `project_id` et `employee_id`, dont la **clé primaire est composite** (les deux colonnes ensemble).",
+      "requiredKeywords": ["create table", "project_members", "project_id", "employee_id", "primary key", "project_id", "employee_id"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE project_members (project_id INTEGER REFERENCES projects(id), employee_id INTEGER REFERENCES employees(id), PRIMARY KEY (project_id, employee_id));",
+      "explanation": "La clé primaire composite garantit qu'un employé ne peut être ajouté qu'une seule fois à un projet. C'est le pattern standard pour les relations many-to-many."
+    },
+    {
+      "id": "ex-sql-l5-m3-3",
+      "order": 3,
+      "title": "Requête sur schéma en étoile",
+      "instructions": "Calculez le **chiffre d'affaires total par catégorie de produit** en joignant `fact_sales`, `dim_product` (via `product_id`) et en groupant par `dim_product.category`.",
+      "requiredKeywords": ["select", "category", "sum", "revenue", "from", "fact_sales", "join", "dim_product", "on", "product_id", "group by", "category"],
+      "validationType": "keywords",
+      "correction": "SELECT p.category, SUM(f.revenue) AS ca FROM fact_sales f JOIN dim_product p ON f.product_id = p.id GROUP BY p.category ORDER BY ca DESC;",
+      "explanation": "Dans un schéma en étoile, les requêtes analytiques joignent la table de faits avec les dimensions. `SUM(revenue)` agrège les mesures, `GROUP BY category` regroupe selon la dimension."
+    },
+    {
+      "id": "ex-sql-l5-m3-4",
+      "order": 4,
+      "title": "Dénormaliser pour la performance",
+      "instructions": "Créez une vue matérialisée (simulée avec une table) `monthly_sales` pré-calculant `SUM(revenue)` groupé par `month` depuis `fact_sales`.",
+      "requiredKeywords": ["create table", "monthly_sales", "as", "select", "month", "sum", "revenue", "from", "fact_sales", "group by", "month"],
+      "validationType": "keywords",
+      "correction": "CREATE TABLE monthly_sales AS SELECT month, SUM(revenue) AS total FROM fact_sales GROUP BY month;",
+      "explanation": "`CREATE TABLE ... AS SELECT ...` crée une table pré-calculée. En OLAP, recalculer ce résultat à chaque requête sur des milliards de lignes est trop coûteux. Cette table dénormalisée est rafraîchie périodiquement."
+    },
+    {
+      "id": "ex-sql-l5-m3-5",
+      "order": 5,
+      "title": "Contrainte d'intégrité référentielle",
+      "instructions": "Ajoutez une contrainte `FOREIGN KEY` sur la colonne `manager_id` de la table `employees`, qui référence `id` dans la même table.",
+      "requiredKeywords": ["alter table", "employees", "add", "foreign key", "manager_id", "references", "employees", "id"],
+      "validationType": "keywords",
+      "correction": "ALTER TABLE employees ADD FOREIGN KEY (manager_id) REFERENCES employees(id);",
+      "explanation": "Une auto-référence (`employees.manager_id` → `employees.id`) modélise une hiérarchie. La contrainte `FOREIGN KEY` garantit que `manager_id` pointe vers un employé existant — impossible d'avoir un manager fantôme."
+    }
+  ]
+}

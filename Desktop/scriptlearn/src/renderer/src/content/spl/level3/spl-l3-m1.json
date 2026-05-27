@@ -1,0 +1,74 @@
+{
+  "id": "spl-l3-m1",
+  "title": "Macros, knowledge objects et optimisation",
+  "level": "spl-l3",
+  "lang": "spl",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Macros SPL — requêtes réutilisables",
+      "content": "Les macros sont des fragments SPL réutilisables définis dans **Settings > Advanced Search > Search macros** :\n\n```spl\n// Définir une macro (dans Splunk UI)\n// Nom : auth_failures\n// Définition : index=security (EventCode=4625 OR EventCode=4771) earliest=-$window$\n// Arguments : window\n\n// Appel d'une macro sans argument\n`base_security_search`\n\n// Appel avec argument\n`auth_failures(24h)`\n// Développé en : index=security (EventCode=4625 OR EventCode=4771) earliest=-24h\n\n// Macro de validation (évite les requêtes accidentellement larges)\n`is_production_host(host)`\n// Définition : host IN (\"web01\", \"web02\", \"db01\")\n\n// Macro de normalisation de champs\n`normalize_user`\n// Définition : eval user=coalesce(Account, UserName, user, username)\n\n// Chaîner des macros\n`auth_failures(4h)` `normalize_user` | stats count BY user\n```"
+    },
+    {
+      "title": "tstats — statistiques rapides sur les CIM",
+      "content": "`tstats` est beaucoup plus rapide que `stats` car il interroge les **index tsidx** (summary indexes) :\n\n```spl\n// Compter des événements sans charger _raw\n| tstats count WHERE index=security BY host, sourcetype, _time span=1h\n\n// Avec le CIM (Common Information Model)\n// Les données normalisées sont dans des datamodels\n| tstats count FROM datamodel=Authentication\n  WHERE nodename=Authentication.Failed_Authentication\n  BY Authentication.user, Authentication.src\n  GROUPBY _time span=1h\n\n// tstats est 10-100x plus rapide sur les grands volumes\n// car il n'extrait pas _raw\n\n// Vérifier les datamodels disponibles\n| datamodel\n\n// Interroger un datamodel spécifique\n| tstats count FROM datamodel=Network_Traffic.All_Traffic\n  WHERE All_Traffic.action=blocked\n  BY All_Traffic.src, All_Traffic.dest_port\n```"
+    },
+    {
+      "title": "Optimisation des requêtes SPL",
+      "content": "```spl\n// ❌ Lent : recherche trop large\nindex=* earliest=-30d | search error\n\n// ✅ Rapide : index + sourcetype + fenêtre temporelle restreinte\nindex=security sourcetype=WinEventLog:Security earliest=-1h | search EventCode=4625\n\n// Ordre optimal des commandes\n// 1. Filtres de base (réduisent le volume)\nindex=security EventCode=4625\n// 2. Filtres temporels (déjà gérés par earliest/latest)\n// 3. Filtres sur champs (where)\n| where isnotnull(src_ip)\n// 4. Agrégations (stats, timechart)\n| stats count BY src_ip\n// 5. Post-traitements (sort, table, eval)\n| sort -count | head 20\n\n// Accélérer avec summarize indexes (summary indexes)\n// Les summary indexes stockent des agrégats pré-calculés\n// Configurés via des recherches planifiées qui écrivent avec collect\n\n| collect index=summary_auth sourcetype=auth_daily\n// Puis interroger le summary index (très rapide)\nindex=summary_auth sourcetype=auth_daily\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l3-m1-1",
+      "order": 1,
+      "title": "Appeler une macro",
+      "instructions": "Appelez la macro `auth_failures` avec l'argument `24h` (syntaxe des backticks) puis ajoutez un `stats count BY src_ip`.",
+      "requiredKeywords": ["`auth_failures(24h)`", "stats count by src_ip"],
+      "validationType": "keywords",
+      "correction": "`auth_failures(24h)`\n| stats count AS failures BY src_ip\n| sort -failures",
+      "explanation": "Les macros s'appellent avec des backticks `` ` ``. Avec arguments : `` `macro(arg1, arg2)` ``. La macro est développée avant l'exécution. Cela permet de maintenir des requêtes complexes à un seul endroit et de les réutiliser dans des tableaux de bord, alertes, rapports."
+    },
+    {
+      "id": "ex-spl-l3-m1-2",
+      "order": 2,
+      "title": "tstats — comptage rapide",
+      "instructions": "Utilisez `tstats count` pour compter les événements par `host` et `sourcetype` dans `index=security` sans charger `_raw`.",
+      "requiredKeywords": ["| tstats count", "where index=security", "by host, sourcetype"],
+      "validationType": "keywords",
+      "correction": "| tstats count WHERE index=security BY host, sourcetype, _time span=1h",
+      "explanation": "`tstats` n'extrait pas `_raw` — il lit les métadonnées indexées (timestamps, champs bloom-filtrés). 10-100x plus rapide sur de gros volumes. Limité aux champs indexés (pas les champs extraits à la volée par `rex` ou `eval`)."
+    },
+    {
+      "id": "ex-spl-l3-m1-3",
+      "order": 3,
+      "title": "tstats — datamodel Authentication",
+      "instructions": "Avec `tstats`, comptez les authentifications échouées depuis le datamodel `Authentication` (nœud `Authentication.Failed_Authentication`) par `Authentication.user`.",
+      "requiredKeywords": ["tstats count from datamodel=authentication", "authentication.failed_authentication", "by authentication.user"],
+      "validationType": "keywords",
+      "correction": "| tstats count FROM datamodel=Authentication\n  WHERE nodename=Authentication.Failed_Authentication\n  BY Authentication.user, Authentication.src",
+      "explanation": "Les datamodels CIM normalisent les données hétérogènes (Windows, Linux, Cisco...) dans un schéma commun. `datamodel=Authentication` couvre tous les events d'authentification, quel que soit le sourcetype. `tstats` sur les datamodels accélérés est la méthode la plus performante pour les grandes requêtes Splunk."
+    },
+    {
+      "id": "ex-spl-l3-m1-4",
+      "order": 4,
+      "title": "Optimisation — ordre des filtres",
+      "instructions": "Réécrivez cette requête inefficace de manière optimisée : `index=* | search EventCode=4625 | stats count BY host | search count > 10`.",
+      "requiredKeywords": ["index=security", "eventcode=4625", "earliest=", "| where count > 10"],
+      "validationType": "keywords",
+      "correction": "index=security sourcetype=WinEventLog:Security EventCode=4625 earliest=-1h\n| stats count BY host\n| where count > 10",
+      "explanation": "Optimisations : (1) `index=*` → `index=security` réduit le périmètre, (2) `sourcetype=WinEventLog:Security` réduit encore, (3) `EventCode=4625` en filtre de base (avant le pipe) est plus rapide que `| search EventCode=4625`, (4) `where` est plus rapide que `search` après un pipe."
+    },
+    {
+      "id": "ex-spl-l3-m1-5",
+      "order": 5,
+      "title": "collect — alimenter un summary index",
+      "instructions": "Écrivez une recherche qui calcule le nombre d'échecs d'auth par heure et stocke le résultat dans `index=summary` avec `collect`.",
+      "requiredKeywords": ["timechart count span=1h", "| collect index=summary"],
+      "validationType": "keywords",
+      "correction": "index=security EventCode=4625 earliest=-2h latest=-1h\n| timechart count span=1h\n| collect index=summary sourcetype=auth_hourly",
+      "explanation": "`collect` écrit les résultats d'une recherche dans un index Splunk. Utilisé dans des recherches planifiées pour pré-agréger les données et créer des summary indexes. Ces index sont ensuite interrogés avec `tstats` — beaucoup plus rapide que recalculer sur 30 jours à chaque fois."
+    }
+  ]
+}

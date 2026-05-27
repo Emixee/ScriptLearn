@@ -29,6 +29,7 @@ function buildLevelStats(progress) {
 }
 
 function findResumeTarget(progress) {
+  // Chercher d'abord dans les niveaux standard (Bash, Python, PowerShell)
   for (const level of contentIndex.levels) {
     if (level.locked) continue
     for (const lang of ALL_LANGS) {
@@ -40,34 +41,64 @@ function findResumeTarget(progress) {
       }
     }
   }
+  // Si tous les niveaux standard sont terminés, chercher dans les langages complémentaires
+  const tracks = contentIndex.complementary?.tracks ?? {}
+  for (const [trackKey, track] of Object.entries(tracks)) {
+    for (const level of track.levels) {
+      for (const modRef of level.modules) {
+        const mod = getModule(modRef.id)
+        if (!mod) continue
+        const idx = mod.exercises.findIndex(ex => !progress[ex.id]?.completed)
+        if (idx !== -1) return { lang: trackKey, levelId: level.id, moduleId: modRef.id, exIdx: idx + 1, moduleTitle: modRef.title }
+      }
+    }
+  }
   return null
 }
 
 function findSpacedRepetition(progress) {
   const now = Date.now()
-  const INTERVALS = [1, 3, 7, 14] // jours
+  // Plus d'attempts = révision plus fréquente (Ebbinghaus spacing effect)
+  const INTERVALS = [1, 3, 7, 14] // jours entre révisions selon le nombre de tentatives
   const results = []
+
+  // Fonction interne : évalue un module pour la révision espacée
+  function checkModule(refId, lang, levelId) {
+    const mod = getModule(refId)
+    if (!mod) return
+    for (const ex of mod.exercises) {
+      const entry = progress[ex.id]
+      if (!entry?.completed) continue
+      const attempts = entry.attempts ?? 1
+      const intervalDays = INTERVALS[Math.min(attempts - 1, INTERVALS.length - 1)]
+      const completedAt = new Date(entry.completedAt).getTime()
+      const daysSince = (now - completedAt) / 86400000
+      if (daysSince >= intervalDays) {
+        results.push({ ex, lang, levelId, moduleId: refId, daysSince: Math.floor(daysSince), attempts })
+      }
+    }
+  }
+
+  // Niveaux standard (non verrouillés)
   for (const level of contentIndex.levels) {
     if (level.locked) continue
     for (const lang of ALL_LANGS) {
       for (const ref of (level.languages[lang] ?? [])) {
-        const mod = getModule(ref.id)
-        if (!mod) continue
-        for (const ex of mod.exercises) {
-          const entry = progress[ex.id]
-          if (!entry?.completed) continue
-          const attempts = entry.attempts ?? 1
-          // Plus d'attempts → révision plus fréquente
-          const intervalDays = INTERVALS[Math.min(attempts - 1, INTERVALS.length - 1)]
-          const completedAt = new Date(entry.completedAt).getTime()
-          const daysSince = (now - completedAt) / 86400000
-          if (daysSince >= intervalDays) {
-            results.push({ ex, lang, levelId: level.id, moduleId: ref.id, daysSince: Math.floor(daysSince), attempts })
-          }
-        }
+        checkModule(ref.id, lang, level.id)
       }
     }
   }
+
+  // Langages complémentaires — pas de notion de verrouillage dans les tracks
+  const tracks = contentIndex.complementary?.tracks ?? {}
+  for (const [trackKey, track] of Object.entries(tracks)) {
+    for (const level of track.levels) {
+      for (const modRef of level.modules) {
+        checkModule(modRef.id, trackKey, level.id)
+      }
+    }
+  }
+
   return results.sort((a, b) => b.daysSince - a.daysSince).slice(0, 5)
 }
 
@@ -165,14 +196,31 @@ export default function Dashboard() {
   const xpLevel      = useMemo(() => xpLevelInfo(xpInfo), [xpInfo])
   const badges       = useMemo(() => getUnlockedBadges(stats), [stats])
 
-  const totalDone      = Object.values(progress).filter(p => p.completed).length
-  const totalExercises = levelStats.reduce((s, l) => s + l.total, 0)
+  // totalDone compte TOUS les exercices complétés dans la store (standard + complémentaires)
+  const totalDone = Object.values(progress).filter(p => p.completed).length
+
+  // Total exercices = niveaux standard + langages complémentaires
+  // On sépare les deux pour pouvoir afficher "X / Y exercices" correctement
+  const compExercisesTotal = useMemo(() => {
+    let total = 0
+    const tracks = contentIndex.complementary?.tracks ?? {}
+    for (const [, track] of Object.entries(tracks)) {
+      for (const level of track.levels) {
+        for (const modRef of level.modules) {
+          total += getModule(modRef.id)?.exercises?.length ?? 0
+        }
+      }
+    }
+    return total
+  }, [])
+  const totalExercises = levelStats.reduce((s, l) => s + l.total, 0) + compExercisesTotal
   const globalPercent  = totalExercises > 0 ? Math.round((totalDone / totalExercises) * 100) : 0
   const isNewProfile   = totalDone === 0 && Object.keys(progress).length === 0
   const streak         = computeStreak(activity)
 
   const completedModules = useMemo(() => {
     let count = 0
+    // Modules standard
     for (const level of contentIndex.levels) {
       for (const lang of ALL_LANGS) {
         for (const ref of (level.languages[lang] ?? [])) {
@@ -182,11 +230,28 @@ export default function Dashboard() {
         }
       }
     }
+    // Modules complémentaires — même critère : 100% des exercices réussis
+    const tracks = contentIndex.complementary?.tracks ?? {}
+    for (const [, track] of Object.entries(tracks)) {
+      for (const level of track.levels) {
+        for (const modRef of level.modules) {
+          const mod = getModule(modRef.id)
+          if (!mod) continue
+          if (mod.exercises.length > 0 && mod.exercises.every(ex => progress[ex.id]?.completed)) count++
+        }
+      }
+    }
     return count
   }, [progress])
 
-  const totalModules = contentIndex.levels.reduce((s, l) =>
-    s + ALL_LANGS.reduce((a, lang) => a + (l.languages[lang]?.length ?? 0), 0), 0)
+  // Nombre total de modules (standard + complémentaires) — affiché dans l'onboarding et les stats
+  const totalModules = useMemo(() => {
+    const standardCount = contentIndex.levels.reduce((s, l) =>
+      s + ALL_LANGS.reduce((a, lang) => a + (l.languages[lang]?.length ?? 0), 0), 0)
+    const compCount = Object.values(contentIndex.complementary?.tracks ?? {})
+      .reduce((s, track) => s + track.levels.reduce((a, l) => a + l.modules.length, 0), 0)
+    return standardCount + compCount
+  }, [])
 
   const weeklyDone = useMemo(() => {
     const { monday, sunday } = getWeekDates()

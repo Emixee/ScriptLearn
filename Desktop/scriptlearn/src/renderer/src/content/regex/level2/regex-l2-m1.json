@@ -1,0 +1,74 @@
+{
+  "id": "regex-l2-m1",
+  "title": "Lookahead et lookbehind",
+  "level": "regex-l2",
+  "lang": "regex",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Lookahead positif (?=...)",
+      "content": "Le **lookahead positif** `(?=...)` vérifie ce qui suit, sans le consommer :\n\n```\nfoo(?=bar)   → \"foo\" seulement si suivi de \"bar\"\n\n# Exemples :\n\\d+(?= euros)   → nombres suivis de \" euros\"\n\\w+(?=\\.com)    → domaine avant \".com\"\npassword(?=.*\\d)(?=.*[A-Z])  → contient chiffre ET majuscule\n```\n\n**Le texte du lookahead n'est pas inclus dans le match** — c'est une vérification de contexte, pas une capture.\n\n```\n\"100 euros\" → \\d+(?= euros) → match \"100\" (sans \" euros\")\n```\n\nUtilisation typique : validation de mot de passe, extraction conditionnelle."
+    },
+    {
+      "title": "Lookahead négatif (?!...)",
+      "content": "Le **lookahead négatif** `(?!...)` vérifie que ce qui suit **n'est pas** le pattern :\n\n```\nfoo(?!bar)   → \"foo\" seulement si PAS suivi de \"bar\"\n\n# Exemples :\n\\d+(?!\\.\\d)    → entier non suivi d'un point (pas décimal)\n\\b(?!http)\\w+  → mot ne commençant pas par \"http\"\n```\n\n```\n# Extraire noms de variables qui ne sont pas des mots réservés\n\\b(?!if|else|for|while)\\w+\\b\n\n# Nombres entiers dans un texte mixte\n\\b\\d+(?!\\.\\d)\\b   → \"42\" mais pas \"3.14\"\n```"
+    },
+    {
+      "title": "Lookbehind positif (?<=...) et négatif (?<!...)",
+      "content": "Le **lookbehind** vérifie ce qui précède sans le consommer :\n\n```\n(?<=@)\\w+        → mot APRÈS @  (partie domaine d'un email)\n(?<=Prix: )\\d+   → nombre APRÈS \"Prix: \"\n\n(?<!\\d)\\d{4}     → 4 chiffres NON précédés d'un chiffre\n(?<!\\.)\\bcom\\b   → \"com\" non précédé d'un point\n```\n\n**Exemples pratiques :**\n```\n# Extraire le montant sans le symbole €\n(?<=€)\\d+[\\d,.]*\n\n# Extraire le code HTTP sans le préfixe\n(?<=HTTP/\\d\\.\\d \")\\d{3}\n\n# Trouver des passwords exposés dans des logs\n(?<=password=)\\S+\n```\n\n⚠️ Python `re` : lookbehind de longueur fixe seulement. `(?<=ab)` OK, `(?<=a+)` non."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l2-m1-1",
+      "order": 1,
+      "title": "Lookahead positif",
+      "instructions": "Écrivez un pattern qui correspond à des **chiffres suivis de \" euros\"** (lookahead positif) sans inclure \" euros\" dans le match.",
+      "requiredKeywords": ["\\d+", "(?= euros)"],
+      "validationType": "keywords",
+      "correction": "\\d+(?= euros)",
+      "explanation": "`(?= euros)` est un lookahead positif : il vérifie que \" euros\" suit, mais ne le consomme pas. Le match ne contient que les chiffres. Utile pour extraire une valeur dans un contexte précis."
+    },
+    {
+      "id": "ex-regex-l2-m1-2",
+      "order": 2,
+      "title": "Lookahead négatif",
+      "instructions": "Écrivez un pattern qui correspond à `\\d+` **non suivi d'un point décimal** (lookahead négatif `(?!\\.\\d)`).",
+      "requiredKeywords": ["\\d+", "(?!\\.\\d)"],
+      "validationType": "keywords",
+      "correction": "\\d+(?!\\.\\d)",
+      "explanation": "`(?!\\.\\d)` est un lookahead négatif : le nombre ne doit pas être suivi de `.` puis d'un chiffre. `3.14` ne correspond pas, mais `42` oui. Permet de distinguer entiers et décimaux."
+    },
+    {
+      "id": "ex-regex-l2-m1-3",
+      "order": 3,
+      "title": "Lookbehind positif",
+      "instructions": "Écrivez un pattern qui extrait le **mot après `@`** dans une adresse email (lookbehind positif).",
+      "requiredKeywords": ["(?<=@)", "\\w+"],
+      "validationType": "keywords",
+      "correction": "(?<=@)\\w+",
+      "explanation": "`(?<=@)` vérifie qu'un `@` précède, sans l'inclure dans le match. `\\w+` capture ensuite le domaine. Pour `user@gmail.com`, le match est `gmail`."
+    },
+    {
+      "id": "ex-regex-l2-m1-4",
+      "order": 4,
+      "title": "Lookbehind négatif",
+      "instructions": "Écrivez un pattern qui correspond à `\\d{4}` **non précédés d'un chiffre** (lookbehind négatif).",
+      "requiredKeywords": ["(?<!\\d)", "\\d{4}"],
+      "validationType": "keywords",
+      "correction": "(?<!\\d)\\d{4}",
+      "explanation": "`(?<!\\d)` est un lookbehind négatif : les 4 chiffres ne doivent pas être précédés d'un autre chiffre. Utile pour trouver des années (`2024`) sans capturer des numéros plus longs (`20241`)."
+    },
+    {
+      "id": "ex-regex-l2-m1-5",
+      "order": 5,
+      "title": "Lookahead combiné",
+      "instructions": "Écrivez un pattern pour valider qu'une chaîne contient au moins un chiffre ET une majuscule (deux lookaheads positifs depuis `^`).",
+      "requiredKeywords": ["^", "(?=.*\\d)", "(?=.*[A-Z])"],
+      "validationType": "keywords",
+      "correction": "^(?=.*\\d)(?=.*[A-Z])",
+      "explanation": "Deux lookaheads depuis `^` testent des conditions indépendantes sur la chaîne entière. `(?=.*\\d)` : au moins un chiffre quelque part. `(?=.*[A-Z])` : au moins une majuscule. Les deux doivent être vrais."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "git-l4-m1",
+  "title": "Rebase interactif",
+  "level": "git-l4",
+  "lang": "git",
+  "order": 1,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "git rebase — réécrire l'historique",
+      "content": "`git rebase` déplace des commits d'une branche sur une autre, créant un historique **linéaire** :\n\n```bash\n# Rebaser feature sur main\ngit switch feature\ngit rebase main\n\n# Vs merge : rebase = historique linéaire, merge = historique fidèle\n# feature ---A---B---C  (avant)\n# main    ---X---Y\n#\n# Après rebase :\n# main    ---X---Y---A'---B'---C'  (A, B, C rejoués sur Y)\n```\n\n**Règle d'or** : ne jamais rebaser une branche **publique** (partagée) — cela réécrit les hashes et perturbe tous les contributeurs."
+    },
+    {
+      "title": "Rebase interactif (-i)",
+      "content": "```bash\n# Modifier les N derniers commits\ngit rebase -i HEAD~4\n```\n\nL'éditeur s'ouvre avec la liste des commits — on change l'instruction avant chaque commit :\n\n| Instruction | Effet |\n|---|---|\n| `pick` | Garder le commit tel quel |\n| `reword` / `r` | Garder mais modifier le message |\n| `edit` / `e` | Pause pour modifier le contenu |\n| `squash` / `s` | Fusionner avec le commit précédent |\n| `fixup` / `f` | Fusionner + jeter le message |\n| `drop` / `d` | Supprimer le commit |\n| `reorder` | Déplacer la ligne = réordonner |"
+    },
+    {
+      "title": "Cas d'usage du rebase interactif",
+      "content": "**Squash de commits WIP** :\n```\nAutre pick abc1234 feat: début feature\n      s   def5678 wip: suite (brouillon)\n      s   ghi9012 wip: correction\n      r   jkl3456 fix: dernier ajustement\n```\n→ Résultat : 1 commit propre avec un bon message\n\n**Corriger un ancien commit** :\n```bash\ngit rebase -i HEAD~5\n# Marquer le commit à corriger avec 'edit'\n# Git s'arrête sur ce commit\ngit add fichier-oublie.js\ngit commit --amend --no-edit\ngit rebase --continue\n```\n\n**Réordonner** : changer l'ordre des lignes dans l'éditeur réordonne les commits."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l4-m1-1",
+      "order": 1,
+      "title": "Rebaser sur main",
+      "instructions": "Depuis la branche `feature/api`, rebaser sur `main`.",
+      "requiredKeywords": ["git switch", "feature/api", "git rebase", "main"],
+      "validationType": "keywords",
+      "correction": "git switch feature/api && git rebase main",
+      "explanation": "`git rebase main` rejoue tous les commits de `feature/api` au-dessus du dernier commit de `main`. L'historique devient linéaire — plus facile à lire qu'un merge commit."
+    },
+    {
+      "id": "ex-git-l4-m1-2",
+      "order": 2,
+      "title": "Rebase interactif",
+      "instructions": "Ouvrez le rebase interactif pour les **5 derniers commits**.",
+      "requiredKeywords": ["git rebase", "-i", "head~5"],
+      "validationType": "keywords",
+      "correction": "git rebase -i HEAD~5",
+      "explanation": "`-i HEAD~5` ouvre un éditeur listant les 5 derniers commits avec leur instruction. On peut squash, reword, drop, réordonner avant de sauvegarder."
+    },
+    {
+      "id": "ex-git-l4-m1-3",
+      "order": 3,
+      "title": "Continuer après un conflit",
+      "instructions": "Après avoir résolu un conflit de rebase, comment **continuer** le rebase ?",
+      "requiredKeywords": ["git rebase", "--continue"],
+      "validationType": "keywords",
+      "correction": "git add fichier-resolu.js && git rebase --continue",
+      "explanation": "En cas de conflit pendant un rebase, Git s'arrête. On résout le conflit, `git add` les fichiers résolus, puis `--continue` pour reprendre le rebase au commit suivant."
+    },
+    {
+      "id": "ex-git-l4-m1-4",
+      "order": 4,
+      "title": "Annuler un rebase",
+      "instructions": "Annulez un rebase en cours et revenez à l'état d'avant.",
+      "requiredKeywords": ["git rebase", "--abort"],
+      "validationType": "keywords",
+      "correction": "git rebase --abort",
+      "explanation": "`--abort` annule entièrement le rebase et restaure la branche à son état d'avant le `git rebase`. Aucune modification n'est perdue."
+    },
+    {
+      "id": "ex-git-l4-m1-5",
+      "order": 5,
+      "title": "Pousser après rebase",
+      "instructions": "Après un rebase, poussez la branche `feature/api` sur `origin` de façon **sécurisée**.",
+      "requiredKeywords": ["git push", "--force-with-lease", "origin", "feature/api"],
+      "validationType": "keywords",
+      "correction": "git push --force-with-lease origin feature/api",
+      "explanation": "Le rebase réécrit les hashes → le remote rejette un push normal. `--force-with-lease` force le push mais seulement si personne d'autre n'a poussé entre-temps — plus sûr que `--force`."
+    }
+  ]
+}

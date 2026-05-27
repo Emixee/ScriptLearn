@@ -1,0 +1,74 @@
+{
+  "id": "git-l4-m4",
+  "title": "Submodules et worktrees",
+  "level": "git-l4",
+  "lang": "git",
+  "order": 4,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "git submodule — dépôts imbriqués",
+      "content": "Un **submodule** est un dépôt Git inclus dans un autre à un commit précis :\n\n```bash\n# Ajouter un submodule\ngit submodule add https://github.com/user/lib.git libs/lib\n\n# Cloner un dépôt avec ses submodules\ngit clone --recurse-submodules https://github.com/user/repo.git\n\n# Ou après un clone normal\ngit submodule init\ngit submodule update\n\n# Mettre à jour tous les submodules\ngit submodule update --remote\n\n# Voir l'état des submodules\ngit submodule status\n```\n\nCas d'usage : bibliothèque partagée entre plusieurs projets, dépendance externe à version fixe."
+    },
+    {
+      "title": "git worktree — plusieurs Working Directories",
+      "content": "`git worktree` permet d'avoir **plusieurs branches actives simultanément** dans des dossiers séparés :\n\n```bash\n# Créer un worktree pour une branche existante\ngit worktree add ../projet-hotfix hotfix/bug-critique\n\n# Créer un worktree + nouvelle branche\ngit worktree add -b feature/v2 ../projet-v2\n\n# Lister les worktrees\ngit worktree list\n\n# Supprimer un worktree\ngit worktree remove ../projet-hotfix\ngit worktree prune  # nettoyer les références obsolètes\n```\n\nUse case : travailler sur un hotfix urgnet pendant qu'une feature longue est en cours, sans `git stash`."
+    },
+    {
+      "title": "git archive et bonnes pratiques finales",
+      "content": "```bash\n# Exporter une archive du code sans historique Git\ngit archive --format=zip --output=release.zip HEAD\ngit archive --format=tar.gz HEAD -- src/  # seulement le dossier src\n\n# Nettoyer les fichiers non suivis\ngit clean -n     # simulation (dry-run)\ngit clean -fd    # supprimer fichiers et dossiers non suivis\ngit clean -fdx   # inclure les fichiers ignorés par .gitignore\n\n# Optimiser la base de données Git\ngit gc           # garbage collection\ngit prune        # supprimer les objets inaccessibles\n```\n\n**Résumé des commandes avancées** :\n```\ncherry-pick  → copier un commit précis\nbisect       → trouver le commit cassant\nreflog       → récupérer des commits perdus\nrebase -i    → réécrire l'historique\nworktree     → plusieurs branches actives\nsubmodule    → dépôts imbriqués\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l4-m4-1",
+      "order": 1,
+      "title": "Ajouter un submodule",
+      "instructions": "Ajoutez le dépôt `https://github.com/utils/helpers.git` comme submodule dans le dossier `libs/helpers`.",
+      "requiredKeywords": ["git submodule add", "https://github.com/utils/helpers.git", "libs/helpers"],
+      "validationType": "keywords",
+      "correction": "git submodule add https://github.com/utils/helpers.git libs/helpers",
+      "explanation": "`git submodule add` clone le dépôt et enregistre le pointeur dans `.gitmodules`. Le commit exact du submodule est stocké dans le dépôt parent — un changement de version est un commit dans le parent."
+    },
+    {
+      "id": "ex-git-l4-m4-2",
+      "order": 2,
+      "title": "Cloner avec submodules",
+      "instructions": "Clonez le dépôt `https://github.com/user/projet.git` en incluant tous ses submodules.",
+      "requiredKeywords": ["git clone", "--recurse-submodules", "https://github.com/user/projet.git"],
+      "validationType": "keywords",
+      "correction": "git clone --recurse-submodules https://github.com/user/projet.git",
+      "explanation": "Sans `--recurse-submodules`, les dossiers des submodules existent mais sont vides. `--recurse-submodules` les initialise et clone automatiquement."
+    },
+    {
+      "id": "ex-git-l4-m4-3",
+      "order": 3,
+      "title": "Créer un worktree",
+      "instructions": "Créez un worktree dans `../projet-fix` sur la branche `hotfix/crash`.",
+      "requiredKeywords": ["git worktree add", "../projet-fix", "hotfix/crash"],
+      "validationType": "keywords",
+      "correction": "git worktree add ../projet-fix hotfix/crash",
+      "explanation": "Le worktree partage le même `.git` mais a son propre Working Directory. On peut y travailler en parallèle sans changer de branche dans le dépôt principal."
+    },
+    {
+      "id": "ex-git-l4-m4-4",
+      "order": 4,
+      "title": "Exporter une archive",
+      "instructions": "Exportez le contenu de HEAD en archive ZIP nommée `release.zip` (sans l'historique Git).",
+      "requiredKeywords": ["git archive", "--format=zip", "--output=release.zip", "head"],
+      "validationType": "keywords",
+      "correction": "git archive --format=zip --output=release.zip HEAD",
+      "explanation": "`git archive` exporte le code sans le dossier `.git/`. Utile pour distribuer le code source sans exposer l'historique Git."
+    },
+    {
+      "id": "ex-git-l4-m4-5",
+      "order": 5,
+      "title": "Nettoyer les fichiers non suivis",
+      "instructions": "Supprimez **tous les fichiers et dossiers** non suivis par Git (simulez d'abord avec `-n`).",
+      "requiredKeywords": ["git clean", "-fd"],
+      "validationType": "keywords",
+      "correction": "git clean -n && git clean -fd",
+      "explanation": "`git clean -n` (dry-run) affiche ce qui sera supprimé sans le faire. `-fd` supprime les fichiers (`-f`) et dossiers (`-d`) non suivis. `-fdx` inclut aussi les fichiers ignorés par `.gitignore`."
+    }
+  ]
+}

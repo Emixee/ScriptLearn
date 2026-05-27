@@ -1,0 +1,74 @@
+{
+  "id": "git-l3-m4",
+  "title": "Workflows Git en équipe",
+  "level": "git-l3",
+  "lang": "git",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Git Flow",
+      "content": "**Git Flow** est un modèle de branches structuré pour les projets avec releases planifiées :\n\n```\nmain      ←── production (tagged)\ndevelop   ←── intégration continue\n  ↑\nfeature/xxx  ←── développement\nrelease/1.2  ←── préparation release\nhotfix/bug   ←── correctifs urgents\n```\n\n```bash\n# Démarrer une feature\ngit switch -c feature/nouvelle-fonc develop\n\n# Terminer : merge dans develop\ngit switch develop && git merge --no-ff feature/nouvelle-fonc\ngit branch -d feature/nouvelle-fonc\n\n# Release\ngit switch -c release/1.2 develop\n# (tests, fixes mineurs)\ngit switch main && git merge --no-ff release/1.2\ngit tag -a v1.2.0 -m \"Version 1.2.0\"\ngit switch develop && git merge --no-ff release/1.2\n```"
+    },
+    {
+      "title": "GitHub Flow — pour le déploiement continu",
+      "content": "**GitHub Flow** est plus simple, adapté au CD (Continuous Deployment) :\n\n```\nmain  ← branche principale, toujours déployable\n  ↑\nfeature/xxx  ← branche courte, PR → main\n```\n\nRègle d'or : **main est toujours deployable**.\n\n```bash\n# 1. Partir de main à jour\ngit switch main && git pull\ngit switch -c feature/mon-truc\n\n# 2. Développer, commiter souvent\n# 3. Pousser + ouvrir PR\ngit push -u origin feature/mon-truc\ngh pr create\n\n# 4. Code review → merge dans main\n# 5. Déploiement automatique\n\n# 6. Nettoyer\ngit branch -d feature/mon-truc\n```"
+    },
+    {
+      "title": "Trunk-Based Development",
+      "content": "**Trunk-Based Development** (TBD) : tout le monde travaille directement sur `main` avec des branches très courtes (< 1 jour) :\n\n```bash\n# Branches ultra-courtes\ngit switch -c fix/typo-readme\ngit add . && git commit -m \"fix: corriger faute README\"\ngit push -u origin fix/typo-readme\ngh pr create  # review rapide\n# Merge dans l'heure\n\n# Feature flags pour les grands changements\n# Le code est poussé mais désactivé jusqu'au lancement\n```\n\n**Comparatif** :\n| Workflow | Taille équipe | Cadence release |\n|---|---|---|\n| Git Flow | Grande | Planifiée |\n| GitHub Flow | Petite/Moyenne | Continue |\n| TBD | Toutes | CI/CD rapide |"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l3-m4-1",
+      "order": 1,
+      "title": "Créer une feature branch depuis develop",
+      "instructions": "Dans un workflow Git Flow, créez une branche `feature/api-rest` depuis `develop`.",
+      "requiredKeywords": ["git switch", "develop", "git switch", "-c", "feature/api-rest"],
+      "validationType": "keywords",
+      "correction": "git switch develop && git switch -c feature/api-rest",
+      "explanation": "Dans Git Flow, les features naissent toujours de `develop`, pas de `main`. `main` = production stable, `develop` = intégration des features en cours."
+    },
+    {
+      "id": "ex-git-l3-m4-2",
+      "order": 2,
+      "title": "Merge avec commit explicite",
+      "instructions": "Fusionnez `feature/api-rest` dans `develop` en **forçant un commit de merge** (même si fast-forward possible).",
+      "requiredKeywords": ["git switch", "develop", "git merge", "--no-ff", "feature/api-rest"],
+      "validationType": "keywords",
+      "correction": "git switch develop && git merge --no-ff feature/api-rest",
+      "explanation": "`--no-ff` (no fast-forward) crée toujours un commit de merge, traçant clairement dans l'historique la naissance et la fin de chaque feature. Git Flow recommande cette option."
+    },
+    {
+      "id": "ex-git-l3-m4-3",
+      "order": 3,
+      "title": "Créer une branche hotfix",
+      "instructions": "Dans Git Flow, créez une branche `hotfix/fix-login-crash` depuis `main`.",
+      "requiredKeywords": ["git switch", "main", "git switch", "-c", "hotfix/fix-login-crash"],
+      "validationType": "keywords",
+      "correction": "git switch main && git switch -c hotfix/fix-login-crash",
+      "explanation": "Les hotfixes naissent de `main` (production) pour corriger des bugs critiques. Après correction, ils sont mergés dans `main` ET dans `develop` pour ne pas régresser."
+    },
+    {
+      "id": "ex-git-l3-m4-4",
+      "order": 4,
+      "title": "Fetch avec pruning",
+      "instructions": "Récupérez les mises à jour du remote et **nettoyez les références de branches supprimées** en une commande.",
+      "requiredKeywords": ["git fetch", "--prune"],
+      "validationType": "keywords",
+      "correction": "git fetch --prune",
+      "explanation": "`--prune` supprime les références locales aux branches distantes qui n'existent plus sur le remote. Essentiel en équipe pour nettoyer `git branch -a` qui accumule sinon des dizaines de branches fantômes."
+    },
+    {
+      "id": "ex-git-l3-m4-5",
+      "order": 5,
+      "title": "Voir le tracking des branches",
+      "instructions": "Affichez toutes les branches locales avec leur **branche distante suivie** (tracking).",
+      "requiredKeywords": ["git branch", "-vv"],
+      "validationType": "keywords",
+      "correction": "git branch -vv",
+      "explanation": "`-vv` (très verbose) affiche pour chaque branche : le hash, le tracking `[origin/main]` et l'état (en avance/retard). Utile pour savoir qui suit quoi et si des branches sont désynchronisées."
+    }
+  ]
+}

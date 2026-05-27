@@ -18,6 +18,8 @@ const FILTERS = [
 
 function buildFlashcards(progress) {
   const cards = []
+
+  // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)
   for (const level of contentIndex.levels) {
     for (const lang of ALL_LANGS) {
       for (const ref of (level.languages[lang] ?? [])) {
@@ -25,11 +27,29 @@ function buildFlashcards(progress) {
         if (!mod) continue
         for (const ex of mod.exercises) {
           const entry = progress[ex.id] ?? {}
+          // levelId numérique (ex : 1, 2) pour les modules standard
           cards.push({ ex, lang, levelId: level.id, moduleId: ref.id, entry })
         }
       }
     }
   }
+
+  // Langages complémentaires (SQL, Git, Regex, KQL, SPL, YAML — structure tracks)
+  // levelId est ici une chaîne du type "sql-l1", "kql-l2", etc. — le routage /course/:lang/:levelId/:id le gère
+  const tracks = contentIndex.complementary?.tracks ?? {}
+  for (const [trackKey, track] of Object.entries(tracks)) {
+    for (const level of track.levels) {
+      for (const modRef of level.modules) {
+        const mod = getModule(modRef.id)
+        if (!mod) continue
+        for (const ex of mod.exercises) {
+          const entry = progress[ex.id] ?? {}
+          cards.push({ ex, lang: trackKey, levelId: level.id, moduleId: modRef.id, entry })
+        }
+      }
+    }
+  }
+
   return cards
 }
 

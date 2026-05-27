@@ -1,0 +1,74 @@
+{
+  "id": "spl-l1-m1",
+  "title": "Introduction à SPL et Splunk",
+  "level": "spl-l1",
+  "lang": "spl",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Qu'est-ce que SPL ?",
+      "content": "**SPL** (Search Processing Language) est le langage de requête de Splunk. Il analyse des événements bruts et des données indexées.\n\n**Architecture pipeline** identique à KQL — `|` chaîne les commandes :\n```spl\nsource ou search\n| commande1\n| commande2\n| commande3\n```\n\n**Différences clés avec KQL :**\n| | SPL (Splunk) | KQL (Sentinel) |\n|---|---|---|\n| Filtre | `search` / mot simple | `where` |\n| Période | `earliest=-1h latest=now` | `ago(1h)` |\n| Regex | `rex` | `matches regex` |\n| Extraction | `rex` / `spath` | `extract()` / `parse_json()` |\n\n```spl\n// Recherche de base — dernière heure\nindex=main sourcetype=access_combined earliest=-1h\n\n// Avec mot-clé\nindex=main \"error\" earliest=-24h\n\n// Sur un hôte précis\nindex=main host=web01 sourcetype=syslog\n```"
+    },
+    {
+      "title": "Index, sourcetype et sélecteurs",
+      "content": "L'organisation des données Splunk repose sur **index** et **sourcetype** :\n\n```spl\n// Index : partition logique des données\nindex=security     // Logs de sécurité\nindex=network      // Logs réseau\nindex=windows      // Logs Windows\nindex=*            // Tous les index (lent !)\n\n// Sourcetype : format du log\nsourcetype=WinEventLog:Security    // Windows Security Events\nsourcetype=access_combined         // Apache/Nginx access logs\nsourcetype=syslog                  // Syslog générique\nsourcetype=cisco:asa               // Cisco ASA firewalls\nsourcetype=json                    // Logs JSON\n\n// Combinaison\nindex=security sourcetype=WinEventLog:Security host=DC01\n\n// Champs automatiques\nsource      // Fichier/flux source\nhost        // Machine émettrice\n_time       // Timestamp (epoch)\nsplunk_server  // Serveur Splunk\n```"
+    },
+    {
+      "title": "Recherche de base et sélection de temps",
+      "content": "```spl\n// Sélection temporelle — modifiers\nearliest=-1h latest=now     // Dernière heure\nearliest=-24h latest=-1h    // Entre -24h et -1h\nearliest=-7d                // 7 derniers jours\nearliest=01/01/2024:00:00:00 latest=01/31/2024:23:59:59  // Période fixe\n\n// Unités : s=secondes, m=minutes, h=heures, d=jours, w=semaines, mon=mois\n\n// Afficher N résultats\nindex=main | head 10    // 10 premiers\nindex=main | tail 5     // 5 derniers\n\n// Champs d'un événement\n| fields host, source, sourcetype, _time\n\n// Voir les champs disponibles\n| fieldsummary\n\n// Dédoublonner\n| dedup host\n| dedup 3 host  // Garder 3 occurrences par host\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-spl-l1-m1-1",
+      "order": 1,
+      "title": "Première recherche SPL",
+      "instructions": "Écrivez la requête SPL pour chercher dans `index=main` les événements des **dernières 24 heures** contenant le mot `error`.",
+      "requiredKeywords": ["index=main", "error", "earliest=-24h"],
+      "validationType": "keywords",
+      "correction": "index=main error earliest=-24h",
+      "explanation": "En SPL, les mots-clés dans la recherche de base agissent comme des filtres AND implicites. `earliest=-24h` (sans `latest`) cherche jusqu'à maintenant. Le mot `error` est recherché dans tous les champs de l'événement."
+    },
+    {
+      "id": "ex-spl-l1-m1-2",
+      "order": 2,
+      "title": "Recherche par sourcetype",
+      "instructions": "Cherchez les événements Syslog (`sourcetype=syslog`) des **dernières 4 heures** sur le host `webserver01`.",
+      "requiredKeywords": ["sourcetype=syslog", "host=webserver01", "earliest=-4h"],
+      "validationType": "keywords",
+      "correction": "index=main sourcetype=syslog host=webserver01 earliest=-4h",
+      "explanation": "Les sélecteurs `index=`, `sourcetype=`, `host=` réduisent le périmètre de recherche — toujours les spécifier pour la performance. SPL évalue d'abord l'index (partition de données), puis le sourcetype (format), puis le host."
+    },
+    {
+      "id": "ex-spl-l1-m1-3",
+      "order": 3,
+      "title": "head et fields",
+      "instructions": "Depuis `index=security`, affichez les **10 premières lignes** avec uniquement les champs `_time`, `host` et `source`.",
+      "requiredKeywords": ["index=security", "| head 10", "| fields _time, host, source"],
+      "validationType": "keywords",
+      "correction": "index=security | head 10 | fields _time, host, source",
+      "explanation": "`head N` retourne les N premiers événements (dans l'ordre chronologique inverse par défaut). `fields` sélectionne les colonnes à afficher — équivalent du `project` KQL. Réduire les champs améliore les performances sur les grandes requêtes."
+    },
+    {
+      "id": "ex-spl-l1-m1-4",
+      "order": 4,
+      "title": "dedup — dédoublonner",
+      "instructions": "Listez les **hosts uniques** présents dans `index=main` des dernières 12 heures avec `dedup`.",
+      "requiredKeywords": ["index=main", "earliest=-12h", "| dedup host", "| fields host"],
+      "validationType": "keywords",
+      "correction": "index=main earliest=-12h | dedup host | fields host",
+      "explanation": "`dedup champ` conserve le premier événement pour chaque valeur unique du champ. Ici, on obtient la liste des hosts actifs. Pour lister tous les hosts avec un compteur, préférer `stats count by host`."
+    },
+    {
+      "id": "ex-spl-l1-m1-5",
+      "order": 5,
+      "title": "Période fixe",
+      "instructions": "Cherchez dans `index=security sourcetype=WinEventLog:Security` les événements du **week-end dernier** (samedi-dimanche) : `earliest=-2d@w6 latest=@w1`.",
+      "requiredKeywords": ["index=security", "sourcetype=winEventLog:Security", "earliest=-2d"],
+      "validationType": "keywords",
+      "correction": "index=security sourcetype=WinEventLog:Security earliest=-2d@w6 latest=@w1",
+      "explanation": "`@w6` = début du samedi (6e jour de la semaine). `@w1` = début du lundi. `earliest=-2d@w6` = samedi dernier. Les modificateurs `@` arrondissent au début de l'unité spécifiée. Utile pour les rapports hebdomadaires automatiques."
+    }
+  ]
+}

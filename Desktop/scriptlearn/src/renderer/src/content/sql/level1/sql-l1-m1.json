@@ -1,0 +1,74 @@
+{
+  "id": "sql-l1-m1",
+  "title": "SELECT et FROM — lire des données",
+  "level": "sql-l1",
+  "lang": "sql",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Qu'est-ce que SQL ?",
+      "content": "**SQL** (Structured Query Language) est le langage standard pour interagir avec les bases de données relationnelles.\n\nUne base de données relationnelle organise les données en **tables** (lignes et colonnes), comme un tableur. SQL permet de lire, insérer, modifier et supprimer ces données.\n\nExemples de SGBD utilisant SQL : SQLite, MySQL, PostgreSQL, SQL Server, Oracle.\n\n**Pourquoi apprendre SQL ?**\n- Indispensable pour tout rôle data, dev, DevOps ou SOC\n- Universel : la syntaxe de base est la même partout\n- Puissant : quelques lignes suffisent pour analyser des millions de lignes"
+    },
+    {
+      "title": "La commande SELECT",
+      "content": "La commande fondamentale de SQL est `SELECT`. Elle permet de **lire** des données dans une table.\n\n```sql\nSELECT colonnes\nFROM table;\n```\n\n- `SELECT *` sélectionne **toutes** les colonnes\n- `SELECT nom, age` sélectionne des colonnes **spécifiques**\n- Le point-virgule `;` termine la requête (bonne pratique)\n\nExemple :\n```sql\nSELECT * FROM employees;\nSELECT name, salary FROM employees;\n```"
+    },
+    {
+      "title": "DISTINCT et alias AS",
+      "content": "**Supprimer les doublons** avec `DISTINCT` :\n```sql\nSELECT DISTINCT department FROM employees;\n-- Retourne chaque département une seule fois\n```\n\n**Renommer les colonnes** dans les résultats avec `AS` :\n```sql\nSELECT name AS nom, salary AS salaire\nFROM employees;\n```\n\n**Limiter les résultats** avec `LIMIT` :\n```sql\nSELECT * FROM employees LIMIT 5;\n-- Retourne les 5 premières lignes\n```\n\nCes trois mots-clés se combinent fréquemment dans les requêtes de base."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l1-m1-1",
+      "order": 1,
+      "title": "Sélectionner toutes les colonnes",
+      "instructions": "Récupérez **toutes les données** de la table `employees`.",
+      "requiredKeywords": ["select", "*", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees;",
+      "explanation": "`SELECT *` sélectionne toutes les colonnes. `FROM employees` indique la table source. C'est la requête SQL la plus simple — à utiliser avec `LIMIT` sur les grandes tables pour ne pas charger des millions de lignes."
+    },
+    {
+      "id": "ex-sql-l1-m1-2",
+      "order": 2,
+      "title": "Sélectionner des colonnes précises",
+      "instructions": "Récupérez uniquement les colonnes `name` et `salary` de la table `employees`.",
+      "requiredKeywords": ["select", "name", "salary", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, salary FROM employees;",
+      "explanation": "Lister les colonnes séparées par des virgules permet de ne récupérer que ce dont on a besoin — économise de la bande passante et améliore la lisibilité. Évitez `SELECT *` en production."
+    },
+    {
+      "id": "ex-sql-l1-m1-3",
+      "order": 3,
+      "title": "Renommer des colonnes avec AS",
+      "instructions": "Sélectionnez `name` et `salary` depuis `employees`, en renommant `name` en `nom` et `salary` en `salaire`.",
+      "requiredKeywords": ["select", "name", "as", "salary", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name AS nom, salary AS salaire FROM employees;",
+      "explanation": "Le mot-clé `AS` crée un **alias** — le résultat affiche le nouveau nom de colonne. Utile pour des rapports lisibles ou des interfaces utilisateur. On peut omettre `AS` (`SELECT name nom`) mais c'est moins lisible."
+    },
+    {
+      "id": "ex-sql-l1-m1-4",
+      "order": 4,
+      "title": "Valeurs distinctes",
+      "instructions": "Obtenez la liste des **valeurs uniques** de la colonne `department` dans `employees`.",
+      "requiredKeywords": ["select", "distinct", "department", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT DISTINCT department FROM employees;",
+      "explanation": "`DISTINCT` élimine les doublons. Sans lui, chaque ligne retourne son département même si répété 100 fois. Idéal pour explorer les valeurs possibles d'une colonne."
+    },
+    {
+      "id": "ex-sql-l1-m1-5",
+      "order": 5,
+      "title": "Limiter les résultats",
+      "instructions": "Récupérez les **5 premiers employés** de la table `employees`.",
+      "requiredKeywords": ["select", "*", "from", "employees", "limit", "5"],
+      "validationType": "keywords",
+      "correction": "SELECT * FROM employees LIMIT 5;",
+      "explanation": "`LIMIT n` restreint le nombre de lignes retournées. Indispensable sur les grandes tables pour éviter de surcharger l'application ou de télécharger inutilement des millions de lignes."
+    }
+  ]
+}

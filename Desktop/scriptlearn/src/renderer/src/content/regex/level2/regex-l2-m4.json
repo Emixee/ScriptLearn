@@ -1,0 +1,74 @@
+{
+  "id": "regex-l2-m4",
+  "title": "Regex en Python — re module",
+  "level": "regex-l2",
+  "lang": "regex",
+  "order": 4,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Les fonctions principales du module re",
+      "content": "Python `re` offre plusieurs fonctions selon l'usage :\n\n```python\nimport re\n\n# re.match()  — seulement en début de chaîne\nm = re.match(r'\\d+', '42abc')  # match\nm = re.match(r'\\d+', 'abc42')  # None (pas en début)\n\n# re.search() — première occurrence n'importe où\nm = re.search(r'\\d+', 'abc42xyz')  # match '42'\n\n# re.findall() — liste de toutes les correspondances\nmatches = re.findall(r'\\d+', '1 chat, 2 chiens, 42 oiseaux')\n# → ['1', '2', '42']\n\n# re.finditer() — itérateur de Match objects (avec position)\nfor m in re.finditer(r'\\d+', texte):\n    print(m.group(), m.start(), m.end())\n\n# re.sub()    — remplacer\nresult = re.sub(r'\\d+', 'N', '3 erreurs et 7 warnings')\n# → 'N erreurs et N warnings'\n\n# re.split()  — découper\nparts = re.split(r'[,;\\s]+', 'a, b;  c d')\n# → ['a', 'b', 'c', 'd']\n```"
+    },
+    {
+      "title": "Objet Match et groupes",
+      "content": "Les fonctions `match`, `search`, `finditer` retournent un **objet Match** :\n\n```python\nm = re.search(r'(\\d{4})-(\\d{2})-(\\d{2})', '2024-05-15')\n\nm.group()     # '2024-05-15'  — match complet\nm.group(0)    # '2024-05-15'  — idem\nm.group(1)    # '2024'        — groupe 1\nm.group(2)    # '05'          — groupe 2\nm.groups()    # ('2024', '05', '15')  — tous les groupes\n\nm.start()     # position de début\nm.end()       # position de fin\nm.span()      # (début, fin)\n\n# Avec groupes nommés\nm = re.search(r'(?P<year>\\d{4})-(?P<month>\\d{2})', '2024-05')\nm.group('year')   # '2024'\nm.groupdict()     # {'year': '2024', 'month': '05'}\n```"
+    },
+    {
+      "title": "Compilation et bonnes pratiques",
+      "content": "**Compiler** une regex avec `re.compile()` pour la réutiliser efficacement :\n\n```python\n# Sans compilation — recompile à chaque appel\nfor line in log_lines:\n    re.search(r'ERROR|WARN', line)  # recompile\n\n# Avec compilation — compile une seule fois\npattern = re.compile(r'ERROR|WARN', re.IGNORECASE)\nfor line in log_lines:\n    pattern.search(line)  # réutilise\n\n# raw strings r'...' — évitent la double-échappement\nr'\\d+'    # \\d+ littéral\n'\\\\d+'    # équivalent sans r-string (lourd)\n\n# re.sub avec fonction de remplacement\ndef uppercase_match(m):\n    return m.group().upper()\n\nre.sub(r'error', uppercase_match, texte)\n# remplace chaque 'error' par sa version majuscule\n```\n\n**Règles de base :**\n- Toujours utiliser `r'...'` pour les patterns\n- Compiler si le même pattern est utilisé plusieurs fois\n- Préférer `re.VERBOSE` pour les patterns complexes"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-regex-l2-m4-1",
+      "order": 1,
+      "title": "re.findall — extraire tous les nombres",
+      "instructions": "Utilisez `re.findall` pour extraire **tous les entiers** de la chaîne `'3 erreurs, 7 warnings, 42 critiques'`.",
+      "requiredKeywords": ["re.findall", "\\d+"],
+      "validationType": "keywords",
+      "correction": "re.findall(r'\\d+', '3 erreurs, 7 warnings, 42 critiques')",
+      "explanation": "`re.findall` retourne une liste de toutes les correspondances. `\\d+` capture chaque séquence de chiffres. Résultat : `['3', '7', '42']`. Pour des entiers : `[int(x) for x in re.findall(r'\\d+', texte)]`."
+    },
+    {
+      "id": "ex-regex-l2-m4-2",
+      "order": 2,
+      "title": "re.search — extraire un groupe",
+      "instructions": "Avec `re.search`, trouvez la **date** dans `'Log du 2024-05-15 : connexion'` et accédez au groupe 1 (année).",
+      "requiredKeywords": ["re.search", "(\\d{4})", ".group(1)"],
+      "validationType": "keywords",
+      "correction": "m = re.search(r'(\\d{4})-(\\d{2})-(\\d{2})', 'Log du 2024-05-15 : connexion'); m.group(1)",
+      "explanation": "`re.search` trouve la première occurrence n'importe où dans la chaîne. `.group(1)` accède au premier groupe capturant. Toujours vérifier si `m is not None` avant d'appeler `.group()`."
+    },
+    {
+      "id": "ex-regex-l2-m4-3",
+      "order": 3,
+      "title": "re.sub — masquer les IPs",
+      "instructions": "Utilisez `re.sub` pour remplacer toutes les adresses IP par `***.***.***` dans un texte de log.",
+      "requiredKeywords": ["re.sub", "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"],
+      "validationType": "keywords",
+      "correction": "re.sub(r'\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}', '***.***.***.***', log)",
+      "explanation": "`re.sub(pattern, remplacement, texte)` remplace toutes les occurrences. Utile pour anonymiser des logs avant de les partager. Le pattern IP `\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}` capture le format standard."
+    },
+    {
+      "id": "ex-regex-l2-m4-4",
+      "order": 4,
+      "title": "re.compile — réutilisation",
+      "instructions": "Compilez le pattern `r'ERROR|WARN'` avec `re.IGNORECASE` et utilisez-le pour rechercher dans une liste `log_lines`.",
+      "requiredKeywords": ["re.compile", "re.IGNORECASE", ".search("],
+      "validationType": "keywords",
+      "correction": "pattern = re.compile(r'ERROR|WARN', re.IGNORECASE)\nfor line in log_lines:\n    if pattern.search(line):\n        print(line)",
+      "explanation": "`re.compile` compile le pattern une seule fois. Réutiliser l'objet compilé est plus performant que d'appeler `re.search(r'...', line)` à chaque itération, surtout sur de grands volumes de logs."
+    },
+    {
+      "id": "ex-regex-l2-m4-5",
+      "order": 5,
+      "title": "re.split — parser une ligne CSV",
+      "instructions": "Utilisez `re.split` pour découper la chaîne `'a,b,,c;d'` sur les virgules ET les points-virgules (séparateurs multiples).",
+      "requiredKeywords": ["re.split", "[,;]"],
+      "validationType": "keywords",
+      "correction": "re.split(r'[,;]+', 'a,b,,c;d')",
+      "explanation": "`re.split` découpe sur un pattern regex. `[,;]+` : un ou plusieurs `,` ou `;`. Le `+` évite les éléments vides pour les séparateurs consécutifs (`,,`). Bien plus puissant que `str.split()` pour des séparateurs variables."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "sql-l2-m1",
+  "title": "Fonctions d'agrégation",
+  "level": "sql-l2",
+  "lang": "sql",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Les 5 fonctions d'agrégation",
+      "content": "Les fonctions d'agrégation **calculent une valeur unique** à partir d'un ensemble de lignes :\n\n| Fonction | Rôle |\n|---|---|\n| `COUNT(*)` | Nombre de lignes |\n| `COUNT(col)` | Nombre de valeurs non NULL |\n| `SUM(col)` | Somme |\n| `AVG(col)` | Moyenne |\n| `MAX(col)` | Valeur maximale |\n| `MIN(col)` | Valeur minimale |\n\n```sql\nSELECT COUNT(*) FROM employees;     -- Nombre total d'employés\nSELECT AVG(salary) FROM employees;  -- Salaire moyen\nSELECT MAX(salary) FROM employees;  -- Salaire le plus élevé\nSELECT SUM(salary) FROM employees;  -- Masse salariale totale\n```"
+    },
+    {
+      "title": "Combiner agrégations et alias",
+      "content": "On peut calculer plusieurs agrégats dans une seule requête et les renommer :\n\n```sql\nSELECT\n  COUNT(*) AS total_employes,\n  AVG(salary) AS salaire_moyen,\n  MIN(salary) AS salaire_min,\n  MAX(salary) AS salaire_max\nFROM employees;\n```\n\n**Avec WHERE** — filtrer avant d'agréger :\n```sql\n-- Salaire moyen uniquement pour le département IT\nSELECT AVG(salary) AS moy_it\nFROM employees\nWHERE department = 'IT';\n```\n\nLe `WHERE` s'applique sur les lignes individuelles **avant** le calcul de l'agrégat."
+    },
+    {
+      "title": "COUNT(*) vs COUNT(colonne)",
+      "content": "La différence est subtile mais importante :\n\n```sql\nSELECT COUNT(*) FROM employees;\n-- Compte toutes les lignes, y compris celles avec des NULL\n\nSELECT COUNT(phone) FROM employees;\n-- Compte uniquement les lignes où phone n'est pas NULL\n```\n\n**Exemple :**\nSi la table a 100 employés mais seulement 70 ont un numéro de téléphone :\n- `COUNT(*)` → 100\n- `COUNT(phone)` → 70\n\n**DISTINCT dans COUNT** :\n```sql\nSELECT COUNT(DISTINCT department) FROM employees;\n-- Compte le nombre de départements uniques\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l2-m1-1",
+      "order": 1,
+      "title": "Compter les employés",
+      "instructions": "Comptez le **nombre total** d'employés dans la table `employees`.",
+      "requiredKeywords": ["select", "count", "*", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT COUNT(*) FROM employees;",
+      "explanation": "`COUNT(*)` compte toutes les lignes de la table, y compris celles avec des valeurs NULL. C'est la façon standard de compter le nombre d'enregistrements."
+    },
+    {
+      "id": "ex-sql-l2-m1-2",
+      "order": 2,
+      "title": "Salaire moyen",
+      "instructions": "Calculez le **salaire moyen** de tous les employés, renommé `salaire_moyen`.",
+      "requiredKeywords": ["select", "avg", "salary", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT AVG(salary) AS salaire_moyen FROM employees;",
+      "explanation": "`AVG()` calcule la moyenne arithmétique. Elle ignore les valeurs NULL. L'alias `AS salaire_moyen` rend le résultat lisible."
+    },
+    {
+      "id": "ex-sql-l2-m1-3",
+      "order": 3,
+      "title": "Salaires extrêmes",
+      "instructions": "Affichez le **salaire minimum** et le **salaire maximum** de la table `employees` sur une seule ligne.",
+      "requiredKeywords": ["select", "min", "max", "salary", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT MIN(salary) AS min_salaire, MAX(salary) AS max_salaire FROM employees;",
+      "explanation": "On peut combiner plusieurs agrégats dans un seul `SELECT`. Ils sont calculés simultanément sur l'ensemble des lignes — une seule passe dans la table."
+    },
+    {
+      "id": "ex-sql-l2-m1-4",
+      "order": 4,
+      "title": "Masse salariale du département IT",
+      "instructions": "Calculez la **somme totale des salaires** (masse salariale) uniquement pour le département `'IT'`.",
+      "requiredKeywords": ["select", "sum", "salary", "from", "employees", "where", "department", "it"],
+      "validationType": "keywords",
+      "correction": "SELECT SUM(salary) AS masse_salariale FROM employees WHERE department = 'IT';",
+      "explanation": "Le `WHERE` filtre les lignes **avant** que `SUM()` calcule. Seules les lignes où `department = 'IT'` sont incluses dans la somme."
+    },
+    {
+      "id": "ex-sql-l2-m1-5",
+      "order": 5,
+      "title": "Départements uniques",
+      "instructions": "Comptez le **nombre de départements distincts** dans la table `employees`.",
+      "requiredKeywords": ["select", "count", "distinct", "department", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT COUNT(DISTINCT department) FROM employees;",
+      "explanation": "`COUNT(DISTINCT col)` déduplique avant de compter. Si 3 employés sont en IT, 2 en Dev et 1 en Sec, le résultat est 3 (les 3 départements uniques), pas 6."
+    }
+  ]
+}

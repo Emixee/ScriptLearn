@@ -1,0 +1,74 @@
+{
+  "id": "sql-l5-m2",
+  "title": "Procédures stockées et triggers",
+  "level": "sql-l5",
+  "lang": "sql",
+  "order": 2,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Procédures stockées",
+      "content": "Une **procédure stockée** est un bloc de code SQL sauvegardé côté base de données et réutilisable :\n\n```sql\n-- PostgreSQL / MySQL\nCREATE PROCEDURE augmenter_salaires(dept TEXT, pct NUMERIC)\nAS $$\n  UPDATE employees\n  SET salary = salary * (1 + pct / 100)\n  WHERE department = dept;\n$$ LANGUAGE SQL;\n\n-- Appel\nCALL augmenter_salaires('IT', 10);\n```\n\nAvantages :\n- Logique métier centralisée côté base\n- Sécurité : on donne accès à la procédure, pas à la table\n- Performance : compilée et mise en cache"
+    },
+    {
+      "title": "Fonctions SQL",
+      "content": "Une **fonction** retourne une valeur et s'utilise dans un `SELECT` :\n\n```sql\n-- Créer une fonction\nCREATE FUNCTION salaire_annuel(sal REAL) RETURNS REAL AS $$\n  SELECT sal * 12;\n$$ LANGUAGE SQL;\n\n-- Utilisation\nSELECT name, salaire_annuel(salary) AS annuel FROM employees;\n\n-- Fonction qui retourne une table\nCREATE FUNCTION employes_dept(dept TEXT)\nRETURNS TABLE(name TEXT, salary REAL) AS $$\n  SELECT name, salary FROM employees WHERE department = dept;\n$$ LANGUAGE SQL;\n\nSELECT * FROM employes_dept('IT');\n```"
+    },
+    {
+      "title": "Triggers — automatiser des actions",
+      "content": "Un **trigger** déclenche automatiquement du code lors d'un INSERT, UPDATE ou DELETE :\n\n```sql\n-- PostgreSQL : trigger de log\nCREATE OR REPLACE FUNCTION log_salary_change()\nRETURNS TRIGGER AS $$\nBEGIN\n  INSERT INTO salary_log(employee_id, old_salary, new_salary, changed_at)\n  VALUES (NEW.id, OLD.salary, NEW.salary, NOW());\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_salary_log\nAFTER UPDATE OF salary ON employees\nFOR EACH ROW\nEXECUTE FUNCTION log_salary_change();\n```\n\nCas d'usage : audit trail, calculs automatiques, synchronisation de tables."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l5-m2-1",
+      "order": 1,
+      "title": "Créer une procédure",
+      "instructions": "Écrivez la signature d'une procédure `reset_salary` qui remet le salary à `50000` pour un `department` donné.",
+      "requiredKeywords": ["create procedure", "reset_salary", "dept", "update", "employees", "set", "salary", "50000", "where", "department"],
+      "validationType": "keywords",
+      "correction": "CREATE PROCEDURE reset_salary(dept TEXT) AS $$ UPDATE employees SET salary = 50000 WHERE department = dept; $$ LANGUAGE SQL;",
+      "explanation": "La procédure encapsule une logique réutilisable. On appelle `CALL reset_salary('Temp')` plutôt que de réécrire le `UPDATE` partout — et si la logique change, on ne modifie qu'un endroit."
+    },
+    {
+      "id": "ex-sql-l5-m2-2",
+      "order": 2,
+      "title": "Appeler une procédure",
+      "instructions": "Appelez la procédure `augmenter_salaires` avec le département `'Dev'` et une augmentation de `15%`.",
+      "requiredKeywords": ["call", "augmenter_salaires", "dev", "15"],
+      "validationType": "keywords",
+      "correction": "CALL augmenter_salaires('Dev', 15);",
+      "explanation": "`CALL` est la syntaxe pour exécuter une procédure stockée. Contrairement à une fonction, une procédure ne retourne pas de valeur — elle modifie des données."
+    },
+    {
+      "id": "ex-sql-l5-m2-3",
+      "order": 3,
+      "title": "Créer une fonction scalaire",
+      "instructions": "Créez une fonction `bonus(salary REAL)` qui retourne 10% du salaire.",
+      "requiredKeywords": ["create function", "bonus", "salary", "returns", "real", "select", "salary", "*", "0.10"],
+      "validationType": "keywords",
+      "correction": "CREATE FUNCTION bonus(salary REAL) RETURNS REAL AS $$ SELECT salary * 0.10; $$ LANGUAGE SQL;",
+      "explanation": "Une fonction SQL simple peut être une expression SQL encapsulée. Elle s'utilise dans `SELECT bonus(salary) FROM employees` — le calcul est délégué à la base plutôt que fait côté applicatif."
+    },
+    {
+      "id": "ex-sql-l5-m2-4",
+      "order": 4,
+      "title": "Trigger d'audit",
+      "instructions": "Écrivez la clause `CREATE TRIGGER` qui déclenche une fonction `log_change` **après chaque UPDATE** sur la table `employees`, pour chaque ligne.",
+      "requiredKeywords": ["create trigger", "after", "update", "on", "employees", "for each row", "execute function", "log_change"],
+      "validationType": "keywords",
+      "correction": "CREATE TRIGGER trg_audit AFTER UPDATE ON employees FOR EACH ROW EXECUTE FUNCTION log_change();",
+      "explanation": "`AFTER UPDATE` déclenche après que la modification est faite. `FOR EACH ROW` exécute la fonction pour chaque ligne modifiée (pas seulement une fois pour toute la commande `UPDATE`)."
+    },
+    {
+      "id": "ex-sql-l5-m2-5",
+      "order": 5,
+      "title": "Supprimer un trigger",
+      "instructions": "Supprimez le trigger `trg_audit` sur la table `employees`.",
+      "requiredKeywords": ["drop trigger", "trg_audit", "on", "employees"],
+      "validationType": "keywords",
+      "correction": "DROP TRIGGER trg_audit ON employees;",
+      "explanation": "En PostgreSQL, `DROP TRIGGER nom ON table` est nécessaire car plusieurs tables peuvent avoir un trigger du même nom. Dans MySQL, `DROP TRIGGER nom` suffit car les noms de triggers sont globaux."
+    }
+  ]
+}

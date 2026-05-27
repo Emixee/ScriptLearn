@@ -1,0 +1,74 @@
+{
+  "id": "git-l4-m3",
+  "title": "Hooks Git",
+  "level": "git-l4",
+  "lang": "git",
+  "order": 3,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Qu'est-ce qu'un hook Git ?",
+      "content": "Les **hooks** sont des scripts exécutés automatiquement à des moments clés du cycle Git.\n\nIls se trouvent dans `.git/hooks/` et sont activés en les rendant exécutables (sans extension `.sample`) :\n\n```bash\nls .git/hooks/\n# pre-commit.sample  commit-msg.sample  pre-push.sample ...\n\n# Activer un hook : copier et rendre exécutable\ncp .git/hooks/pre-commit.sample .git/hooks/pre-commit\nchmod +x .git/hooks/pre-commit\n```\n\n**Hooks côté client :**\n| Hook | Déclenché |\n|---|---|\n| `pre-commit` | Avant la création du commit |\n| `commit-msg` | Pour valider le message |\n| `pre-push` | Avant `git push` |\n| `post-merge` | Après un merge réussi |"
+    },
+    {
+      "title": "Exemples de hooks",
+      "content": "**pre-commit** — lancer les linters :\n```bash\n#!/bin/bash\n# .git/hooks/pre-commit\n\n# Lancer ESLint sur les fichiers JS stagés\nfiles=$(git diff --cached --name-only --diff-filter=ACM | grep '\\.js$')\nif [ -n \"$files\" ]; then\n  npx eslint $files\n  if [ $? -ne 0 ]; then\n    echo \"❌ ESLint a trouvé des erreurs — commit annulé\"\n    exit 1  # code non-0 = annuler le commit\n  fi\nfi\n```\n\n**commit-msg** — valider le format du message :\n```bash\n#!/bin/bash\n# .git/hooks/commit-msg\nmsg=$(cat \"$1\")\npattern='^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?: .+'\nif ! echo \"$msg\" | grep -qE \"$pattern\"; then\n  echo \"❌ Format invalide. Exemple: feat(auth): ajouter OAuth\"\n  exit 1\nfi\n```"
+    },
+    {
+      "title": "Partager les hooks avec Husky",
+      "content": "Les hooks `.git/hooks/` ne sont pas versionnés. **Husky** les stocke dans le repo :\n\n```bash\n# Installer Husky\nnpm install --save-dev husky\nnpx husky init\n\n# Ajouter un hook pre-commit\nnpx husky add .husky/pre-commit \"npx lint-staged\"\n\n# Avec lint-staged (ne linter que les fichiers stagés)\nnpm install --save-dev lint-staged\n```\n\n`package.json` :\n```json\n\"lint-staged\": {\n  \"*.js\": [\"eslint --fix\", \"prettier --write\"],\n  \"*.ts\": [\"tsc --noEmit\"]\n}\n```\n\n**Contourner un hook** (avec précaution) :\n```bash\ngit commit --no-verify -m \"emergency fix\"\ngit push --no-verify\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l4-m3-1",
+      "order": 1,
+      "title": "Lister les hooks disponibles",
+      "instructions": "Listez tous les fichiers dans le répertoire `.git/hooks/`.",
+      "requiredKeywords": ["ls", ".git/hooks"],
+      "validationType": "keywords",
+      "correction": "ls .git/hooks/",
+      "explanation": "Git fournit des exemples pour chaque hook (avec `.sample`). Pour activer un hook, le copier sans `.sample` et le rendre exécutable avec `chmod +x`."
+    },
+    {
+      "id": "ex-git-l4-m3-2",
+      "order": 2,
+      "title": "Rendre un hook exécutable",
+      "instructions": "Rendez le fichier `.git/hooks/pre-commit` **exécutable**.",
+      "requiredKeywords": ["chmod", "+x", ".git/hooks/pre-commit"],
+      "validationType": "keywords",
+      "correction": "chmod +x .git/hooks/pre-commit",
+      "explanation": "Un hook Git doit être exécutable pour être déclenché. Sans `chmod +x`, Git l'ignore silencieusement — source d'une erreur courante en configurant des hooks."
+    },
+    {
+      "id": "ex-git-l4-m3-3",
+      "order": 3,
+      "title": "Committer en ignorant les hooks",
+      "instructions": "Créez un commit **en contournant tous les hooks** avec `--no-verify`.",
+      "requiredKeywords": ["git commit", "--no-verify", "-m"],
+      "validationType": "keywords",
+      "correction": "git commit --no-verify -m \"emergency: hotfix critique sans passer les hooks\"",
+      "explanation": "`--no-verify` contourne `pre-commit` et `commit-msg`. À utiliser avec parcimonie (urgences uniquement) — les hooks existent pour une raison. Tracer les cas où on les contourne."
+    },
+    {
+      "id": "ex-git-l4-m3-4",
+      "order": 4,
+      "title": "Initialiser Husky",
+      "instructions": "Initialisez Husky dans un projet Node.js.",
+      "requiredKeywords": ["npx husky init"],
+      "validationType": "keywords",
+      "correction": "npx husky init",
+      "explanation": "`npx husky init` crée le dossier `.husky/` versionné + modifie `package.json` pour installer Husky automatiquement lors du `npm install`. Les hooks sont maintenant partagés avec toute l'équipe."
+    },
+    {
+      "id": "ex-git-l4-m3-5",
+      "order": 5,
+      "title": "Hook de validation du message",
+      "instructions": "Quelle variable contient le **chemin du fichier de message de commit** dans le hook `commit-msg` ?",
+      "requiredKeywords": ["$1"],
+      "validationType": "keywords",
+      "correction": "cat \"$1\"",
+      "explanation": "Dans le hook `commit-msg`, `$1` est le chemin du fichier temporaire contenant le message de commit. `cat \"$1\"` lit le message, puis on peut le valider avec `grep -E` et retourner `exit 1` pour annuler."
+    }
+  ]
+}

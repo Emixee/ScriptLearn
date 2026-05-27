@@ -1,0 +1,74 @@
+{
+  "id": "git-l1-m1",
+  "title": "Introduction à Git",
+  "level": "git-l1",
+  "lang": "git",
+  "order": 1,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Qu'est-ce que Git ?",
+      "content": "**Git** est un système de **contrôle de version décentralisé** créé par Linus Torvalds en 2005. Il permet de :\n\n- Suivre l'historique de toutes les modifications\n- Travailler en équipe sur le même code\n- Revenir en arrière en cas de problème\n- Créer des branches pour tester des idées en isolation\n\nGit est **local** — il fonctionne entièrement sans connexion. Les plateformes comme GitHub, GitLab ou Bitbucket hébergent les dépôts distants pour la collaboration."
+    },
+    {
+      "title": "Les 3 zones de Git",
+      "content": "Git organise le travail en **3 zones** :\n\n```\nWorking Directory → Staging Area → Repository\n     (édition)       (git add)      (git commit)\n```\n\n1. **Working Directory** : vos fichiers en cours d'édition\n2. **Staging Area** (Index) : fichiers préparés pour le prochain commit\n3. **Repository** : l'historique permanent des commits\n\n`git status` affiche l'état de chaque zone à tout moment."
+    },
+    {
+      "title": "Les commandes de base",
+      "content": "```bash\n# Initialiser un dépôt dans le répertoire courant\ngit init\n\n# Vérifier l'état des fichiers\ngit status\n\n# Ajouter des fichiers au staging\ngit add fichier.txt    # un fichier précis\ngit add .              # tous les fichiers modifiés\n\n# Créer un commit (instantané)\ngit commit -m \"Message descriptif\"\n\n# Voir l'historique\ngit log\ngit log --oneline    # version condensée (un commit par ligne)\n```\n\nCes 5 commandes forment le cycle de travail de base : **status → add → commit → log**."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-git-l1-m1-1",
+      "order": 1,
+      "title": "Initialiser un dépôt",
+      "instructions": "Quelle commande initialise un nouveau dépôt Git dans le répertoire courant ?",
+      "requiredKeywords": ["git init"],
+      "validationType": "keywords",
+      "correction": "git init",
+      "explanation": "`git init` crée un dossier `.git/` caché contenant toute la base de données Git du projet. À exécuter une seule fois au démarrage d'un projet."
+    },
+    {
+      "id": "ex-git-l1-m1-2",
+      "order": 2,
+      "title": "Vérifier l'état du dépôt",
+      "instructions": "Affichez l'**état actuel** du dépôt — fichiers modifiés, en staging, non suivis.",
+      "requiredKeywords": ["git status"],
+      "validationType": "keywords",
+      "correction": "git status",
+      "explanation": "`git status` est la commande la plus utilisée. Elle montre : les fichiers non suivis (untracked), les fichiers modifiés, et les fichiers en staging prêts à commiter."
+    },
+    {
+      "id": "ex-git-l1-m1-3",
+      "order": 3,
+      "title": "Ajouter tous les fichiers au staging",
+      "instructions": "Ajoutez **tous les fichiers modifiés** du répertoire courant à la zone de staging.",
+      "requiredKeywords": ["git add", "."],
+      "validationType": "keywords",
+      "correction": "git add .",
+      "explanation": "`git add .` ajoute tous les fichiers du répertoire courant et ses sous-dossiers. `git add -A` inclut aussi les suppressions. `git add fichier.txt` n'ajoute qu'un fichier."
+    },
+    {
+      "id": "ex-git-l1-m1-4",
+      "order": 4,
+      "title": "Créer un commit",
+      "instructions": "Créez un commit avec le message `\"Initial commit\"`.",
+      "requiredKeywords": ["git commit", "-m", "initial commit"],
+      "validationType": "keywords",
+      "correction": "git commit -m \"Initial commit\"",
+      "explanation": "Un commit est un **instantané permanent** du projet. Le message `-m \"...\"` décrit les changements. Un bon message explique le **pourquoi**, pas le quoi — le diff montre déjà le quoi."
+    },
+    {
+      "id": "ex-git-l1-m1-5",
+      "order": 5,
+      "title": "Historique condensé",
+      "instructions": "Affichez l'historique des commits en **version condensée** (une ligne par commit).",
+      "requiredKeywords": ["git log", "--oneline"],
+      "validationType": "keywords",
+      "correction": "git log --oneline",
+      "explanation": "`--oneline` affiche chaque commit sur une ligne : hash court + message. Très pratique pour naviguer dans l'historique. Combiner avec `--graph --all` pour visualiser les branches."
+    }
+  ]
+}

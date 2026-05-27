@@ -1,0 +1,74 @@
+{
+  "id": "sql-l5-m4",
+  "title": "SQL en pratique — patterns avancés",
+  "level": "sql-l5",
+  "lang": "sql",
+  "order": 4,
+  "estimatedMinutes": 60,
+  "course": [
+    {
+      "title": "Upsert — INSERT ou UPDATE",
+      "content": "L'**upsert** insère une ligne si elle n'existe pas, la met à jour sinon :\n\n```sql\n-- SQLite / PostgreSQL\nINSERT INTO config (key, value)\nVALUES ('theme', 'dark')\nON CONFLICT (key) DO UPDATE SET value = excluded.value;\n\n-- MySQL\nINSERT INTO config (key, value) VALUES ('theme', 'dark')\nON DUPLICATE KEY UPDATE value = VALUES(value);\n```\n\nCas d'usage courant :\n- Synchronisation de données\n- Compteurs (vues, clics)\n- Cache côté base de données"
+    },
+    {
+      "title": "PIVOT et agrégation conditionnelle",
+      "content": "SQL standard ne supporte pas `PIVOT` natif, mais on peut le simuler avec `CASE + SUM` :\n\n```sql\n-- Transposer : nombre d'employés IT, Dev, Sec en colonnes\nSELECT\n  COUNT(CASE WHEN department = 'IT'  THEN 1 END) AS nb_it,\n  COUNT(CASE WHEN department = 'Dev' THEN 1 END) AS nb_dev,\n  COUNT(CASE WHEN department = 'Sec' THEN 1 END) AS nb_sec\nFROM employees;\n```\n\n**CASE dans SUM** pour les agrégations conditionnelles :\n```sql\n-- Total des ventes par mois et par catégorie en colonnes\nSELECT\n  month,\n  SUM(CASE WHEN category = 'A' THEN amount ELSE 0 END) AS cat_a,\n  SUM(CASE WHEN category = 'B' THEN amount ELSE 0 END) AS cat_b\nFROM sales\nGROUP BY month;\n```"
+    },
+    {
+      "title": "CASE, COALESCE et NULLIF",
+      "content": "**CASE** — expressions conditionnelles :\n```sql\nSELECT name, salary,\n  CASE\n    WHEN salary > 80000 THEN 'Senior'\n    WHEN salary > 50000 THEN 'Mid'\n    ELSE 'Junior'\n  END AS niveau\nFROM employees;\n```\n\n**COALESCE** — remplacer les NULL :\n```sql\nSELECT name, COALESCE(phone, 'Non renseigné') AS contact\nFROM employees;\n-- Retourne phone si non NULL, sinon 'Non renseigné'\n```\n\n**NULLIF** — retourne NULL si deux valeurs sont égales :\n```sql\nSELECT total, NULLIF(discount, 0) AS remise\nFROM orders;\n-- discount=0 → NULL (évite la division par zéro)\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-sql-l5-m4-1",
+      "order": 1,
+      "title": "Upsert simple",
+      "instructions": "Insérez la paire `('max_users', '100')` dans la table `settings (key, value)`. Si `key` existe déjà, mettez à jour `value`.",
+      "requiredKeywords": ["insert into", "settings", "values", "max_users", "100", "on conflict", "key", "do update", "set", "value"],
+      "validationType": "keywords",
+      "correction": "INSERT INTO settings (key, value) VALUES ('max_users', '100') ON CONFLICT (key) DO UPDATE SET value = excluded.value;",
+      "explanation": "`ON CONFLICT (key) DO UPDATE` déclenche la mise à jour si `key` viole une contrainte UNIQUE. `excluded.value` référence la valeur qu'on tentait d'insérer."
+    },
+    {
+      "id": "ex-sql-l5-m4-2",
+      "order": 2,
+      "title": "CASE — catégorisation",
+      "instructions": "Ajoutez une colonne `niveau` aux employés : `'Senior'` si salary > 80000, `'Mid'` si > 50000, sinon `'Junior'`.",
+      "requiredKeywords": ["select", "name", "salary", "case", "when", "salary", ">", "80000", "then", "senior", "when", "salary", ">", "50000", "then", "mid", "else", "junior", "end", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, salary, CASE WHEN salary > 80000 THEN 'Senior' WHEN salary > 50000 THEN 'Mid' ELSE 'Junior' END AS niveau FROM employees;",
+      "explanation": "`CASE WHEN ... THEN ... END` est l'équivalent SQL de if/elif/else. Les conditions sont évaluées dans l'ordre — la première vraie gagne."
+    },
+    {
+      "id": "ex-sql-l5-m4-3",
+      "order": 3,
+      "title": "COALESCE — gérer les NULL",
+      "instructions": "Sélectionnez `name` et `phone` depuis `employees`. Si `phone` est NULL, afficher `'Indisponible'` à la place.",
+      "requiredKeywords": ["select", "name", "coalesce", "phone", "indisponible", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT name, COALESCE(phone, 'Indisponible') AS contact FROM employees;",
+      "explanation": "`COALESCE(a, b, c)` retourne le premier argument non NULL. Très utilisé pour les valeurs par défaut, les données manquantes ou les jointures avec des NULL."
+    },
+    {
+      "id": "ex-sql-l5-m4-4",
+      "order": 4,
+      "title": "Agrégation PIVOT avec CASE",
+      "instructions": "Comptez le nombre d'employés dans les colonnes `nb_it`, `nb_dev`, `nb_sec` en une seule requête sans `GROUP BY`.",
+      "requiredKeywords": ["select", "count", "case", "when", "department", "it", "then", "nb_it", "count", "case", "when", "department", "dev", "then", "nb_dev", "from", "employees"],
+      "validationType": "keywords",
+      "correction": "SELECT COUNT(CASE WHEN department = 'IT' THEN 1 END) AS nb_it, COUNT(CASE WHEN department = 'Dev' THEN 1 END) AS nb_dev, COUNT(CASE WHEN department = 'Sec' THEN 1 END) AS nb_sec FROM employees;",
+      "explanation": "`COUNT(CASE WHEN ... THEN 1 END)` compte les lignes qui satisfont la condition. Le `CASE` retourne `NULL` pour les lignes non concernées, et `COUNT` ignore les NULL — c'est le mécanisme du PIVOT manuel."
+    },
+    {
+      "id": "ex-sql-l5-m4-5",
+      "order": 5,
+      "title": "NULLIF — division sécurisée",
+      "instructions": "Calculez `revenue / NULLIF(quantity, 0)` pour éviter une division par zéro dans la table `sales`.",
+      "requiredKeywords": ["select", "revenue", "/", "nullif", "quantity", "0", "from", "sales"],
+      "validationType": "keywords",
+      "correction": "SELECT revenue / NULLIF(quantity, 0) AS prix_unitaire FROM sales;",
+      "explanation": "`NULLIF(quantity, 0)` retourne `NULL` quand `quantity = 0`. La division par `NULL` retourne `NULL` (pas une erreur) — ainsi les lignes problématiques sont exclues plutôt que de crasher la requête."
+    }
+  ]
+}

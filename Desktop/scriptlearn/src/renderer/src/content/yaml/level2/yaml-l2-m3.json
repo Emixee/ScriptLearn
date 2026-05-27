@@ -1,0 +1,74 @@
+{
+  "id": "yaml-l2-m3",
+  "title": "GitHub Actions — pipelines CI/CD",
+  "level": "yaml-l2",
+  "lang": "yaml",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Structure d'un workflow GitHub Actions",
+      "content": "```yaml\n# .github/workflows/ci.yml\nname: CI Pipeline\n\n# Déclencheurs\non:\n  push:\n    branches: [main, develop]\n  pull_request:\n    branches: [main]\n  workflow_dispatch:  # Déclenchement manuel\n\n# Variables globales\nenv:\n  NODE_VERSION: '20'\n  REGISTRY: ghcr.io\n\njobs:\n  # Job 1 : tests\n  test:\n    name: Tests unitaires\n    runs-on: ubuntu-latest\n\n    steps:\n      - name: Checkout du code\n        uses: actions/checkout@v4\n\n      - name: Setup Node.js ${{ env.NODE_VERSION }}\n        uses: actions/setup-node@v4\n        with:\n          node-version: ${{ env.NODE_VERSION }}\n          cache: 'npm'\n\n      - name: Installer les dépendances\n        run: npm ci\n\n      - name: Exécuter les tests\n        run: npm test\n        env:\n          CI: true\n```"
+    },
+    {
+      "title": "Jobs parallèles et conditions",
+      "content": "```yaml\njobs:\n  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci && npm run lint\n\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '20'\n      - run: npm ci && npm test\n\n  # Deploy ne s'exécute que si lint ET test réussissent\n  deploy:\n    runs-on: ubuntu-latest\n    needs: [lint, test]  # Dépendances entre jobs\n    # Seulement sur la branche main\n    if: github.ref == 'refs/heads/main'\n\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Build Docker image\n        run: docker build -t myapp:${{ github.sha }} .\n\n      - name: Push to registry\n        run: |\n          docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io\n          docker push ghcr.io/${{ github.repository }}/myapp:${{ github.sha }}\n```"
+    },
+    {
+      "title": "Matrix, artifacts et secrets",
+      "content": "```yaml\njobs:\n  # Tests sur plusieurs versions de Node\n  test-matrix:\n    strategy:\n      matrix:\n        node: ['18', '20', '22']\n        os: [ubuntu-latest, windows-latest]\n      fail-fast: false  # Continue même si une combinaison échoue\n    runs-on: ${{ matrix.os }}\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: ${{ matrix.node }}\n      - run: npm ci && npm test\n\n  # Upload d'artefacts\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm run build\n      - uses: actions/upload-artifact@v4\n        with:\n          name: dist-files\n          path: dist/\n          retention-days: 7\n\n  # Utiliser les artefacts\n  deploy:\n    needs: build\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/download-artifact@v4\n        with:\n          name: dist-files\n          path: ./dist\n      - name: Deploy\n        run: ./deploy.sh\n        env:\n          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}\n          SERVER_IP: ${{ vars.SERVER_IP }}  # Non-secret, dans Variables\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-yaml-l2-m3-1",
+      "order": 1,
+      "title": "Workflow déclenché sur push main",
+      "instructions": "Créez un workflow GitHub Actions déclenché sur `push` vers la branche `main`, avec un job `build` qui s'exécute sur `ubuntu-latest`.",
+      "requiredKeywords": ["on:", "  push:", "    branches: [main]", "jobs:", "  build:", "    runs-on: ubuntu-latest"],
+      "validationType": "keywords",
+      "correction": "name: Build\non:\n  push:\n    branches: [main]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: echo 'Building...'",
+      "explanation": "`on:` définit les déclencheurs. `push: branches: [main]` = seulement sur la branche main. `runs-on: ubuntu-latest` = runner GitHub-hosted Ubuntu. `actions/checkout@v4` est la première step quasi-universelle — clone le dépôt dans le runner."
+    },
+    {
+      "id": "ex-yaml-l2-m3-2",
+      "order": 2,
+      "title": "Job avec needs — séquence",
+      "instructions": "Créez deux jobs : `test` (sans dépendance) et `deploy` (qui dépend de `test` avec `needs: [test]`) et ne s'exécute que sur `main` (`if: github.ref == 'refs/heads/main'`).",
+      "requiredKeywords": ["needs: [test]", "if: github.ref == 'refs/heads/main'"],
+      "validationType": "keywords",
+      "correction": "jobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm test\n  deploy:\n    runs-on: ubuntu-latest\n    needs: [test]\n    if: github.ref == 'refs/heads/main'\n    steps:\n      - run: ./deploy.sh",
+      "explanation": "`needs: [test]` crée une dépendance — `deploy` attend que `test` réussisse. Sans `needs`, les jobs s'exécutent en parallèle. `if: github.ref == 'refs/heads/main'` protège le déploiement — ne s'exécute que sur la branche principale, pas sur les PR."
+    },
+    {
+      "id": "ex-yaml-l2-m3-3",
+      "order": 3,
+      "title": "Matrix strategy — plusieurs versions Node",
+      "instructions": "Créez un job `test` avec une stratégie de matrix sur `node: ['18', '20', '22']` et `${{ matrix.node }}` dans `actions/setup-node`.",
+      "requiredKeywords": ["strategy:", "  matrix:", "    node: ['18', '20', '22']", "node-version: ${{ matrix.node }}"],
+      "validationType": "keywords",
+      "correction": "jobs:\n  test:\n    strategy:\n      matrix:\n        node: ['18', '20', '22']\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: ${{ matrix.node }}\n      - run: npm ci && npm test",
+      "explanation": "`strategy.matrix` génère N instances du job (une par valeur). `${{ matrix.node }}` accède à la valeur courante. Avec `['18', '20', '22']`, 3 jobs parallèles s'exécutent. Garantit la compatibilité multi-versions sans dupliquer le workflow."
+    },
+    {
+      "id": "ex-yaml-l2-m3-4",
+      "order": 4,
+      "title": "Script multi-lignes avec run",
+      "instructions": "Dans une step `run`, écrivez un script shell multi-lignes (3 commandes) avec le `|` YAML : `npm ci`, `npm run build`, `npm test`.",
+      "requiredKeywords": ["run: |", "npm ci", "npm run build", "npm test"],
+      "validationType": "keywords",
+      "correction": "steps:\n  - name: Build and test\n    run: |\n      npm ci\n      npm run build\n      npm test",
+      "explanation": "`run: |` utilise le Literal Block YAML pour un script multi-lignes. Les commandes s'exécutent séquentiellement dans le même shell. Si une commande échoue (exit code != 0), le step échoue et le job s'arrête. Pour continuer après une erreur : `run: command || true`."
+    },
+    {
+      "id": "ex-yaml-l2-m3-5",
+      "order": 5,
+      "title": "Utiliser un secret",
+      "instructions": "Dans une step de déploiement, utilisez le secret `DEPLOY_API_KEY` via `${{ secrets.DEPLOY_API_KEY }}` dans la variable d'environnement `API_KEY` de la step.",
+      "requiredKeywords": ["env:", "api_key: ${{ secrets.deploy_api_key }}"],
+      "validationType": "keywords",
+      "correction": "steps:\n  - name: Deploy\n    run: ./deploy.sh\n    env:\n      API_KEY: ${{ secrets.DEPLOY_API_KEY }}",
+      "explanation": "`${{ secrets.NOM }}` accède aux secrets GitHub (Settings > Secrets). Ils sont masqués dans les logs. Ne jamais passer les secrets comme arguments de commande (`run: deploy --key $SECRET`) — ils apparaissent dans les logs. Toujours les injecter via `env:` ou des fichiers temporaires."
+    }
+  ]
+}

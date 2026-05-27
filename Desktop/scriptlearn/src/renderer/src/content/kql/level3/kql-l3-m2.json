@@ -1,0 +1,74 @@
+{
+  "id": "kql-l3-m2",
+  "title": "Détection d'anomalies et UEBA",
+  "level": "kql-l3",
+  "lang": "kql",
+  "order": 2,
+  "estimatedMinutes": 55,
+  "course": [
+    {
+      "title": "Baseline comportementale — analyse de l'historique",
+      "content": "Détecter des anomalies nécessite de comparer avec un comportement normal :\n\n```kql\n// Construire une baseline : comportement normal d'un utilisateur\nlet Baseline =\n    SigninLogs\n    | where TimeGenerated between (ago(30d) .. ago(1d))  // 30 jours d'historique\n    | summarize\n        AvgDailyLogins   = count() / 30,\n        UsualIPs         = make_set(IPAddress),\n        UsualCountries   = make_set(tostring(LocationDetails.countryOrRegion)),\n        UsualBrowsers    = make_set(tostring(DeviceDetail))\n      by UserPrincipalName;\n\n// Activité récente\nlet Recent =\n    SigninLogs\n    | where TimeGenerated > ago(1d)\n    | summarize\n        TodayLogins    = count(),\n        TodayIPs       = make_set(IPAddress),\n        TodayCountries = make_set(tostring(LocationDetails.countryOrRegion))\n      by UserPrincipalName;\n\n// Comparer\nRecent\n| join kind=leftouter Baseline on UserPrincipalName\n| extend\n    IsNewCountry = array_length(set_difference(TodayCountries, UsualCountries)) > 0,\n    IsNewIP      = array_length(set_difference(TodayIPs, UsualIPs)) > 0,\n    VolumeRatio  = todouble(TodayLogins) / iff(AvgDailyLogins > 0, AvgDailyLogins, 1.0)\n| where IsNewCountry or VolumeRatio > 5\n```"
+    },
+    {
+      "title": "Impossible Travel — connexions géographiquement impossibles",
+      "content": "```kql\n// Connexions depuis deux pays en moins de 1 heure\nSigninLogs\n| where TimeGenerated > ago(1d)\n| where ResultType == 0  // Connexions réussies seulement\n| project TimeGenerated, UserPrincipalName, IPAddress,\n          Country = tostring(LocationDetails.countryOrRegion)\n| sort by UserPrincipalName asc, TimeGenerated asc\n| extend\n    PrevCountry = prev(Country),\n    PrevTime    = prev(TimeGenerated),\n    PrevUser    = prev(UserPrincipalName)\n| where PrevUser == UserPrincipalName  // Même utilisateur\n    and Country != PrevCountry          // Pays différent\n    and datetime_diff('minute', TimeGenerated, PrevTime) < 60\n    and Country != \"\"                   // Pays connu\n    and PrevCountry != \"\"\n| project UserPrincipalName, Time1=PrevTime, Country1=PrevCountry,\n          Time2=TimeGenerated, Country2=Country,\n          MinutesBetween = datetime_diff('minute', TimeGenerated, PrevTime)\n| sort by MinutesBetween asc\n```"
+    },
+    {
+      "title": "Scoring de risque composite",
+      "content": "```kql\n// Score de risque cumulé sur plusieurs indicateurs\nlet Window = 24h;\n\nlet FailureScore =\n    SecurityEvent\n    | where TimeGenerated > ago(Window)\n    | where EventID == 4625\n    | summarize Score = count() by Account\n    | extend FailureScore = iff(Score > 50, 3, iff(Score > 20, 2, iff(Score > 5, 1, 0)));\n\nlet AdminGroupScore =\n    SecurityEvent\n    | where TimeGenerated > ago(Window)\n    | where EventID in (4728, 4732)\n    | summarize Changes=count() by Account=SubjectUserName\n    | extend AdminScore = 5;  // Changement groupe admin = très risqué\n\nlet OffHoursScore =\n    SigninLogs\n    | where TimeGenerated > ago(Window)\n    | where hourofday(TimeGenerated) !between (8 .. 18)\n    | summarize NightLogins=count() by Account=UserPrincipalName\n    | extend OffHoursScore = iff(NightLogins > 10, 2, 1);\n\n// Consolider les scores\nFailureScore\n| join kind=fullouter AdminGroupScore on Account\n| join kind=fullouter OffHoursScore on Account\n| extend TotalScore = coalesce(FailureScore, 0)\n                    + coalesce(AdminScore, 0)\n                    + coalesce(OffHoursScore, 0)\n| where TotalScore > 3\n| sort by TotalScore desc\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-kql-l3-m2-1",
+      "order": 1,
+      "title": "Baseline — activité hors-norme",
+      "instructions": "Calculez la moyenne de connexions quotidiennes par utilisateur sur 30 jours (`ago(30d)` à `ago(1d)`), puis comparez avec les connexions d'aujourd'hui. Affichez ceux avec un ratio > 5.",
+      "requiredKeywords": ["let", "ago(30d)", "ago(1d)", "avg(", "ratio"],
+      "validationType": "keywords",
+      "correction": "let Baseline = SigninLogs | where TimeGenerated between (ago(30d) .. ago(1d)) | summarize AvgDaily = count()/30.0 by UserPrincipalName;\nlet Today = SigninLogs | where TimeGenerated > ago(1d) | summarize TodayCount=count() by UserPrincipalName;\nToday | join kind=leftouter Baseline on UserPrincipalName | extend Ratio=todouble(TodayCount)/iff(AvgDaily>0,AvgDaily,1.0) | where Ratio > 5",
+      "explanation": "La baseline sur 30 jours représente le comportement normal. Diviser l'activité récente par la moyenne historique donne un ratio. Un ratio > 5 (5x la normale) est une anomalie significative. `todouble()` évite la division entière."
+    },
+    {
+      "id": "ex-kql-l3-m2-2",
+      "order": 2,
+      "title": "Nouveau pays de connexion",
+      "instructions": "Détectez les utilisateurs `SigninLogs` qui se connectent aujourd'hui depuis un **pays jamais vu** dans les 30 derniers jours avec `set_difference()`.",
+      "requiredKeywords": ["set_difference(", "make_set(", "array_length(", "> 0"],
+      "validationType": "keywords",
+      "correction": "let History = SigninLogs | where TimeGenerated between (ago(30d) .. ago(1d)) | summarize PastCountries=make_set(tostring(LocationDetails.countryOrRegion)) by UserPrincipalName;\nlet Today = SigninLogs | where TimeGenerated > ago(1d) | summarize TodayCountries=make_set(tostring(LocationDetails.countryOrRegion)) by UserPrincipalName;\nToday | join kind=leftouter History on UserPrincipalName | extend NewCountries=set_difference(TodayCountries, PastCountries) | where array_length(NewCountries) > 0",
+      "explanation": "`set_difference(A, B)` retourne les éléments dans A mais pas dans B. `array_length(NewCountries) > 0` : il y a au moins un nouveau pays. Cette détection est à la base des alertes de connexion depuis un pays inhabituel dans Azure AD Identity Protection."
+    },
+    {
+      "id": "ex-kql-l3-m2-3",
+      "order": 3,
+      "title": "Impossible Travel",
+      "instructions": "Détectez les connexions successives du même utilisateur depuis **deux pays différents en moins de 60 minutes** avec `prev()` et `datetime_diff()`.",
+      "requiredKeywords": ["prev(country", "prev(timegenerated", "datetime_diff('minute'", "< 60"],
+      "validationType": "keywords",
+      "correction": "SigninLogs\n| where TimeGenerated > ago(1d)\n| where ResultType == 0\n| project TimeGenerated, UserPrincipalName, Country=tostring(LocationDetails.countryOrRegion)\n| sort by UserPrincipalName asc, TimeGenerated asc\n| extend PrevCountry=prev(Country), PrevTime=prev(TimeGenerated), PrevUser=prev(UserPrincipalName)\n| where PrevUser == UserPrincipalName and Country != PrevCountry and datetime_diff('minute', TimeGenerated, PrevTime) < 60",
+      "explanation": "`prev()` accède à la ligne précédente après tri. On vérifie que c'est le même utilisateur, que le pays a changé, et que le délai est inférieur à 60 min. Physiquement impossible de voyager entre deux pays éloignés en < 1h = compte compromis probable."
+    },
+    {
+      "id": "ex-kql-l3-m2-4",
+      "order": 4,
+      "title": "coalesce() — valeurs nulles dans les jointures",
+      "instructions": "Dans une jointure `fullouter`, utilisez `coalesce(Score, 0)` pour remplacer les valeurs nulles (compte sans score) par 0 dans le calcul d'un total.",
+      "requiredKeywords": ["coalesce(", "fullouter", "totalscore"],
+      "validationType": "keywords",
+      "correction": "let A = datatable(Account:string, ScoreA:int) [\"alice\", 3, \"bob\", 0];\nlet B = datatable(Account:string, ScoreB:int) [\"alice\", 2, \"charlie\", 5];\nA | join kind=fullouter B on Account | extend Total = coalesce(ScoreA, 0) + coalesce(ScoreB, 0)",
+      "explanation": "`fullouter` garde toutes les lignes des deux tables — les colonnes de la table absente sont null. `coalesce(value, default)` retourne `default` si `value` est null. Indispensable dans les jointures fullouter pour éviter que les null rendent les calculs incorrects."
+    },
+    {
+      "id": "ex-kql-l3-m2-5",
+      "order": 5,
+      "title": "Score de risque multi-critères",
+      "instructions": "Créez un score de risque pour chaque compte en combinant : score pour les échecs de connexion (EventID 4625, > 10 = 2 points, > 5 = 1 point) et score pour les connexions nocturnes (nuit = 1 point).",
+      "requiredKeywords": ["let", "eventid == 4625", "iff(", "hourofday", "coalesce("],
+      "validationType": "keywords",
+      "correction": "let FailScore = SecurityEvent | where TimeGenerated > ago(1d) | where EventID == 4625 | summarize F=count() by Account | extend FScore=iff(F>10, 2, iff(F>5, 1, 0));\nlet NightScore = SigninLogs | where TimeGenerated > ago(1d) | where hourofday(TimeGenerated) !between (8 .. 18) | summarize N=count() by Account=UserPrincipalName | extend NScore=1;\nFailScore | join kind=fullouter NightScore on Account | extend Total=coalesce(FScore,0)+coalesce(NScore,0) | where Total > 1 | sort by Total desc",
+      "explanation": "Le scoring multi-critères réduit les faux positifs : un seul indicateur peut être un bruit, la combinaison de plusieurs est plus fiable. `fullouter` + `coalesce` garantit que les comptes présents dans seulement une des tables sont inclus avec un score partiel."
+    }
+  ]
+}
