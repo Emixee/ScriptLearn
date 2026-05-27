@@ -36,6 +36,11 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "ScriptLearn"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Emixee",
+      "repo": "scriptlearn"
     }
   },
   "dependencies": {
