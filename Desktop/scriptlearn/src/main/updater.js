@@ -7,7 +7,9 @@ import { spawn } from 'child_process'
 
 const GITHUB_OWNER = 'Emixee'
 const GITHUB_REPO  = 'ScriptLearn'
-const ASSET_NAME   = 'ScriptLearn-Setup-Hybrid.exe'
+// Pas de constante ASSET_NAME fixe : electron-builder génère un nom qui inclut le numéro de version
+// (ex: "ScriptLearn.Setup.0.4.1.exe") et GitHub remplace les espaces par des points.
+// On cherche donc dynamiquement le premier asset .exe qui n'est pas un .blockmap.
 
 function isNewer(remote, current) {
   const r = remote.replace(/^v/, '').split('.').map(Number)
@@ -77,7 +79,12 @@ export function setupUpdaterIPC(mainWindow) {
         return { available: false, currentVersion }
       }
 
-      const asset = release.assets?.find(a => a.name === ASSET_NAME)
+      // Trouver l'installateur .exe dans les assets de la release.
+      // On exclut les .blockmap (fichiers de différence pour l'auto-updater) et on cherche le .exe.
+      // electron-builder nomme l'asset "ScriptLearn.Setup.X.Y.Z.exe" (GitHub remplace les espaces par des points).
+      const asset = release.assets?.find(
+        a => a.name.endsWith('.exe') && !a.name.endsWith('.blockmap')
+      )
       if (!asset) return { available: false, currentVersion }
 
       return {
