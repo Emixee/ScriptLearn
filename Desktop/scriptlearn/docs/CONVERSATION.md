@@ -1,9 +1,33 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.2
+## Version actuelle : 0.4.3
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.3 — Correctif installation mise à jour NSIS (2026-05-28)
+
+### Cause du bug
+`update:install` dans `updater.js` appelait `spawn(installerPath, [])` sans arguments NSIS.
+
+**Bug 1 — pas de `/S`** : NSIS s'ouvre en mode interactif (fenêtre UI visible). L'utilisateur ne la voit pas (l'app vient de se fermer), l'ignore, ou installe dans un mauvais répertoire.
+
+**Bug 2 — pas de `/D=`** : même en silencieux, NSIS installe dans son chemin par défaut. Si l'installation existante est ailleurs → deux versions coexistent, raccourcis pointent toujours vers l'ancienne.
+
+### Correction
+```javascript
+const installDir = dirname(app.getPath('exe'))
+spawn(installerPath, ['/S', `/D=${installDir}`], { detached: true, stdio: 'ignore' }).unref()
+setTimeout(() => app.quit(), 1500)  // était 800ms
+```
+- `/S` = mode silencieux, aucune UI
+- `/D=<installDir>` = écrase l'installation existante au bon endroit
+- `dirname(app.getPath('exe'))` = répertoire de l'exécutable actuel
+
+### Note importante pour l'utilisateur v0.4.1
+Pour passer de 0.4.1 à 0.4.3, **installer manuellement** `ScriptLearn-Setup-Hybrid.exe` depuis la [release v0.4.3](https://github.com/Emixee/ScriptLearn/releases/tag/v0.4.3). Les versions 0.4.2+ peuvent se mettre à jour automatiquement.
 
 ---
 
