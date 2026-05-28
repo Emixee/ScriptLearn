@@ -44,8 +44,11 @@ function ScoreBadge({ score, started }) {
   )
 }
 
-// Composant d'une carte de module, réutilisé pour standards et complémentaires
-function ModuleCard({ ref: modRef, lang, levelId, navigate, progress }) {
+// Composant d'une carte de module, réutilisé pour les modules complémentaires.
+// ATTENTION : ne pas utiliser "ref" comme nom de prop — c'est un mot réservé React
+// qui est intercepté par le framework et jamais transmis au composant.
+// On utilise "modRef" à la place.
+function ModuleCard({ modRef, lang, levelId, navigate, progress }) {
   const mod = getModule(modRef.id)
   const exercises = mod?.exercises ?? []
   const { score, completed, total, stars } = moduleScore(exercises, progress)
@@ -624,7 +627,7 @@ export default function CourseList() {
                     {compModuleRefs.map((modRef) => (
                       <ModuleCard
                         key={modRef.id}
-                        ref={modRef}
+                        modRef={modRef}
                         lang={selectedTrack}
                         levelId={selectedCompLevelId}
                         navigate={navigate}
