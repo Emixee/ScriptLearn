@@ -1,9 +1,23 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.4
+## Version actuelle : 0.4.5
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.5 — Correctif cours complémentaires / prop `ref` réservé (2026-05-28)
+
+### Cause du bug
+Dans `CourseList.jsx`, le composant `ModuleCard` était appelé avec `ref={modRef}` :
+```jsx
+<ModuleCard ref={modRef} lang={selectedTrack} ... />
+```
+`ref` est un **prop réservé React** — React l'intercepte pour ses propres besoins (refs DOM/composants) et **ne le transmet jamais** au composant. Résultat : à l'intérieur de `ModuleCard`, `modRef` était `undefined` → `getModule(undefined.id)` → `TypeError: Cannot read properties of undefined (reading 'id')` → intercepté par ErrorBoundary (v0.4.4) et affiché à l'utilisateur.
+
+### Correction
+Renommage `ref` → `modRef` dans la définition et l'appel du composant `ModuleCard`.
 
 ---
 
