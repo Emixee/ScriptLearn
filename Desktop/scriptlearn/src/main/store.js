@@ -2,6 +2,33 @@ import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 
+// ------------------------------------------------------------------------------
+// LECTURE DE LA CONFIG INSTALLATEUR
+// L'installateur NSIS (via build/setup-ollama.ps1) peut laisser un fichier JSON
+// dans %APPDATA%\ScriptLearn\installer-ai-config.json contenant le modèle Ollama
+// choisi par l'utilisateur PENDANT l'installation.
+// Cette fonction lit ce fichier UNE SEULE FOIS au premier démarrage et retourne
+// { model, enabled } ou null si le fichier n'existe pas.
+// POURQUOI on ne supprime pas le fichier : si l'utilisateur réinstalle ScriptLearn
+// sans changer les paramètres, on ne veut pas réinitialiser son choix. Le fichier
+// est ignoré si les paramètres ont déjà été personnalisés (aiEnabled différent de false).
+// ------------------------------------------------------------------------------
+function readInstallerAiConfig() {
+  try {
+    const configPath = join(app.getPath('userData'), 'installer-ai-config.json')
+    if (!existsSync(configPath)) return null
+    const raw = readFileSync(configPath, 'utf8')
+    const parsed = JSON.parse(raw)
+    if (parsed?.model && parsed.model !== 'none') {
+      return { model: parsed.model, enabled: parsed.enabled ?? true }
+    }
+    return null
+  } catch {
+    // Si le fichier est corrompu ou illisible, on l'ignore silencieusement
+    return null
+  }
+}
+
 let _dataFile = null
 function getDataFile() {
   if (!_dataFile) _dataFile = join(app.getPath('userData'), 'scriptlearn-data.json')
@@ -48,6 +75,21 @@ function load() {
     if (!d.settings) d.settings = {}
     if (d.settings.remindersEnabled == null) d.settings.remindersEnabled = false
     if (!d.settings.reminderTime) d.settings.reminderTime = '20:00'
+
+    // Appliquer la configuration laissée par l'installateur si :
+    // - Le fichier installer-ai-config.json existe (l'user a choisi un modèle)
+    // - ET aiEnabled est encore à false (l'utilisateur n'a pas encore personnalisé manuellement)
+    // Cela évite d'écraser un paramètre que l'utilisateur aurait changé dans les Paramètres.
+    if (!d.settings.aiEnabled) {
+      const installerConfig = readInstallerAiConfig()
+      if (installerConfig) {
+        d.settings.aiModel   = installerConfig.model
+        d.settings.aiEnabled = installerConfig.enabled
+        // Sauvegarder immédiatement pour ne pas relire à chaque démarrage
+        persist(d)
+      }
+    }
+
     return d
   } catch {
     return DEFAULT_DATA()
