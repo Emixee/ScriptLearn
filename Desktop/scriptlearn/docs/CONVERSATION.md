@@ -1,9 +1,38 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.6
+## Version actuelle : 0.5.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.5.0 — Installation Ollama et modèle IA pendant l'installateur (2026-05-28)
+
+### Ce qui se passe pendant l'installation (NSIS)
+
+Après la copie des fichiers de ScriptLearn, l'installateur lance automatiquement une fenêtre de configuration Ollama :
+
+1. **Sélection du modèle** — UI Windows Forms avec radio buttons :
+   - `mistral:7b` — Recommandé, excellent français (4.1 Go)
+   - `llama3.2` — Léger et rapide (2.0 Go)
+   - `gemma2:2b` — Ultra léger (1.6 Go)
+   - `phi3.5` — Compact et polyvalent (2.2 Go)
+   - Ne pas installer (configurer plus tard dans Paramètres)
+
+2. **Installation Ollama** — Si absent, télécharge `OllamaSetup.exe` depuis `ollama.com/download` et l'installe silencieusement
+
+3. **Pull du modèle** — Lance `ollama pull <modèle>` et attend la fin
+
+4. **Config sauvegardée** — Écrit `%APPDATA%\ScriptLearn\installer-ai-config.json` avec `{ model, enabled, installedAt }`
+
+5. **Premier démarrage ScriptLearn** — `store.js` `load()` lit le fichier et applique `aiModel` + `aiEnabled` si non encore configurés
+
+### Fichiers créés
+- `build/setup-ollama.ps1` — Script PowerShell bundlé dans l'installateur NSIS, extrait vers `%TEMP%` et exécuté pendant l'installation
+- `installer/custom.nsh` — Macro `!macro customInstall` electron-builder/NSIS : extrait et run le PS1 via `ExecWait`
+- `src/main/store.js` — Fonction `readInstallerAiConfig()` + application au `load()`
+- `package.json` — `nsis.include: "installer/custom.nsh"`
 
 ---
 
