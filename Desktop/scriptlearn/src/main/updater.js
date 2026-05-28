@@ -1,5 +1,5 @@
 import { app, ipcMain } from 'electron'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { createWriteStream, existsSync, unlinkSync } from 'fs'
 import { get as httpsGet } from 'https'
 import { get as httpGet } from 'http'
@@ -115,8 +115,29 @@ export function setupUpdaterIPC(mainWindow) {
   })
 
   ipcMain.handle('update:install', (_, { path: installerPath }) => {
-    spawn(installerPath, [], { detached: true, stdio: 'ignore' }).unref()
-    setTimeout(() => app.quit(), 800)
+    // Récupérer le répertoire d'installation ACTUEL de l'application.
+    // app.getPath('exe') → ex: C:\Users\user\AppData\Local\Programs\ScriptLearn\ScriptLearn.exe
+    // dirname(...) → C:\Users\user\AppData\Local\Programs\ScriptLearn
+    //
+    // POURQUOI c'est nécessaire :
+    // Sans /D=, NSIS installe dans son chemin par défaut, qui peut différer du chemin
+    // réel si l'utilisateur avait choisi un répertoire personnalisé lors de l'install initiale.
+    // Résultat sans /D= : deux versions coexistent, les raccourcis pointent toujours vers l'ancienne.
+    const installDir = dirname(app.getPath('exe'))
+
+    // /S  = mode silencieux NSIS : aucune fenêtre, aucune invite utilisateur.
+    //       Sans ce flag, l'installeur ouvre une UI et attend une action — l'utilisateur
+    //       ne la voit souvent pas ou l'installe au mauvais endroit.
+    // /D= = répertoire cible (DOIT être le dernier argument NSIS, sans guillemets).
+    //       Garantit que la mise à jour écrase l'installation existante.
+    spawn(installerPath, ['/S', `/D=${installDir}`], {
+      detached: true,   // L'installeur survit à la fermeture du parent (app.quit)
+      stdio: 'ignore'   // Pas de pipes — l'installeur tourne en arrière-plan
+    }).unref()
+
+    // Laisser 1,5s à l'installeur NSIS pour démarrer et vérifier les fichiers
+    // avant que l'app se ferme et libère les locks sur ses propres binaires.
+    setTimeout(() => app.quit(), 1500)
     return { ok: true }
   })
 }
