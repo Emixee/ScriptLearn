@@ -1,9 +1,34 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.3
+## Version actuelle : 0.4.4
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.4 — Correctif exercices vides en production (2026-05-28)
+
+### Cause du bug
+**Bug 1 — Temporal Dead Zone (TDZ)** dans `Exercise.jsx` :
+```js
+// AVANT (ligne 376 — BUG) :
+const noteKey = exercise ? `ex:${exercise.id}` : null  // exercise utilisé ici...
+// ...
+const exercise = module?.exercises?.[exIdx] ?? null     // ...mais déclaré ICI (ligne 385)
+```
+- En **développement** (esbuild) : `const` → `var`, pas de TDZ → fonctionne silencieusement
+- En **production** (Rollup) : `const` conservé, TDZ enforced → `ReferenceError: Cannot access 'exercise' before initialization` → React doit démonter
+
+**Bug 2 — Aucun `ErrorBoundary`** dans toute l'app. Tout `ReferenceError` non intercepté fait démonter l'arbre React entier → écran blanc, sans message.
+
+### Corrections
+- `src/renderer/src/pages/Exercise.jsx` — `noteKey` déplacé après la déclaration de `exercise`
+- `src/renderer/src/components/ErrorBoundary.jsx` (**nouveau**) — intercepte les erreurs de rendu, affiche message + bouton retour
+- `src/renderer/src/main.jsx` — `ErrorBoundary` en racine autour de tout l'app
+
+### Note
+Ce bug existait depuis que les annotations (notes) ont été ajoutées en v0.3.0, mais n'était visible qu'en build production (pas en `npm run dev`).
 
 ---
 
