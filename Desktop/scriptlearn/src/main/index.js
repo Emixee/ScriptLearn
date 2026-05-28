@@ -3,6 +3,7 @@ import { join } from 'path'
 import { setupTerminalIPC } from './terminal.js'
 import { setupStoreIPC } from './storeIPC.js'
 import { setupUpdaterIPC } from './updater.js'
+import { setupOllamaIPC } from './ollama.js'
 import { getSettings, getActiveProfileId, getLastActivityDate } from './store.js'
 
 let mainWindow = null
@@ -34,6 +35,9 @@ function createWindow() {
 
   setupTerminalIPC(mainWindow)
   setupUpdaterIPC(mainWindow)
+  // Ollama IPC : appels depuis le processus principal pour contourner
+  // la restriction Private Network Access de Chromium (voir src/main/ollama.js)
+  setupOllamaIPC()
 
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)

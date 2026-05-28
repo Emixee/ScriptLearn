@@ -1,13 +1,27 @@
 /**
- * Appelle l'API Ollama locale pour obtenir un feedback pédagogique.
- * Retourne null en cas d'erreur (timeout, Ollama non lancé, etc.)
+ * Utilitaires de communication avec Ollama — côté renderer.
+ *
+ * POURQUOI on passe par window.electronAPI.ollama (IPC) et non par fetch() :
+ * Chromium applique la "Private Network Access" policy : une page chargée
+ * depuis file:// (origine "null") ne peut pas appeler localhost directement —
+ * le préflight OPTIONS déclenché par Chromium échoue (Ollama répond 403).
+ * Toutes les requêtes HTTP vers Ollama sont donc déléguées au processus
+ * principal (main process Node.js) via IPC, où aucune restriction CORS n'existe.
+ */
+
+/**
+ * Génère un feedback pédagogique pour un exercice (réussi ou non).
+ * Retourne null si Ollama est indisponible (l'UI affiche alors la correction statique).
  */
 export async function askOllama({ url, model, exercise, code, isCorrect, lang }) {
+  // Construire le nom du langage lisible pour le prompt
   const langName = lang === 'powershell' ? 'PowerShell'
     : lang === 'python' ? 'Python'
     : lang === 'kql' ? 'KQL (Kusto Query Language)'
     : 'Bash'
 
+  // Prompt adapté selon le langage (KQL a un contexte spécifique Sentinel)
+  // et selon si l'exercice est réussi ou en échec
   const prompt = lang === 'kql'
     ? isCorrect
       ? `Tu es un expert Microsoft Sentinel et KQL. L'apprenant a réussi l'exercice "${exercise.title}".
@@ -52,58 +66,26 @@ ${code}
 
 Donne un indice utile en 2 phrases sans donner la solution directement. Sois encourageant. Réponds en français.`
 
-  try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 90000)
-
-    const resp = await fetch(`${url}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, prompt, stream: false }),
-      signal: controller.signal
-    })
-
-    clearTimeout(timeout)
-
-    if (!resp.ok) return null
-    const json = await resp.json()
-    return json.response?.trim() || null
-  } catch {
-    return null
-  }
+  // Délégation au processus principal via IPC — pas de fetch direct
+  return window.electronAPI.ollama.generate({ url, model, prompt })
 }
 
-/** Appel générique à Ollama (pour l'assistant IA chat) */
+/**
+ * Appel générique à Ollama pour l'assistant IA chat.
+ * Retourne la réponse texte ou null si Ollama est indisponible.
+ */
 export async function chatOllama({ url, model, prompt }) {
-  try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 90000)
-    const resp = await fetch(`${url}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, prompt, stream: false }),
-      signal: controller.signal
-    })
-    clearTimeout(timeout)
-    if (!resp.ok) return null
-    const json = await resp.json()
-    return json.response?.trim() || null
-  } catch {
-    return null
-  }
+  // Délégation au processus principal via IPC — pas de fetch direct
+  return window.electronAPI.ollama.generate({ url, model, prompt })
 }
 
-/** Vérifie si Ollama est accessible et retourne les modèles disponibles */
+/**
+ * Vérifie si Ollama est accessible et retourne les modèles disponibles.
+ * Appelée par la page Paramètres pour le bouton "Tester la connexion".
+ *
+ * Retourne : { ok: boolean, models: string[] }
+ */
 export async function checkOllama(url) {
-  try {
-    const controller = new AbortController()
-    setTimeout(() => controller.abort(), 3000)
-    const resp = await fetch(`${url}/api/tags`, { signal: controller.signal })
-    if (!resp.ok) return { ok: false, models: [] }
-    const json = await resp.json()
-    const models = (json.models ?? []).map(m => m.name)
-    return { ok: true, models }
-  } catch {
-    return { ok: false, models: [] }
-  }
+  // Délégation au processus principal via IPC — pas de fetch direct
+  return window.electronAPI.ollama.check(url)
 }

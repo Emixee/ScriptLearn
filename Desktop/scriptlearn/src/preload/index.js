@@ -32,6 +32,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return () => ipcRenderer.removeListener('update:progress', handler)
     }
   },
+  // Pont IPC vers Ollama — les requêtes sont faites depuis le processus principal
+  // (Node.js) pour éviter les blocages CORS/Private Network Access du renderer.
+  // Le renderer ne fait JAMAIS de fetch direct vers localhost:11434.
+  ollama: {
+    check:    (url)                    => ipcRenderer.invoke('ollama:check',    { url }),
+    generate: ({ url, model, prompt }) => ipcRenderer.invoke('ollama:generate', { url, model, prompt }),
+  },
   store: {
     listProfiles:        ()                         => ipcRenderer.invoke('store:listProfiles'),
     getActiveProfile:    ()                         => ipcRenderer.invoke('store:getActiveProfile'),
