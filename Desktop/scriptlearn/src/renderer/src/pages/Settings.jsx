@@ -160,11 +160,25 @@ function Settings() {
   const testConnection = async () => {
     setTestState('testing')
     const result = await checkOllama(aiUrl)
-    setTestState(result)
+
     if (result?.ok && result.models?.length > 0) {
-      const firstModel = result.models[0]
-      setAiModel(firstModel)
-      persist({ aiModel: firstModel })
+      // Vérifier si le modèle actuellement configuré est bien dans la liste des modèles installés.
+      // POURQUOI : si on prend toujours models[0], le modèle choisi par l'utilisateur
+      // (ex: mistral:7b) est silencieusement écrasé par le premier de la liste (ex: llama3.2).
+      const configuredModelAvailable = result.models.includes(aiModel)
+
+      if (!configuredModelAvailable) {
+        // Le modèle configuré n'est pas installé dans Ollama.
+        // On enrichit le résultat avec un avertissement pour l'afficher dans l'UI.
+        // On ne change PAS le modèle automatiquement — c'est à l'utilisateur de choisir.
+        setTestState({ ...result, modelWarning: true })
+      } else {
+        // Le modèle configuré est disponible — aucun changement nécessaire.
+        setTestState(result)
+      }
+    } else {
+      // Ollama inaccessible ou aucun modèle installé
+      setTestState(result)
     }
   }
 
@@ -300,10 +314,34 @@ function Settings() {
                   className="w-full bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
                   placeholder="llama3.2"
                 />
+                {/* Liste des modèles installés — permet à l'utilisateur de savoir quoi taper */}
                 {testState?.models?.length > 0 && (
-                  <p className="text-slate-500 text-xs mt-1">
-                    Disponibles : {testState.models.join(', ')}
-                  </p>
+                  <div className="mt-1.5 space-y-1">
+                    <p className="text-slate-500 text-xs">Modèles installés dans Ollama :</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {testState.models.map(m => (
+                        <button
+                          key={m}
+                          onClick={() => { setAiModel(m); persist({ aiModel: m }) }}
+                          className={`text-xs px-2 py-0.5 rounded-full transition-colors font-mono ${
+                            m === aiModel
+                              ? 'bg-[#6366f1] text-white'
+                              : 'bg-[#232640] text-slate-400 hover:text-white hover:bg-[#2d3258]'
+                          }`}
+                        >
+                          {m === aiModel ? '✓ ' : ''}{m}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Avertissement si le modèle configuré n'est pas dans la liste */}
+                    {testState.modelWarning && (
+                      <p className="text-amber-400 text-xs mt-1">
+                        Le modèle <span className="font-mono">{aiModel}</span> n'est pas installé dans Ollama.
+                        Cliquez sur un modèle disponible ci-dessus ou lancez{' '}
+                        <span className="font-mono bg-[#0f1117] px-1 rounded">ollama pull {aiModel}</span>.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               <button
@@ -313,8 +351,10 @@ function Settings() {
               >
                 {testState === 'testing' ? (
                   <>⏳ Test en cours…</>
-                ) : testState?.ok ? (
-                  <><span className="text-green-400">✓</span> Connexion réussie</>
+                ) : testState?.ok && !testState?.modelWarning ? (
+                  <><span className="text-green-400">✓</span> Ollama OK — modèle disponible</>
+                ) : testState?.ok && testState?.modelWarning ? (
+                  <><span className="text-amber-400">⚠</span> Ollama OK — modèle introuvable</>
                 ) : testState?.ok === false ? (
                   <><span className="text-red-400">✗</span> Ollama inaccessible</>
                 ) : (

@@ -200,7 +200,8 @@ export default function Stats() {
             {hardExercises.map(({ ex, attempts, completed, lang }) => (
               <div key={ex.id} className="flex items-center justify-between py-2 border-b border-[#2d3748] last:border-0">
                 <div className="flex items-center gap-3">
-                  <span className={`text-base ${completed ? '✅' : '❌'}`}>{completed ? '✅' : '❌'}</span>
+                  {/* L'emoji ne doit pas être dans className — les emojis ne sont pas des classes CSS valides */}
+                  <span className="text-base">{completed ? '✅' : '❌'}</span>
                   <div>
                     <p className="text-slate-300 text-sm">{ex.title}</p>
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: `${LANG_COLORS[lang]}20`, color: LANG_COLORS[lang] }}>
