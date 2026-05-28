@@ -1,9 +1,27 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.1
+## Version actuelle : 0.4.2
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.2 — Correctif Ollama / Private Network Access (2026-05-28)
+
+### Cause du bug
+Chromium (moteur d'Electron) applique la **Private Network Access (PNA)** policy depuis Chromium 94+. Quand le renderer (page `file://` = origine `null`) tente un `fetch('http://localhost:11434/...')`, Chromium envoie d'abord un préflight `OPTIONS` avec le header `Access-Control-Request-Private-Network: true`. Ollama répond **403 Forbidden** à ce préflight → Chromium bloque la requête → `catch` silencieux → "Ollama inaccessible".
+
+Preuve : `Invoke-WebRequest -Uri "http://localhost:11434/api/tags"` depuis PowerShell répond bien 200, mais la requête OPTIONS échoue avec 403.
+
+### Correction
+Tous les appels HTTP vers Ollama migrent du renderer vers le **processus principal** (Node.js via IPC). Le main process n'est pas soumis aux restrictions CORS/PNA — il fait de vraies requêtes réseau.
+
+**Fichiers modifiés :**
+- `src/main/ollama.js` (**nouveau**) — handlers `ollama:check` (ping + liste modèles) et `ollama:generate` (inférence IA), utilisant `fetch` Node.js 22 sans restriction
+- `src/main/index.js` — appel `setupOllamaIPC()` au démarrage de la fenêtre
+- `src/preload/index.js` — exposition de `window.electronAPI.ollama.{check, generate}`
+- `src/renderer/src/utils/ollama.js` — suppression des `fetch` directs, délégation à `window.electronAPI.ollama.*`
 
 ---
 
