@@ -373,16 +373,22 @@ export default function Exercise() {
   const [draftLoaded, setDraftLoaded] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [showNote, setShowNote] = useState(false)
-  const noteKey = exercise ? `ex:${exercise.id}` : null
 
   const outputBuffer = useRef('')
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
   const dragStartW = useRef(DEFAULT_PANEL_WIDTH)
 
+  // IMPORTANT : module et exercise doivent être déclarés AVANT noteKey.
+  // En production (build Rollup), const respecte la Temporal Dead Zone (TDZ) :
+  // accéder à une variable const avant sa déclaration lève ReferenceError,
+  // même si c'est dans la même fonction. En dev (esbuild), const → var, pas de TDZ,
+  // d'où une différence de comportement dev vs production (écran blanc en prod).
   const module = getModule(moduleId)
   const exIdx = Math.max(0, parseInt(exerciseIndex || '1', 10) - 1)
   const exercise = module?.exercises?.[exIdx] ?? null
+  // noteKey dépend de exercise, donc déclaré après
+  const noteKey = exercise ? `ex:${exercise.id}` : null
   const totalExercises = module?.exercises?.length ?? 0
   const isFirst = exIdx === 0
   const isLast = exIdx === totalExercises - 1
