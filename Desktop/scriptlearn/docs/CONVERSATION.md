@@ -1,9 +1,41 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.4.5
+## Version actuelle : 0.4.6
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.4.6 — Vérification modèle Ollama + revue complète du code (2026-05-28)
+
+### Revue complète du code — résultats
+
+**Bug corrigé — `Settings.jsx` `testConnection()` écrasait le modèle choisi :**
+```javascript
+// AVANT (bug) : toujours models[0], écrase silencieusement le modèle configuré
+const firstModel = result.models[0]
+setAiModel(firstModel)
+persist({ aiModel: firstModel })
+
+// APRÈS (corrigé) : vérifie si le modèle configuré est dans la liste
+const configuredModelAvailable = result.models.includes(aiModel)
+if (!configuredModelAvailable) setTestState({ ...result, modelWarning: true })
+```
+Comportement après correction :
+- Modèle configuré **installé dans Ollama** → `✓ Ollama OK — modèle disponible`
+- Modèle configuré **absent d'Ollama** → `⚠ Ollama OK — modèle introuvable` + message avec `ollama pull <modèle>`
+- Modèles installés affichés comme **boutons cliquables** pour sélection directe
+
+**Bug cosmétique corrigé — `Stats.jsx` ligne 203 :**
+Emoji utilisé comme classe CSS (`className="text-base ✅"`) — classe invalide ignorée par le navigateur. Corrigé : emoji dans le contenu uniquement.
+
+### Ce que le code fait / ne fait PAS concernant Ollama
+- **Fait** : vérifie si Ollama tourne (`/api/tags`), liste les modèles installés
+- **Fait** : vérifie si le modèle configuré est dans la liste (ajouté en v0.4.6)
+- **Ne fait pas** : télécharger/installer Ollama (l'utilisateur doit l'installer séparément)
+- **Ne fait pas** : `ollama pull <modèle>` (l'utilisateur doit exécuter cette commande manuellement)
+- Si `generate` est appelé avec un modèle non installé → retourne `null` silencieusement (Ollama échoue côté serveur)
 
 ---
 
