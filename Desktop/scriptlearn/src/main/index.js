@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Notification } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Notification, session } from 'electron'
 import { join } from 'path'
 import { setupTerminalIPC } from './terminal.js'
 import { setupStoreIPC } from './storeIPC.js'
@@ -48,6 +48,32 @@ function createWindow() {
 
 app.whenReady().then(() => {
   setupStoreIPC()
+
+  // ─── Correctif CORS pour Ollama ──────────────────────────────────────────────
+  // Problème : Ollama 0.5+ a durci ses règles CORS et peut rejeter les requêtes
+  // POST depuis le renderer Electron (origin = file:// en prod).
+  // Même en passant par IPC/main process, certaines requêtes check (GET /api/tags)
+  // peuvent être faites depuis le renderer.
+  //
+  // Solution : intercepter les RÉPONSES des URLs Ollama et y injecter les headers
+  // CORS permissifs. session.defaultSession agit comme un proxy local — Electron
+  // a accès aux réponses HTTP avant que Chromium applique sa validation CORS.
+  //
+  // Inspiré de l'implémentation Analyst SOC Training qui a résolu ce même problème.
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: ['http://localhost:11434/*', 'http://127.0.0.1:11434/*'] },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'access-control-allow-origin' : ['*'],
+          'access-control-allow-methods': ['GET, POST, PUT, DELETE, OPTIONS'],
+          'access-control-allow-headers': ['Content-Type, Authorization'],
+        }
+      })
+    }
+  )
+
   createWindow()
   setupReminder()
   app.on('activate', () => {
