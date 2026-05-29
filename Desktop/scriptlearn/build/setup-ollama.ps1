@@ -22,7 +22,7 @@ Add-Type -AssemblyName System.Drawing
 function Show-ModelSelector {
     $form = New-Object System.Windows.Forms.Form
     $form.Text       = 'ScriptLearn — Configuration de l''assistant IA'
-    $form.ClientSize = New-Object System.Drawing.Size(500, 370)
+    $form.ClientSize = New-Object System.Drawing.Size(500, 355)
     $form.StartPosition    = 'CenterScreen'
     $form.FormBorderStyle  = 'FixedDialog'
     $form.MaximizeBox      = $false
@@ -56,71 +56,64 @@ function Show-ModelSelector {
     $desc.Size      = New-Object System.Drawing.Size(460, 40)
     $form.Controls.Add($desc)
 
-    # Séparateur
-    $sep = New-Object System.Windows.Forms.Panel
-    $sep.BackColor = [System.Drawing.Color]::FromArgb(45, 55, 72)
-    $sep.Location  = New-Object System.Drawing.Point(20, 122)
-    $sep.Size      = New-Object System.Drawing.Size(460, 1)
-    $form.Controls.Add($sep)
-
     # Modèles disponibles avec leur taille de téléchargement
-    # L'ordre est : meilleure qualité → le plus léger → option de passer
     $models = @(
-        [PSCustomObject]@{ Name='mistral:7b'; Label='mistral:7b'; Desc='Recommande — excellent francais, polyvalent (4.1 Go)' },
-        [PSCustomObject]@{ Name='llama3.2';   Label='llama3.2';   Desc='Leger et rapide, bon equilibre (2.0 Go)' },
-        [PSCustomObject]@{ Name='gemma2:2b';  Label='gemma2:2b';  Desc='Ultra leger, ideal pour machines modestes (1.6 Go)' },
-        [PSCustomObject]@{ Name='phi3.5';     Label='phi3.5';     Desc='Compact et polyvalent (2.2 Go)' },
-        [PSCustomObject]@{ Name='none';       Label='Ne pas installer maintenant'; Desc='Vous pourrez configurer Ollama dans les Parametres' }
+        [PSCustomObject]@{ Name='mistral:7b'; Label='mistral:7b   —  Recommande, excellent francais (4.1 Go)' },
+        [PSCustomObject]@{ Name='llama3.2';   Label='llama3.2    —  Leger et rapide (2.0 Go)' },
+        [PSCustomObject]@{ Name='gemma2:2b';  Label='gemma2:2b   —  Ultra leger (1.6 Go)' },
+        [PSCustomObject]@{ Name='phi3.5';     Label='phi3.5      —  Compact et polyvalent (2.2 Go)' },
+        [PSCustomObject]@{ Name='none';       Label='Ne pas installer maintenant (configurer plus tard dans Parametres)' }
     )
+
+    # IMPORTANT : tous les RadioButton DOIVENT partager le meme conteneur parent
+    # pour que Windows Forms gere automatiquement la deselection mutuelle.
+    # Chaque RadioButton dans son propre Panel = parents differents = pas de groupe
+    # = impossible de decocher mistral:7b en cliquant sur un autre modele.
+    # Solution : un seul GroupBox comme parent commun de tous les boutons radio.
+    $grp = New-Object System.Windows.Forms.GroupBox
+    $grp.Text      = 'Modele a telecharger'
+    $grp.Font      = New-Object System.Drawing.Font('Segoe UI', 9)
+    $grp.ForeColor = [System.Drawing.Color]::FromArgb(148, 163, 184)
+    $grp.BackColor = [System.Drawing.Color]::FromArgb(26, 29, 46)
+    $grp.Location  = New-Object System.Drawing.Point(20, 120)
+    $grp.Size      = New-Object System.Drawing.Size(460, 175)
+    $form.Controls.Add($grp)
 
     $radios = @()
     for ($i = 0; $i -lt $models.Count; $i++) {
-        $panel = New-Object System.Windows.Forms.Panel
-        $panel.Location  = New-Object System.Drawing.Point(20, (132 + $i * 38))
-        $panel.Size      = New-Object System.Drawing.Size(460, 34)
-        $panel.BackColor = [System.Drawing.Color]::FromArgb(26, 29, 46)
-        $form.Controls.Add($panel)
-
         $r = New-Object System.Windows.Forms.RadioButton
         $r.Text      = $models[$i].Label
-        $r.Font      = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+        $r.Font      = New-Object System.Drawing.Font('Segoe UI', 9)
         $r.ForeColor = [System.Drawing.Color]::White
         $r.BackColor = [System.Drawing.Color]::Transparent
-        $r.Location  = New-Object System.Drawing.Point(8, 3)
-        $r.Size      = New-Object System.Drawing.Size(200, 20)
-        $r.Checked   = ($i -eq 0)   # mistral:7b sélectionné par défaut
-        $panel.Controls.Add($r)
-
-        $d = New-Object System.Windows.Forms.Label
-        $d.Text      = $models[$i].Desc
-        $d.Font      = New-Object System.Drawing.Font('Segoe UI', 8)
-        $d.ForeColor = [System.Drawing.Color]::FromArgb(100, 116, 139)
-        $d.BackColor = [System.Drawing.Color]::Transparent
-        $d.Location  = New-Object System.Drawing.Point(28, 20)
-        $d.Size      = New-Object System.Drawing.Size(420, 14)
-        $panel.Controls.Add($d)
-
+        $r.Location  = New-Object System.Drawing.Point(12, (18 + $i * 30))
+        $r.Size      = New-Object System.Drawing.Size(435, 24)
+        # mistral:7b est le defaut suggere, mais l utilisateur peut changer
+        $r.Checked   = ($i -eq 0)
+        # Ajouter au GroupBox (pas au form) — c'est ce qui cree le groupe radio
+        $grp.Controls.Add($r)
         $radios += $r
     }
 
     # Bouton Confirmer
     $btnOk = New-Object System.Windows.Forms.Button
-    $btnOk.Text        = 'Confirmer'
-    $btnOk.Font        = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
-    $btnOk.BackColor   = [System.Drawing.Color]::FromArgb(99, 102, 241)
-    $btnOk.ForeColor   = [System.Drawing.Color]::White
-    $btnOk.FlatStyle   = 'Flat'
-    $btnOk.Location    = New-Object System.Drawing.Point(390, 330)
-    $btnOk.Size        = New-Object System.Drawing.Size(90, 28)
+    $btnOk.Text         = 'Confirmer'
+    $btnOk.Font         = New-Object System.Drawing.Font('Segoe UI', 9, [System.Drawing.FontStyle]::Bold)
+    $btnOk.BackColor    = [System.Drawing.Color]::FromArgb(99, 102, 241)
+    $btnOk.ForeColor    = [System.Drawing.Color]::White
+    $btnOk.FlatStyle    = 'Flat'
+    $btnOk.Location     = New-Object System.Drawing.Point(350, 307)
+    $btnOk.Size         = New-Object System.Drawing.Size(130, 32)
     $btnOk.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $form.Controls.Add($btnOk)
-    $form.AcceptButton = $btnOk
+    $form.AcceptButton  = $btnOk
 
     if ($form.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
         return 'none'
     }
 
-    # Retourner le nom du modèle sélectionné
+    # Lire la valeur reellement selectionnee au moment du clic "Confirmer"
+    # (pas la valeur initiale — l utilisateur a pu changer son choix)
     for ($i = 0; $i -lt $radios.Count; $i++) {
         if ($radios[$i].Checked) { return $models[$i].Name }
     }

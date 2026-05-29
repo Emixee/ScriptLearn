@@ -32,9 +32,12 @@ function Settings() {
   const [aiEnabled, setAiEnabled] = useState(false)
   const [aiModel,   setAiModel]   = useState('llama3.2')
   const [aiUrl,     setAiUrl]     = useState('http://localhost:11434')
-  const [testState, setTestState] = useState(null)
+  const [testState,      setTestState]      = useState(null)
   // pullState : null | 'pulling' | { status, pct } | 'done' | 'error'
-  const [pullState, setPullState] = useState(null)
+  const [pullState,      setPullState]      = useState(null)
+  // installedModels : liste persistante des modèles installés dans Ollama
+  // — séparée de testState pour ne pas disparaître quand l'utilisateur modifie le champ modèle
+  const [installedModels, setInstalledModels] = useState([])
   const [resetState, setResetState] = useState(null)
   const [appVersion, setAppVersion] = useState('…')
   const [exportState, setExportState] = useState(null)
@@ -194,10 +197,11 @@ function Settings() {
       unsubProgress()
       unsubDone()
       if (ok) {
-        // Le modèle est téléchargé — l'activer comme modèle par défaut et relancer le test
+        // Activer le modèle téléchargé comme défaut et rafraîchir la liste
         persist({ aiModel, aiEnabled: true })
         setPullState('done')
-        // Rafraîchir la liste des modèles pour montrer le nouveau modèle
+        // Relancer le test pour mettre à jour la liste des modèles installés
+        // — le nouveau modèle apparaîtra dans installedModels
         testConnection()
       } else {
         setPullState('error')
@@ -213,22 +217,17 @@ function Settings() {
     const result = await checkOllama(aiUrl)
 
     if (result?.ok && result.models?.length > 0) {
-      // Vérifier si le modèle actuellement configuré est bien dans la liste des modèles installés.
-      // POURQUOI : si on prend toujours models[0], le modèle choisi par l'utilisateur
-      // (ex: mistral:7b) est silencieusement écrasé par le premier de la liste (ex: llama3.2).
-      const configuredModelAvailable = result.models.includes(aiModel)
+      // Mémoriser la liste des modèles installés de façon persistante
+      // (ne disparaît pas quand l'utilisateur modifie le champ modèle)
+      setInstalledModels(result.models)
 
+      const configuredModelAvailable = result.models.includes(aiModel)
       if (!configuredModelAvailable) {
-        // Le modèle configuré n'est pas installé dans Ollama.
-        // On enrichit le résultat avec un avertissement pour l'afficher dans l'UI.
-        // On ne change PAS le modèle automatiquement — c'est à l'utilisateur de choisir.
         setTestState({ ...result, modelWarning: true })
       } else {
-        // Le modèle configuré est disponible — aucun changement nécessaire.
         setTestState(result)
       }
     } else {
-      // Ollama inaccessible ou aucun modèle installé
       setTestState(result)
     }
   }
@@ -373,40 +372,82 @@ function Settings() {
                   className="w-full bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
                   placeholder="llama3.2"
                 />
-                {/* Liste des modèles installés — permet à l'utilisateur de savoir quoi taper */}
-                {testState?.models?.length > 0 && (
-                  <div className="mt-1.5 space-y-1">
-                    <p className="text-slate-500 text-xs">Modèles installés dans Ollama :</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {testState.models.map(m => (
-                        <button
-                          key={m}
-                          onClick={() => { setAiModel(m); persist({ aiModel: m }) }}
-                          className={`text-xs px-2 py-0.5 rounded-full transition-colors font-mono ${
-                            m === aiModel
-                              ? 'bg-[#6366f1] text-white'
-                              : 'bg-[#232640] text-slate-400 hover:text-white hover:bg-[#2d3258]'
-                          }`}
-                        >
-                          {m === aiModel ? '✓ ' : ''}{m}
-                        </button>
-                      ))}
+                {/* ── Sélection du modèle par défaut ──────────────────────────
+                    Affiche les modèles installés dans Ollama comme cartes cliquables.
+                    Cliquer sur une carte définit ce modèle comme défaut ET le sauvegarde.
+                    La liste persiste même si l'utilisateur modifie le champ texte ci-dessus
+                    (installedModels est un état séparé de testState). */}
+                {installedModels.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-slate-500 text-xs uppercase tracking-widest">
+                      Modèles installés — cliquez pour sélectionner
+                    </p>
+                    <div className="space-y-1.5">
+                      {installedModels.map(m => {
+                        const isActive = m === aiModel
+                        const ram = getModelRam(m)
+                        return (
+                          <button
+                            key={m}
+                            onClick={() => { setAiModel(m); persist({ aiModel: m }); setPullState(null) }}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-left transition-all ${
+                              isActive
+                                ? 'bg-[#6366f1]/15 border-[#6366f1] text-white'
+                                : 'bg-[#0f1117] border-[#2d3748] text-slate-400 hover:border-[#3d4756] hover:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {/* Indicateur visuel du modèle actif */}
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-[#6366f1]' : 'bg-[#374151]'}`} />
+                              <span className="font-mono text-sm">{m}</span>
+                              {isActive && (
+                                <span className="text-[10px] bg-[#6366f1]/30 text-[#818cf8] px-1.5 py-0.5 rounded font-medium">
+                                  par défaut
+                                </span>
+                              )}
+                            </div>
+                            {ram && (
+                              <span className="text-[10px] text-slate-600 flex-shrink-0 ml-2">
+                                🧠 {ram.split(',')[0]}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
                     </div>
-                    {/* Avertissement + bouton pull si le modèle configuré n'est pas installé */}
-                    {testState.modelWarning && (
-                      <div className="mt-1.5 space-y-1.5">
+
+                    {/* Avertissement + bouton pull si le modèle tapé n'est pas dans la liste */}
+                    {testState?.modelWarning && (
+                      <div className="space-y-1.5 pt-1">
                         <p className="text-amber-400 text-xs">
-                          Le modèle <span className="font-mono">{aiModel}</span> n'est pas installé dans Ollama.
+                          <span className="font-mono">{aiModel}</span> n'est pas installé.
+                          Sélectionnez un modèle ci-dessus ou téléchargez-le :
                         </p>
                         <button
                           onClick={pullModel}
                           disabled={pullState === 'pulling'}
                           className="flex items-center gap-2 text-xs bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
                         >
-                          {pullState === 'pulling' ? '⏳ Téléchargement…' : '↓ Télécharger ce modèle'}
+                          {pullState === 'pulling' ? '⏳ Téléchargement…' : `↓ Télécharger ${aiModel}`}
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Bouton pull quand aucun modèle n'est installé mais Ollama tourne */}
+                {installedModels.length === 0 && testState?.ok && (
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-amber-400 text-xs">
+                      Aucun modèle installé. Téléchargez-en un :
+                    </p>
+                    <button
+                      onClick={pullModel}
+                      disabled={pullState === 'pulling'}
+                      className="flex items-center gap-2 text-xs bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                    >
+                      {pullState === 'pulling' ? '⏳ Téléchargement…' : `↓ Télécharger ${aiModel || 'mistral:7b'}`}
+                    </button>
                   </div>
                 )}
               </div>
