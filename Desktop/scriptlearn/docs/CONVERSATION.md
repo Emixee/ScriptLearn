@@ -1,9 +1,30 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.5.0
+## Version actuelle : 0.5.2
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.5.2 — Pull modèle Ollama depuis Paramètres + RAM requis (2026-05-28)
+
+### Nouvelles fonctionnalités
+- **Bouton "Télécharger ce modèle"** dans Paramètres > IA : apparaît quand le modèle configuré n'est pas installé. Lance `ollama pull <modèle>` avec streaming de progression (statut + barre %)
+- **Indicateur RAM** à côté du champ modèle : affiche la RAM minimum/recommandée selon le modèle sélectionné (`mistral:7b` → 8 Go min, `llama3.2` → 4 Go min, etc.)
+- Après pull réussi : modèle activé automatiquement + liste des modèles rafraîchie
+
+### v0.5.1 — Fix validation + IA (http natif, /api/chat, timeout 180s) (2026-05-28)
+- **Exercise.jsx** : suppression fallback source-code dans validate() → plus de faux positifs
+- **ollama.js** : migration `fetch`/undici → `http` natif Node.js (plus fiable sur longues connexions)
+- **ollama.js** : migration `/api/generate` → `/api/chat` (API recommandée Ollama v0.1.14+)
+- **ollama.js** : timeout augmenté de 90s → 180s (cold start mistral:7b)
+
+### Architecture IPC Ollama (mise à jour)
+- `ollama:check` → `/api/tags` (ping + liste modèles)
+- `ollama:generate` → `/api/chat` (inférence, 180s timeout, http natif)
+- `ollama:pull` → `/api/pull` (streaming NDJSON, pas de timeout fixe)
+- Événements renderer : `ollama:pull-progress` `{ status, pct }` + `ollama:pull-done` `{ ok }`
 
 ---
 
