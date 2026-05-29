@@ -38,6 +38,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ollama: {
     check:    (url)                    => ipcRenderer.invoke('ollama:check',    { url }),
     generate: ({ url, model, prompt }) => ipcRenderer.invoke('ollama:generate', { url, model, prompt }),
+    // pull : télécharge un modèle depuis le registre Ollama.
+    // Les événements de progression sont reçus via onPullProgress / onPullDone.
+    pull:     ({ url, model })         => ipcRenderer.invoke('ollama:pull',     { url, model }),
+    // Abonnements aux événements de progression du pull (envoyés par le main process)
+    onPullProgress: (cb) => {
+      const handler = (_, data) => cb(data)
+      ipcRenderer.on('ollama:pull-progress', handler)
+      return () => ipcRenderer.removeListener('ollama:pull-progress', handler)
+    },
+    onPullDone: (cb) => {
+      const handler = (_, data) => cb(data)
+      ipcRenderer.on('ollama:pull-done', handler)
+      return () => ipcRenderer.removeListener('ollama:pull-done', handler)
+    }
   },
   store: {
     listProfiles:        ()                         => ipcRenderer.invoke('store:listProfiles'),

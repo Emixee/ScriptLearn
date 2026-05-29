@@ -33,6 +33,8 @@ function Settings() {
   const [aiModel,   setAiModel]   = useState('llama3.2')
   const [aiUrl,     setAiUrl]     = useState('http://localhost:11434')
   const [testState, setTestState] = useState(null)
+  // pullState : null | 'pulling' | { status, pct } | 'done' | 'error'
+  const [pullState, setPullState] = useState(null)
   const [resetState, setResetState] = useState(null)
   const [appVersion, setAppVersion] = useState('…')
   const [exportState, setExportState] = useState(null)
@@ -155,6 +157,55 @@ function Settings() {
     setWeeklyGoal(n)
     setWeeklyGoalInput(String(n))
     if (profile) await window.electronAPI.store.setWeeklyGoal(profile.id, n)
+  }
+
+  // RAM recommandée par modèle — affichée dans l'UI pour guider le choix
+  // Ces valeurs correspondent à la RAM nécessaire pour charger le modèle en mémoire
+  // (VRAM si GPU, RAM système sinon). Source : documentation officielle Ollama.
+  const MODEL_RAM = {
+    'mistral:7b':  '8 Go minimum, 16 Go recommandé',
+    'llama3.2':    '4 Go minimum, 8 Go recommandé',
+    'gemma2:2b':   '4 Go minimum',
+    'phi3.5':      '4 Go minimum, 8 Go recommandé',
+    'llama3.1':    '8 Go minimum, 16 Go recommandé',
+    'llama3.1:8b': '8 Go minimum, 16 Go recommandé',
+    'codellama':   '8 Go minimum, 16 Go recommandé',
+    'qwen2.5':     '8 Go minimum',
+  }
+
+  // Retourne la RAM requise pour le modèle configuré, ou un texte générique
+  const getModelRam = (model) => {
+    if (!model) return null
+    // Chercher correspondance exacte puis par préfixe
+    if (MODEL_RAM[model]) return MODEL_RAM[model]
+    const prefix = Object.keys(MODEL_RAM).find(k => model.startsWith(k.split(':')[0]))
+    return prefix ? MODEL_RAM[prefix] : null
+  }
+
+  const pullModel = async () => {
+    // Télécharger le modèle sélectionné et le définir comme modèle par défaut
+    setPullState('pulling')
+
+    // S'abonner aux événements de progression envoyés par le main process
+    const unsubProgress = window.electronAPI.ollama.onPullProgress(({ status, pct }) => {
+      setPullState({ status, pct })
+    })
+    const unsubDone = window.electronAPI.ollama.onPullDone(({ ok }) => {
+      unsubProgress()
+      unsubDone()
+      if (ok) {
+        // Le modèle est téléchargé — l'activer comme modèle par défaut et relancer le test
+        persist({ aiModel, aiEnabled: true })
+        setPullState('done')
+        // Rafraîchir la liste des modèles pour montrer le nouveau modèle
+        testConnection()
+      } else {
+        setPullState('error')
+      }
+    })
+
+    // Lancer le pull via IPC — le main process gère le streaming NDJSON
+    await window.electronAPI.ollama.pull({ url: aiUrl, model: aiModel })
   }
 
   const testConnection = async () => {
@@ -304,12 +355,20 @@ function Settings() {
                 )}
               </div>
               <div>
-                <label className="text-slate-400 text-xs uppercase tracking-widest block mb-1.5">
-                  Modèle
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-slate-400 text-xs uppercase tracking-widest">
+                    Modèle
+                  </label>
+                  {/* Indicateur de RAM requise — aide l'utilisateur à choisir selon sa machine */}
+                  {getModelRam(aiModel) && (
+                    <span className="text-xs text-slate-500">
+                      🧠 RAM : <span className="text-slate-400">{getModelRam(aiModel)}</span>
+                    </span>
+                  )}
+                </div>
                 <input
                   value={aiModel}
-                  onChange={e => setAiModel(e.target.value)}
+                  onChange={e => { setAiModel(e.target.value); setPullState(null) }}
                   onBlur={() => persist({ aiModel })}
                   className="w-full bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
                   placeholder="llama3.2"
@@ -333,20 +392,56 @@ function Settings() {
                         </button>
                       ))}
                     </div>
-                    {/* Avertissement si le modèle configuré n'est pas dans la liste */}
+                    {/* Avertissement + bouton pull si le modèle configuré n'est pas installé */}
                     {testState.modelWarning && (
-                      <p className="text-amber-400 text-xs mt-1">
-                        Le modèle <span className="font-mono">{aiModel}</span> n'est pas installé dans Ollama.
-                        Cliquez sur un modèle disponible ci-dessus ou lancez{' '}
-                        <span className="font-mono bg-[#0f1117] px-1 rounded">ollama pull {aiModel}</span>.
-                      </p>
+                      <div className="mt-1.5 space-y-1.5">
+                        <p className="text-amber-400 text-xs">
+                          Le modèle <span className="font-mono">{aiModel}</span> n'est pas installé dans Ollama.
+                        </p>
+                        <button
+                          onClick={pullModel}
+                          disabled={pullState === 'pulling'}
+                          className="flex items-center gap-2 text-xs bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                        >
+                          {pullState === 'pulling' ? '⏳ Téléchargement…' : '↓ Télécharger ce modèle'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
               </div>
+              {/* Zone de progression du téléchargement de modèle */}
+              {pullState && pullState !== 'done' && pullState !== 'error' && pullState !== 'pulling' && (
+                <div className="bg-[#0f1117] rounded-lg p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">{pullState.status || 'Téléchargement…'}</span>
+                    {pullState.pct !== null && (
+                      <span className="text-xs text-[#6366f1] font-medium">{pullState.pct}%</span>
+                    )}
+                  </div>
+                  {pullState.pct !== null && (
+                    <div className="h-1.5 bg-[#1a1d2e] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#6366f1] rounded-full transition-all duration-300"
+                        style={{ width: `${pullState.pct}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              {pullState === 'done' && (
+                <p className="text-green-400 text-xs flex items-center gap-1">
+                  <span>✓</span> Modèle téléchargé et activé comme modèle par défaut.
+                </p>
+              )}
+              {pullState === 'error' && (
+                <p className="text-red-400 text-xs">
+                  ✗ Erreur lors du téléchargement. Vérifiez qu'Ollama est lancé et réessayez.
+                </p>
+              )}
               <button
                 onClick={testConnection}
-                disabled={testState === 'testing'}
+                disabled={testState === 'testing' || pullState === 'pulling'}
                 className="flex items-center gap-2 text-sm bg-[#232640] hover:bg-[#2d3258] text-slate-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
                 {testState === 'testing' ? (
