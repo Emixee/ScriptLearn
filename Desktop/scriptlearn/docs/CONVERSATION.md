@@ -1,9 +1,31 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.5.2
+## Version actuelle : 0.5.4
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.5.4 — Fix installer + sélection modèle défaut (2026-05-28)
+
+### Fix installer NSIS — boutons radio (2 bugs)
+**Bug 1** : impossible de déselectionner. Chaque `RadioButton` dans son propre `Panel` → parents différents → Windows Forms ne crée pas de groupe → `mistral:7b` restait coché.
+**Bug 2** : `mistral:7b` toujours installé peu importe le choix (conséquence du bug 1).
+**Fix** : tous les `RadioButton` dans un seul `GroupBox` (même parent = déselection mutuelle automatique).
+
+### Paramètres — sélection modèle par défaut
+- `installedModels` : état persistant séparé de `testState` (ne disparaît plus quand l'utilisateur tape)
+- Cartes cliquables pour chaque modèle installé → clic = modèle par défaut + badge "par défaut"
+- RAM requise affichée sur chaque carte (version courte)
+
+### v0.5.3 — Fix IA indisponible (cause racine)
+**Cause principale** : Node.js résout `localhost` → `::1` (IPv6) sur Windows 11+, Ollama écoute sur `127.0.0.1` (IPv4) → connexion refusée silencieusement.
+Identifié en comparant avec l'implémentation Analyst SOC Training.
+- `resolveHostname()` force `127.0.0.1` explicitement
+- `stream: true` + lecture NDJSON ligne par ligne (plus robuste)
+- `session.defaultSession.webRequest.onHeadersReceived` injecte CORS sur `localhost:11434`
+- `event.sender.send()` au lieu de `BrowserWindow.getAllWindows()[0]` pour `ollama:pull`
 
 ---
 
