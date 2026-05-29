@@ -8,44 +8,92 @@
  * ne gère pas → 403 Forbidden → fetch échoue silencieusement.
  *
  * Solution : déléguer les appels HTTP à Ollama au processus PRINCIPAL (Node.js)
- * via IPC. Le processus principal n'a pas de restrictions CORS/PNA — il fait
- * de vraies requêtes réseau Node.js, pas des requêtes navigateur.
+ * via IPC. Le processus principal n'a pas de restrictions CORS/PNA.
+ *
+ * POURQUOI on utilise le module http natif plutôt que fetch :
+ * Node.js 22 utilise undici comme implémentation de fetch. undici a des
+ * comportements différents du module http natif pour les longues connexions :
+ *   - AbortController ne se comporte pas toujours comme attendu sous undici
+ *   - Le chargement d'un modèle 7B peut prendre 30-90s (cold start)
+ *   - fetch/undici peut fermer la connexion prématurément sur de longs timeouts
+ * Le module http natif avec req.setTimeout() est plus fiable pour ce cas.
  */
 
-import { ipcMain } from 'electron'
+import { ipcMain }                     from 'electron'
+import { request as httpRequest }      from 'http'
+import { request as httpsRequest }     from 'https'
 
-// Timeout généreux pour les inférences IA : les modèles 7B peuvent prendre
-// plusieurs secondes avant de répondre, surtout au premier appel (cold start).
-const AI_TIMEOUT_MS   = 90_000  // 90s pour les générations
-const PING_TIMEOUT_MS =  3_000  // 3s pour la simple vérification de disponibilité
+// Timeout généreux : le premier appel charge le modèle en mémoire (cold start).
+// mistral:7b = 4.1 Go → peut prendre 30-90s de chargement + temps de génération.
+// 3 minutes = marge suffisante même sur une machine modeste.
+const AI_TIMEOUT_MS   = 180_000   // 3 minutes pour les générations (cold start inclus)
+const PING_TIMEOUT_MS =   3_000   // 3s pour la vérification de disponibilité
 
 /**
- * Wrapper fetch pour le processus principal.
- * Utilise le fetch natif de Node.js 18+ (bundlé avec Electron 20+),
- * qui n'est pas soumis aux restrictions CORS/PNA du renderer.
+ * Effectue une requête HTTP/HTTPS vers Ollama depuis le processus principal.
+ * Utilise le module http natif de Node.js pour une fiabilité maximale sur les
+ * longues connexions (génération IA = plusieurs dizaines de secondes).
  *
- * @param {string} baseUrl   - ex: "http://localhost:11434"
- * @param {string} path      - ex: "/api/generate"
- * @param {object} opts      - { method, body, timeout }
+ * @param {string} baseUrl  - ex: "http://localhost:11434"
+ * @param {string} path     - ex: "/api/generate"
+ * @param {object} opts     - { method, body, timeout }
+ * @returns {Promise<{ ok: boolean, json: () => Promise<any> }>}
  */
-async function ollamaFetch(baseUrl, path, opts = {}) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), opts.timeout ?? AI_TIMEOUT_MS)
+function ollamaHttpRequest(baseUrl, path, opts = {}) {
+  return new Promise((resolve, reject) => {
+    // Déterminer si on utilise http ou https selon le protocole de l'URL
+    const fullUrl   = new URL(path, baseUrl)
+    const isHttps   = fullUrl.protocol === 'https:'
+    const requester = isHttps ? httpsRequest : httpRequest
+    const timeout   = opts.timeout ?? AI_TIMEOUT_MS
 
-  try {
-    const resp = await fetch(`${baseUrl}${path}`, {
-      method:  opts.method ?? 'GET',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'ScriptLearn' },
-      // body n'est envoyé que pour les requêtes POST
-      ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
-      signal: controller.signal
+    // Corps de la requête (JSON sérialisé)
+    const bodyStr = opts.body ? JSON.stringify(opts.body) : null
+
+    const reqOptions = {
+      hostname: fullUrl.hostname,
+      port:     fullUrl.port || (isHttps ? 443 : 80),
+      path:     fullUrl.pathname + fullUrl.search,
+      method:   opts.method ?? 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent':   'ScriptLearn',
+        // Content-Length obligatoire pour les requêtes POST avec body
+        ...(bodyStr ? { 'Content-Length': Buffer.byteLength(bodyStr) } : {})
+      }
+    }
+
+    // Accumuler les chunks de la réponse dans un buffer
+    const req = requester(reqOptions, (res) => {
+      const chunks = []
+      res.on('data',  chunk => chunks.push(chunk))
+      res.on('end',   () => {
+        const raw = Buffer.concat(chunks).toString('utf8')
+        resolve({
+          ok:     res.statusCode >= 200 && res.statusCode < 300,
+          status: res.statusCode,
+          // Exposer json() comme la Response API fetch pour minimiser les changements d'usage
+          json: () => {
+            try   { return Promise.resolve(JSON.parse(raw)) }
+            catch { return Promise.reject(new Error(`JSON invalide : ${raw.slice(0, 100)}`)) }
+          }
+        })
+      })
+      res.on('error', reject)
     })
-    clearTimeout(timer)
-    return resp
-  } catch (err) {
-    clearTimeout(timer)
-    throw err
-  }
+
+    req.on('error', reject)
+
+    // Timeout sur le socket TCP — bien plus fiable qu'AbortController avec undici.
+    // Si Ollama ne répond pas dans le délai, la requête est détruite proprement.
+    req.setTimeout(timeout, () => {
+      req.destroy(new Error(`Ollama timeout après ${timeout / 1000}s`))
+    })
+
+    // Envoyer le body si présent, puis fermer la requête
+    if (bodyStr) req.write(bodyStr)
+    req.end()
+  })
 }
 
 /**
@@ -62,7 +110,7 @@ export function setupOllamaIPC() {
    */
   ipcMain.handle('ollama:check', async (_, { url }) => {
     try {
-      const resp = await ollamaFetch(url, '/api/tags', { timeout: PING_TIMEOUT_MS })
+      const resp = await ollamaHttpRequest(url, '/api/tags', { timeout: PING_TIMEOUT_MS })
       if (!resp.ok) return { ok: false, models: [] }
       const json = await resp.json()
       // L'API Ollama retourne { models: [{ name, model, size, ... }] }
@@ -76,23 +124,47 @@ export function setupOllamaIPC() {
 
   /**
    * ollama:generate — envoie un prompt à Ollama et retourne la réponse texte.
-   * Utilisé par l'assistant IA et les feedbacks pédagogiques des exercices.
+   * Utilisé par l'assistant IA (AIAssistant.jsx) et les feedbacks des exercices.
    *
-   * Retourne : string | null (null si Ollama est indisponible ou en erreur)
+   * POURQUOI /api/chat plutôt que /api/generate :
+   * /api/generate est l'ancienne API "raw completion". Elle peut être instable
+   * sur certaines versions d'Ollama (body mal parsé, timeout prématuré).
+   * /api/chat est l'API recommandée depuis Ollama v0.1.14 — format messages[]
+   * identique à l'API OpenAI, mieux maintenu et plus robuste pour tous les modèles.
+   *
+   * Format /api/chat :
+   *   Requête  → { model, messages: [{role:"user", content:"..."}], stream: false }
+   *   Réponse  → { message: { role:"assistant", content:"..." }, done: true }
+   *
+   * Comportement attendu :
+   *   - Premier appel : peut prendre 30-90s (cold start = chargement modèle en RAM)
+   *   - Appels suivants : 5-20s (modèle déjà chargé)
+   * Le timeout est de 3 minutes pour couvrir le cold start même sur machine lente.
+   *
+   * Retourne : string | null (null si Ollama est indisponible, en erreur ou timeout)
    */
   ipcMain.handle('ollama:generate', async (_, { url, model, prompt }) => {
     try {
-      const resp = await ollamaFetch(url, '/api/generate', {
-        method:  'POST',
-        // stream: false → Ollama attend la fin de génération et renvoie tout d'un coup
-        // Si stream était true, il faudrait lire le flux NDJSON ligne par ligne
-        body:    { model, prompt, stream: false },
+      const resp = await ollamaHttpRequest(url, '/api/chat', {
+        method: 'POST',
+        body: {
+          model,
+          // Format messages[] = standard OpenAI-compatible utilisé par /api/chat
+          // Le prompt est envoyé comme message utilisateur (role "user")
+          messages: [{ role: 'user', content: prompt }],
+          // stream: false → Ollama attend la fin de génération avant de répondre.
+          // Plus simple que stream: true qui nécessite de lire le NDJSON ligne par ligne.
+          stream: false
+        },
         timeout: AI_TIMEOUT_MS
       })
       if (!resp.ok) return null
       const json = await resp.json()
-      return json.response?.trim() || null
+      // /api/chat retourne la réponse dans json.message.content (pas json.response)
+      return json.message?.content?.trim() || null
     } catch {
+      // Timeout, erreur réseau ou JSON invalide → retourne null
+      // L'UI affiche "L'IA n'est pas disponible" et l'utilisateur peut réessayer
       return null
     }
   })

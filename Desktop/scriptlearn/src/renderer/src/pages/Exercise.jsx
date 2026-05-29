@@ -579,10 +579,15 @@ export default function Exercise() {
     const cleanOutput = stripAnsi(outputBuffer.current)
     let isCorrect = false
     if (exercise.validationType === 'output_nonempty') {
+      // Validation simple : le code n'est pas vide (exercices de type "exécute quelque chose")
       isCorrect = trimmed.length > 0
     } else {
+      // Validation par correspondance : la sortie RÉELLE du terminal doit contenir l'attendu.
+      // IMPORTANT : on NE vérifie PAS le code source (trimmed) comme fallback.
+      // Ce fallback créait des faux positifs : si l'expectedOutput apparaît dans le code écrit
+      // (ex: echo "$USER"), l'exercice était marqué correct sans que la commande ait produit
+      // la bonne sortie. On valide uniquement sur ce que le terminal a réellement affiché.
       isCorrect = cleanOutput.toLowerCase().includes(exercise.expectedOutput.toLowerCase())
-      if (!isCorrect) isCorrect = trimmed.toLowerCase().includes(exercise.expectedOutput.toLowerCase())
     }
     finalize(isCorrect, trimmed)
   }
