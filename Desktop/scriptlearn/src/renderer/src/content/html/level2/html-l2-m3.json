@@ -1,0 +1,50 @@
+{
+  "id": "html-l2-m3",
+  "title": "Attributs et classes",
+  "level": "html-l2",
+  "lang": "html",
+  "order": 3,
+  "estimatedMinutes": 30,
+  "course": [
+    {
+      "title": "id, class et style",
+      "content": "Ces attributs universels s'appliquent à **toutes** les balises HTML :\n\n```html\n<!-- id : identifiant unique dans la page (un seul élément peut avoir cet id) -->\n<h1 id=\"titre-principal\">Mon titre</h1>\n\n<!-- class : groupe d'éléments partageant le même style -->\n<p class=\"intro\">Introduction.</p>\n<p class=\"intro important\">Intro importante.</p>\n\n<!-- style : CSS inline (à éviter en dehors des exercices) -->\n<p style=\"color: red; font-size: 18px;\">Texte en rouge</p>\n\n<!-- Combinaison -->\n<div id=\"hero\" class=\"section-principale\">\n  <h2 class=\"titre\">Bienvenue</h2>\n</div>\n```\n\nDifférence clé : `id` = **unique** (cibler un seul élément), `class` = **réutilisable** (cibler plusieurs éléments)."
+    },
+    {
+      "title": "Attributs data-* et autres universels",
+      "content": "```html\n<!-- data-* : stocker des données personnalisées sur un élément -->\n<button data-produit-id=\"42\" data-action=\"ajouter\">\n  Ajouter au panier\n</button>\n\n<!-- title : info-bulle au survol de la souris -->\n<abbr title=\"HyperText Markup Language\">HTML</abbr>\n\n<!-- tabindex : ordre de navigation au clavier -->\n<input tabindex=\"1\">\n<input tabindex=\"2\">\n\n<!-- hidden : cacher un élément -->\n<div hidden>Contenu caché</div>\n\n<!-- contenteditable : rendre un élément éditable -->\n<p contenteditable=\"true\">Cliquez pour modifier.</p>\n\n<!-- lang : langue d'une partie de la page -->\n<p lang=\"en\">This is in English.</p>\n```\n\nLes attributs `data-*` sont utilisés par JavaScript pour accéder à des informations sans polluer la structure HTML."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l2-m3-1",
+      "order": 1,
+      "title": "Utiliser id et class",
+      "instructions": "Créez un `<div id=\"conteneur\">` contenant deux `<p class=\"texte\">`, le premier avec le texte `Premier`, le second avec `Second`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<div", "id=\"conteneur\"", "<p", "class=\"texte\"", "premier", "second", "</div>"],
+      "correction": "<div id=\"conteneur\">\n  <p class=\"texte\">Premier</p>\n  <p class=\"texte\">Second</p>\n</div>",
+      "explanation": "`id` est unique — il identifie un seul élément (utilisé comme ancre par les liens `#conteneur` ou par JavaScript `getElementById`). `class` est réutilisable — plusieurs éléments peuvent partager la même classe."
+    },
+    {
+      "id": "ex-html-l2-m3-2",
+      "order": 2,
+      "title": "Style inline",
+      "instructions": "Créez un `<h1 style=\"color: #6366f1; text-align: center;\">Titre coloré</h1>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<h1", "style=", "color:", "text-align:", "center", "titre coloré"],
+      "correction": "<h1 style=\"color: #6366f1; text-align: center;\">Titre coloré</h1>",
+      "explanation": "`style` permet d'écrire du CSS directement dans la balise HTML. C'est pratique pour les prototypes ou les exercices, mais en production on préfère des fichiers CSS séparés pour la maintenabilité."
+    },
+    {
+      "id": "ex-html-l2-m3-3",
+      "order": 3,
+      "title": "Attribut data-*",
+      "instructions": "Créez un `<button>` avec `data-id=\"1\"` et `data-action=\"supprimer\"`, contenant le texte `Supprimer`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<button", "data-id=\"1\"", "data-action=\"supprimer\"", "supprimer", "</button>"],
+      "correction": "<button data-id=\"1\" data-action=\"supprimer\">Supprimer</button>",
+      "explanation": "Les attributs `data-*` permettent de stocker des données personnalisées sur un élément HTML sans impact visuel. En JavaScript, on les lit avec `element.dataset.id` ou `element.getAttribute('data-id')`. Ils sont très utilisés pour lier les éléments visuels aux données métier."
+    }
+  ]
+}

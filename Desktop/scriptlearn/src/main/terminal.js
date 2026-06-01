@@ -23,6 +23,18 @@ function checkPythonAvailable() {
   }
 }
 
+// Vérifie que PHP est disponible DANS WSL — pas le php.exe Windows natif.
+// Les exercices PHP utilisent le terminal WSL bash (wsl php ...).
+// Tester le php.exe natif donnerait un faux positif si PHP n'est pas dans WSL.
+function checkPhpAvailable() {
+  try {
+    execSync('wsl.exe -e php --version', { timeout: 5000, windowsHide: true, stdio: 'pipe' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 const sessions = new Map()
 const emitter = new EventEmitter()
 
@@ -62,8 +74,9 @@ function createSession(id, shell) {
 }
 
 export function setupTerminalIPC(mainWindow) {
-  ipcMain.handle('terminal:bashAvailable', () => checkBashAvailable())
+  ipcMain.handle('terminal:bashAvailable',   () => checkBashAvailable())
   ipcMain.handle('terminal:pythonAvailable', () => checkPythonAvailable())
+  ipcMain.handle('terminal:phpAvailable',    () => checkPhpAvailable())
 
   ipcMain.handle('terminal:create', (_, { id, shell }) => {
     if (sessions.has(id)) return { ok: true }

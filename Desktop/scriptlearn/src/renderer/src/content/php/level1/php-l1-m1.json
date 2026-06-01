@@ -1,0 +1,50 @@
+{
+  "id": "php-l1-m1",
+  "title": "Syntaxe de base PHP",
+  "level": "php-l1",
+  "lang": "php",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Introduction à PHP",
+      "content": "PHP (PHP: Hypertext Preprocessor) est un langage de script côté serveur. Dans ScriptLearn, le code PHP s'exécute via WSL dans un terminal bash.\n\n```php\n<?php\n// Tout code PHP doit être dans <?php ... ?>\n// Afficher du texte avec echo ou print\necho \"Hello, PHP!\";\necho \"\\n\";  // saut de ligne\nprint(\"Deuxième ligne\\n\");\n\n// Les commentaires\n// Commentaire sur une ligne\n# Aussi valide\n/* Commentaire\n   multi-lignes */\n?>\n```\n\n- Le code PHP commence par `<?php`\n- Chaque instruction se termine par `;`\n- `echo` affiche du texte (plus rapide que `print`)\n- `\\n` crée un saut de ligne dans la sortie terminal"
+    },
+    {
+      "title": "echo, print_r et var_dump",
+      "content": "```php\n<?php\n// echo : afficher une chaîne\necho \"Bonjour !\\n\";\n\n// Concaténation avec le point (.)\n$prenom = \"Alice\";\necho \"Bonjour \" . $prenom . \"!\\n\";\n\n// Variables dans une chaîne double-quote (interpolation)\necho \"Bonjour $prenom !\\n\";\n\n// print_r : afficher une valeur lisible (utile pour debug)\nprint_r([1, 2, 3]);\necho \"\\n\";\n\n// var_dump : afficher type ET valeur (plus détaillé)\nvar_dump(42);\nvar_dump(\"texte\");\nvar_dump(true);\n?>\n```\n\n`var_dump` est votre meilleur outil de debug — il montre le type exact de chaque valeur."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l1-m1-1",
+      "order": 1,
+      "title": "Premier script PHP",
+      "instructions": "Écrivez un script PHP qui affiche `Hello, PHP!` (avec le point d'exclamation).",
+      "validationType": "output_contains",
+      "expectedOutput": "Hello, PHP!",
+      "correction": "<?php\necho \"Hello, PHP!\\n\";\n?>",
+      "explanation": "`echo` affiche du texte sur la sortie standard. Le `\\n` est un caractère de saut de ligne (newline) — il n'est pas obligatoire pour l'exercice mais c'est une bonne pratique de terminer les lignes de sortie par `\\n` en PHP CLI."
+    },
+    {
+      "id": "ex-php-l1-m1-2",
+      "order": 2,
+      "title": "Concaténation",
+      "instructions": "Affichez `Bonjour Alice!` en concaténant la chaîne `Bonjour ` avec `Alice` et `!` avec l'opérateur `.`",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour Alice!",
+      "correction": "<?php\necho \"Bonjour \" . \"Alice\" . \"!\\n\";\n?>",
+      "explanation": "En PHP, l'opérateur `.` (point) concatène des chaînes. C'est différent de JavaScript (`+`) ou Python (`+`). On peut aussi interpoler une variable directement : `\"Bonjour $nom !\"` — les double-quotes évaluent les variables."
+    },
+    {
+      "id": "ex-php-l1-m1-3",
+      "order": 3,
+      "title": "Afficher sur plusieurs lignes",
+      "instructions": "Affichez trois lignes distinctes : `Ligne 1`, `Ligne 2`, `Ligne 3` avec trois `echo` séparés.",
+      "validationType": "output_contains",
+      "expectedOutput": "Ligne 1",
+      "correction": "<?php\necho \"Ligne 1\\n\";\necho \"Ligne 2\\n\";\necho \"Ligne 3\\n\";\n?>",
+      "explanation": "Chaque `echo` affiche son contenu. Le `\\n` (newline) force le retour à la ligne — sans lui, les textes se collent. En PHP CLI, `\\n` est équivalent à PHP_EOL (mais PHP_EOL varie selon l'OS)."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "php-l2-m1",
+  "title": "Tableaux PHP",
+  "level": "php-l2",
+  "lang": "php",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Tableaux indexés et associatifs",
+      "content": "PHP a un seul type de tableau qui peut être indexé ou associatif :\n\n```php\n<?php\n// Tableau indexé (clés numériques auto)\n$fruits = [\"pomme\", \"poire\", \"banane\"];\necho $fruits[0] . \"\\n\";    // pomme\necho count($fruits) . \"\\n\"; // 3\n\n// Tableau associatif (clés personnalisées)\n$personne = [\n    \"nom\"   => \"Alice\",\n    \"age\"   => 28,\n    \"ville\" => \"Paris\"\n];\necho $personne[\"nom\"] . \"\\n\";   // Alice\necho $personne[\"age\"] . \"\\n\";   // 28\n\n// Tableau multidimensionnel\n$equipe = [\n    [\"nom\" => \"Alice\", \"role\" => \"Dev\"],\n    [\"nom\" => \"Bob\",   \"role\" => \"QA\"]\n];\necho $equipe[0][\"nom\"] . \"\\n\";   // Alice\n\n// Ajouter un élément\n$fruits[] = \"kiwi\";           // ajoute à la fin\narray_push($fruits, \"mangue\"); // idem\necho implode(\", \", $fruits) . \"\\n\";\n?>\n```"
+    },
+    {
+      "title": "Fonctions de tableau essentielles",
+      "content": "```php\n<?php\n$nombres = [3, 1, 4, 1, 5, 9, 2, 6];\n\n// Tri\nsort($nombres);              // tri croissant (modifie le tableau)\necho implode(\", \", $nombres) . \"\\n\";  // 1, 1, 2, 3, 4, 5, 6, 9\n\nrsort($nombres);             // tri décroissant\n\n// Recherche\necho in_array(5, $nombres) ? \"trouvé\\n\" : \"absent\\n\";\n$pos = array_search(4, $nombres);\n\n// Transformation\n$doubles = array_map(fn($x) => $x * 2, $nombres);\n$pairs   = array_filter($nombres, fn($x) => $x % 2 === 0);\n$somme   = array_reduce($nombres, fn($carry, $x) => $carry + $x, 0);\n\necho \"Somme : $somme\\n\";\n\n// Découpage\n$debut = array_slice($nombres, 0, 3);  // 3 premiers éléments\n\n// Fusion\n$a = [1, 2]; $b = [3, 4];\n$fusion = array_merge($a, $b);\n\n// Clés\n$ages = [\"Alice\" => 28, \"Bob\" => 34];\necho implode(\", \", array_keys($ages)) . \"\\n\";    // Alice, Bob\necho implode(\", \", array_values($ages)) . \"\\n\";  // 28, 34\n?>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l2-m1-1",
+      "order": 1,
+      "title": "Créer et afficher un tableau",
+      "instructions": "Créez un tableau `$langages = [\"PHP\", \"Python\", \"JavaScript\"]` et affichez son contenu avec `implode(\", \", $langages)` — doit afficher `PHP, Python, JavaScript`.",
+      "validationType": "output_contains",
+      "expectedOutput": "PHP, Python, JavaScript",
+      "correction": "<?php\n$langages = [\"PHP\", \"Python\", \"JavaScript\"];\necho implode(\", \", $langages) . \"\\n\";\n?>",
+      "explanation": "`implode(séparateur, tableau)` joint tous les éléments d'un tableau en une chaîne. C'est l'inverse de `explode()` qui découpe une chaîne en tableau."
+    },
+    {
+      "id": "ex-php-l2-m1-2",
+      "order": 2,
+      "title": "Tableau associatif",
+      "instructions": "Créez `$produit = [\"nom\" => \"Clavier\", \"prix\" => 45]` et affichez `Produit: Clavier - 45 EUR`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Produit: Clavier - 45 EUR",
+      "correction": "<?php\n$produit = [\"nom\" => \"Clavier\", \"prix\" => 45];\necho \"Produit: {$produit['nom']} - {$produit['prix']} EUR\\n\";\n?>",
+      "explanation": "Pour accéder à une valeur dans un tableau associatif : `$tab[\"cle\"]`. Dans une chaîne double-quote, on utilise les accolades `{$tab['cle']}` pour éviter les ambiguïtés."
+    },
+    {
+      "id": "ex-php-l2-m1-3",
+      "order": 3,
+      "title": "Trier un tableau",
+      "instructions": "Créez `$notes = [15, 8, 18, 12, 7]`, triez-le avec `sort()` et affichez le résultat avec `implode`.",
+      "validationType": "output_contains",
+      "expectedOutput": "7, 8, 12, 15, 18",
+      "correction": "<?php\n$notes = [15, 8, 18, 12, 7];\nsort($notes);\necho implode(\", \", $notes) . \"\\n\";\n?>",
+      "explanation": "`sort()` trie le tableau **sur place** (modifie le tableau original). Contrairement à Python's `sorted()` qui retourne un nouveau tableau, `sort()` retourne `true`/`false`. Pour trier un tableau associatif sans perdre les clés, utiliser `asort()`."
+    }
+  ]
+}

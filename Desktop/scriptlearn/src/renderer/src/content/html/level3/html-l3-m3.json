@@ -1,0 +1,46 @@
+{
+  "id": "html-l3-m3",
+  "title": "Projet final — page HTML complète",
+  "level": "html-l3",
+  "lang": "html",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Assembler une page HTML complète",
+      "content": "Voici une page HTML professionnelle complète qui combine tous les éléments appris :\n\n```html\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <meta name=\"description\" content=\"Portfolio de développeuse web\">\n  <title>Alice Martin — Portfolio</title>\n  <style>\n    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }\n    header { background: #6366f1; color: white; padding: 20px; border-radius: 8px; }\n    nav a { color: white; margin-right: 15px; text-decoration: none; }\n    section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }\n  </style>\n</head>\n<body>\n  <header>\n    <h1>Alice Martin</h1>\n    <nav>\n      <a href=\"#projets\">Projets</a>\n      <a href=\"#contact\">Contact</a>\n    </nav>\n  </header>\n\n  <main>\n    <section id=\"projets\">\n      <h2>Mes projets</h2>\n      <article>\n        <h3>Site e-commerce</h3>\n        <p>Développé en <strong>HTML/CSS/JS</strong>. <a href=\"#\">Voir le projet</a></p>\n      </article>\n    </section>\n\n    <section id=\"contact\">\n      <h2>Contact</h2>\n      <form action=\"/contact\" method=\"POST\">\n        <label for=\"email\">Email :</label>\n        <input type=\"email\" id=\"email\" name=\"email\" required><br><br>\n        <label for=\"msg\">Message :</label><br>\n        <textarea id=\"msg\" name=\"message\" rows=\"4\"></textarea><br><br>\n        <button type=\"submit\">Envoyer</button>\n      </form>\n    </section>\n  </main>\n\n  <footer>\n    <p>&copy; 2024 Alice Martin. <a href=\"mailto:alice@example.com\">alice@example.com</a></p>\n  </footer>\n</body>\n</html>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l3-m3-1",
+      "order": 1,
+      "title": "Page portfolio minimale",
+      "instructions": "Créez une page HTML complète avec : DOCTYPE, `<html lang=\"fr\">`, `<head>` (charset + viewport + title + meta description), `<body>` avec `<header>` contenant un `<h1>`, `<main>` avec un `<section>` et un `<p>`, et `<footer>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<!doctype html>", "lang=\"fr\"", "charset=\"utf-8\"", "name=\"viewport\"", "<title>", "<header>", "<h1>", "<main>", "<section>", "<p>", "<footer>"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <meta name=\"description\" content=\"Mon portfolio de développeur web\">\n  <title>Mon Portfolio</title>\n</head>\n<body>\n  <header>\n    <h1>Mon Portfolio</h1>\n    <nav>\n      <a href=\"#projets\">Projets</a>\n      <a href=\"#contact\">Contact</a>\n    </nav>\n  </header>\n  <main>\n    <section id=\"projets\">\n      <h2>Mes projets</h2>\n      <p>Découvrez mes réalisations.</p>\n    </section>\n  </main>\n  <footer>\n    <p>&copy; 2024 Mon Nom</p>\n  </footer>\n</body>\n</html>",
+      "explanation": "Une page complète combine : structure HTML5 valide (DOCTYPE, lang, charset, viewport), métadonnées SEO (description, title), structure sémantique (header, main, footer), et contenu organisé en sections."
+    },
+    {
+      "id": "ex-html-l3-m3-2",
+      "order": 2,
+      "title": "Section avec formulaire et liste",
+      "instructions": "Dans un `<main>`, créez deux `<section>` : la première avec une `<ul>` de compétences (3 `<li>`), la seconde avec un `<form method=\"POST\">` comprenant un champ email et un bouton submit.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<main>", "<section>", "<ul>", "<li>", "</ul>", "<form", "method=\"post\"", "type=\"email\"", "type=\"submit\"", "</main>"],
+      "correction": "<main>\n  <section>\n    <h2>Compétences</h2>\n    <ul>\n      <li>HTML5</li>\n      <li>CSS3</li>\n      <li>JavaScript</li>\n    </ul>\n  </section>\n  <section>\n    <h2>Contact</h2>\n    <form method=\"POST\">\n      <label for=\"email\">Email :</label>\n      <input type=\"email\" id=\"email\" name=\"email\" required>\n      <button type=\"submit\">Envoyer</button>\n    </form>\n  </section>\n</main>",
+      "explanation": "Combiner plusieurs types de contenu dans des `<section>` séparées est la bonne pratique. Chaque section a son propre titre `<h2>` qui décrit clairement son contenu."
+    },
+    {
+      "id": "ex-html-l3-m3-3",
+      "order": 3,
+      "title": "Style inline pour la mise en page",
+      "instructions": "Ajoutez dans le `<head>` une balise `<style>` contenant `body { font-family: sans-serif; max-width: 800px; margin: 0 auto; }` et `header { background: #6366f1; color: white; padding: 20px; }`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<style>", "font-family:", "sans-serif", "max-width:", "800px", "background:", "#6366f1", "color:", "white"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma page</title>\n  <style>\n    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; }\n    header { background: #6366f1; color: white; padding: 20px; }\n  </style>\n</head>\n<body>\n  <header><h1>Mon Site</h1></header>\n</body>\n</html>",
+      "explanation": "La balise `<style>` dans le `<head>` contient du CSS interne à la page. `max-width: 800px; margin: 0 auto;` est le pattern classique pour centrer le contenu avec une largeur maximale — très utilisé pour la mise en page responsive."
+    }
+  ]
+}

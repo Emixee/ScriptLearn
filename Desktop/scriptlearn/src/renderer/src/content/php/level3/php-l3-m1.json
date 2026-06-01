@@ -1,0 +1,40 @@
+{
+  "id": "php-l3-m1",
+  "title": "Programmation Orientée Objet",
+  "level": "php-l3",
+  "lang": "php",
+  "order": 1,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "Classes et objets",
+      "content": "```php\n<?php\n// Définition d'une classe\nclass Produit {\n    // Propriétés (attributs)\n    public string $nom;\n    public float  $prix;\n    private int   $stock;  // privé : accessible uniquement dans la classe\n\n    // Constructeur : appelé à la création de l'objet\n    public function __construct(string $nom, float $prix, int $stock = 0) {\n        $this->nom   = $nom;\n        $this->prix  = $prix;\n        $this->stock = $stock;\n    }\n\n    // Méthode\n    public function afficher(): string {\n        return \"{$this->nom} : {$this->prix} EUR (stock: {$this->stock})\";  \n    }\n\n    // Getter pour propriété privée\n    public function getStock(): int {\n        return $this->stock;\n    }\n\n    // Méthode statique (appartient à la classe, pas à l'instance)\n    public static function creerGratuit(string $nom): self {\n        return new self($nom, 0.0);\n    }\n}\n\n// Créer un objet\n$clavier = new Produit(\"Clavier mécanique\", 89.99, 15);\necho $clavier->afficher() . \"\\n\";\necho $clavier->nom . \"\\n\";      // public = accessible\n\n// Méthode statique\n$gratuit = Produit::creerGratuit(\"Démo\");\necho $gratuit->afficher() . \"\\n\";\n?>\n```"
+    },
+    {
+      "title": "Héritage et interfaces",
+      "content": "```php\n<?php\n// Classe parente\nclass Forme {\n    protected string $couleur;\n    \n    public function __construct(string $couleur = \"noir\") {\n        $this->couleur = $couleur;\n    }\n    \n    public function getCouleur(): string {\n        return $this->couleur;\n    }\n    \n    // Méthode abstraite : oblige les enfants à l'implémenter\n    public function aire(): float {\n        return 0.0;\n    }\n}\n\n// Classe enfant\nclass Cercle extends Forme {\n    private float $rayon;\n    \n    public function __construct(float $rayon, string $couleur = \"rouge\") {\n        parent::__construct($couleur);  // appel du constructeur parent\n        $this->rayon = $rayon;\n    }\n    \n    // Surcharge de la méthode parent\n    public function aire(): float {\n        return M_PI * $this->rayon ** 2;\n    }\n    \n    public function __toString(): string {\n        return \"Cercle {$this->couleur} (r={$this->rayon})\";  \n    }\n}\n\n$c = new Cercle(5);\necho $c . \"\\n\";         // utilise __toString\necho round($c->aire(), 2) . \"\\n\";\n?>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l3-m1-1",
+      "order": 1,
+      "title": "Classe Personne",
+      "instructions": "Créez une classe `Personne` avec les propriétés publiques `$nom` et `$age`, un constructeur, et une méthode `presenter()` qui retourne `Je m'appelle Alice et j'ai 28 ans`. Instanciez avec `Alice, 28`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Je m'appelle Alice et j'ai 28 ans",
+      "correction": "<?php\nclass Personne {\n    public string $nom;\n    public int    $age;\n    \n    public function __construct(string $nom, int $age) {\n        $this->nom = $nom;\n        $this->age = $age;\n    }\n    \n    public function presenter(): string {\n        return \"Je m'appelle {$this->nom} et j'ai {$this->age} ans\";\n    }\n}\n\n$p = new Personne(\"Alice\", 28);\necho $p->presenter() . \"\\n\";\n?>",
+      "explanation": "`$this` réfère à l'instance courante de la classe. `$this->nom = $nom` stocke le paramètre du constructeur dans la propriété de l'objet. Les méthodes et propriétés publiques (`public`) sont accessibles depuis n'importe où."
+    },
+    {
+      "id": "ex-php-l3-m1-2",
+      "order": 2,
+      "title": "Méthode et calcul",
+      "instructions": "Créez une classe `Rectangle` avec `$largeur` et `$hauteur`, et une méthode `aire()` qui retourne `$largeur * $hauteur`. Créez un rectangle 4×5 et affichez `Aire: 20`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Aire: 20",
+      "correction": "<?php\nclass Rectangle {\n    private float $largeur;\n    private float $hauteur;\n    \n    public function __construct(float $largeur, float $hauteur) {\n        $this->largeur = $largeur;\n        $this->hauteur = $hauteur;\n    }\n    \n    public function aire(): float {\n        return $this->largeur * $this->hauteur;\n    }\n}\n\n$r = new Rectangle(4, 5);\necho \"Aire: \" . $r->aire() . \"\\n\";\n?>",
+      "explanation": "Les propriétés `private` ne sont accessibles que depuis la classe elle-même — pas depuis l'extérieur ni les classes enfants. C'est l'**encapsulation** : les données sont protégées, seules les méthodes publiques y ont accès."
+    }
+  ]
+}

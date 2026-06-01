@@ -1,0 +1,46 @@
+{
+  "id": "php-l3-m3",
+  "title": "Projet final — générateur de page HTML",
+  "level": "php-l3",
+  "lang": "php",
+  "order": 3,
+  "estimatedMinutes": 50,
+  "course": [
+    {
+      "title": "PHP générant du HTML",
+      "content": "PHP est né pour générer du HTML dynamiquement. Voici comment combiner les deux :\n\n```php\n<?php\n// Données (simulées — en vrai, viendraient d'une base de données)\n$produits = [\n    [\"nom\" => \"Clavier\",  \"prix\" => 89.99,  \"stock\" => 15],\n    [\"nom\" => \"Souris\",   \"prix\" => 34.99,  \"stock\" => 42],\n    [\"nom\" => \"Écran 4K\", \"prix\" => 449.00, \"stock\" => 3],\n];\n\n$titre = \"Notre Catalogue\";\n?>\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title><?= htmlspecialchars($titre) ?></title>\n  <style>\n    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; }\n    table { width: 100%; border-collapse: collapse; }\n    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }\n    th { background: #6366f1; color: white; }\n    tr:nth-child(even) { background: #f5f5f5; }\n    .rupture { color: red; font-weight: bold; }\n  </style>\n</head>\n<body>\n  <h1><?= htmlspecialchars($titre) ?></h1>\n  <p><?= count($produits) ?> produits disponibles.</p>\n  \n  <table>\n    <thead>\n      <tr><th>Produit</th><th>Prix</th><th>Stock</th></tr>\n    </thead>\n    <tbody>\n      <?php foreach ($produits as $p): ?>\n      <tr>\n        <td><?= htmlspecialchars($p['nom']) ?></td>\n        <td><?= number_format($p['prix'], 2, ',', ' ') ?> €</td>\n        <td class=\"<?= $p['stock'] < 5 ? 'rupture' : '' ?>\">\n          <?= $p['stock'] ?>\n        </td>\n      </tr>\n      <?php endforeach; ?>\n    </tbody>\n  </table>\n</body>\n</html>\n```\n\n`<?= $var ?>` est un raccourci pour `<?php echo $var; ?>`. Toujours utiliser `htmlspecialchars()` sur les variables affichées."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l3-m3-1",
+      "order": 1,
+      "title": "Génération de liste HTML",
+      "instructions": "Créez un tableau PHP `$langages = [\"HTML\", \"PHP\", \"CSS\"]` et générez une liste HTML `<ul>` avec un `<li>` pour chaque langage (avec `htmlspecialchars`). Le résultat doit contenir `<ul>`, `<li>HTML</li>`, etc.",
+      "validationType": "output_contains",
+      "expectedOutput": "<li>HTML</li>",
+      "correction": "<?php\n$langages = [\"HTML\", \"PHP\", \"CSS\"];\necho \"<ul>\\n\";\nforeach ($langages as $lang) {\n    echo \"  <li>\" . htmlspecialchars($lang) . \"</li>\\n\";\n}\necho \"</ul>\\n\";\n?>",
+      "explanation": "PHP génère du HTML en sortie — c'est l'usage principal de PHP dans le web. `htmlspecialchars()` sur chaque variable affichée protège contre les injections XSS. Le HTML généré peut ensuite être affiché dans le PreviewPane."
+    },
+    {
+      "id": "ex-php-l3-m3-2",
+      "order": 2,
+      "title": "Page HTML complète générée par PHP",
+      "instructions": "Générez une page HTML complète (avec `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`) contenant un `<h1>` avec le contenu d'une variable `$titre = \"Mon Site PHP\"` et un `<p>` avec `$description = \"Bienvenue\"`. La page doit être valide HTML.",
+      "validationType": "output_contains",
+      "expectedOutput": "<!DOCTYPE html>",
+      "correction": "<?php\n$titre = \"Mon Site PHP\";\n$description = \"Bienvenue\";\n?>\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title><?= htmlspecialchars($titre) ?></title>\n</head>\n<body>\n  <h1><?= htmlspecialchars($titre) ?></h1>\n  <p><?= htmlspecialchars($description) ?></p>\n</body>\n</html>",
+      "explanation": "PHP peut alterner entre mode PHP (`<?php ... ?>`) et mode HTML (texte brut). `<?= $var ?>` est un echo court très pratique pour les templates. Cette syntaxe est utilisée dans tous les frameworks PHP (Laravel, Symfony)."
+    },
+    {
+      "id": "ex-php-l3-m3-3",
+      "order": 3,
+      "title": "Tableau HTML dynamique",
+      "instructions": "Générez un `<table>` HTML avec 3 lignes à partir de `$items = [[\"PHP\",1994],[\"Python\",1991],[\"HTML\",1993]]`. Chaque ligne doit avoir deux `<td>`. La sortie doit contenir `<table>` et `<td>PHP</td>`.",
+      "validationType": "output_contains",
+      "expectedOutput": "<td>PHP</td>",
+      "correction": "<?php\n$items = [[\"PHP\", 1994], [\"Python\", 1991], [\"HTML\", 1993]];\necho \"<table>\\n\";\nforeach ($items as $item) {\n    echo \"  <tr>\";\n    echo \"<td>\" . htmlspecialchars($item[0]) . \"</td>\";\n    echo \"<td>\" . $item[1] . \"</td>\";\n    echo \"</tr>\\n\";\n}\necho \"</table>\\n\";\n?>",
+      "explanation": "Générer des tableaux HTML dynamiquement est un cas d'usage quotidien de PHP. En combinant `foreach` avec des `echo`, on peut créer autant de lignes que nécessaire depuis n'importe quelle source de données (tableau PHP, base de données, API, fichier JSON)."
+    }
+  ]
+}

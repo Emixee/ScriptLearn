@@ -1,0 +1,50 @@
+{
+  "id": "html-l3-m1",
+  "title": "Accessibilité ARIA",
+  "level": "html-l3",
+  "lang": "html",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Pourquoi l'accessibilité ?",
+      "content": "L'accessibilité web (a11y) permet aux personnes handicapées d'utiliser les sites. Les technologies d'assistance (lecteurs d'écran, navigation clavier) dépendent du HTML sémantique et des attributs ARIA.\n\nPrincipes fondamentaux :\n\n```html\n<!-- 1. Toujours un alt sur les images -->\n<img src=\"logo.png\" alt=\"Logo Entreprise\">\n<!-- Image purement décorative : alt vide (pas absent) -->\n<img src=\"separateur.png\" alt=\"\">\n\n<!-- 2. Labels associés aux inputs -->\n<label for=\"prenom\">Prénom :</label>\n<input type=\"text\" id=\"prenom\" name=\"prenom\">\n\n<!-- 3. Liens descriptifs (éviter \"Cliquez ici\") -->\n<a href=\"/rapport.pdf\">Télécharger le rapport annuel 2024</a>\n\n<!-- 4. Structure de titres logique h1 > h2 > h3 (pas de saut) -->\n<h1>Page principale</h1>\n<h2>Section</h2>  <!-- pas de h3 avant h2 -->\n```"
+    },
+    {
+      "title": "Attributs ARIA",
+      "content": "ARIA (Accessible Rich Internet Applications) ajoute de la sémantique quand le HTML seul ne suffit pas :\n\n```html\n<!-- aria-label : nom accessible (quand pas de texte visible) -->\n<button aria-label=\"Fermer la fenêtre\">✕</button>\n\n<!-- aria-hidden : cacher aux lecteurs d'écran -->\n<span aria-hidden=\"true\">❤️</span> J'aime\n\n<!-- role : décrire le rôle sémantique -->\n<div role=\"alert\">Erreur : champ obligatoire</div>\n<div role=\"navigation\">...</div>\n\n<!-- aria-expanded : état ouvert/fermé -->\n<button aria-expanded=\"false\" aria-controls=\"menu\">\n  Menu\n</button>\n<ul id=\"menu\" hidden>...</ul>\n\n<!-- aria-live : annoncer les changements dynamiques -->\n<div aria-live=\"polite\" aria-atomic=\"true\">\n  <!-- les changements ici sont annoncés -->\n</div>\n\n<!-- tabindex : ordre et focus clavier -->\n<div tabindex=\"0\" role=\"button\">Élément focusable</div>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l3-m1-1",
+      "order": 1,
+      "title": "Image accessible",
+      "instructions": "Créez une image `<img>` avec `src=\"icon.svg\"`, un `alt` descriptif (`Icône de validation`), et une image décorative avec `alt=\"\"`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<img", "alt=\"icône de validation\"", "alt=\"\""],
+      "correction": "<img src=\"icon.svg\" alt=\"Icône de validation\">\n<img src=\"decoration.png\" alt=\"\">",
+      "explanation": "Règle d'or : toute image doit avoir un `alt`. Un `alt` vide `alt=\"\"` (pas absent) indique que l'image est purement décorative — le lecteur d'écran l'ignore. Un `alt` absent est une erreur d'accessibilité."
+    },
+    {
+      "id": "ex-html-l3-m1-2",
+      "order": 2,
+      "title": "Bouton aria-label",
+      "instructions": "Créez un `<button>` avec le caractère `✕` comme contenu visible et `aria-label=\"Fermer\"` pour les lecteurs d'écran.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<button", "aria-label=\"fermer\"", "✕", "</button>"],
+      "correction": "<button aria-label=\"Fermer\">✕</button>",
+      "explanation": "Un bouton avec seulement une icône ou un symbole n'a pas de texte lisible par les lecteurs d'écran. `aria-label` fournit un nom alternatif. Sans cela, le lecteur d'écran lirait \"✕\" ce qui n'est pas parlant."
+    },
+    {
+      "id": "ex-html-l3-m1-3",
+      "order": 3,
+      "title": "Alert ARIA",
+      "instructions": "Créez un `<div role=\"alert\">` contenant le texte `Erreur : veuillez remplir tous les champs`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<div", "role=\"alert\"", "erreur", "</div>"],
+      "correction": "<div role=\"alert\">Erreur : veuillez remplir tous les champs</div>",
+      "explanation": "`role=\"alert\"` signale au lecteur d'écran que ce contenu est une alerte urgente — il sera lu immédiatement, même si le focus est ailleurs. Sans ce rôle, le message d'erreur ne serait pas annoncé automatiquement."
+    }
+  ]
+}

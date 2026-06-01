@@ -1,0 +1,50 @@
+{
+  "id": "html-l1-m4",
+  "title": "Listes et tableaux",
+  "level": "html-l1",
+  "lang": "html",
+  "order": 4,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Listes HTML",
+      "content": "HTML propose trois types de listes :\n\n```html\n<!-- Liste non ordonnée (puces) -->\n<ul>\n  <li>Pommes</li>\n  <li>Poires</li>\n  <li>Bananes</li>\n</ul>\n\n<!-- Liste ordonnée (numérotée) -->\n<ol>\n  <li>Étape 1 : Ouvrir le terminal</li>\n  <li>Étape 2 : Taper la commande</li>\n  <li>Étape 3 : Valider</li>\n</ol>\n\n<!-- Liste de définitions -->\n<dl>\n  <dt>HTML</dt>\n  <dd>HyperText Markup Language</dd>\n  <dt>CSS</dt>\n  <dd>Cascading Style Sheets</dd>\n</dl>\n\n<!-- Listes imbriquées -->\n<ul>\n  <li>Fruits\n    <ul>\n      <li>Pomme</li>\n      <li>Poire</li>\n    </ul>\n  </li>\n</ul>\n```"
+    },
+    {
+      "title": "Tableaux HTML",
+      "content": "La balise `<table>` crée un tableau. Les lignes sont des `<tr>`, les cellules `<td>`, les en-têtes `<th>` :\n\n```html\n<table>\n  <!-- En-tête du tableau -->\n  <thead>\n    <tr>\n      <th>Nom</th>\n      <th>Âge</th>\n      <th>Ville</th>\n    </tr>\n  </thead>\n  <!-- Corps du tableau -->\n  <tbody>\n    <tr>\n      <td>Alice</td>\n      <td>28</td>\n      <td>Paris</td>\n    </tr>\n    <tr>\n      <td>Bob</td>\n      <td>34</td>\n      <td>Lyon</td>\n    </tr>\n  </tbody>\n  <!-- Pied du tableau (totaux, résumés) -->\n  <tfoot>\n    <tr>\n      <td colspan=\"3\">2 personnes</td>\n    </tr>\n  </tfoot>\n</table>\n```\n\n`colspan` fusionne des colonnes, `rowspan` fusionne des lignes."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l1-m4-1",
+      "order": 1,
+      "title": "Liste de courses",
+      "instructions": "Créez une liste non ordonnée `<ul>` avec 3 éléments `<li>` : `Pain`, `Lait`, `Oeufs`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<ul>", "<li>", "pain", "lait", "oeufs", "</ul>"],
+      "correction": "<ul>\n  <li>Pain</li>\n  <li>Lait</li>\n  <li>Oeufs</li>\n</ul>",
+      "explanation": "`<ul>` (unordered list) crée une liste avec des puces. Chaque `<li>` (list item) est un élément. Les listes `<ul>` sont utilisées pour les listes où l'ordre n'a pas d'importance."
+    },
+    {
+      "id": "ex-html-l1-m4-2",
+      "order": 2,
+      "title": "Recette numérotée",
+      "instructions": "Créez une liste ordonnée `<ol>` avec 3 étapes : `Préchauffer le four`, `Préparer la pâte`, `Enfourner 30 min`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<ol>", "<li>", "préchauffer", "préparer", "enfourner", "</ol>"],
+      "correction": "<ol>\n  <li>Préchauffer le four à 180°C</li>\n  <li>Préparer la pâte</li>\n  <li>Enfourner 30 min</li>\n</ol>",
+      "explanation": "`<ol>` (ordered list) numérote automatiquement les éléments. Elle est utilisée quand l'ordre est important : instructions, étapes, classements."
+    },
+    {
+      "id": "ex-html-l1-m4-3",
+      "order": 3,
+      "title": "Tableau simple",
+      "instructions": "Créez un tableau avec `<table>`, `<thead>`, `<tbody>`, une ligne d'en-tête avec `<th>` (Prénom, Âge) et une ligne de données avec `<td>` (Alice, 25).",
+      "validationType": "keywords",
+      "requiredKeywords": ["<table>", "<thead>", "<tbody>", "<tr>", "<th>", "prénom", "âge", "<td>", "alice", "25"],
+      "correction": "<table>\n  <thead>\n    <tr>\n      <th>Prénom</th>\n      <th>Âge</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Alice</td>\n      <td>25</td>\n    </tr>\n  </tbody>\n</table>",
+      "explanation": "La structure `<thead>`/`<tbody>` n'est pas obligatoire mais recommandée pour la sémantique. `<th>` (table header) rend le texte en gras et centré par défaut — il marque les en-têtes de colonnes. `<td>` (table data) contient les données."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "php-l1-m2",
+  "title": "Variables et opérateurs",
+  "level": "php-l1",
+  "lang": "php",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Variables et types",
+      "content": "En PHP, toutes les variables commencent par `$`. Le type est déterminé automatiquement :\n\n```php\n<?php\n// Types scalaires\n$nom      = \"Alice\";       // string (chaîne)\n$age      = 28;            // int (entier)\n$taille   = 1.68;          // float (décimal)\n$actif    = true;          // bool\n$rien     = null;          // NULL\n\n// Vérifier le type\necho gettype($nom) . \"\\n\";     // string\necho gettype($age) . \"\\n\";     // integer\necho gettype($actif) . \"\\n\";  // boolean\n\n// Constantes (pas de $, pas de modification)\ndefine(\"VERSION\", \"1.0.0\");\necho VERSION . \"\\n\";\n\n// Interpolation dans double-quotes\necho \"Bonjour $nom, vous avez $age ans.\\n\";\n\n// Single-quotes : pas d'interpolation\necho 'Bonjour $nom'   . \"\\n\";  // Affiche : Bonjour $nom\n?>\n```"
+    },
+    {
+      "title": "Opérateurs",
+      "content": "```php\n<?php\n// Arithmétique\n$a = 10; $b = 3;\necho $a + $b . \"\\n\";   // 13\necho $a - $b . \"\\n\";   // 7\necho $a * $b . \"\\n\";   // 30\necho $a / $b . \"\\n\";   // 3.333...\necho $a % $b . \"\\n\";   // 1 (modulo)\necho $a ** $b . \"\\n\";  // 1000 (puissance)\n\n// Concaténation\n$prenom = \"Alice\";\n$nom_famille = \"Martin\";\n$complet = $prenom . \" \" . $nom_famille;\necho $complet . \"\\n\";  // Alice Martin\n\n// Raccourcis\n$x = 5;\n$x += 3;    // $x = $x + 3 = 8\n$x -= 2;    // $x = 6\n$x .= \" PHP\"; // $x = \"6 PHP\" (concat)\necho $x . \"\\n\";\n\n// Comparaison\nvar_dump(5 == \"5\");   // true  (valeurs égales)\nvar_dump(5 === \"5\");  // false (types différents !)\nvar_dump(5 !== \"5\");  // true\n?>\n```\n\n⚠️ `===` compare valeur ET type — toujours préférer `===` en PHP pour éviter les surprises."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l1-m2-1",
+      "order": 1,
+      "title": "Déclarer des variables",
+      "instructions": "Déclarez `$prenom = \"Bob\"`, `$age = 30` et affichez `Bob a 30 ans` en utilisant ces variables.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bob a 30 ans",
+      "correction": "<?php\n$prenom = \"Bob\";\n$age = 30;\necho \"$prenom a $age ans\\n\";\n?>",
+      "explanation": "En PHP, `$` précède toujours les noms de variables. L'interpolation dans les double-quotes remplace `$prenom` et `$age` par leurs valeurs directement dans la chaîne."
+    },
+    {
+      "id": "ex-php-l1-m2-2",
+      "order": 2,
+      "title": "Calcul arithmétique",
+      "instructions": "Calculez `$prix = 20`, `$quantite = 3`, calculez le total (`$prix * $quantite`) et affichez `Total: 60`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Total: 60",
+      "correction": "<?php\n$prix = 20;\n$quantite = 3;\n$total = $prix * $quantite;\necho \"Total: $total\\n\";\n?>",
+      "explanation": "PHP effectue les opérations arithmétiques avant l'affichage. `$prix * $quantite` calcule 20 × 3 = 60. La variable `$total` stocke ce résultat pour le réutiliser."
+    },
+    {
+      "id": "ex-php-l1-m2-3",
+      "order": 3,
+      "title": "Différence == vs ===",
+      "instructions": "Affichez le résultat de `var_dump(0 == false)` puis `var_dump(0 === false)` (les deux sur des lignes séparées).",
+      "validationType": "output_contains",
+      "expectedOutput": "bool(true)",
+      "correction": "<?php\nvar_dump(0 == false);\nvar_dump(0 === false);\n?>",
+      "explanation": "`0 == false` est `true` car PHP convertit les types pour comparer (0 est falsy). `0 === false` est `false` car les types sont différents (int vs bool). En PHP, préférez toujours `===` pour éviter les comparaisons inattendues."
+    }
+  ]
+}

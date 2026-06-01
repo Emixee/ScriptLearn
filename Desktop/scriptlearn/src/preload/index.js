@@ -14,8 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     create: (opts) => ipcRenderer.invoke('terminal:create', opts),
     write: (opts) => ipcRenderer.invoke('terminal:write', opts),
     kill: (opts) => ipcRenderer.invoke('terminal:kill', opts),
-    bashAvailable: () => ipcRenderer.invoke('terminal:bashAvailable'),
+    bashAvailable:   () => ipcRenderer.invoke('terminal:bashAvailable'),
     pythonAvailable: () => ipcRenderer.invoke('terminal:pythonAvailable'),
+    phpAvailable:    () => ipcRenderer.invoke('terminal:phpAvailable'),
     onData: (cb) => {
       const handler = (_, payload) => cb(payload)
       ipcRenderer.on('terminal:data', handler)

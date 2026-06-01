@@ -1,0 +1,50 @@
+{
+  "id": "php-l1-m4",
+  "title": "Fonctions et portée",
+  "level": "php-l1",
+  "lang": "php",
+  "order": 4,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Définir et appeler des fonctions",
+      "content": "```php\n<?php\n// Définition de base\nfunction direBonjour($prenom) {\n    echo \"Bonjour, $prenom !\\n\";\n}\ndireBonjour(\"Alice\");   // Bonjour, Alice !\n\n// Valeur de retour\nfunction additionner($a, $b) {\n    return $a + $b;\n}\n$resultat = additionner(5, 3);\necho \"Résultat : $resultat\\n\";  // 8\n\n// Valeurs par défaut\nfunction saluer($nom, $salutation = \"Bonjour\") {\n    return \"$salutation, $nom !\\n\";\n}\necho saluer(\"Bob\");          // Bonjour, Bob !\necho saluer(\"Bob\", \"Salut\"); // Salut, Bob !\n\n// Type hints (PHP 7+)\nfunction carre(int $n): int {\n    return $n * $n;\n}\necho carre(4) . \"\\n\";  // 16\n?>\n```"
+    },
+    {
+      "title": "Portée des variables",
+      "content": "```php\n<?php\n$global = \"Je suis global\";\n\nfunction tester() {\n    // $global n'est PAS accessible ici — PHP isole les fonctions\n    // echo $global;  // Warning: Undefined variable\n    \n    // Pour accéder à une variable globale :\n    global $global;\n    echo $global . \"\\n\";\n    \n    $local = \"Je suis local\";\n    echo $local . \"\\n\";\n}\n\ntester();\n// echo $local;  // Inaccessible ici\n\n// Fonctions anonymes (closures)\n$multiplier = function($x) use ($global) {\n    return $x * 2;  // $global accessible via use\n};\necho $multiplier(5) . \"\\n\";  // 10\n\n// Fonctions utiles intégrées\necho strlen(\"Hello\") . \"\\n\";  // 5 (longueur)\necho strtoupper(\"php\") . \"\\n\"; // PHP\necho round(3.7) . \"\\n\";        // 4\necho abs(-5) . \"\\n\";           // 5\n?>\n```\n\nContrairement à Python ou JavaScript, PHP n'a **pas de portée de bloc** — `if`, `for` partagent la portée de la fonction. Les fonctions ont leur propre portée isolée."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l1-m4-1",
+      "order": 1,
+      "title": "Fonction de salutation",
+      "instructions": "Créez une fonction `saluer($prenom)` qui retourne `Bonjour $prenom !` et appelez-la avec `\"Marie\"`. Affichez le résultat.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour Marie !",
+      "correction": "<?php\nfunction saluer($prenom) {\n    return \"Bonjour $prenom !\";\n}\necho saluer(\"Marie\") . \"\\n\";\n?>",
+      "explanation": "`function nom($parametre) { return valeur; }` définit une fonction réutilisable. `return` renvoie une valeur sans l'afficher — c'est l'appelant qui décide quoi faire avec."
+    },
+    {
+      "id": "ex-php-l1-m4-2",
+      "order": 2,
+      "title": "Calculatrice de périmètre",
+      "instructions": "Créez une fonction `perimetre($largeur, $hauteur)` qui retourne `2 * ($largeur + $hauteur)`. Appelez-la avec `5` et `3`, affichez `16`.",
+      "validationType": "output_contains",
+      "expectedOutput": "16",
+      "correction": "<?php\nfunction perimetre($largeur, $hauteur) {\n    return 2 * ($largeur + $hauteur);\n}\necho perimetre(5, 3) . \"\\n\";\n?>",
+      "explanation": "Les fonctions peuvent prendre plusieurs paramètres. `2 * ($largeur + $hauteur)` = 2 × (5+3) = 16. Les parenthèses changent la priorité des opérations — sans elles, `2 * $largeur + $hauteur` = 10+3 = 13."
+    },
+    {
+      "id": "ex-php-l1-m4-3",
+      "order": 3,
+      "title": "Valeur par défaut",
+      "instructions": "Créez une fonction `puissance($base, $exposant = 2)` qui retourne `$base ** $exposant`. Appelez-la avec `4` (doit retourner `16`) et avec `3, 3` (doit retourner `27`).",
+      "validationType": "output_contains",
+      "expectedOutput": "16",
+      "correction": "<?php\nfunction puissance($base, $exposant = 2) {\n    return $base ** $exposant;\n}\necho puissance(4) . \"\\n\";     // 16\necho puissance(3, 3) . \"\\n\"; // 27\n?>",
+      "explanation": "La valeur par défaut `$exposant = 2` permet d'appeler `puissance(4)` sans le deuxième argument — il vaut 2 par défaut. Les paramètres avec valeur par défaut doivent toujours être après les paramètres obligatoires."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "html-l3-m2",
+  "title": "Métadonnées et SEO",
+  "level": "html-l3",
+  "lang": "html",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Les balises meta essentielles",
+      "content": "Les métadonnées dans `<head>` sont invisibles pour l'utilisateur mais cruciales pour les moteurs de recherche et les réseaux sociaux :\n\n```html\n<head>\n  <!-- Encodage — toujours en premier -->\n  <meta charset=\"UTF-8\">\n  \n  <!-- Viewport — responsivité mobile -->\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  \n  <!-- Description (affichée dans les résultats Google) -->\n  <meta name=\"description\" content=\"Plateforme d'apprentissage du scripting et du web. Apprenez Bash, Python, HTML et PHP.\">\n  \n  <!-- Robots : indexation par les moteurs de recherche -->\n  <meta name=\"robots\" content=\"index, follow\">\n  \n  <!-- Auteur -->\n  <meta name=\"author\" content=\"Jean Dupont\">\n  \n  <!-- Langue de la page -->\n  <html lang=\"fr\">\n  \n  <!-- Favicon -->\n  <link rel=\"icon\" href=\"/favicon.ico\" type=\"image/x-icon\">\n  \n  <!-- Feuille de style externe -->\n  <link rel=\"stylesheet\" href=\"/styles.css\">\n  \n  <!-- URL canonique (évite le contenu dupliqué) -->\n  <link rel=\"canonical\" href=\"https://example.com/ma-page\">\n</head>\n```"
+    },
+    {
+      "title": "Open Graph (partage sur les réseaux sociaux)",
+      "content": "Les balises Open Graph contrôlent l'aperçu affiché quand on partage un lien sur les réseaux sociaux :\n\n```html\n<head>\n  <!-- Open Graph -->\n  <meta property=\"og:title\" content=\"Mon super article\">\n  <meta property=\"og:description\" content=\"Description de l'article en 2-3 phrases.\">\n  <meta property=\"og:image\" content=\"https://example.com/image-partage.jpg\">\n  <meta property=\"og:url\" content=\"https://example.com/article\">\n  <meta property=\"og:type\" content=\"article\">\n  \n  <!-- Twitter Cards -->\n  <meta name=\"twitter:card\" content=\"summary_large_image\">\n  <meta name=\"twitter:title\" content=\"Mon super article\">\n  <meta name=\"twitter:image\" content=\"https://example.com/image-partage.jpg\">\n</head>\n```\n\nSans Open Graph, les réseaux sociaux devinent eux-mêmes le titre et l'image — avec des résultats aléatoires."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l3-m2-1",
+      "order": 1,
+      "title": "Meta description SEO",
+      "instructions": "Ajoutez dans le `<head>` une `<meta name=\"description\" content=\"Apprenez HTML et CSS facilement.\">` et un `<title>Cours HTML</title>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<meta", "name=\"description\"", "content=\"apprenez html et css facilement.\"", "<title>", "cours html", "</title>"],
+      "correction": "<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"description\" content=\"Apprenez HTML et CSS facilement.\">\n  <title>Cours HTML</title>\n</head>",
+      "explanation": "La `meta description` est affichée sous le titre dans les résultats Google. Elle doit faire entre 150 et 160 caractères, décrire précisément le contenu de la page, et inciter au clic. Elle n'améliore pas directement le classement mais améliore le taux de clic."
+    },
+    {
+      "id": "ex-html-l3-m2-2",
+      "order": 2,
+      "title": "Lien vers un CSS externe",
+      "instructions": "Ajoutez dans le `<head>` un `<link rel=\"stylesheet\" href=\"/styles.css\">` et un `<link rel=\"icon\" href=\"/favicon.ico\">`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<link", "rel=\"stylesheet\"", "href=\"/styles.css\"", "rel=\"icon\"", "href=\"/favicon.ico\""],
+      "correction": "<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma page</title>\n  <link rel=\"stylesheet\" href=\"/styles.css\">\n  <link rel=\"icon\" href=\"/favicon.ico\">\n</head>",
+      "explanation": "`<link rel=\"stylesheet\">` lie une feuille de style CSS externe — meilleure pratique que le CSS inline car le navigateur le met en cache et évite de recharger les styles à chaque page. Le favicon s'affiche dans l'onglet du navigateur."
+    },
+    {
+      "id": "ex-html-l3-m2-3",
+      "order": 3,
+      "title": "Open Graph basique",
+      "instructions": "Ajoutez les 3 balises Open Graph essentielles : `og:title` (Mon Site), `og:description` (Description courte), `og:image` (https://example.com/img.jpg).",
+      "validationType": "keywords",
+      "requiredKeywords": ["property=\"og:title\"", "mon site", "property=\"og:description\"", "property=\"og:image\"", "https://example.com/img.jpg"],
+      "correction": "<head>\n  <meta charset=\"UTF-8\">\n  <title>Mon Site</title>\n  <meta property=\"og:title\" content=\"Mon Site\">\n  <meta property=\"og:description\" content=\"Description courte\">\n  <meta property=\"og:image\" content=\"https://example.com/img.jpg\">\n</head>",
+      "explanation": "Les balises Open Graph (`og:title`, `og:description`, `og:image`) contrôlent ce que voient les utilisateurs quand ils partagent votre lien sur Facebook, LinkedIn, Slack, etc. L'image doit faire au moins 1200×630px pour un affichage optimal."
+    }
+  ]
+}

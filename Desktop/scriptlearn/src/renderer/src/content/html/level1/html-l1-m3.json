@@ -1,0 +1,60 @@
+{
+  "id": "html-l1-m3",
+  "title": "Liens et images",
+  "level": "html-l1",
+  "lang": "html",
+  "order": 3,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Les liens hypertextes",
+      "content": "La balise `<a>` (anchor) crée des liens. L'attribut `href` (hypertext reference) contient la destination :\n\n```html\n<!-- Lien externe -->\n<a href=\"https://www.google.com\">Aller sur Google</a>\n\n<!-- Lien dans la même page -->\n<a href=\"#section2\">Aller à la section 2</a>\n\n<!-- Lien ouvert dans un nouvel onglet -->\n<a href=\"https://example.com\" target=\"_blank\" rel=\"noopener noreferrer\">Ouvrir</a>\n\n<!-- Lien vers un email -->\n<a href=\"mailto:contact@example.com\">Nous écrire</a>\n\n<!-- Lien relatif (vers un autre fichier du même site) -->\n<a href=\"/contact.html\">Contact</a>\n<a href=\"../index.html\">Accueil</a>\n```\n\n`target=\"_blank\"` ouvre dans un nouvel onglet. `rel=\"noopener noreferrer\"` est une bonne pratique de sécurité obligatoire avec `target=\"_blank\"`."
+    },
+    {
+      "title": "Les images",
+      "content": "La balise `<img>` affiche une image. Elle est **auto-fermante** (pas de balise fermante) :\n\n```html\n<!-- Image avec src (source) et alt (texte alternatif) -->\n<img src=\"photo.jpg\" alt=\"Description de la photo\">\n\n<!-- Image avec dimensions -->\n<img src=\"logo.png\" alt=\"Logo\" width=\"200\" height=\"100\">\n\n<!-- Image depuis une URL externe -->\n<img src=\"https://via.placeholder.com/300\" alt=\"Image placeholder\">\n\n<!-- Image cliquable (lien + image) -->\n<a href=\"https://example.com\">\n  <img src=\"banner.jpg\" alt=\"Bannière cliquable\">\n</a>\n```\n\n⚠️ L'attribut `alt` est **obligatoire** pour l'accessibilité. Il est lu par les lecteurs d'écran pour les personnes malvoyantes."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l1-m3-1",
+      "order": 1,
+      "title": "Créer un lien externe",
+      "instructions": "Créez un lien vers `https://www.wikipedia.org` avec le texte visible `Visiter Wikipedia`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<a", "href=\"https://www.wikipedia.org\"", "visiter wikipedia", "</a>"],
+      "correction": "<a href=\"https://www.wikipedia.org\">Visiter Wikipedia</a>",
+      "explanation": "`<a href=\"URL\">texte</a>` est la syntaxe d'un lien. La valeur de `href` peut être une URL complète (http://...) ou un chemin relatif (/page.html). Le texte entre les balises est ce que l'utilisateur voit et clique."
+    },
+    {
+      "id": "ex-html-l1-m3-2",
+      "order": 2,
+      "title": "Lien dans un nouvel onglet",
+      "instructions": "Créez un lien vers `https://www.openai.com` avec `target=\"_blank\"` et `rel=\"noopener noreferrer\"`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["href=\"https://www.openai.com\"", "target=\"_blank\"", "rel=\"noopener noreferrer\""],
+      "correction": "<a href=\"https://www.openai.com\" target=\"_blank\" rel=\"noopener noreferrer\">OpenAI</a>",
+      "explanation": "`target=\"_blank\"` ouvre le lien dans un nouvel onglet. Sans `rel=\"noopener noreferrer\"`, la page ouverte pourrait accéder à `window.opener` et modifier la page d'origine — une faille de sécurité. Ces deux attributs vont toujours ensemble."
+    },
+    {
+      "id": "ex-html-l1-m3-3",
+      "order": 3,
+      "title": "Insérer une image",
+      "instructions": "Insérez une image avec `src=\"https://via.placeholder.com/150\"`, `alt=\"Image de test\"` et `width=\"150\"`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<img", "src=\"https://via.placeholder.com/150\"", "alt=\"image de test\"", "width=\"150\""],
+      "correction": "<img src=\"https://via.placeholder.com/150\" alt=\"Image de test\" width=\"150\">",
+      "explanation": "`<img>` est auto-fermante (pas de `</img>`). `src` pointe vers le fichier image (URL ou chemin relatif). `alt` est obligatoire pour l'accessibilité — si l'image ne charge pas, le texte alt s'affiche à la place. `width`/`height` en pixels évitent le saut de mise en page au chargement."
+    },
+    {
+      "id": "ex-html-l1-m3-4",
+      "order": 4,
+      "title": "Image cliquable",
+      "instructions": "Créez une image `<img src=\"https://via.placeholder.com/100\" alt=\"Logo\">` enveloppée dans un lien `<a href=\"/accueil\">` pour la rendre cliquable.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<a", "href=\"/accueil\"", "<img", "alt=\"logo\"", "</a>"],
+      "correction": "<a href=\"/accueil\">\n  <img src=\"https://via.placeholder.com/100\" alt=\"Logo\">\n</a>",
+      "explanation": "En plaçant une `<img>` à l'intérieur d'une balise `<a>`, l'image entière devient cliquable. C'est le pattern standard pour les logos qui redirigent vers l'accueil."
+    }
+  ]
+}

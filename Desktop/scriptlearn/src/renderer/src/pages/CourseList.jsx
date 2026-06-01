@@ -7,7 +7,7 @@ import { moduleScore } from '../utils/score'
 
 // Langages standards (Bash, Python, PowerShell) sur les 6 niveaux
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
+const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 const LANG_COLORS = {
   bash:       { active: 'bg-[#22d3ee] text-[#0f1117]',  badge: 'text-[#22d3ee]' },
   python:     { active: 'bg-[#f59e0b] text-[#0f1117]',  badge: 'text-[#f59e0b]' },
@@ -18,6 +18,8 @@ const LANG_COLORS = {
   git:        { active: 'bg-[#f97316] text-white',       badge: 'text-[#f97316]' },
   spl:        { active: 'bg-[#10b981] text-white',       badge: 'text-[#10b981]' },
   yaml:       { active: 'bg-[#f59e0b] text-[#0f1117]',  badge: 'text-[#f59e0b]' },
+  html:       { active: 'bg-[#e34c26] text-white',       badge: 'text-[#e34c26]' },
+  php:        { active: 'bg-[#8892bf] text-white',       badge: 'text-[#8892bf]' },
 }
 
 function Stars({ count, max = 3 }) {

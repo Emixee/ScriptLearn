@@ -4,9 +4,15 @@ import CodeMirror from '@uiw/react-codemirror'
 import { python } from '@codemirror/lang-python'
 import { StreamLanguage } from '@codemirror/language'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
+// html est dans @codemirror/legacy-modes/mode/xml (déjà en package.json ^6.5.3)
+// Le module xml.js exporte xml et html — on utilise html pour la coloration HTML
+// Pour PHP, on utilise javascript (syntaxe C-like proche) — pas de mode php disponible
+import { html as htmlMode } from '@codemirror/legacy-modes/mode/xml'
+import { javascript as jsMode } from '@codemirror/legacy-modes/mode/javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorView } from '@codemirror/view'
 import Terminal from '../components/Terminal'
+import PreviewPane from '../components/PreviewPane'
 import AIAssistant from '../components/AIAssistant'
 import WindowControls from '../components/WindowControls'
 import { getModule } from '../content/loader'
@@ -18,9 +24,13 @@ import contentIndex from '../content/index.json'
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 const SENTINEL_PREFIX = '__SL_DONE_'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
-const STATIC_LANGS = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml']
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
+// STATIC_LANGS : langages validés par mots-clés (pas d'exécution terminal)
+// HTML est statique — la prévisualisation vient du srcDoc direct, pas d'une exécution
+const STATIC_LANGS = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml', 'html']
+// PREVIEW_LANGS : langages qui affichent un panneau d'aperçu HTML en plus du terminal
+const PREVIEW_LANGS = ['html', 'php']
 
 const KQL_REFERENCE = `Tables fréquentes
 ─────────────────
@@ -305,13 +315,87 @@ version: !!str 1.0
 enabled: "true"    # string
 version: "3.9"     # string`
 
+const HTML_REFERENCE = `Structure de base
+─────────────────
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Titre de la page</title>
+</head>
+<body>
+  <!-- Contenu ici -->
+</body>
+</html>
+
+Balises texte
+─────────────────
+<h1>–<h6>   Titres (h1 = principal)
+<p>          Paragraphe
+<strong>     Gras sémantique
+<em>         Italique sémantique
+<br>         Saut de ligne
+<hr>         Ligne horizontale
+<span>       Conteneur inline
+<div>        Conteneur bloc
+
+Liens & médias
+─────────────────
+<a href="url">texte</a>
+<a href="url" target="_blank">  nouvel onglet
+<img src="url" alt="desc">
+<img src="img.png" width="300">
+
+Listes
+─────────────────
+<ul>  liste non ordonnée
+  <li>élément</li>
+</ul>
+<ol>  liste ordonnée (1, 2, 3…)
+  <li>élément</li>
+</ol>
+
+Tableaux
+─────────────────
+<table>
+  <thead><tr><th>Col 1</th></tr></thead>
+  <tbody><tr><td>val</td></tr></tbody>
+</table>
+
+Formulaires
+─────────────────
+<form action="/submit" method="POST">
+  <label for="nom">Nom :</label>
+  <input type="text" id="nom" name="nom">
+  <input type="email" name="email">
+  <input type="password" name="pwd">
+  <input type="checkbox" name="ok">
+  <select name="pays">
+    <option value="fr">France</option>
+  </select>
+  <textarea name="msg"></textarea>
+  <button type="submit">Envoyer</button>
+</form>
+
+Sémantique HTML5
+─────────────────
+<header>  en-tête de page
+<nav>     navigation
+<main>    contenu principal
+<section> section thématique
+<article> contenu autonome
+<aside>   contenu latéral
+<footer>  pied de page`
+
 function getStaticReference(lang) {
-  if (lang === 'kql') return KQL_REFERENCE
-  if (lang === 'sql') return SQL_REFERENCE
+  if (lang === 'kql')  return KQL_REFERENCE
+  if (lang === 'sql')  return SQL_REFERENCE
   if (lang === 'regex') return REGEX_REFERENCE
-  if (lang === 'git') return GIT_REFERENCE
-  if (lang === 'spl') return SPL_REFERENCE
+  if (lang === 'git')  return GIT_REFERENCE
+  if (lang === 'spl')  return SPL_REFERENCE
   if (lang === 'yaml') return YAML_REFERENCE
+  if (lang === 'html') return HTML_REFERENCE
   return ''
 }
 
@@ -334,9 +418,15 @@ function findNextModule(currentLang, currentLevelId, currentModuleId) {
 }
 
 // Choisit l'extension CodeMirror selon le langage
+// htmlmixed active la coloration HTML + CSS inline + JS inline en une seule extension
+// php active la coloration PHP (les blocs <?php ?> sont reconnus)
 function getLangExtension(lang) {
   if (lang === 'python') return python()
   if (lang === 'bash' || lang === 'powershell') return StreamLanguage.define(shell)
+  // html : mode xml avec support HTML (balises, attributs, entités)
+  // php : mode javascript pour la coloration de base (C-like — accolades, strings, commentaires)
+  if (lang === 'html') return StreamLanguage.define(htmlMode)
+  if (lang === 'php')  return StreamLanguage.define(jsMode)
   return []
 }
 
@@ -373,6 +463,10 @@ export default function Exercise() {
   const [draftLoaded, setDraftLoaded] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [showNote, setShowNote] = useState(false)
+  // previewSrc : contenu HTML rendu dans le PreviewPane pour les langages PHP
+  // Pour HTML, le srcDoc est directement `code` (temps réel), pas cet état
+  // Pour PHP, cet état est mis à jour après l'exécution (sortie terminal stripée)
+  const [previewSrc, setPreviewSrc] = useState('')
 
   const outputBuffer = useRef('')
   const isDragging = useRef(false)
@@ -452,6 +546,7 @@ export default function Exercise() {
     setDraftLoaded(false)
     setNoteText('')
     setShowNote(false)
+    setPreviewSrc('')
     outputBuffer.current = ''
   }, [moduleId, exerciseIndex])
 
@@ -523,9 +618,20 @@ export default function Exercise() {
   const handleRun = () => {
     if (!code.trim() || isStaticLang) return
     outputBuffer.current = ''
-    window.electronAPI.terminal.write({ id: termId, data: code + '\r' })
-    setStatus(STATUS.idle)
     setFeedback(null)
+    setStatus(STATUS.idle)
+
+    if (lang === 'php') {
+      // PHP s'exécute dans le terminal bash WSL existant (shell='bash').
+      // On envoie un heredoc bash : le délimiteur 'PHPEOF' en single-quotes empêche
+      // bash d'expandre les variables PHP ($name, $arr) avant que PHP les voie.
+      // Sans les quotes autour de PHPEOF, bash remplacerait $name par une chaîne vide.
+      setPreviewSrc('')
+      const heredoc = `php << 'PHPEOF'\n${code}\nPHPEOF\r`
+      window.electronAPI.terminal.write({ id: termId, data: heredoc })
+    } else {
+      window.electronAPI.terminal.write({ id: termId, data: code + '\r' })
+    }
   }
 
   const validateStatic = async () => {
@@ -555,13 +661,24 @@ export default function Exercise() {
     setFeedback(null)
     const sentinelId = Date.now()
     const sentinel = `${SENTINEL_PREFIX}${sentinelId}__`
+    // Pour PHP : la commande echo "${sentinel}" est un echo bash (pas PHP).
+    // Le heredoc PHP a déjà terminé avant l'envoi du sentinel — on est de retour
+    // dans le shell bash, donc `echo` fonctionne normalement.
     const sentinelCmd = lang === 'powershell'
       ? `Write-Host "${sentinel}"`
       : lang === 'python'
       ? `print("${sentinel}")`
       : `echo "${sentinel}"`
     outputBuffer.current = ''
-    window.electronAPI.terminal.write({ id: termId, data: trimmed + '\r' })
+
+    if (lang === 'php') {
+      // Pour PHP : exécution via heredoc (même logique que handleRun)
+      setPreviewSrc('')
+      const heredoc = `php << 'PHPEOF'\n${trimmed}\nPHPEOF\r`
+      window.electronAPI.terminal.write({ id: termId, data: heredoc })
+    } else {
+      window.electronAPI.terminal.write({ id: termId, data: trimmed + '\r' })
+    }
     await new Promise(r => setTimeout(r, 80))
     if (lang === 'python') {
       window.electronAPI.terminal.write({ id: termId, data: '\r' })
@@ -577,16 +694,28 @@ export default function Exercise() {
       elapsed += pollInterval
     }
     const cleanOutput = stripAnsi(outputBuffer.current)
+
+    // Pour PHP : mettre à jour le panneau de prévisualisation avec la sortie HTML
+    // On prend le contenu AVANT la ligne du sentinel pour ne pas inclure le marqueur
+    if (lang === 'php') {
+      const sentinelIdx = cleanOutput.indexOf(sentinel)
+      const phpOut = sentinelIdx !== -1 ? cleanOutput.slice(0, sentinelIdx) : cleanOutput
+      // Supprimer les lignes de prompt bash (commencent par $ suivi d'un espace)
+      // et la ligne du heredoc elle-même pour ne garder que la sortie PHP réelle
+      const lines = phpOut.split('\n').filter(l => !l.match(/^\$\s/) && !l.includes('PHPEOF') && !l.startsWith('php <<'))
+      const phpHtmlOut = lines.join('\n').trim()
+      const isFullHtml = phpHtmlOut.toLowerCase().startsWith('<!doctype') || phpHtmlOut.toLowerCase().startsWith('<html')
+      setPreviewSrc(isFullHtml
+        ? phpHtmlOut
+        : `<body style="font-family:sans-serif;background:#fff;padding:16px;color:#222;white-space:pre-wrap">${phpHtmlOut}</body>`
+      )
+    }
+
     let isCorrect = false
     if (exercise.validationType === 'output_nonempty') {
-      // Validation simple : le code n'est pas vide (exercices de type "exécute quelque chose")
       isCorrect = trimmed.length > 0
     } else {
       // Validation par correspondance : la sortie RÉELLE du terminal doit contenir l'attendu.
-      // IMPORTANT : on NE vérifie PAS le code source (trimmed) comme fallback.
-      // Ce fallback créait des faux positifs : si l'expectedOutput apparaît dans le code écrit
-      // (ex: echo "$USER"), l'exercice était marqué correct sans que la commande ait produit
-      // la bonne sortie. On valide uniquement sur ce que le terminal a réellement affiché.
       isCorrect = cleanOutput.toLowerCase().includes(exercise.expectedOutput.toLowerCase())
     }
     finalize(isCorrect, trimmed)
@@ -628,6 +757,7 @@ export default function Exercise() {
     setFeedback(null)
     setShowCorrection(false)
     setShowCompletion(false)
+    setPreviewSrc('')
     if (!isStaticLang) {
       const clearCmd = lang === 'powershell' ? 'Clear-Host\r'
         : lang === 'python' ? 'import os; os.system("cls")\r'
@@ -789,6 +919,8 @@ export default function Exercise() {
                   : lang === 'regex'    ? 'Écrivez votre pattern Python ici…\n\nimport re\nre.search(r\'\\d+\', texte)'
                   : lang === 'git'      ? 'Écrivez la commande Git ici…\n\nEx: git log --oneline'
                   : lang === 'spl'      ? 'Écrivez votre recherche SPL ici…\n\nEx: index=security EventCode=4625\n| stats count BY user'
+                  : lang === 'html'     ? '<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8">\n  <title>Ma page</title>\n</head>\n<body>\n  <!-- Votre HTML ici -->\n</body>\n</html>'
+                  : lang === 'php'      ? '<?php\n// Votre code PHP ici\necho "Hello, PHP!";\n?>'
                   : 'Écrivez votre Bash ici…'
                 }
                 style={{ minHeight: '150px' }}
@@ -910,26 +1042,50 @@ export default function Exercise() {
           title="Redimensionner"
         />
 
-        {/* Terminal ou référence (langages statiques) */}
+        {/* Panneau droit : terminal, référence ou aperçu selon le langage
+            - HTML  → PreviewPane plein panneau (aperçu temps réel)
+            - PHP   → Terminal bash (60%) + PreviewPane (40%) empilés
+            - Autres terminaux (bash, python, powershell) → Terminal seul
+            - Langages statiques (kql, sql, regex…) → Référence textuelle */}
         <div className="flex flex-col overflow-hidden flex-1">
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1d2e] border-b border-[#2d3748] flex-shrink-0">
-            <div className="flex gap-1.5">
-              {isStaticLang ? (
-                <><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}99` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}50` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}25` }}/></>
-              ) : (
-                <><div className="w-3 h-3 rounded-full bg-red-500/70"/><div className="w-3 h-3 rounded-full bg-yellow-500/70"/><div className="w-3 h-3 rounded-full bg-green-500/70"/></>
-              )}
+          {/* Barre de titre du panneau droit — masquée pour PHP et HTML car
+              PreviewPane et le Terminal ont leur propre barre */}
+          {lang !== 'html' && lang !== 'php' && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1d2e] border-b border-[#2d3748] flex-shrink-0">
+              <div className="flex gap-1.5">
+                {isStaticLang ? (
+                  <><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}99` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}50` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}25` }}/></>
+                ) : (
+                  <><div className="w-3 h-3 rounded-full bg-red-500/70"/><div className="w-3 h-3 rounded-full bg-yellow-500/70"/><div className="w-3 h-3 rounded-full bg-green-500/70"/></>
+                )}
+              </div>
+              <span className="text-slate-500 text-xs ml-2">
+                {isStaticLang
+                  ? `Référence ${langLabel}`
+                  : lang === 'powershell' ? 'Windows PowerShell' : lang === 'python' ? 'Python' : 'Bash (WSL)'}
+              </span>
+              {!isStaticLang && status === STATUS.running && <span className="ml-auto text-slate-500 text-xs animate-pulse">en cours…</span>}
+              {isStaticLang && <span className="ml-auto text-xs opacity-40" style={{ color: langAccent }}>{langLabel}</span>}
             </div>
-            <span className="text-slate-500 text-xs ml-2">
-              {isStaticLang
-                ? `Référence ${langLabel}`
-                : lang === 'powershell' ? 'Windows PowerShell' : lang === 'python' ? 'Python' : 'Bash (WSL)'}
-            </span>
-            {!isStaticLang && status === STATUS.running && <span className="ml-auto text-slate-500 text-xs animate-pulse">en cours…</span>}
-            {isStaticLang && <span className="ml-auto text-xs opacity-40" style={{ color: langAccent }}>{langLabel}</span>}
-          </div>
+          )}
           <div className="flex-1 overflow-hidden bg-[#0d0f16]">
-            {isStaticLang ? (
+            {lang === 'html' ? (
+              // HTML : l'aperçu occupe tout le panneau — le code est le srcdoc direct
+              // (mise à jour en temps réel à chaque frappe sans délai)
+              <PreviewPane srcDoc={code} label="HTML" langColor={langAccent} />
+            ) : lang === 'php' ? (
+              // PHP : terminal bash WSL en haut (60 %) + aperçu HTML en bas (40 %)
+              // Le terminal montre la sortie brute + les erreurs PHP
+              // Le PreviewPane montre la sortie rendue après validation
+              <div className="flex flex-col h-full">
+                <div style={{ flex: '0 0 60%', overflow: 'hidden' }}>
+                  <Terminal id={termId} shell="bash" className="h-full" />
+                </div>
+                <div className="border-t border-[#2d3748] flex-shrink-0" style={{ flex: '0 0 40%', overflow: 'hidden' }}>
+                  <PreviewPane srcDoc={previewSrc} label="PHP" langColor={langAccent} />
+                </div>
+              </div>
+            ) : isStaticLang ? (
               <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-slate-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
             ) : (
               <Terminal id={termId} shell={lang} className="h-full" />

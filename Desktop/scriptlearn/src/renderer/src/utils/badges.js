@@ -24,6 +24,8 @@ export const BADGE_DEFS = [
   { id: 'sql_module',       icon: '🗄️', label: 'Data Analyst',       desc: 'Finir 2 modules SQL',               check: (s) => (s.completedByLang.sql ?? 0) >= 2 },
   { id: 'git_module',       icon: '🌿', label: 'Versionneur',        desc: 'Finir 2 modules Git',               check: (s) => (s.completedByLang.git ?? 0) >= 2 },
   { id: 'yaml_module',      icon: '📋', label: 'Config Master',      desc: 'Finir 2 modules YAML',              check: (s) => (s.completedByLang.yaml ?? 0) >= 2 },
+  { id: 'html_module',      icon: '🌐', label: 'Web Designer',       desc: 'Finir 2 modules HTML',              check: (s) => (s.completedByLang.html ?? 0) >= 2 },
+  { id: 'php_module',       icon: '🐘', label: 'PHPiste',            desc: 'Finir 2 modules PHP',               check: (s) => (s.completedByLang.php  ?? 0) >= 2 },
   { id: 'polyglot',         icon: '🌐', label: 'Polyglotte',         desc: 'Réussir des exercices dans 5 langages', check: (s) => s.langsWithProgress >= 5 },
 
   // Streak
@@ -34,7 +36,7 @@ export const BADGE_DEFS = [
 
 export function computeStats(progress, activityDates = []) {
   let totalDone = 0, firstTryCount = 0, maxAttempts = 0
-  const completedByLang = { bash: 0, python: 0, powershell: 0, kql: 0, sql: 0, regex: 0, git: 0, spl: 0, yaml: 0 }
+  const completedByLang = { bash: 0, python: 0, powershell: 0, kql: 0, sql: 0, regex: 0, git: 0, spl: 0, yaml: 0, html: 0, php: 0 }
   const langsSet = new Set()
   let perfectModules = 0
 

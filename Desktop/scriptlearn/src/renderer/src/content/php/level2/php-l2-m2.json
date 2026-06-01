@@ -1,0 +1,50 @@
+{
+  "id": "php-l2-m2",
+  "title": "Chaînes de caractères",
+  "level": "php-l2",
+  "lang": "php",
+  "order": 2,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Fonctions de chaînes essentielles",
+      "content": "```php\n<?php\n$texte = \"  Bonjour le Monde  \";\n\n// Longueur et casse\necho strlen($texte) . \"\\n\";          // 20\necho strtolower($texte) . \"\\n\";      // bonjour le monde\necho strtoupper($texte) . \"\\n\";      // BONJOUR LE MONDE\necho ucfirst(\"hello world\") . \"\\n\";  // Hello world\necho ucwords(\"hello world\") . \"\\n\";  // Hello World\n\n// Nettoyage\necho trim($texte) . \"\\n\";         // \"Bonjour le Monde\" (sans espaces)\necho ltrim($texte) . \"\\n\";        // espaces gauche supprimés\necho str_pad(\"5\", 3, \"0\", STR_PAD_LEFT) . \"\\n\"; // 005\n\n// Recherche et extraction\n$email = \"alice@example.com\";\necho strpos($email, \"@\") . \"\\n\";   // 5 (position du @)\necho substr($email, 0, 5) . \"\\n\";  // alice\necho substr($email, 6) . \"\\n\";    // example.com\n\n// Remplacement\n$phrase = \"Chat noir mange souris\";\necho str_replace(\"noir\", \"blanc\", $phrase) . \"\\n\";\n\n// Découpage\n$csv = \"alice,bob,charlie\";\n$noms = explode(\",\", $csv);\nprint_r($noms);\n\n// Test de contenu\necho str_contains($email, \"@\") ? \"Valide\\n\" : \"Invalide\\n\"; // PHP 8+\n?>\n```"
+    },
+    {
+      "title": "sprintf et formatage",
+      "content": "```php\n<?php\n// sprintf : formater une chaîne (comme printf en C)\n$nom = \"Alice\";\n$score = 98.5;\n$total = 100;\n\n// %s = string, %d = entier, %.2f = float 2 décimales\n$message = sprintf(\"%-10s : %3d/%-3d (%.1f%%)\", $nom, (int)$score, $total, $score);\necho $message . \"\\n\";  // Alice      :  98/100 (98.5%)\n\n// Nombre formaté\necho number_format(1234567.89, 2, ',', ' ') . \"\\n\";\n// 1 234 567,89\n\n// Date\necho date(\"d/m/Y H:i\") . \"\\n\";  // 15/01/2024 14:30\n\n// Heredoc : chaîne multi-lignes avec interpolation\n$html = <<<HTML\n<h1>Bonjour $nom</h1>\n<p>Score : $score</p>\nHTML;\necho $html . \"\\n\";\n\n// Nowdoc : chaîne multi-lignes SANS interpolation\n$sql = <<<'SQL'\nSELECT * FROM users WHERE email = '$email'\nSQL;\necho $sql . \"\\n\";  // $email n'est pas remplacé\n?>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l2-m2-1",
+      "order": 1,
+      "title": "Manipulation de casse",
+      "instructions": "Déclarez `$texte = \"hello WORLD\"` et affichez-le en minuscules avec `strtolower()` puis en MAJUSCULES avec `strtoupper()`.",
+      "validationType": "output_contains",
+      "expectedOutput": "hello world",
+      "correction": "<?php\n$texte = \"hello WORLD\";\necho strtolower($texte) . \"\\n\";\necho strtoupper($texte) . \"\\n\";\n?>",
+      "explanation": "`strtolower()` et `strtoupper()` retournent une nouvelle chaîne sans modifier l'originale. Pour gérer les accents correctement, utiliser `mb_strtolower()` / `mb_strtoupper()` (mb = multi-byte)."
+    },
+    {
+      "id": "ex-php-l2-m2-2",
+      "order": 2,
+      "title": "Extraire avec substr",
+      "instructions": "Extrayez le domaine de `$email = \"contact@scriptlearn.fr\"` : tout ce qui est après le `@`. Utilisez `strpos` et `substr`. Affichez `scriptlearn.fr`.",
+      "validationType": "output_contains",
+      "expectedOutput": "scriptlearn.fr",
+      "correction": "<?php\n$email = \"contact@scriptlearn.fr\";\n$pos = strpos($email, \"@\");\n$domaine = substr($email, $pos + 1);\necho $domaine . \"\\n\";\n?>",
+      "explanation": "`strpos($chaine, $caractere)` retourne la position du premier `@` (ici : 7). `substr($chaine, $debut)` retourne tout à partir de $debut. `$pos + 1` saute le `@` lui-même."
+    },
+    {
+      "id": "ex-php-l2-m2-3",
+      "order": 3,
+      "title": "sprintf formatage",
+      "instructions": "Utilisez `sprintf` pour afficher `Prix: 29.99 EUR` avec `$prix = 29.99` et le format `\"Prix: %.2f EUR\"`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Prix: 29.99 EUR",
+      "correction": "<?php\n$prix = 29.99;\n$message = sprintf(\"Prix: %.2f EUR\", $prix);\necho $message . \"\\n\";\n?>",
+      "explanation": "`sprintf(format, valeur)` formate une valeur selon un motif. `%.2f` = float avec 2 décimales. `sprintf` ne fait qu'assembler la chaîne, `echo` l'affiche — cette séparation permet de stocker la chaîne dans une variable pour la réutiliser."
+    }
+  ]
+}

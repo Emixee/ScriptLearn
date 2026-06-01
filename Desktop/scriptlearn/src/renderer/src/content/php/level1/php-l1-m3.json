@@ -1,0 +1,50 @@
+{
+  "id": "php-l1-m3",
+  "title": "Conditions et boucles",
+  "level": "php-l1",
+  "lang": "php",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Conditions",
+      "content": "```php\n<?php\n$age = 20;\n\n// if / elseif / else\nif ($age >= 18) {\n    echo \"Majeur\\n\";\n} elseif ($age >= 13) {\n    echo \"Adolescent\\n\";\n} else {\n    echo \"Enfant\\n\";\n}\n\n// Opérateur ternaire\n$statut = ($age >= 18) ? \"majeur\" : \"mineur\";\necho \"Statut : $statut\\n\";\n\n// Null coalescing (PHP 7+)\n$nom = $nom ?? \"Inconnu\";  // Si $nom est null, utilise \"Inconnu\"\n\n// Switch\n$jour = \"lundi\";\nswitch ($jour) {\n    case \"lundi\":\n    case \"mardi\":\n        echo \"Début de semaine\\n\";\n        break;\n    case \"vendredi\":\n        echo \"Fin de semaine\\n\";\n        break;\n    default:\n        echo \"Milieu de semaine\\n\";\n}\n?>\n```"
+    },
+    {
+      "title": "Boucles",
+      "content": "```php\n<?php\n// for : nombre d'itérations connu\nfor ($i = 0; $i < 5; $i++) {\n    echo $i . \" \";\n}\necho \"\\n\";  // 0 1 2 3 4\n\n// while : condition d'arrêt\n$n = 1;\nwhile ($n <= 3) {\n    echo \"Tour $n\\n\";\n    $n++;\n}\n\n// do...while : s'exécute au moins une fois\n$x = 10;\ndo {\n    echo \"x = $x\\n\";\n    $x--;\n} while ($x > 8);\n\n// foreach : parcourir un tableau\n$fruits = [\"pomme\", \"poire\", \"banane\"];\nforeach ($fruits as $fruit) {\n    echo \"- $fruit\\n\";\n}\n\n// foreach avec clé => valeur\n$ages = [\"Alice\" => 28, \"Bob\" => 34];\nforeach ($ages as $nom => $age) {\n    echo \"$nom a $age ans\\n\";\n}\n\n// break et continue\nfor ($i = 0; $i < 10; $i++) {\n    if ($i === 5) break;     // stop\n    if ($i % 2 === 0) continue;  // passe au suivant\n    echo $i . \" \";\n}\necho \"\\n\";  // 1 3\n?>\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l1-m3-1",
+      "order": 1,
+      "title": "Majeur ou mineur",
+      "instructions": "Déclarez `$age = 17` et affichez `Mineur` si < 18, sinon `Majeur`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Mineur",
+      "correction": "<?php\n$age = 17;\nif ($age >= 18) {\n    echo \"Majeur\\n\";\n} else {\n    echo \"Mineur\\n\";\n}\n?>",
+      "explanation": "La structure `if ($condition) { ... } else { ... }` est universelle. En PHP, les accolades délimitent les blocs. `$age = 17` est mineur car `17 >= 18` est faux."
+    },
+    {
+      "id": "ex-php-l1-m3-2",
+      "order": 2,
+      "title": "Boucle for compteur",
+      "instructions": "Affichez les nombres de 1 à 5 sur une seule ligne séparés par des espaces : `1 2 3 4 5`.",
+      "validationType": "output_contains",
+      "expectedOutput": "1 2 3 4 5",
+      "correction": "<?php\nfor ($i = 1; $i <= 5; $i++) {\n    echo $i;\n    if ($i < 5) echo \" \";\n}\necho \"\\n\";\n?>",
+      "explanation": "`for ($init; $condition; $increment)` : $i commence à 1, s'arrête quand $i > 5, augmente de 1 à chaque tour. Les espaces entre les nombres sont gérés par la condition `if ($i < 5)`."
+    },
+    {
+      "id": "ex-php-l1-m3-3",
+      "order": 3,
+      "title": "foreach sur un tableau",
+      "instructions": "Parcourez le tableau `$langages = [\"PHP\", \"Python\", \"JavaScript\"]` avec `foreach` et affichez chaque élément sur une ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "PHP",
+      "correction": "<?php\n$langages = [\"PHP\", \"Python\", \"JavaScript\"];\nforeach ($langages as $lang) {\n    echo $lang . \"\\n\";\n}\n?>",
+      "explanation": "`foreach ($tableau as $element)` parcourt tous les éléments d'un tableau. `$lang` prend la valeur de chaque élément à chaque itération. C'est la boucle la plus utilisée en PHP pour les tableaux."
+    }
+  ]
+}

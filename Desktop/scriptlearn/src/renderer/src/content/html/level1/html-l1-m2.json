@@ -1,0 +1,60 @@
+{
+  "id": "html-l1-m2",
+  "title": "Texte et mise en forme",
+  "level": "html-l1",
+  "lang": "html",
+  "order": 2,
+  "estimatedMinutes": 30,
+  "course": [
+    {
+      "title": "Titres et paragraphes",
+      "content": "HTML propose 6 niveaux de titres (`h1` à `h6`) et la balise `<p>` pour les paragraphes :\n\n```html\n<h1>Titre principal (un seul par page)</h1>\n<h2>Sous-titre</h2>\n<h3>Sous-sous-titre</h3>\n<h4>Niveau 4</h4>\n<h5>Niveau 5</h5>\n<h6>Niveau 6 (le plus petit)</h6>\n\n<p>Un paragraphe. Le texte est automatiquement suivi d'un espace vertical.</p>\n<p>Un deuxième paragraphe.</p>\n```\n\n⚠️ Les titres ont une **signification sémantique** (structure du document), pas juste visuelle. `<h1>` est le titre principal — il ne doit y en avoir qu'un seul par page."
+    },
+    {
+      "title": "Mise en forme inline",
+      "content": "Ces balises modifient le style du texte à l'intérieur d'un paragraphe :\n\n```html\n<p>Voici du texte <strong>en gras sémantique</strong> et du texte <em>en italique</em>.</p>\n<p>Ce mot est <mark>surligné</mark>.</p>\n<p>Prix : <del>100€</del> → <ins>80€</ins></p>\n<p>La formule est H<sub>2</sub>O et E=mc<sup>2</sup></p>\n<p>Pour un saut de ligne simple :<br>on utilise br.</p>\n<hr>   <!-- séparateur horizontal -->\n<p><code>console.log()</code> est une fonction JavaScript.</p>\n```\n\n- `<strong>` : texte important (gras)\n- `<em>` : emphase (italique)\n- `<mark>` : surlignage\n- `<code>` : code informatique (police monospace)"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l1-m2-1",
+      "order": 1,
+      "title": "Titre h1 et paragraphe",
+      "instructions": "Créez une page HTML avec un titre `<h1>Mon Blog</h1>` et un paragraphe `<p>Bienvenue sur mon blog personnel.</p>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<h1>", "mon blog", "</h1>", "<p>", "bienvenue"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Mon Blog</title></head>\n<body>\n  <h1>Mon Blog</h1>\n  <p>Bienvenue sur mon blog personnel.</p>\n</body>\n</html>",
+      "explanation": "`<h1>` marque le titre principal de la page. Il y en a un seul par page (important pour le SEO et l'accessibilité). `<p>` crée un bloc de texte avec des marges automatiques au-dessus et en-dessous."
+    },
+    {
+      "id": "ex-html-l1-m2-2",
+      "order": 2,
+      "title": "Hiérarchie de titres",
+      "instructions": "Créez une structure avec `<h1>Sciences</h1>`, `<h2>Physique</h2>`, `<h3>Mécanique</h3>` et un paragraphe de description.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<h1>", "</h1>", "<h2>", "</h2>", "<h3>", "</h3>", "<p>"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Sciences</title></head>\n<body>\n  <h1>Sciences</h1>\n  <h2>Physique</h2>\n  <h3>Mécanique</h3>\n  <p>La mécanique étudie le mouvement des corps.</p>\n</body>\n</html>",
+      "explanation": "La hiérarchie `h1 > h2 > h3` structure le document comme un plan. Les lecteurs d'écran et les moteurs de recherche utilisent cette structure pour comprendre l'organisation du contenu."
+    },
+    {
+      "id": "ex-html-l1-m2-3",
+      "order": 3,
+      "title": "Texte en gras et italique",
+      "instructions": "Dans un paragraphe, mettez le mot `important` en `<strong>` et le mot `remarque` en `<em>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<p>", "<strong>", "</strong>", "<em>", "</em>"],
+      "correction": "<p>Voici une information <strong>importante</strong> et une <em>remarque</em> à noter.</p>",
+      "explanation": "`<strong>` signifie que le contenu est important (gras par défaut). `<em>` signifie une emphase (italique par défaut). Ces balises ont une signification sémantique — utilisez-les pour le sens, pas juste pour le style visuel."
+    },
+    {
+      "id": "ex-html-l1-m2-4",
+      "order": 4,
+      "title": "Saut de ligne et séparateur",
+      "instructions": "Créez deux phrases dans un `<p>` séparées par `<br>`, puis ajoutez `<hr>` après le paragraphe.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<p>", "<br>", "</p>", "<hr>"],
+      "correction": "<p>Première ligne de texte.<br>Deuxième ligne dans le même paragraphe.</p>\n<hr>",
+      "explanation": "`<br>` crée un saut de ligne DANS un paragraphe (sans créer un nouveau bloc). `<hr>` crée une ligne horizontale de séparation. Ces deux balises sont auto-fermantes — pas besoin de `</br>` ni `</hr>`."
+    }
+  ]
+}

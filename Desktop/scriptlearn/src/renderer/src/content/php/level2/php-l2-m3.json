@@ -1,0 +1,50 @@
+{
+  "id": "php-l2-m3",
+  "title": "Fichiers et JSON",
+  "level": "php-l2",
+  "lang": "php",
+  "order": 3,
+  "estimatedMinutes": 45,
+  "course": [
+    {
+      "title": "Lecture et écriture de fichiers",
+      "content": "```php\n<?php\n// Écrire dans un fichier (crée ou écrase)\nfile_put_contents(\"/tmp/test.txt\", \"Ligne 1\\nLigne 2\\n\");\n\n// Lire tout le fichier\n$contenu = file_get_contents(\"/tmp/test.txt\");\necho $contenu;\n\n// Lire ligne par ligne\n$lignes = file(\"/tmp/test.txt\", FILE_IGNORE_NEW_LINES);\nforeach ($lignes as $i => $ligne) {\n    echo \"[$i] $ligne\\n\";\n}\n\n// Vérifier si un fichier existe\nif (file_exists(\"/tmp/test.txt\")) {\n    echo \"Le fichier existe\\n\";\n    echo \"Taille : \" . filesize(\"/tmp/test.txt\") . \" octets\\n\";\n}\n\n// Ajouter du contenu (sans écraser)\nfile_put_contents(\"/tmp/test.txt\", \"Ligne 3\\n\", FILE_APPEND);\n\n// Supprimer\nunlink(\"/tmp/test.txt\");\n\n// Créer un dossier\nmkdir(\"/tmp/mon_dossier\", 0755);\n?>\n```"
+    },
+    {
+      "title": "JSON en PHP",
+      "content": "```php\n<?php\n// Encoder un tableau PHP en JSON\n$donnees = [\n    \"nom\"    => \"Alice\",\n    \"age\"    => 28,\n    \"langages\" => [\"PHP\", \"Python\"]\n];\n\n$json = json_encode($donnees, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);\necho $json . \"\\n\";\n// {\n//   \"nom\": \"Alice\",\n//   \"age\": 28,\n//   \"langages\": [\"PHP\", \"Python\"]\n// }\n\n// Décoder un JSON en tableau PHP\n$texte_json = '{\"ville\":\"Paris\",\"code\":75}';\n$ville = json_decode($texte_json, true);  // true = tableau, false = objet\necho $ville[\"ville\"] . \"\\n\";   // Paris\necho $ville[\"code\"] . \"\\n\";    // 75\n\n// Sauvegarder dans un fichier JSON\nfile_put_contents(\"/tmp/data.json\", json_encode($donnees, JSON_PRETTY_PRINT));\n\n// Lire depuis un fichier JSON\n$config = json_decode(file_get_contents(\"/tmp/data.json\"), true);\necho $config[\"nom\"] . \"\\n\";    // Alice\n?>\n```\n\n`JSON_PRETTY_PRINT` = formatage indenté, `JSON_UNESCAPED_UNICODE` = accents non échappés."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-php-l2-m3-1",
+      "order": 1,
+      "title": "Écrire et lire un fichier",
+      "instructions": "Écrivez `Hello Fichier` dans `/tmp/sl_test.txt` avec `file_put_contents`, puis relisez-le avec `file_get_contents` et affichez le contenu.",
+      "validationType": "output_contains",
+      "expectedOutput": "Hello Fichier",
+      "correction": "<?php\nfile_put_contents(\"/tmp/sl_test.txt\", \"Hello Fichier\\n\");\n$contenu = file_get_contents(\"/tmp/sl_test.txt\");\necho $contenu;\n?>",
+      "explanation": "`file_put_contents()` écrit dans un fichier en une seule ligne (crée le fichier si absent). `file_get_contents()` lit tout le fichier en une chaîne. Ces deux fonctions sont les plus simples pour la lecture/écriture basique."
+    },
+    {
+      "id": "ex-php-l2-m3-2",
+      "order": 2,
+      "title": "Encoder en JSON",
+      "instructions": "Créez `$config = [\"debug\" => true, \"version\" => \"1.0\"]` et affichez son encodage JSON avec `json_encode()`.",
+      "validationType": "output_contains",
+      "expectedOutput": "\"version\"",
+      "correction": "<?php\n$config = [\"debug\" => true, \"version\" => \"1.0\"];\necho json_encode($config, JSON_PRETTY_PRINT) . \"\\n\";\n?>",
+      "explanation": "`json_encode()` convertit n'importe quel tableau PHP en chaîne JSON. `JSON_PRETTY_PRINT` le formate avec indentation pour la lisibilité. Les clés PHP deviennent des clés JSON, les valeurs sont converties automatiquement (bool, string, int)."
+    },
+    {
+      "id": "ex-php-l2-m3-3",
+      "order": 3,
+      "title": "Décoder du JSON",
+      "instructions": "Décodez `$json = '{\"produit\":\"Laptop\",\"prix\":999}'` avec `json_decode($json, true)` et affichez `Produit: Laptop`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Produit: Laptop",
+      "correction": "<?php\n$json = '{\"produit\":\"Laptop\",\"prix\":999}';\n$data = json_decode($json, true);\necho \"Produit: \" . $data[\"produit\"] . \"\\n\";\n?>",
+      "explanation": "`json_decode($json, true)` décodes un JSON en tableau PHP associatif. Sans `true`, retourne un objet stdClass. Le deuxième argument `true` est presque toujours ce qu'on veut — les tableaux sont plus pratiques que les objets pour les données simples."
+    }
+  ]
+}

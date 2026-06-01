@@ -1,0 +1,50 @@
+{
+  "id": "html-l2-m2",
+  "title": "Sémantique HTML5",
+  "level": "html-l2",
+  "lang": "html",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Les balises sémantiques HTML5",
+      "content": "Avant HTML5, on utilisait `<div>` pour tout. HTML5 introduit des balises **sémantiques** qui décrivent la signification du contenu :\n\n```html\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Blog</title></head>\n<body>\n\n  <header>\n    <h1>Mon Site</h1>\n    <nav>\n      <a href=\"/\">Accueil</a>\n      <a href=\"/blog\">Blog</a>\n      <a href=\"/contact\">Contact</a>\n    </nav>\n  </header>\n\n  <main>\n    <article>\n      <h2>Mon premier article</h2>\n      <p>Contenu de l'article...</p>\n    </article>\n\n    <aside>\n      <h3>À propos</h3>\n      <p>Informations sur l'auteur.</p>\n    </aside>\n  </main>\n\n  <section>\n    <h2>Nos services</h2>\n    <p>Description des services.</p>\n  </section>\n\n  <footer>\n    <p>&copy; 2024 Mon Site. Tous droits réservés.</p>\n  </footer>\n\n</body>\n</html>\n```"
+    },
+    {
+      "title": "Quand utiliser quelle balise ?",
+      "content": "| Balise | Usage |\n|--------|-------|\n| `<header>` | En-tête de page ou de section (logo, titre, nav) |\n| `<nav>` | Bloc de navigation principal |\n| `<main>` | Contenu principal unique (un seul par page) |\n| `<article>` | Contenu autonome (article de blog, carte produit) |\n| `<section>` | Groupe thématique de contenu avec un titre |\n| `<aside>` | Contenu secondaire (sidebar, encart, publicité) |\n| `<footer>` | Pied de page ou de section |\n| `<figure>` | Image avec légende |\n| `<figcaption>` | Légende d'une figure |\n\n```html\n<figure>\n  <img src=\"graph.png\" alt=\"Graphique des ventes\">\n  <figcaption>Fig. 1 — Ventes 2024</figcaption>\n</figure>\n```\n\nAvantages des balises sémantiques : meilleur SEO, accessibilité, code plus lisible."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l2-m2-1",
+      "order": 1,
+      "title": "Header avec navigation",
+      "instructions": "Créez un `<header>` contenant un `<h1>Mon Site</h1>` et un `<nav>` avec deux liens : Accueil (`href=\"/\"`) et Contact (`href=\"/contact\"`).",
+      "validationType": "keywords",
+      "requiredKeywords": ["<header>", "<h1>", "mon site", "</h1>", "<nav>", "<a", "href=\"/\"", "accueil", "href=\"/contact\"", "contact", "</nav>", "</header>"],
+      "correction": "<header>\n  <h1>Mon Site</h1>\n  <nav>\n    <a href=\"/\">Accueil</a>\n    <a href=\"/contact\">Contact</a>\n  </nav>\n</header>",
+      "explanation": "`<header>` contient l'en-tête de la page (logo, titre, navigation). `<nav>` délimite la zone de navigation principale. Les lecteurs d'écran utilisent ces balises pour permettre aux utilisateurs de sauter directement à la navigation."
+    },
+    {
+      "id": "ex-html-l2-m2-2",
+      "order": 2,
+      "title": "Article de blog",
+      "instructions": "Créez un `<article>` avec un `<h2>Titre de l'article</h2>` et deux `<p>` de contenu.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<article>", "<h2>", "</h2>", "<p>", "</p>", "</article>"],
+      "correction": "<article>\n  <h2>Titre de l'article</h2>\n  <p>Premier paragraphe de contenu.</p>\n  <p>Deuxième paragraphe de contenu.</p>\n</article>",
+      "explanation": "`<article>` représente un contenu autonome qui peut être extrait et partagé indépendamment : article de blog, post de forum, fiche produit. Il a sa propre hiérarchie de titres (h2, h3...)."
+    },
+    {
+      "id": "ex-html-l2-m2-3",
+      "order": 3,
+      "title": "Page complète sémantique",
+      "instructions": "Créez une page avec `<header>`, `<main>` contenant un `<section>`, et `<footer>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<header>", "</header>", "<main>", "<section>", "</section>", "</main>", "<footer>", "</footer>"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Ma page</title></head>\n<body>\n  <header>\n    <h1>Mon Site</h1>\n  </header>\n  <main>\n    <section>\n      <h2>Bienvenue</h2>\n      <p>Contenu principal.</p>\n    </section>\n  </main>\n  <footer>\n    <p>&copy; 2024 Mon Site</p>\n  </footer>\n</body>\n</html>",
+      "explanation": "La structure sémantique standard d'une page web : `<header>` en haut, `<main>` pour le contenu central, `<footer>` en bas. `<main>` ne doit apparaître qu'une seule fois par page."
+    }
+  ]
+}

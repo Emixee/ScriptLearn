@@ -1,5 +1,6 @@
 // Eager-load all module JSON files from all language subdirectories
-const moduleFiles = import.meta.glob('./{bash,powershell,python,kql,sql,regex,git,spl,yaml}/**/*.json', { eager: true })
+// html et php sont ajoutés ici — Vite va les bundler automatiquement au build
+const moduleFiles = import.meta.glob('./{bash,powershell,python,kql,sql,regex,git,spl,yaml,html,php}/**/*.json', { eager: true })
 
 const MODULE_MAP = {}
 for (const path in moduleFiles) {

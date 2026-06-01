@@ -5,11 +5,12 @@ import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
+const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 const LANG_COLORS = {
   bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1',
   kql: '#e879f9', sql: '#3b82f6', regex: '#8b5cf6',
-  git: '#f97316', spl: '#10b981', yaml: '#f59e0b'
+  git: '#f97316', spl: '#10b981', yaml: '#f59e0b',
+  html: '#e34c26', php: '#8892bf'
 }
 
 export default function CourseMap() {

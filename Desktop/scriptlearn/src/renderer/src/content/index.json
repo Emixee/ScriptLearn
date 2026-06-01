@@ -462,6 +462,84 @@
             ]
           }
         ]
+      },
+      "html": {
+        "name": "HTML",
+        "icon": "🌐",
+        "color": "#e34c26",
+        "description": "Langage de balisage du Web — structure, formulaires, sémantique et accessibilité.",
+        "levels": [
+          {
+            "id": "html-l1",
+            "name": "HTML Fondamentaux",
+            "order": 1,
+            "modules": [
+              { "id": "html-l1-m1", "title": "Structure de base",                 "order": 1, "estimatedMinutes": 30 },
+              { "id": "html-l1-m2", "title": "Texte et mise en forme",            "order": 2, "estimatedMinutes": 30 },
+              { "id": "html-l1-m3", "title": "Liens et images",                   "order": 3, "estimatedMinutes": 35 },
+              { "id": "html-l1-m4", "title": "Listes et tableaux",                "order": 4, "estimatedMinutes": 35 }
+            ]
+          },
+          {
+            "id": "html-l2",
+            "name": "HTML Intermédiaire",
+            "order": 2,
+            "modules": [
+              { "id": "html-l2-m1", "title": "Formulaires",                       "order": 1, "estimatedMinutes": 40 },
+              { "id": "html-l2-m2", "title": "Sémantique HTML5",                  "order": 2, "estimatedMinutes": 35 },
+              { "id": "html-l2-m3", "title": "Attributs et classes",              "order": 3, "estimatedMinutes": 30 }
+            ]
+          },
+          {
+            "id": "html-l3",
+            "name": "HTML Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "html-l3-m1", "title": "Accessibilité ARIA",                "order": 1, "estimatedMinutes": 40 },
+              { "id": "html-l3-m2", "title": "Métadonnées et SEO",                "order": 2, "estimatedMinutes": 35 },
+              { "id": "html-l3-m3", "title": "Projet final — page complète",      "order": 3, "estimatedMinutes": 50 }
+            ]
+          }
+        ]
+      },
+      "php": {
+        "name": "PHP",
+        "icon": "🐘",
+        "color": "#8892bf",
+        "description": "Langage serveur du Web — syntaxe, tableaux, chaînes, fonctions, OOP.",
+        "levels": [
+          {
+            "id": "php-l1",
+            "name": "PHP Fondamentaux",
+            "order": 1,
+            "modules": [
+              { "id": "php-l1-m1", "title": "Syntaxe de base",                    "order": 1, "estimatedMinutes": 35 },
+              { "id": "php-l1-m2", "title": "Variables et opérateurs",            "order": 2, "estimatedMinutes": 35 },
+              { "id": "php-l1-m3", "title": "Conditions et boucles",              "order": 3, "estimatedMinutes": 40 },
+              { "id": "php-l1-m4", "title": "Fonctions et portée",                "order": 4, "estimatedMinutes": 40 }
+            ]
+          },
+          {
+            "id": "php-l2",
+            "name": "PHP Web",
+            "order": 2,
+            "modules": [
+              { "id": "php-l2-m1", "title": "Tableaux",                           "order": 1, "estimatedMinutes": 40 },
+              { "id": "php-l2-m2", "title": "Chaînes de caractères",              "order": 2, "estimatedMinutes": 40 },
+              { "id": "php-l2-m3", "title": "Fichiers et JSON",                   "order": 3, "estimatedMinutes": 45 }
+            ]
+          },
+          {
+            "id": "php-l3",
+            "name": "PHP Avancé",
+            "order": 3,
+            "modules": [
+              { "id": "php-l3-m1", "title": "Programmation Orientée Objet",       "order": 1, "estimatedMinutes": 50 },
+              { "id": "php-l3-m2", "title": "Sécurité PHP",                       "order": 2, "estimatedMinutes": 45 },
+              { "id": "php-l3-m3", "title": "Projet final — générateur de page",  "order": 3, "estimatedMinutes": 50 }
+            ]
+          }
+        ]
       }
     }
   }

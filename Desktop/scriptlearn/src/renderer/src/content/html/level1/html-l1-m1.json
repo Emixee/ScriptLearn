@@ -1,0 +1,64 @@
+{
+  "id": "html-l1-m1",
+  "title": "Structure de base HTML",
+  "level": "html-l1",
+  "lang": "html",
+  "order": 1,
+  "estimatedMinutes": 30,
+  "course": [
+    {
+      "title": "Qu'est-ce que HTML ?",
+      "content": "HTML (HyperText Markup Language) est le langage de balisage du Web. Il décrit la **structure** d'une page : titres, paragraphes, liens, images. Ce n'est pas un langage de programmation — c'est un ensemble de **balises** (tags) qui délimitent du contenu.\n\n```html\n<!-- Une balise ouvrante et une balise fermante forment un élément -->\n<p>Bonjour le monde !</p>\n\n<!-- Certaines balises sont auto-fermantes (vides) -->\n<br>    <!-- saut de ligne -->\n<hr>    <!-- ligne horizontale -->\n<img src=\"photo.jpg\" alt=\"Photo\">   <!-- image -->\n```"
+    },
+    {
+      "title": "La structure minimale d'une page",
+      "content": "Toute page HTML valide doit contenir ces éléments :\n\n```html\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Titre de la page</title>\n</head>\n<body>\n  <!-- Tout le contenu visible va ici -->\n  <h1>Bienvenue</h1>\n  <p>Contenu de la page.</p>\n</body>\n</html>\n```\n\n- `<!DOCTYPE html>` : déclare HTML5 au navigateur\n- `<html lang=\"fr\">` : racine de la page, attribut `lang` pour l'accessibilité\n- `<head>` : métadonnées invisibles (charset, viewport, titre, CSS...)\n- `<body>` : tout le contenu affiché à l'utilisateur"
+    },
+    {
+      "title": "Attributs HTML",
+      "content": "Les balises peuvent avoir des **attributs** (clé=\"valeur\") qui précisent leur comportement :\n\n```html\n<!-- lang : langue du document -->\n<html lang=\"fr\">\n\n<!-- charset : encodage des caractères (UTF-8 supporte les accents) -->\n<meta charset=\"UTF-8\">\n\n<!-- src et alt : source et texte alternatif d'une image -->\n<img src=\"logo.png\" alt=\"Logo de l'entreprise\">\n\n<!-- href : URL du lien -->\n<a href=\"https://example.com\">Visitez ce site</a>\n```\n\nLes attributs se placent dans la **balise ouvrante**, jamais dans la balise fermante."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l1-m1-1",
+      "order": 1,
+      "title": "Déclarer le DOCTYPE",
+      "instructions": "Écrivez la première ligne de tout document HTML5 : la déclaration `DOCTYPE`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<!doctype html>"],
+      "correction": "<!DOCTYPE html>",
+      "explanation": "`<!DOCTYPE html>` indique au navigateur d'utiliser le mode de rendu HTML5 (le standard actuel). Sans cette ligne, certains navigateurs peuvent utiliser un mode de compatibilité qui peut casser la mise en page."
+    },
+    {
+      "id": "ex-html-l1-m1-2",
+      "order": 2,
+      "title": "Structure complète minimale",
+      "instructions": "Créez une page HTML complète avec `<!DOCTYPE html>`, `<html lang=\"fr\">`, `<head>` avec `<meta charset=\"UTF-8\">` et `<title>Ma page</title>`, et `<body>` avec un titre `<h1>Bonjour !</h1>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<!doctype html>", "<html", "lang=\"fr\"", "<head>", "<meta charset=\"utf-8\">", "<title>", "<body>", "<h1>"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma page</title>\n</head>\n<body>\n  <h1>Bonjour !</h1>\n</body>\n</html>",
+      "explanation": "C'est la structure minimale valide d'une page HTML5. Le `charset=\"UTF-8\"` est essentiel pour afficher les accents français correctement. Le `<title>` s'affiche dans l'onglet du navigateur, pas dans la page elle-même."
+    },
+    {
+      "id": "ex-html-l1-m1-3",
+      "order": 3,
+      "title": "Balise meta viewport",
+      "instructions": "Ajoutez dans le `<head>` la balise `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">` qui rend la page responsive sur mobile.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<meta", "name=\"viewport\"", "width=device-width"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Ma page</title>\n</head>\n<body></body>\n</html>",
+      "explanation": "Le viewport meta tag est indispensable pour le responsive design. Sans lui, les navigateurs mobiles affichent la page en version desktop réduite. `width=device-width` ajuste la largeur à l'écran, `initial-scale=1.0` désactive le zoom automatique."
+    },
+    {
+      "id": "ex-html-l1-m1-4",
+      "order": 4,
+      "title": "Commentaires HTML",
+      "instructions": "Ajoutez un commentaire HTML `<!-- Page d'accueil -->` dans le `<body>`, puis un titre `<h1>` avec le texte `Accueil`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<!--", "-->", "<h1>", "accueil"],
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head><meta charset=\"UTF-8\"><title>Test</title></head>\n<body>\n  <!-- Page d'accueil -->\n  <h1>Accueil</h1>\n</body>\n</html>",
+      "explanation": "Les commentaires HTML `<!-- ... -->` sont ignorés par le navigateur et n'apparaissent pas à l'écran. Ils servent à documenter le code ou à désactiver temporairement des éléments."
+    }
+  ]
+}

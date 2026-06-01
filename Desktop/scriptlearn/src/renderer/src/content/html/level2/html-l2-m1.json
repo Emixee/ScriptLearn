@@ -1,0 +1,60 @@
+{
+  "id": "html-l2-m1",
+  "title": "Formulaires HTML",
+  "level": "html-l2",
+  "lang": "html",
+  "order": 1,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "La balise <form> et ses attributs",
+      "content": "Un formulaire HTML collecte des données utilisateur. La balise `<form>` enveloppe tous les champs :\n\n```html\n<form action=\"/traitement\" method=\"POST\">\n  <!-- les champs vont ici -->\n  <button type=\"submit\">Envoyer</button>\n</form>\n```\n\n- `action` : URL vers laquelle envoyer les données\n- `method` : `GET` (données dans l'URL) ou `POST` (données dans le corps de la requête)\n\nPour les données sensibles (mot de passe, informations personnelles) : toujours `POST`."
+    },
+    {
+      "title": "Les champs de saisie",
+      "content": "```html\n<!-- Champ texte simple -->\n<label for=\"nom\">Nom :</label>\n<input type=\"text\" id=\"nom\" name=\"nom\" placeholder=\"Votre nom\">\n\n<!-- Email (validation automatique) -->\n<input type=\"email\" name=\"email\" required>\n\n<!-- Mot de passe (masqué) -->\n<input type=\"password\" name=\"mdp\" minlength=\"8\">\n\n<!-- Nombre -->\n<input type=\"number\" name=\"age\" min=\"0\" max=\"120\">\n\n<!-- Case à cocher -->\n<input type=\"checkbox\" id=\"cgu\" name=\"cgu\">\n<label for=\"cgu\">J'accepte les CGU</label>\n\n<!-- Boutons radio -->\n<input type=\"radio\" id=\"h\" name=\"genre\" value=\"homme\">\n<label for=\"h\">Homme</label>\n<input type=\"radio\" id=\"f\" name=\"genre\" value=\"femme\">\n<label for=\"f\">Femme</label>\n\n<!-- Liste déroulante -->\n<select name=\"pays\">\n  <option value=\"fr\">France</option>\n  <option value=\"be\">Belgique</option>\n</select>\n\n<!-- Zone de texte multi-lignes -->\n<textarea name=\"message\" rows=\"4\" cols=\"40\">\nÉcrivez ici...\n</textarea>\n```\n\nL'attribut `for` du `<label>` doit correspondre à l'`id` du champ — cela rend le label cliquable (accessibilité)."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-html-l2-m1-1",
+      "order": 1,
+      "title": "Formulaire de contact basique",
+      "instructions": "Créez un `<form>` avec `method=\"POST\"`, un `<input type=\"text\" name=\"nom\">` avec son `<label>`, et un `<button type=\"submit\">`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<form", "method=\"post\"", "<input", "type=\"text\"", "name=\"nom\"", "<button", "type=\"submit\"", "</form>"],
+      "correction": "<form method=\"POST\">\n  <label for=\"nom\">Nom :</label>\n  <input type=\"text\" id=\"nom\" name=\"nom\">\n  <button type=\"submit\">Envoyer</button>\n</form>",
+      "explanation": "`method=\"POST\"` envoie les données dans le corps de la requête HTTP (invisible dans l'URL). C'est à préférer pour les données personnelles. Le `name` de chaque champ est la clé qui sera envoyée au serveur."
+    },
+    {
+      "id": "ex-html-l2-m1-2",
+      "order": 2,
+      "title": "Champ email avec validation",
+      "instructions": "Ajoutez un `<input type=\"email\" name=\"email\" required>` avec son `<label for=\"email\">Email :</label>`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<input", "type=\"email\"", "name=\"email\"", "required", "<label", "for=\"email\""],
+      "correction": "<label for=\"email\">Email :</label>\n<input type=\"email\" id=\"email\" name=\"email\" required>",
+      "explanation": "`type=\"email\"` valide automatiquement que la saisie est au format email (xxx@xxx.xxx). L'attribut `required` rend le champ obligatoire — le formulaire ne peut pas être soumis si le champ est vide."
+    },
+    {
+      "id": "ex-html-l2-m1-3",
+      "order": 3,
+      "title": "Liste déroulante",
+      "instructions": "Créez un `<select name=\"couleur\">` avec trois `<option>` : `Rouge` (value=\"rouge\"), `Vert` (value=\"vert\"), `Bleu` (value=\"bleu\").",
+      "validationType": "keywords",
+      "requiredKeywords": ["<select", "name=\"couleur\"", "<option", "value=\"rouge\"", "rouge", "value=\"vert\"", "vert", "value=\"bleu\"", "bleu", "</select>"],
+      "correction": "<select name=\"couleur\">\n  <option value=\"rouge\">Rouge</option>\n  <option value=\"vert\">Vert</option>\n  <option value=\"bleu\">Bleu</option>\n</select>",
+      "explanation": "La valeur de `value` est ce qui est envoyé au serveur. Le texte entre les balises `<option>` est ce que l'utilisateur voit. Si `value` est absent, le texte affiché est envoyé."
+    },
+    {
+      "id": "ex-html-l2-m1-4",
+      "order": 4,
+      "title": "Formulaire complet",
+      "instructions": "Créez un formulaire avec `action=\"/inscription\"` et `method=\"POST\"` contenant : un champ `text` (nom), un champ `email`, un `textarea` (message), et un bouton submit.",
+      "validationType": "keywords",
+      "requiredKeywords": ["<form", "action=\"/inscription\"", "method=\"post\"", "type=\"text\"", "type=\"email\"", "<textarea", "<button", "type=\"submit\""],
+      "correction": "<form action=\"/inscription\" method=\"POST\">\n  <label for=\"nom\">Nom :</label>\n  <input type=\"text\" id=\"nom\" name=\"nom\"><br>\n  <label for=\"email\">Email :</label>\n  <input type=\"email\" id=\"email\" name=\"email\"><br>\n  <label for=\"msg\">Message :</label><br>\n  <textarea id=\"msg\" name=\"message\" rows=\"4\"></textarea><br>\n  <button type=\"submit\">S'inscrire</button>\n</form>",
+      "explanation": "Un formulaire complet associe chaque `<label>` à son `<input>` via `for`/`id`. Le `<textarea>` crée une zone de saisie multi-lignes. Les `<br>` servent ici à sauter des lignes entre les champs."
+    }
+  ]
+}
