@@ -51,7 +51,16 @@ marked.use({
     },
 
     codespan({ text }) {
-      return `<code class="sl-inline-code">${text}</code>`
+      // POURQUOI échapper ici : `marked` passe le contenu du backtick brut (ex: "<html>").
+      // Sans échappement, le navigateur interprète ces caractères comme du vrai HTML
+      // et les balises disparaissent au lieu d'être affichées.
+      // La même logique s'applique dans highlightCode() pour les blocs de code.
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+      return `<code class="sl-inline-code">${escaped}</code>`
     },
 
     tablecell(token) {
