@@ -1,9 +1,46 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.5.4
+## Version actuelle : 0.6.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.6.0 — HTML et PHP avec panneau de prévisualisation (2026-06-01)
+
+### Nouveaux langages complémentaires
+
+**HTML** (3 niveaux, 11 modules) — validation par mots-clés, prévisualisation temps réel :
+- L1 : Structure de base, Texte/mise en forme, Liens/images, Listes/tableaux
+- L2 : Formulaires, Sémantique HTML5, Attributs et classes
+- L3 : Accessibilité ARIA, Métadonnées SEO, Projet final
+
+**PHP** (3 niveaux, 11 modules) — exécution WSL bash, prévisualisation après run :
+- L1 : Syntaxe de base, Variables/opérateurs, Conditions/boucles, Fonctions
+- L2 : Tableaux, Chaînes de caractères, Fichiers et JSON
+- L3 : POO, Sécurité, Projet final
+
+### Architecture
+
+**`PreviewPane.jsx`** (nouveau) : iframe `srcdoc` sandboxée (`allow-scripts`, PAS `allow-same-origin` → les scripts de l'iframe ne peuvent pas accéder à `window.electronAPI`)
+
+**`Exercise.jsx`** :
+- `STATIC_LANGS` étendu avec `html` (validation keywords)
+- `PREVIEW_LANGS = ['html', 'php']`
+- `previewSrc` state pour PHP
+- PHP `handleRun` : heredoc bash avec `'PHPEOF'` en single-quotes (protège les `$` PHP)
+- PHP `validate` : extrait la sortie HTML du buffer et met à jour `previewSrc`
+- Layout : HTML → PreviewPane plein panneau | PHP → Terminal (60%) + PreviewPane (40%)
+
+**`Sandbox.jsx`** : bouton "↻ Aperçu PHP" pour actualiser manuellement
+
+**`terminal.js`** : `terminal:phpAvailable` IPC — vérifie `wsl.exe -e php --version`
+
+**Coloration CodeMirror** :
+- HTML → `html` depuis `@codemirror/legacy-modes/mode/xml`
+- PHP → `javascript` depuis `@codemirror/legacy-modes/mode/javascript` (C-like)
+- (`htmlmixed` et `php` modes n'existent pas dans cette version de legacy-modes)
 
 ---
 
