@@ -20,13 +20,13 @@ export default function PreviewPane({ srcDoc, label, langColor }) {
   return (
     <div className="flex flex-col h-full">
       {/* Barre de titre — miroir visuel des barres Terminal et Référence */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1d2e] border-b border-[#2d3748] flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langColor}99` }} />
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langColor}50` }} />
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langColor}25` }} />
         </div>
-        <span className="text-slate-500 text-xs ml-2">Aperçu — {label}</span>
+        <span className="text-stone-500 text-xs ml-2">Aperçu — {label}</span>
       </div>
 
       {/* Zone de rendu — fond blanc pour simuler un navigateur */}
@@ -34,7 +34,7 @@ export default function PreviewPane({ srcDoc, label, langColor }) {
         <iframe
           // srcdoc passe le HTML directement comme contenu — pas de requête réseau,
           // pas de fichier temporaire. Le rendu se fait entièrement en mémoire.
-          srcDoc={srcDoc || '<body style="background:#1a1d2e;margin:0"></body>'}
+          srcDoc={srcDoc || '<body style="background:#111110;margin:0"></body>'}
           sandbox="allow-scripts allow-forms"
           className="w-full h-full border-0"
           title={`Aperçu ${label}`}

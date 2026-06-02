@@ -1,3 +1,9 @@
+/* ── Imports JetBrains Mono (via @fontsource, bundlé localement pour mode hors-ligne) ── */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,53 +15,57 @@
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #0f1117;
-  color: #f1f5f9;
+  /* Monospace pour toute l'interface — cohérent avec le contenu enseigné (scripting).
+     Les fallbacks couvrent les machines avec Cascadia/Fira déjà installés. */
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  /* Active les ligatures et les variantes contextuelles JetBrains Mono (-> != etc.) */
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  /* Légèrement plus petit que 14px car monospace est plus large que sans-serif */
+  font-size: 13.5px;
+  line-height: 1.5;
+  background-color: #0a0a09;
+  color: #f5f0e8;
   overflow: hidden;
   user-select: none;
+  /* Rendu de police optimisé pour les petites tailles en monospace */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1a1d2e;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
-}
+/* ── Scrollbars ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: #111110; }
+::-webkit-scrollbar-thumb  { background: #2e2b26; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3d3a34; }
 
 /* ============================================================
-   Blocs de code — Prism.js (thème ScriptLearn dark)
+   Blocs de code — Prism.js (thème Terminal Ambre)
+   POURQUOI ce thème : cohérence avec la palette ambre.
+   Les variables ($var) restent cyan — lisibilité maximale sur fond noir.
+   Les keywords passent en ambre — cohérence avec l'accent UI.
    ============================================================ */
 
 .sl-code-block {
   position: relative;
-  background: #0d0f16;
-  border: 1px solid #2d3748;
-  border-radius: 0.5rem;
+  /* Fond légèrement plus chaud que le fond UI pour créer une distinction */
+  background: #080807;
+  border: 1px solid #2e2b26;
+  border-radius: 4px;
   margin: 0.75rem 0;
   overflow: hidden;
   user-select: text;
 }
 
+/* Badge de langage en haut à droite */
 .sl-code-block .sl-lang-badge {
   position: absolute;
   top: 0.5rem;
   right: 0.75rem;
-  font-size: 0.65rem;
-  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.625rem;
+  font-family: inherit;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #4b5563;
+  letter-spacing: 0.08em;
+  color: #3d3a34;
   pointer-events: none;
   z-index: 1;
 }
@@ -64,10 +74,11 @@ body {
   margin: 0;
   padding: 1rem;
   overflow-x: auto;
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-  color: #e2e8f0;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  color: #d6d0c8;  /* légèrement moins blanc que le texte UI, look "console" */
   white-space: pre;
 }
 
@@ -78,71 +89,75 @@ body {
   background: transparent;
 }
 
-/* Tokens Prism */
+/* ── Tokens Prism — Terminal Ambre ──────────────────────────────────────── */
+
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #4b5563;
+  /* Commentaires : ton pierre/gris chaud, discrets */
+  color: #4a4640;
   font-style: italic;
 }
 
 .token.punctuation {
-  color: #64748b;
+  color: #5a5650;
 }
 
 .token.namespace {
   opacity: 0.75;
 }
 
-/* Mots-clés : if, else, function, foreach, param, return … */
+/* Mots-clés : if, else, function, foreach, param, return …
+   Ambre = accent UI → les mots-clés sont "importants" comme les boutons */
 .token.keyword,
 .token.important {
-  color: #c084fc;
-  font-weight: 500;
+  color: #d97706;
+  font-weight: 600;
 }
 
-/* Chaînes */
+/* Chaînes : vert doux — contraste agréable avec l'ambre */
 .token.string,
 .token.char,
 .token.attr-value {
-  color: #fbbf24;
+  color: #86efac;
 }
 
-/* Nombres */
+/* Nombres et booléens */
 .token.number,
 .token.boolean,
 .token.constant,
 .token.symbol {
-  color: #f97316;
+  color: #fb923c;
 }
 
-/* Noms de fonctions et cmdlets */
+/* Noms de fonctions */
 .token.function,
 .token.function-name {
   color: #60a5fa;
 }
 
-/* Variables : $var, ${var} */
+/* Variables : $var, ${var} — cyan conservé pour la lisibilité maximale
+   Le cyan sur fond noir est la combinaison la plus lisible pour les variables */
 .token.variable,
 .token.variable.important {
   color: #22d3ee;
 }
 
-/* Classes, types */
+/* Classes, types, builtins */
 .token.class-name,
 .token.builtin,
 .token.type {
-  color: #4ade80;
+  color: #fbbf24;  /* ambre clair — famille de l'accent */
 }
 
 /* Opérateurs */
 .token.operator,
 .token.entity {
-  color: #94a3b8;
+  color: #78716c;  /* stone-500, neutre */
 }
 
-/* Balises / sélecteurs */
+/* Balises HTML / sélecteurs CSS */
 .token.tag,
 .token.selector,
 .token.attr-name {
@@ -157,13 +172,16 @@ body {
 .token.italic { font-style: italic; }
 .token.bold   { font-weight: bold; }
 
-/* Inline code */
+/* ── Code inline ─────────────────────────────────────────────────────────
+   Fond légèrement surélevé, texte ambre clair — visuellement distinct
+   du texte normal sans être agressif. */
 .sl-inline-code {
-  background: #232640;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  color: #22d3ee;
-  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.875em;
+  background: #1c1c1a;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  color: #fbbf24;    /* ambre-400 — visible et cohérent avec la palette */
+  font-family: inherit;
+  font-size: 0.9em;
   user-select: text;
+  border: 1px solid #2e2b26;
 }

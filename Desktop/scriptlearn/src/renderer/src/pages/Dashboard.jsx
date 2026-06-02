@@ -9,7 +9,7 @@ import { computeStats, getUnlockedBadges, computeStreak, BADGE_DEFS } from '../u
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 
 function getLevelExercises(levelId, lang) {
   const level = contentIndex.levels.find(l => l.id === levelId)
@@ -103,10 +103,10 @@ function findSpacedRepetition(progress) {
 }
 
 function MasteryBar({ score }) {
-  const barColor = score === 0 ? '#374151' : score >= 80 ? '#4ade80' : score >= 55 ? '#fbbf24' : '#f97316'
+  const barColor = score === 0 ? '#2e2b26' : score >= 80 ? '#4ade80' : score >= 55 ? '#fbbf24' : '#f97316'
   return (
     <div className="flex items-center gap-2 mt-1">
-      <div className="flex-1 h-1 bg-[#0f1117] rounded-full overflow-hidden">
+      <div className="flex-1 h-1 bg-[#0a0a09] rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: barColor }} />
       </div>
       {score > 0 && (
@@ -146,7 +146,7 @@ function ActivityCalendar({ dates }) {
               key={d.iso}
               title={d.iso}
               className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-              style={{ backgroundColor: d.active ? '#6366f1' : '#1a1d2e' }}
+              style={{ backgroundColor: d.active ? '#d97706' : '#111110' }}
             />
           ))}
         </div>
@@ -277,24 +277,24 @@ export default function Dashboard() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Bonjour, {profile?.name ?? '…'}</h1>
-          <p className="text-slate-400">Continuez votre apprentissage du scripting.</p>
+          <p className="text-stone-400">Continuez votre apprentissage du scripting.</p>
         </div>
         {/* XP + niveau */}
-        <div className="bg-[#1a1d2e] border border-[#2d3748] rounded-xl px-4 py-3 text-right min-w-[160px]">
+        <div className="bg-[#111110] border border-[#2e2b26] rounded px-4 py-3 text-right min-w-[160px]">
           <div className="flex items-center justify-end gap-2 mb-1">
-            <span className="text-slate-400 text-xs">Niv. {xpLevel.level}</span>
+            <span className="text-stone-400 text-xs">Niv. {xpLevel.level}</span>
             <span className="text-white font-bold text-sm">{xpLevel.title}</span>
           </div>
-          <div className="h-1.5 bg-[#0f1117] rounded-full overflow-hidden mb-1">
-            <div className="h-full bg-[#6366f1] rounded-full transition-all duration-700" style={{ width: `${xpLevel.pct}%` }} />
+          <div className="h-1.5 bg-[#0a0a09] rounded-full overflow-hidden mb-1">
+            <div className="h-full bg-[#d97706] rounded-full transition-all duration-700" style={{ width: `${xpLevel.pct}%` }} />
           </div>
-          <span className="text-slate-500 text-xs">{xpInfo} XP{xpLevel.nextThreshold ? ` / ${xpLevel.nextThreshold}` : ''}</span>
+          <span className="text-stone-500 text-xs">{xpInfo} XP{xpLevel.nextThreshold ? ` / ${xpLevel.nextThreshold}` : ''}</span>
         </div>
       </div>
 
       {/* Avertissement WSL */}
       {!bashAvailable && (
-        <div className="mb-5 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+        <div className="mb-5 bg-amber-500/10 border border-amber-500/30 rounded p-4 flex items-start gap-3">
           <span className="text-amber-400 text-lg flex-shrink-0">⚠</span>
           <div>
             <p className="text-amber-300 text-sm font-medium">Bash (WSL) introuvable</p>
@@ -309,27 +309,27 @@ export default function Dashboard() {
 
       {/* Onboarding nouveau profil */}
       {isNewProfile && (
-        <div className="mb-6 bg-[#6366f1]/10 border border-[#6366f1]/30 rounded-xl p-6">
+        <div className="mb-6 bg-[#d97706]/10 border border-[#d97706]/30 rounded p-6">
           <h2 className="text-white font-semibold mb-2">Bienvenue dans ScriptLearn !</h2>
-          <p className="text-slate-300 text-sm mb-4">
+          <p className="text-stone-300 text-sm mb-4">
             Apprenez Bash, Python, PowerShell et KQL du niveau débutant à l'expert grâce à des cours interactifs et des exercices validés dans un terminal réel.
           </p>
           <div className="grid grid-cols-3 gap-3 mb-5 text-center">
-            <div className="bg-[#0f1117]/60 rounded-lg p-3">
+            <div className="bg-[#0a0a09]/60 rounded-sm p-3">
               <p className="text-2xl font-bold text-white">{totalModules}</p>
-              <p className="text-slate-400 text-xs mt-0.5">modules</p>
+              <p className="text-stone-400 text-xs mt-0.5">modules</p>
             </div>
-            <div className="bg-[#0f1117]/60 rounded-lg p-3">
+            <div className="bg-[#0a0a09]/60 rounded-sm p-3">
               <p className="text-2xl font-bold text-white">{totalExercises}</p>
-              <p className="text-slate-400 text-xs mt-0.5">exercices</p>
+              <p className="text-stone-400 text-xs mt-0.5">exercices</p>
             </div>
-            <div className="bg-[#0f1117]/60 rounded-lg p-3">
+            <div className="bg-[#0a0a09]/60 rounded-sm p-3">
               <p className="text-2xl font-bold text-white">~150h</p>
-              <p className="text-slate-400 text-xs mt-0.5">de contenu</p>
+              <p className="text-stone-400 text-xs mt-0.5">de contenu</p>
             </div>
           </div>
           <button onClick={handleResume}
-            className="bg-[#6366f1] hover:bg-[#4f46e5] text-white px-6 py-2.5 rounded-xl font-medium transition-colors text-sm">
+            className="bg-[#d97706] hover:bg-[#b45309] text-[#0a0a09] px-6 py-2.5 rounded font-medium transition-colors text-sm">
             Commencer le premier module →
           </button>
         </div>
@@ -339,44 +339,44 @@ export default function Dashboard() {
       {!isNewProfile && (
         <div className="space-y-4 mb-5">
           <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2 bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
+            <div className="col-span-2 bg-[#111110] rounded p-5 border border-[#2e2b26]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-slate-300 text-sm font-medium">Progression globale</span>
+                <span className="text-stone-300 text-sm font-medium">Progression globale</span>
                 <span className="text-white font-bold text-sm">{globalPercent}%</span>
               </div>
-              <div className="h-2 bg-[#0f1117] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${globalPercent}%`, background: 'linear-gradient(90deg, #6366f1, #22d3ee)' }} />
+                  style={{ width: `${globalPercent}%`, background: 'linear-gradient(90deg, #d97706, #fbbf24)' }} />
               </div>
-              <p className="text-slate-500 text-xs mt-2">
+              <p className="text-stone-500 text-xs mt-2">
                 {totalDone} exercices réussis sur {totalExercises} — {completedModules}/{totalModules} modules
               </p>
             </div>
-            <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748] flex flex-col items-center justify-center">
+            <div className="bg-[#111110] rounded p-5 border border-[#2e2b26] flex flex-col items-center justify-center">
               <div className="text-3xl font-bold text-white mb-0.5">{streak}</div>
-              <div className="text-slate-400 text-xs">
+              <div className="text-stone-400 text-xs">
                 {streak === 0 ? 'Aucun streak' : streak === 1 ? 'jour consécutif 🔥' : `jours consécutifs 🔥`}
               </div>
             </div>
           </div>
           {/* Objectif hebdomadaire */}
-          <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
+          <div className="bg-[#111110] rounded p-5 border border-[#2e2b26]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white font-medium text-sm">Objectif de la semaine</span>
-              <span className="text-slate-400 text-xs">
+              <span className="text-stone-400 text-xs">
                 {weeklyDone >= weeklyGoal
-                  ? <span className="text-green-400 font-medium">Objectif atteint ✓</span>
+                  ? <span className="text-[#86efac] font-medium">Objectif atteint ✓</span>
                   : <span>{weeklyDone} / {weeklyGoal} exercices</span>}
               </span>
             </div>
-            <div className="h-2 bg-[#0f1117] rounded-full overflow-hidden">
+            <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700"
                 style={{
                   width: `${Math.min(100, Math.round((weeklyDone / weeklyGoal) * 100))}%`,
-                  backgroundColor: weeklyDone >= weeklyGoal ? '#4ade80' : '#6366f1'
+                  backgroundColor: weeklyDone >= weeklyGoal ? '#4ade80' : '#d97706'
                 }} />
             </div>
-            <p className="text-slate-600 text-xs mt-1.5">
+            <p className="text-stone-600 text-xs mt-1.5">
               {weeklyGoal - weeklyDone > 0
                 ? `Encore ${weeklyGoal - weeklyDone} exercice${weeklyGoal - weeklyDone > 1 ? 's' : ''} pour atteindre votre objectif`
                 : `Bravo ! Continuez sur votre lancée.`}
@@ -387,48 +387,48 @@ export default function Dashboard() {
 
       {/* Stats + Reprendre */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
-          <p className="text-slate-400 text-sm mb-1">Modules complétés</p>
+        <div className="bg-[#111110] rounded p-5 border border-[#2e2b26]">
+          <p className="text-stone-400 text-sm mb-1">Modules complétés</p>
           <p className="text-2xl font-bold text-white">
             {completedModules}{' '}
-            <span className="text-slate-500 text-base font-normal">/ {totalModules}</span>
+            <span className="text-stone-500 text-base font-normal">/ {totalModules}</span>
           </p>
         </div>
-        <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
-          <p className="text-slate-400 text-sm mb-1">Exercices réussis</p>
+        <div className="bg-[#111110] rounded p-5 border border-[#2e2b26]">
+          <p className="text-stone-400 text-sm mb-1">Exercices réussis</p>
           <p className="text-2xl font-bold text-white">
             {totalDone}{' '}
-            <span className="text-slate-500 text-base font-normal">/ {totalExercises}</span>
+            <span className="text-stone-500 text-base font-normal">/ {totalExercises}</span>
           </p>
         </div>
         <button
           onClick={handleResume}
-          className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748] text-left hover:border-[#6366f1] transition-colors group"
+          className="bg-[#111110] rounded p-5 border border-[#2e2b26] text-left hover:border-[#d97706] transition-colors group"
         >
-          <p className="text-slate-400 text-sm mb-1">
+          <p className="text-stone-400 text-sm mb-1">
             {!resumeTarget ? 'Tout terminé !' : totalDone === 0 ? 'Commencer' : 'Continuer'}
           </p>
           {resumeTarget ? (
             <>
-              <p className="text-[#6366f1] text-sm font-semibold group-hover:text-[#818cf8] transition-colors truncate">
+              <p className="text-[#d97706] text-sm font-semibold group-hover:text-[#fbbf24] transition-colors truncate">
                 → {resumeTarget.moduleTitle}
               </p>
-              <p className="text-slate-600 text-xs mt-0.5 uppercase tracking-wide">
+              <p className="text-stone-600 text-xs mt-0.5 uppercase tracking-wide">
                 {LANG_LABELS[resumeTarget.lang] ?? resumeTarget.lang}
               </p>
             </>
           ) : (
-            <p className="text-green-400 text-sm font-semibold">Tous les exercices réussis 🎉</p>
+            <p className="text-[#86efac] text-sm font-semibold">Tous les exercices réussis 🎉</p>
           )}
         </button>
       </div>
 
       {/* Calendrier d'activité */}
       {activity.length > 0 && (
-        <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748] mb-6">
+        <div className="bg-[#111110] rounded p-5 border border-[#2e2b26] mb-6">
           <div className="flex items-center justify-between mb-3">
             <span className="text-white font-semibold text-sm">Activité (365 jours)</span>
-            <span className="text-slate-500 text-xs">{activity.length} jours actifs</span>
+            <span className="text-stone-500 text-xs">{activity.length} jours actifs</span>
           </div>
           <ActivityCalendar dates={activity} />
         </div>
@@ -436,17 +436,17 @@ export default function Dashboard() {
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748] mb-6">
+        <div className="bg-[#111110] rounded p-5 border border-[#2e2b26] mb-6">
           <div className="flex items-center justify-between mb-3">
             <span className="text-white font-semibold text-sm">Badges débloqués</span>
-            <span className="text-slate-500 text-xs">{badges.length} / {BADGE_DEFS.length}</span>
+            <span className="text-stone-500 text-xs">{badges.length} / {BADGE_DEFS.length}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {badges.map(b => (
               <div key={b.id} title={b.desc}
-                className="flex items-center gap-1.5 bg-[#232640] px-3 py-1.5 rounded-lg border border-[#2d3748]">
+                className="flex items-center gap-1.5 bg-[#1c1c1a] px-3 py-1.5 rounded-sm border border-[#2e2b26]">
                 <span className="text-base">{b.icon}</span>
-                <span className="text-slate-300 text-xs font-medium">{b.label}</span>
+                <span className="text-stone-300 text-xs font-medium">{b.label}</span>
               </div>
             ))}
           </div>
@@ -455,9 +455,9 @@ export default function Dashboard() {
             <div className="flex flex-wrap gap-2 mt-2">
               {BADGE_DEFS.filter(b => !badges.find(u => u.id === b.id)).map(b => (
                 <div key={b.id} title={`À débloquer : ${b.desc}`}
-                  className="flex items-center gap-1.5 bg-[#0f1117] px-3 py-1.5 rounded-lg border border-[#1a1d2e] opacity-40">
+                  className="flex items-center gap-1.5 bg-[#0a0a09] px-3 py-1.5 rounded-sm border border-[#111110] opacity-40">
                   <span className="text-base grayscale">{b.icon}</span>
-                  <span className="text-slate-500 text-xs">{b.label}</span>
+                  <span className="text-stone-500 text-xs">{b.label}</span>
                 </div>
               ))}
             </div>
@@ -467,7 +467,7 @@ export default function Dashboard() {
 
       {/* Révision espacée */}
       {reviewItems.length > 0 && (
-        <div className="bg-[#1a1d2e] rounded-xl p-5 border border-amber-500/20 mb-6">
+        <div className="bg-[#111110] rounded p-5 border border-amber-500/20 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-amber-400">🔄</span>
             <span className="text-white font-semibold text-sm">À réviser</span>
@@ -482,16 +482,16 @@ export default function Dashboard() {
                   const idx = mod?.exercises.findIndex(e => e.id === ex.id) ?? 0
                   navigate(`/exercise/${lang}/${levelId}/${moduleId}/${idx + 1}`)
                 }}
-                className="w-full flex items-center justify-between bg-[#0f1117] hover:bg-[#232640] px-3 py-2.5 rounded-lg transition-colors text-left group"
+                className="w-full flex items-center justify-between bg-[#0a0a09] hover:bg-[#1c1c1a] px-3 py-2.5 rounded-sm transition-colors text-left group"
               >
                 <div>
-                  <span className="text-slate-300 text-sm group-hover:text-white transition-colors">{ex.title}</span>
+                  <span className="text-stone-300 text-sm group-hover:text-white transition-colors">{ex.title}</span>
                   <span className="ml-2 text-xs px-1.5 py-0.5 rounded font-medium"
                     style={{ backgroundColor: `${LANG_COLORS[lang]}20`, color: LANG_COLORS[lang] }}>
                     {LANG_LABELS[lang]}
                   </span>
                 </div>
-                <span className="text-slate-500 text-xs flex-shrink-0 ml-2">Réviser →</span>
+                <span className="text-stone-500 text-xs flex-shrink-0 ml-2">Réviser →</span>
               </button>
             ))}
           </div>
@@ -506,8 +506,8 @@ export default function Dashboard() {
             key={level.id}
             disabled={level.locked}
             onClick={() => !level.locked && navigate('/app/courses')}
-            className={`w-full bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748] text-left transition-all ${
-              level.locked ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#3d4756]'
+            className={`w-full bg-[#111110] rounded p-5 border border-[#2e2b26] text-left transition-all ${
+              level.locked ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#3d3a34]'
             }`}
           >
             <div className="flex items-start justify-between mb-2">
@@ -516,18 +516,18 @@ export default function Dashboard() {
                 <div className="min-w-0 flex-1">
                   <span className="text-white font-medium text-sm">Niveau {level.id} — {level.name}</span>
                   {level.description && (
-                    <p className="text-slate-500 text-xs mt-0.5 leading-snug truncate">{level.description}</p>
+                    <p className="text-stone-500 text-xs mt-0.5 leading-snug truncate">{level.description}</p>
                   )}
                 </div>
                 {level.locked && (
-                  <span className="text-xs text-slate-500 bg-[#232640] px-2 py-0.5 rounded flex-shrink-0">Verrouillé</span>
+                  <span className="text-xs text-stone-500 bg-[#1c1c1a] px-2 py-0.5 rounded flex-shrink-0">Verrouillé</span>
                 )}
               </div>
-              <span className="text-slate-400 text-xs flex-shrink-0 ml-4 mt-0.5">
+              <span className="text-stone-400 text-xs flex-shrink-0 ml-4 mt-0.5">
                 {level.done}/{level.total} — {level.percent}%
               </span>
             </div>
-            <div className="h-1.5 bg-[#0f1117] rounded-full overflow-hidden mb-1">
+            <div className="h-1.5 bg-[#0a0a09] rounded-full overflow-hidden mb-1">
               <div className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${level.percent}%`, backgroundColor: level.color }} />
             </div>

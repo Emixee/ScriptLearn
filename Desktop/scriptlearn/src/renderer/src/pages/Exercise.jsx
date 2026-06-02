@@ -24,7 +24,7 @@ import contentIndex from '../content/index.json'
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 const SENTINEL_PREFIX = '__SL_DONE_'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 // STATIC_LANGS : langages validés par mots-clés (pas d'exécution terminal)
 // HTML est statique — la prévisualisation vient du srcDoc direct, pas d'une exécution
@@ -431,7 +431,7 @@ function getLangExtension(lang) {
 }
 
 const cmTheme = EditorView.theme({
-  '&': { fontSize: '13px', backgroundColor: '#0d0f16' },
+  '&': { fontSize: '13px', backgroundColor: '#080807' },
   '.cm-content': { padding: '8px', fontFamily: "'Fira Code', 'Cascadia Code', monospace" },
   '.cm-focused': { outline: 'none' },
   '.cm-editor': { borderRadius: '0' },
@@ -609,8 +609,8 @@ export default function Exercise() {
 
   if (!module || !exercise) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0f1117]">
-        <p className="text-slate-400">Exercice introuvable.</p>
+      <div className="flex h-screen items-center justify-center bg-[#0a0a09]">
+        <p className="text-stone-400">Exercice introuvable.</p>
       </div>
     )
   }
@@ -780,16 +780,16 @@ export default function Exercise() {
   const langLabel = LANG_LABELS[lang] ?? lang
 
   return (
-    <div className="flex flex-col h-screen bg-[#0f1117]">
+    <div className="flex flex-col h-screen bg-[#0a0a09]">
       {/* Écran de complétion */}
       {showCompletion && (
-        <div className="absolute inset-0 z-50 bg-[#0f1117]/95 flex items-center justify-center">
-          <div className="bg-[#1a1d2e] border border-[#2d3748] rounded-2xl p-10 max-w-md w-full text-center shadow-2xl">
+        <div className="absolute inset-0 z-50 bg-[#0a0a09]/95 flex items-center justify-center">
+          <div className="bg-[#111110] border border-[#2e2b26] rounded p-10 max-w-md w-full text-center shadow-2xl">
             <div className="text-5xl mb-4">🎉</div>
             <h2 className="text-white text-2xl font-bold mb-2">Module terminé !</h2>
-            <p className="text-slate-400 text-sm mb-1">{module.title}</p>
+            <p className="text-stone-400 text-sm mb-1">{module.title}</p>
             {moduleProgress && (
-              <p className="text-[#6366f1] font-semibold text-lg mt-3 mb-6">
+              <p className="text-[#d97706] font-semibold text-lg mt-3 mb-6">
                 {moduleProgress.done} / {moduleProgress.total} exercices réussis
               </p>
             )}
@@ -797,17 +797,17 @@ export default function Exercise() {
               {nextModule && (
                 <button
                   onClick={() => navigate(`/course/${nextModule.lang}/${nextModule.levelId}/${nextModule.ref.id}`)}
-                  className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white py-3 rounded-xl font-medium transition-colors"
+                  className="w-full bg-[#d97706] hover:bg-[#b45309] text-[#0a0a09] py-3 rounded font-medium transition-colors"
                 >
                   Module suivant : {nextModule.ref.title} →
                 </button>
               )}
               <button onClick={() => navigate('/app/courses')}
-                className="w-full bg-[#232640] hover:bg-[#2d3258] text-slate-300 py-3 rounded-xl transition-colors">
+                className="w-full bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 py-3 rounded transition-colors">
                 Retour aux cours
               </button>
               <button onClick={() => setShowCompletion(false)}
-                className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
+                className="text-stone-500 hover:text-stone-300 text-sm transition-colors">
                 Rester sur cet exercice
               </button>
             </div>
@@ -817,29 +817,29 @@ export default function Exercise() {
 
       {/* Barre du haut */}
       <div
-        className="flex items-center gap-3 px-4 py-3 bg-[#1a1d2e] border-b border-[#2d3748] flex-shrink-0"
+        className="flex items-center gap-3 px-4 py-3 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0"
         style={{ WebkitAppRegion: 'drag' }}
       >
         <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
-          <button onClick={() => navigate('/app/courses')} className="text-slate-400 hover:text-white transition-colors text-sm">← Menu</button>
-          <div className="w-px h-4 bg-[#2d3748]" />
-          <button onClick={() => navigate(`/course/${lang}/${level}/${moduleId}`)} className="text-slate-400 hover:text-white transition-colors text-sm">Cours</button>
-          <div className="w-px h-4 bg-[#2d3748]" />
+          <button onClick={() => navigate('/app/courses')} className="text-stone-400 hover:text-white transition-colors text-sm">← Menu</button>
+          <div className="w-px h-4 bg-[#2e2b26]" />
+          <button onClick={() => navigate(`/course/${lang}/${level}/${moduleId}`)} className="text-stone-400 hover:text-white transition-colors text-sm">Cours</button>
+          <div className="w-px h-4 bg-[#2e2b26]" />
           {isBoss && <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">👑 Boss</span>}
           {isDebug && <span className="text-orange-400 text-xs font-bold uppercase tracking-wider">🐛 Débogage</span>}
-          {!isBoss && !isDebug && <span className="text-slate-400 text-xs uppercase tracking-widest">Exercice</span>}
-          <div className="w-px h-4 bg-[#2d3748]" />
+          {!isBoss && !isDebug && <span className="text-stone-400 text-xs uppercase tracking-widest">Exercice</span>}
+          <div className="w-px h-4 bg-[#2e2b26]" />
           <h1 className="text-white font-medium text-sm truncate max-w-[200px]">{exercise.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
           <div className="flex items-center gap-1.5">
             {module.exercises.map((_, i) => (
               <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                i < exIdx ? 'bg-[#6366f1]' : i === exIdx ? 'bg-white' : 'bg-[#374151]'
+                i < exIdx ? 'bg-[#d97706]' : i === exIdx ? 'bg-white' : 'bg-[#2e2b26]'
               }`} />
             ))}
           </div>
-          <span className="text-slate-500 text-xs font-medium">{exIdx + 1} / {totalExercises}</span>
+          <span className="text-stone-500 text-xs font-medium">{exIdx + 1} / {totalExercises}</span>
           <span className={`text-xs px-2 py-0.5 rounded font-medium`}
             style={{ backgroundColor: `${langAccent}20`, color: langAccent }}>
             {langLabel}
@@ -847,8 +847,8 @@ export default function Exercise() {
           <button
             onClick={() => setShowAI(v => !v)}
             title="Assistant IA (Ctrl+I)"
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-              showAI ? 'bg-[#6366f1] text-white' : 'bg-[#232640] text-slate-400 hover:text-white hover:bg-[#2d3258]'
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-medium transition-colors ${
+              showAI ? 'bg-[#d97706] text-[#0a0a09]' : 'bg-[#1c1c1a] text-stone-400 hover:text-white hover:bg-[#252520]'
             }`}
           >
             <span>✦</span><span>IA</span>
@@ -860,7 +860,7 @@ export default function Exercise() {
       {/* Corps principal */}
       <div className="flex flex-1 overflow-hidden">
         {/* Panneau gauche (redimensionnable) */}
-        <div className="flex flex-col border-r border-[#2d3748] flex-shrink-0" style={{ width: panelWidth }}>
+        <div className="flex flex-col border-r border-[#2e2b26] flex-shrink-0" style={{ width: panelWidth }}>
           {/* Badge boss/debug */}
           {(isBoss || isDebug) && (
             <div className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${
@@ -874,16 +874,16 @@ export default function Exercise() {
           )}
 
           {/* Instructions */}
-          <div className="p-5 border-b border-[#2d3748] overflow-y-auto flex-shrink-0 max-h-[32%]">
+          <div className="p-5 border-b border-[#2e2b26] overflow-y-auto flex-shrink-0 max-h-[32%]">
             <h2 className="text-white font-semibold mb-3">Instructions</h2>
-            <div className="text-slate-300 text-sm leading-relaxed"
+            <div className="text-stone-300 text-sm leading-relaxed"
               dangerouslySetInnerHTML={{ __html: parseMarkdown(exercise.instructions) }} />
             {!isBoss && exercise.hint && (
               <details className="mt-3">
-                <summary className="text-slate-500 text-xs cursor-pointer hover:text-slate-300 transition-colors select-none">
+                <summary className="text-stone-500 text-xs cursor-pointer hover:text-stone-300 transition-colors select-none">
                   💡 Afficher un indice
                 </summary>
-                <p className="text-slate-400 text-xs mt-1.5 pl-3 border-l border-[#2d3748]">{exercise.hint}</p>
+                <p className="text-stone-400 text-xs mt-1.5 pl-3 border-l border-[#2e2b26]">{exercise.hint}</p>
               </details>
             )}
           </div>
@@ -891,16 +891,16 @@ export default function Exercise() {
           {/* Zone scrollable : éditeur + feedback + correction */}
           <div className="flex-1 overflow-y-auto min-h-0 p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between flex-shrink-0">
-              <span className="text-slate-400 text-xs uppercase tracking-widest">
+              <span className="text-stone-400 text-xs uppercase tracking-widest">
                 {isDebug ? 'Code à déboguer' : 'Votre script'}
               </span>
-              <button onClick={reset} className="text-slate-500 hover:text-slate-300 text-xs transition-colors">
+              <button onClick={reset} className="text-stone-500 hover:text-stone-300 text-xs transition-colors">
                 Réinitialiser
               </button>
             </div>
 
             {/* Éditeur CodeMirror */}
-            <div className={`rounded-lg overflow-hidden border flex-shrink-0 border-[#2d3748] transition-colors`}
+            <div className={`rounded-sm overflow-hidden border flex-shrink-0 border-[#2e2b26] transition-colors`}
               style={{ minHeight: 150 }}>
               <CodeMirror
                 value={code}
@@ -941,9 +941,9 @@ export default function Exercise() {
 
             {/* Feedback */}
             {feedback && (
-              <div className={`rounded-lg p-3 text-sm border flex-shrink-0 ${
+              <div className={`rounded-sm p-3 text-sm border flex-shrink-0 ${
                 feedback.type === 'success'
-                  ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                  ? 'bg-[#86efac]/10 border-[#86efac]/30 text-[#86efac]'
                   : 'bg-red-500/10 border-red-500/30 text-red-300'
               }`}>
                 <p className="font-semibold mb-1">{feedback.title}</p>
@@ -961,20 +961,20 @@ export default function Exercise() {
 
             {/* Correction (masquée pour les boss exercises) */}
             {!isBoss && showCorrection && (
-              <div className="bg-[#0d0f16] border border-[#2d3748] rounded-lg p-3 flex-shrink-0">
-                <p className="text-slate-400 text-xs mb-2 uppercase tracking-widest">Correction</p>
+              <div className="bg-[#080807] border border-[#2e2b26] rounded-sm p-3 flex-shrink-0">
+                <p className="text-stone-400 text-xs mb-2 uppercase tracking-widest">Correction</p>
                 <pre className="text-[#4ade80] text-sm font-mono mb-2 whitespace-pre-wrap overflow-x-auto">{exercise.correction}</pre>
-                <div className="text-slate-400 text-xs leading-relaxed"
+                <div className="text-stone-400 text-xs leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: parseMarkdown(exercise.explanation) }} />
               </div>
             )}
           </div>
 
           {/* Notes personnelles */}
-          <div className="flex-shrink-0 border-t border-[#2d3748] px-4 pt-2 pb-1">
+          <div className="flex-shrink-0 border-t border-[#2e2b26] px-4 pt-2 pb-1">
             <button
               onClick={() => setShowNote(v => !v)}
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5"
+              className="text-xs text-stone-500 hover:text-stone-300 transition-colors flex items-center gap-1.5"
             >
               <span>{showNote ? '▾' : '▸'}</span>
               <span>{noteText ? '📝 Note' : '+ Ajouter une note'}</span>
@@ -985,28 +985,28 @@ export default function Exercise() {
                 onChange={e => setNoteText(e.target.value)}
                 placeholder="Vos notes personnelles sur cet exercice…"
                 rows={3}
-                className="w-full mt-2 bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-xs text-slate-300 resize-none focus:outline-none focus:border-[#6366f1] transition-colors leading-relaxed"
+                className="w-full mt-2 bg-[#0a0a09] border border-[#2e2b26] rounded-sm px-3 py-2 text-xs text-stone-300 resize-none focus:outline-none focus:border-[#d97706] transition-colors leading-relaxed"
               />
             )}
           </div>
 
           {/* Boutons */}
-          <div className="flex-shrink-0 p-4 pt-3 border-t border-[#2d3748] flex flex-col gap-2">
-            <div className="text-slate-600 text-[10px] mb-1">
+          <div className="flex-shrink-0 p-4 pt-3 border-t border-[#2e2b26] flex flex-col gap-2">
+            <div className="text-stone-600 text-[10px] mb-1">
               Ctrl+↵ Exécuter · Ctrl+Shift+↵ Valider · Ctrl+R Reset
             </div>
             <div className="flex gap-2">
               {!isStaticLang && (
                 <button onClick={handleRun}
-                  className="flex-1 bg-[#232640] hover:bg-[#2d3258] text-slate-300 text-sm py-2 rounded-lg transition-colors font-medium">
+                  className="flex-1 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-sm py-2 rounded-sm transition-colors font-medium">
                   ▶ Exécuter
                 </button>
               )}
               <button
                 onClick={validate}
                 disabled={status === STATUS.running}
-                className="flex-1 disabled:opacity-60 text-white text-sm py-2 rounded-lg transition-colors font-medium"
-                style={{ backgroundColor: isStaticLang ? `${langAccent}cc` : '#6366f1' }}
+                className="flex-1 disabled:opacity-60 text-white text-sm py-2 rounded-sm transition-colors font-medium"
+                style={{ backgroundColor: isStaticLang ? `${langAccent}cc` : '#d97706' }}
               >
                 {status === STATUS.running ? '⏳ Validation…' : isStaticLang ? '✓ Valider' : '✓ Valider'}
               </button>
@@ -1014,18 +1014,18 @@ export default function Exercise() {
             <div className="flex items-center justify-between">
               {!isBoss ? (
                 <button onClick={() => setShowCorrection(v => !v)}
-                  className="text-slate-500 hover:text-slate-300 text-xs transition-colors">
+                  className="text-stone-500 hover:text-stone-300 text-xs transition-colors">
                   {showCorrection ? 'Masquer' : 'Voir'} la correction
                 </button>
               ) : (
                 <span className="text-amber-600 text-xs">Pas de correction pour les boss</span>
               )}
               <div className="flex gap-3">
-                <button onClick={goPrev} className="text-slate-500 hover:text-slate-300 text-xs transition-colors">← Préc.</button>
+                <button onClick={goPrev} className="text-stone-500 hover:text-stone-300 text-xs transition-colors">← Préc.</button>
                 <button
                   onClick={status === STATUS.success && isLast ? () => setShowCompletion(true) : goNext}
                   className={`text-xs font-medium transition-colors ${
-                    status === STATUS.success ? 'text-[#6366f1] hover:text-[#4f46e5]' : 'text-slate-500 hover:text-slate-300'
+                    status === STATUS.success ? 'text-[#d97706] hover:text-[#b45309]' : 'text-stone-500 hover:text-stone-300'
                   }`}
                 >
                   {isLast ? (status === STATUS.success ? 'Terminer ✓' : 'Terminer') : 'Suiv. →'}
@@ -1038,7 +1038,7 @@ export default function Exercise() {
         {/* Séparateur draggable */}
         <div
           onMouseDown={startDrag}
-          className="w-1 bg-[#2d3748] hover:bg-[#6366f1] cursor-col-resize flex-shrink-0 transition-colors"
+          className="w-1 bg-[#2e2b26] hover:bg-[#d97706] cursor-col-resize flex-shrink-0 transition-colors"
           title="Redimensionner"
         />
 
@@ -1051,24 +1051,24 @@ export default function Exercise() {
           {/* Barre de titre du panneau droit — masquée pour PHP et HTML car
               PreviewPane et le Terminal ont leur propre barre */}
           {lang !== 'html' && lang !== 'php' && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1d2e] border-b border-[#2d3748] flex-shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
               <div className="flex gap-1.5">
                 {isStaticLang ? (
                   <><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}99` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}50` }}/><div className="w-3 h-3 rounded-full" style={{ backgroundColor: `${langAccent}25` }}/></>
                 ) : (
-                  <><div className="w-3 h-3 rounded-full bg-red-500/70"/><div className="w-3 h-3 rounded-full bg-yellow-500/70"/><div className="w-3 h-3 rounded-full bg-green-500/70"/></>
+                  <><div className="w-3 h-3 rounded-full bg-red-500/70"/><div className="w-3 h-3 rounded-full bg-yellow-500/70"/><div className="w-3 h-3 rounded-full bg-[#86efac]/70"/></>
                 )}
               </div>
-              <span className="text-slate-500 text-xs ml-2">
+              <span className="text-stone-500 text-xs ml-2">
                 {isStaticLang
                   ? `Référence ${langLabel}`
                   : lang === 'powershell' ? 'Windows PowerShell' : lang === 'python' ? 'Python' : 'Bash (WSL)'}
               </span>
-              {!isStaticLang && status === STATUS.running && <span className="ml-auto text-slate-500 text-xs animate-pulse">en cours…</span>}
+              {!isStaticLang && status === STATUS.running && <span className="ml-auto text-stone-500 text-xs animate-pulse">en cours…</span>}
               {isStaticLang && <span className="ml-auto text-xs opacity-40" style={{ color: langAccent }}>{langLabel}</span>}
             </div>
           )}
-          <div className="flex-1 overflow-hidden bg-[#0d0f16]">
+          <div className="flex-1 overflow-hidden bg-[#080807]">
             {lang === 'html' ? (
               // HTML : l'aperçu occupe tout le panneau — le code est le srcdoc direct
               // (mise à jour en temps réel à chaque frappe sans délai)
@@ -1081,12 +1081,12 @@ export default function Exercise() {
                 <div style={{ flex: '0 0 60%', overflow: 'hidden' }}>
                   <Terminal id={termId} shell="bash" className="h-full" />
                 </div>
-                <div className="border-t border-[#2d3748] flex-shrink-0" style={{ flex: '0 0 40%', overflow: 'hidden' }}>
+                <div className="border-t border-[#2e2b26] flex-shrink-0" style={{ flex: '0 0 40%', overflow: 'hidden' }}>
                   <PreviewPane srcDoc={previewSrc} label="PHP" langColor={langAccent} />
                 </div>
               </div>
             ) : isStaticLang ? (
-              <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-slate-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
+              <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
             ) : (
               <Terminal id={termId} shell={lang} className="h-full" />
             )}

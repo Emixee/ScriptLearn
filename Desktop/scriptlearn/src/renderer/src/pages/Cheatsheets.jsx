@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
 
 const SHEETS = {
   bash: {
@@ -411,9 +411,9 @@ function Section({ section, color }) {
       <h3 className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color }}>{section.title}</h3>
       <div className="space-y-1">
         {section.items.map((item, i) => (
-          <div key={i} className="flex gap-3 py-1 border-b border-[#1a1d2e]">
-            <code className="text-xs font-mono flex-shrink-0 w-48 text-slate-200 leading-relaxed">{item.cmd}</code>
-            <span className="text-xs text-slate-500 leading-relaxed">{item.desc}</span>
+          <div key={i} className="flex gap-3 py-1 border-b border-[#111110]">
+            <code className="text-xs font-mono flex-shrink-0 w-48 text-stone-200 leading-relaxed">{item.cmd}</code>
+            <span className="text-xs text-stone-500 leading-relaxed">{item.desc}</span>
           </div>
         ))}
       </div>
@@ -437,8 +437,8 @@ export default function Cheatsheets() {
             <button
               key={l}
               onClick={() => setLang(l)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                lang === l ? 'text-white' : 'bg-[#1a1d2e] text-slate-400 hover:text-white border border-[#2d3748]'
+              className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-colors ${
+                lang === l ? 'text-white' : 'bg-[#111110] text-stone-400 hover:text-white border border-[#2e2b26]'
               }`}
               style={lang === l ? { backgroundColor: LANG_COLORS[l] } : {}}
             >
@@ -448,7 +448,7 @@ export default function Cheatsheets() {
         </div>
         <button
           onClick={handlePrint}
-          className="ml-auto flex items-center gap-2 bg-[#232640] hover:bg-[#2d3258] text-slate-300 px-4 py-2 rounded-lg text-sm transition-colors"
+          className="ml-auto flex items-center gap-2 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 px-4 py-2 rounded-sm text-sm transition-colors"
         >
           🖨️ Imprimer
         </button>
@@ -456,7 +456,7 @@ export default function Cheatsheets() {
 
       <div className="grid grid-cols-2 gap-6">
         {sheet.sections.map((section, i) => (
-          <div key={i} className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
+          <div key={i} className="bg-[#111110] rounded p-5 border border-[#2e2b26]">
             <Section section={section} color={color} />
           </div>
         ))}

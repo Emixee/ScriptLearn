@@ -44,16 +44,16 @@ export default function AIAssistant({ context = '', onClose }) {
   }
 
   return (
-    <div className="w-[320px] flex flex-col bg-[#1a1d2e] border-l border-[#2d3748] flex-shrink-0">
+    <div className="w-[320px] flex flex-col bg-[#111110] border-l border-[#2e2b26] flex-shrink-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2d3748] flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2e2b26] flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[#6366f1] flex items-center justify-center text-xs text-white font-bold">✦</div>
+          <div className="w-6 h-6 rounded-full bg-[#d97706] flex items-center justify-center text-xs text-[#0a0a09] font-bold">✦</div>
           <span className="text-white text-sm font-medium">Assistant IA</span>
         </div>
         <button
           onClick={onClose}
-          className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-white hover:bg-[#232640] rounded transition-colors text-base"
+          className="w-6 h-6 flex items-center justify-center text-stone-500 hover:text-white hover:bg-[#1c1c1a] rounded transition-colors text-base"
         >
           ×
         </button>
@@ -63,21 +63,21 @@ export default function AIAssistant({ context = '', onClose }) {
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 min-h-0">
         {messages.map((msg, i) => (
           <div key={i} className={msg.role === 'user' ? 'flex justify-end' : ''}>
-            <div className={`text-xs rounded-xl p-2.5 leading-relaxed max-w-[92%] ${
+            <div className={`text-xs rounded p-2.5 leading-relaxed max-w-[92%] ${
               msg.role === 'assistant'
-                ? 'bg-[#232640] text-slate-300'
-                : 'bg-[#6366f1]/25 text-slate-200'
+                ? 'bg-[#1c1c1a] text-stone-300'
+                : 'bg-[#d97706]/25 text-stone-200'
             }`}>
               {msg.role === 'assistant' && (
-                <span className="text-[#6366f1] text-xs font-semibold block mb-1">IA</span>
+                <span className="text-[#d97706] text-xs font-semibold block mb-1">IA</span>
               )}
               <span className="whitespace-pre-wrap">{msg.text}</span>
             </div>
           </div>
         ))}
         {loading && (
-          <div className="bg-[#232640] rounded-xl p-2.5 text-xs text-slate-500 animate-pulse max-w-[92%]">
-            <span className="text-[#6366f1] font-semibold block mb-1">IA</span>
+          <div className="bg-[#1c1c1a] rounded p-2.5 text-xs text-stone-500 animate-pulse max-w-[92%]">
+            <span className="text-[#d97706] font-semibold block mb-1">IA</span>
             Analyse en cours…
           </div>
         )}
@@ -85,9 +85,9 @@ export default function AIAssistant({ context = '', onClose }) {
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-[#2d3748] flex-shrink-0">
+      <div className="p-3 border-t border-[#2e2b26] flex-shrink-0">
         {!settings?.aiEnabled ? (
-          <p className="text-slate-600 text-xs text-center py-1">
+          <p className="text-stone-600 text-xs text-center py-1">
             Activez Ollama dans les Paramètres pour utiliser l'IA.
           </p>
         ) : (
@@ -97,12 +97,12 @@ export default function AIAssistant({ context = '', onClose }) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
               placeholder="Posez une question…"
-              className="flex-1 bg-[#0d0f16] border border-[#2d3748] rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#6366f1] transition-colors"
+              className="flex-1 bg-[#080807] border border-[#2e2b26] rounded-sm px-3 py-2 text-xs text-stone-200 placeholder-stone-600 focus:outline-none focus:border-[#d97706] transition-colors"
             />
             <button
               onClick={send}
               disabled={loading || !input.trim()}
-              className="bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-40 text-white text-sm px-3 py-2 rounded-lg transition-colors flex-shrink-0"
+              className="bg-[#d97706] hover:bg-[#b45309] disabled:opacity-40 text-[#0a0a09] text-sm px-3 py-2 rounded-sm transition-colors flex-shrink-0"
             >
               ↑
             </button>

@@ -18,7 +18,7 @@ function AppLayout() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-[#0f1117]">
+    <div className="flex h-screen bg-[#0a0a09]">
       <Sidebar onSearch={() => setShowSearch(true)} />
       <main className="flex-1 overflow-y-auto">
         <Outlet />

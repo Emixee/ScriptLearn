@@ -8,14 +8,14 @@ import { computeStats, BADGE_DEFS, getUnlockedBadges } from '../utils/badges'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
 const LANG_LABELS  = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-const LANG_COLORS  = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS  = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div className="bg-[#1a1d2e] rounded-xl p-5 border border-[#2d3748]">
-      <p className="text-slate-400 text-sm mb-1">{label}</p>
+    <div className="bg-[#111110] rounded p-5 border border-[#2e2b26]">
+      <p className="text-stone-400 text-sm mb-1">{label}</p>
       <p className="text-2xl font-bold" style={{ color: color ?? 'white' }}>{value}</p>
-      {sub && <p className="text-slate-500 text-xs mt-0.5">{sub}</p>}
+      {sub && <p className="text-stone-500 text-xs mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -24,11 +24,11 @@ function Bar({ label, value, max, color }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-3">
-      <span className="text-slate-400 text-sm w-24 flex-shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-[#0f1117] rounded-full overflow-hidden">
+      <span className="text-stone-400 text-sm w-24 flex-shrink-0">{label}</span>
+      <div className="flex-1 h-2 bg-[#0a0a09] rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-slate-300 text-sm w-8 text-right flex-shrink-0">{value}</span>
+      <span className="text-stone-300 text-sm w-8 text-right flex-shrink-0">{value}</span>
     </div>
   )
 }
@@ -139,27 +139,27 @@ export default function Stats() {
         <h1 className="text-2xl font-bold text-white">Statistiques</h1>
         <button
           onClick={() => navigate('/app/dashboard')}
-          className="ml-auto text-slate-400 hover:text-white text-sm transition-colors"
+          className="ml-auto text-stone-400 hover:text-white text-sm transition-colors"
         >
           ← Tableau de bord
         </button>
       </div>
 
       {/* XP & Niveau */}
-      <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#6366f1]/30 mb-6">
+      <div className="bg-[#111110] rounded p-6 border border-[#d97706]/30 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-white font-bold text-xl">Niveau {xpInfo.level} — {xpInfo.title}</p>
-            <p className="text-slate-400 text-sm">{xpTotal} XP accumulés</p>
+            <p className="text-stone-400 text-sm">{xpTotal} XP accumulés</p>
           </div>
-          <div className="text-4xl font-black text-[#6366f1]">Niv.{xpInfo.level}</div>
+          <div className="text-4xl font-black text-[#d97706]">Niv.{xpInfo.level}</div>
         </div>
-        <div className="h-3 bg-[#0f1117] rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#6366f1] to-[#22d3ee] rounded-full transition-all duration-700"
+        <div className="h-3 bg-[#0a0a09] rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-[#d97706] to-[#fbbf24] rounded-full transition-all duration-700"
             style={{ width: `${xpInfo.pct}%` }} />
         </div>
         {xpInfo.nextThreshold && (
-          <p className="text-slate-500 text-xs mt-1.5">
+          <p className="text-stone-500 text-xs mt-1.5">
             {xpTotal} / {xpInfo.nextThreshold} XP pour le niveau suivant
           </p>
         )}
@@ -174,16 +174,16 @@ export default function Stats() {
       </div>
 
       {/* Progression par langage */}
-      <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748] mb-6">
+      <div className="bg-[#111110] rounded p-6 border border-[#2e2b26] mb-6">
         <h2 className="text-white font-semibold mb-4">Progression par langage</h2>
         <div className="space-y-4">
           {ALL_LANGS.map(lang => (
             <div key={lang}>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium" style={{ color: LANG_COLORS[lang] }}>{LANG_LABELS[lang]}</span>
-                <span className="text-slate-400 text-xs">{rateByLang[lang].done} / {rateByLang[lang].total} — {rateByLang[lang].pct}%</span>
+                <span className="text-stone-400 text-xs">{rateByLang[lang].done} / {rateByLang[lang].total} — {rateByLang[lang].pct}%</span>
               </div>
-              <div className="h-2 bg-[#0f1117] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${rateByLang[lang].pct}%`, backgroundColor: LANG_COLORS[lang] }} />
               </div>
@@ -194,22 +194,22 @@ export default function Stats() {
 
       {/* Exercices difficiles */}
       {hardExercises.length > 0 && (
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748] mb-6">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26] mb-6">
           <h2 className="text-white font-semibold mb-4">Exercices les plus difficiles</h2>
           <div className="space-y-2">
             {hardExercises.map(({ ex, attempts, completed, lang }) => (
-              <div key={ex.id} className="flex items-center justify-between py-2 border-b border-[#2d3748] last:border-0">
+              <div key={ex.id} className="flex items-center justify-between py-2 border-b border-[#2e2b26] last:border-0">
                 <div className="flex items-center gap-3">
                   {/* L'emoji ne doit pas être dans className — les emojis ne sont pas des classes CSS valides */}
                   <span className="text-base">{completed ? '✅' : '❌'}</span>
                   <div>
-                    <p className="text-slate-300 text-sm">{ex.title}</p>
+                    <p className="text-stone-300 text-sm">{ex.title}</p>
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: `${LANG_COLORS[lang]}20`, color: LANG_COLORS[lang] }}>
                       {LANG_LABELS[lang]}
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-400 text-sm flex-shrink-0 ml-4">{attempts} tentatives</span>
+                <span className="text-stone-400 text-sm flex-shrink-0 ml-4">{attempts} tentatives</span>
               </div>
             ))}
           </div>
@@ -217,26 +217,26 @@ export default function Stats() {
       )}
 
       {/* Badges */}
-      <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+      <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white font-semibold">Badges</h2>
-          <span className="text-slate-500 text-sm">{badges.length} / {BADGE_DEFS.length}</span>
+          <span className="text-stone-500 text-sm">{badges.length} / {BADGE_DEFS.length}</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {BADGE_DEFS.map(b => {
             const unlocked = badges.some(u => u.id === b.id)
             return (
-              <div key={b.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+              <div key={b.id} className={`flex items-center gap-3 p-3 rounded-sm border transition-colors ${
                 unlocked
-                  ? 'bg-[#232640] border-[#2d3748]'
-                  : 'bg-[#0f1117] border-[#1a1d2e] opacity-50'
+                  ? 'bg-[#1c1c1a] border-[#2e2b26]'
+                  : 'bg-[#0a0a09] border-[#111110] opacity-50'
               }`}>
                 <span className={`text-2xl ${unlocked ? '' : 'grayscale'}`}>{b.icon}</span>
                 <div>
-                  <p className={`text-sm font-medium ${unlocked ? 'text-white' : 'text-slate-500'}`}>{b.label}</p>
-                  <p className="text-slate-500 text-xs">{b.desc}</p>
+                  <p className={`text-sm font-medium ${unlocked ? 'text-white' : 'text-stone-500'}`}>{b.label}</p>
+                  <p className="text-stone-500 text-xs">{b.desc}</p>
                 </div>
-                {unlocked && <span className="ml-auto text-green-400 text-xs">✓</span>}
+                {unlocked && <span className="ml-auto text-[#86efac] text-xs">✓</span>}
               </div>
             )
           })}

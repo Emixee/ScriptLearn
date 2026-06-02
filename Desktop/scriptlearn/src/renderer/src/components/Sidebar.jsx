@@ -2,16 +2,17 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
 import WindowControls from './WindowControls'
 
+// Labels seuls — les indicateurs ASCII (▸ / ·) sont gérés dynamiquement dans le rendu
 const navItems = [
-  { to: '/app/dashboard',   label: 'Tableau de bord', icon: '▦' },
-  { to: '/app/courses',     label: 'Cours',            icon: '◫' },
-  { to: '/app/roadmap',     label: 'Parcours',         icon: '◉' },
-  { to: '/app/flashcards',  label: 'Révision',         icon: '◪' },
-  { to: '/app/sandbox',     label: 'Sandbox',          icon: '◌' },
-  { to: '/app/map',         label: 'Carte',            icon: '◈' },
-  { to: '/app/stats',       label: 'Statistiques',     icon: '◑' },
-  { to: '/app/cheatsheets', label: 'Aide-mémoire',     icon: '◧' },
-  { to: '/app/settings',    label: 'Paramètres',       icon: '◎', updateBadge: true },
+  { to: '/app/dashboard',   label: 'tableau de bord'  },
+  { to: '/app/courses',     label: 'cours'             },
+  { to: '/app/roadmap',     label: 'parcours'          },
+  { to: '/app/flashcards',  label: 'révision'          },
+  { to: '/app/sandbox',     label: 'sandbox'           },
+  { to: '/app/map',         label: 'carte'             },
+  { to: '/app/stats',       label: 'statistiques'      },
+  { to: '/app/cheatsheets', label: 'aide-mémoire'      },
+  { to: '/app/settings',    label: 'paramètres',       updateBadge: true },
 ]
 
 function Sidebar({ onSearch }) {
@@ -19,68 +20,94 @@ function Sidebar({ onSearch }) {
   const { profile, updateAvailable } = useProfile()
 
   return (
-    <aside className="w-64 bg-[#1a1d2e] border-r border-[#2d3748] flex flex-col flex-shrink-0">
-      {/* Logo + contrôles fenêtre */}
+    <aside className="w-56 bg-[#111110] border-r border-[#2e2b26] flex flex-col flex-shrink-0">
+
+      {/* ── En-tête : marque + contrôles fenêtre ────────────────────────
+          WebkitAppRegion:'drag' rend la zone draggable pour déplacer la fenêtre
+          (nécessaire car frame:false supprime la barre de titre native).
+          Les contrôles et le logo doivent être no-drag pour rester cliquables. */}
       <div
-        className="px-4 py-4 border-b border-[#2d3748] flex items-center justify-between"
+        className="px-4 py-4 border-b border-[#2e2b26] flex items-center justify-between flex-shrink-0"
         style={{ WebkitAppRegion: 'drag' }}
       >
-        <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
-          <div className="w-8 h-8 bg-[#6366f1] rounded-lg flex items-center justify-center text-sm font-bold text-white">
-            S
+        <div className="flex items-center gap-2.5" style={{ WebkitAppRegion: 'no-drag' }}>
+          {/* Carré ambre avec >_ — évoque un prompt terminal, identité forte */}
+          <div className="w-7 h-7 bg-[#d97706] flex items-center justify-center text-[10px] font-bold text-[#0a0a09] flex-shrink-0 rounded-sm select-none">
+            &gt;_
           </div>
-          <span className="text-white font-semibold text-lg">ScriptLearn</span>
+          <div>
+            <div className="text-[#f5f0e8] text-sm font-semibold leading-none tracking-tight">
+              ScriptLearn
+            </div>
+            {/* Tagline commentaire — clin d'œil au code source, ton authentique */}
+            <div className="text-[#3d3a34] text-[10px] leading-none mt-0.5 tracking-wide">
+              // scripting
+            </div>
+          </div>
         </div>
         <WindowControls />
       </div>
 
-      {/* Recherche (Ctrl+K) */}
-      <div className="px-3 pt-3 pb-1" style={{ WebkitAppRegion: 'no-drag' }}>
+      {/* ── Recherche (Ctrl+K) ─────────────────────────────────────────── */}
+      <div className="px-3 pt-3 pb-1 flex-shrink-0" style={{ WebkitAppRegion: 'no-drag' }}>
         <button
           onClick={onSearch}
-          className="w-full flex items-center gap-2 px-3 py-2 bg-[#0f1117] border border-[#2d3748] rounded-lg text-slate-500 hover:text-slate-300 hover:border-[#3d4756] transition-colors text-sm"
+          className="w-full flex items-center gap-2 px-3 py-1.5 bg-[#0a0a09] border border-[#2e2b26] rounded-sm text-[#3d3a34] hover:text-[#78716c] hover:border-[#3d3a34] transition-colors text-xs"
         >
-          <span>🔍</span>
-          <span className="flex-1 text-left text-xs">Rechercher…</span>
-          <kbd className="text-xs border border-[#374151] px-1 py-0.5 rounded text-slate-600">Ctrl K</kbd>
+          <span className="text-[#3d3a34]">/</span>
+          <span className="flex-1 text-left">rechercher…</span>
+          <kbd className="text-[10px] border border-[#2e2b26] px-1 py-0.5 rounded-sm text-[#3d3a34]">⌃K</kbd>
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1">
-        {navItems.map(({ to, label, icon, updateBadge }) => (
+      {/* ── Navigation ────────────────────────────────────────────────────
+          ▸ = item actif (triangle ASCII), · = inactif
+          Labels en minuscules pour le style terminal */}
+      <nav className="flex-1 px-2 py-2 space-y-px overflow-y-auto" style={{ WebkitAppRegion: 'no-drag' }}>
+        {navItems.map(({ to, label, updateBadge }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs transition-colors ${
                 isActive
-                  ? 'bg-[#6366f1] text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-[#232640]'
+                  ? 'bg-[#d97706] text-[#0a0a09] font-semibold'
+                  : 'text-[#78716c] hover:text-[#f5f0e8] hover:bg-[#1c1c1a]'
               }`
             }
           >
-            <span className="text-base">{icon}</span>
-            <span className="flex-1">{label}</span>
-            {updateBadge && updateAvailable && (
-              <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="Mise à jour disponible" />
+            {({ isActive }) => (
+              <>
+                {/* Indicateur ASCII : ▸ actif, · inactif — plus sobre que les icônes emoji */}
+                <span className="w-3 text-center flex-shrink-0 text-[10px]">
+                  {isActive ? '▸' : '·'}
+                </span>
+                <span className="flex-1 tracking-wide">{label}</span>
+                {updateBadge && updateAvailable && (
+                  /* Pastille mise à jour : vert ambre-adjacent, discret */
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#86efac] flex-shrink-0" title="Mise à jour disponible" />
+                )}
+              </>
             )}
           </NavLink>
         ))}
       </nav>
 
-      {/* Profil actif */}
-      <div className="px-3 pb-4 border-t border-[#2d3748] pt-4">
+      {/* ── Profil actif ──────────────────────────────────────────────────
+          Juste emoji + nom + indicateur de changement — épuré, pas de fond coloré */}
+      <div className="px-2 pb-3 pt-2 border-t border-[#2e2b26] flex-shrink-0" style={{ WebkitAppRegion: 'no-drag' }}>
         <button
           onClick={() => navigate('/')}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-[#232640] transition-colors"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs text-[#78716c] hover:text-[#f5f0e8] hover:bg-[#1c1c1a] transition-colors"
         >
-          <div className="w-8 h-8 bg-[#1a1d2e] border border-[#2d3748] rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-            {profile?.emoji ?? '🧑'}
-          </div>
-          <div className="text-left overflow-hidden">
-            <div className="text-white text-sm font-medium truncate">{profile?.name ?? '…'}</div>
-            <div className="text-slate-500 text-xs">Changer de profil</div>
+          <span className="text-base flex-shrink-0">{profile?.emoji ?? '🧑'}</span>
+          <div className="text-left overflow-hidden flex-1 min-w-0">
+            <div className="text-[#d6d0c8] text-xs font-medium truncate leading-tight">
+              {profile?.name ?? '…'}
+            </div>
+            <div className="text-[#3d3a34] text-[10px] leading-tight tracking-wide">
+              changer ▸
+            </div>
           </div>
         </button>
       </div>

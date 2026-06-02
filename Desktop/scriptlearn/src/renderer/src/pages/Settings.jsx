@@ -14,7 +14,7 @@ function Toggle({ enabled, onToggle }) {
     <button
       onClick={onToggle}
       className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 focus:outline-none overflow-hidden ${
-        enabled ? 'bg-[#6366f1]' : 'bg-[#374151]'
+        enabled ? 'bg-[#d97706]' : 'bg-[#2e2b26]'
       }`}
     >
       <span
@@ -303,17 +303,17 @@ function Settings() {
 
       <div className="space-y-6">
         {/* IA locale */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-1">Intelligence artificielle</h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-stone-400 text-sm mb-4">
             Activer Ollama pour des corrections et explications générées localement.
             Requiert ~5 Go de disque et 8 Go de RAM.
           </p>
 
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-slate-300 text-sm font-medium">Ollama (IA locale)</p>
-              <p className="text-slate-500 text-xs mt-0.5">
+              <p className="text-stone-300 text-sm font-medium">Ollama (IA locale)</p>
+              <p className="text-stone-500 text-xs mt-0.5">
                 {aiEnabled
                   ? 'Actif — feedback dynamique activé'
                   : 'Inactif — corrections statiques utilisées'}
@@ -323,15 +323,15 @@ function Settings() {
           </div>
 
           {aiEnabled && (
-            <div className="border-t border-[#2d3748] pt-4 space-y-3">
+            <div className="border-t border-[#2e2b26] pt-4 space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-slate-400 text-xs uppercase tracking-widest">
+                  <label className="text-stone-400 text-xs uppercase tracking-widest">
                     URL Ollama
                   </label>
                   <button
                     onClick={() => persist({ aiUrl: 'http://localhost:11434' })}
-                    className="text-xs text-slate-500 hover:text-[#6366f1] transition-colors"
+                    className="text-xs text-stone-500 hover:text-[#d97706] transition-colors"
                   >
                     Réinitialiser
                   </button>
@@ -340,10 +340,10 @@ function Settings() {
                   value={aiUrl}
                   onChange={e => setAiUrl(e.target.value)}
                   onBlur={() => persist({ aiUrl })}
-                  className={`w-full bg-[#0f1117] border rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none transition-colors ${
+                  className={`w-full bg-[#0a0a09] border rounded-sm px-3 py-2 text-sm text-stone-200 font-mono focus:outline-none transition-colors ${
                     aiUrl && !aiUrl.startsWith('http')
                       ? 'border-red-500/60 focus:border-red-500'
-                      : 'border-[#2d3748] focus:border-[#6366f1]'
+                      : 'border-[#2e2b26] focus:border-[#d97706]'
                   }`}
                   placeholder="http://localhost:11434"
                 />
@@ -355,13 +355,13 @@ function Settings() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-slate-400 text-xs uppercase tracking-widest">
+                  <label className="text-stone-400 text-xs uppercase tracking-widest">
                     Modèle
                   </label>
                   {/* Indicateur de RAM requise — aide l'utilisateur à choisir selon sa machine */}
                   {getModelRam(aiModel) && (
-                    <span className="text-xs text-slate-500">
-                      🧠 RAM : <span className="text-slate-400">{getModelRam(aiModel)}</span>
+                    <span className="text-xs text-stone-500">
+                      🧠 RAM : <span className="text-stone-400">{getModelRam(aiModel)}</span>
                     </span>
                   )}
                 </div>
@@ -369,7 +369,7 @@ function Settings() {
                   value={aiModel}
                   onChange={e => { setAiModel(e.target.value); setPullState(null) }}
                   onBlur={() => persist({ aiModel })}
-                  className="w-full bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[#0a0a09] border border-[#2e2b26] rounded-sm px-3 py-2 text-sm text-stone-200 font-mono focus:outline-none focus:border-[#d97706] transition-colors"
                   placeholder="llama3.2"
                 />
                 {/* ── Sélection du modèle par défaut ──────────────────────────
@@ -379,7 +379,7 @@ function Settings() {
                     (installedModels est un état séparé de testState). */}
                 {installedModels.length > 0 && (
                   <div className="mt-2 space-y-2">
-                    <p className="text-slate-500 text-xs uppercase tracking-widest">
+                    <p className="text-stone-500 text-xs uppercase tracking-widest">
                       Modèles installés — cliquez pour sélectionner
                     </p>
                     <div className="space-y-1.5">
@@ -390,24 +390,24 @@ function Settings() {
                           <button
                             key={m}
                             onClick={() => { setAiModel(m); persist({ aiModel: m }); setPullState(null) }}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-left transition-all ${
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-sm border text-left transition-all ${
                               isActive
-                                ? 'bg-[#6366f1]/15 border-[#6366f1] text-white'
-                                : 'bg-[#0f1117] border-[#2d3748] text-slate-400 hover:border-[#3d4756] hover:text-slate-200'
+                                ? 'bg-[#d97706]/15 border-[#d97706] text-white'
+                                : 'bg-[#0a0a09] border-[#2e2b26] text-stone-400 hover:border-[#3d3a34] hover:text-stone-200'
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               {/* Indicateur visuel du modèle actif */}
-                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-[#6366f1]' : 'bg-[#374151]'}`} />
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-[#d97706]' : 'bg-[#2e2b26]'}`} />
                               <span className="font-mono text-sm">{m}</span>
                               {isActive && (
-                                <span className="text-[10px] bg-[#6366f1]/30 text-[#818cf8] px-1.5 py-0.5 rounded font-medium">
+                                <span className="text-[10px] bg-[#d97706]/30 text-[#fbbf24] px-1.5 py-0.5 rounded font-medium">
                                   par défaut
                                 </span>
                               )}
                             </div>
                             {ram && (
-                              <span className="text-[10px] text-slate-600 flex-shrink-0 ml-2">
+                              <span className="text-[10px] text-stone-600 flex-shrink-0 ml-2">
                                 🧠 {ram.split(',')[0]}
                               </span>
                             )}
@@ -426,7 +426,7 @@ function Settings() {
                         <button
                           onClick={pullModel}
                           disabled={pullState === 'pulling'}
-                          className="flex items-center gap-2 text-xs bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                          className="flex items-center gap-2 text-xs bg-[#d97706] hover:bg-[#b45309] disabled:opacity-50 text-[#0a0a09] px-3 py-1.5 rounded-sm transition-colors font-medium"
                         >
                           {pullState === 'pulling' ? '⏳ Téléchargement…' : `↓ Télécharger ${aiModel}`}
                         </button>
@@ -444,7 +444,7 @@ function Settings() {
                     <button
                       onClick={pullModel}
                       disabled={pullState === 'pulling'}
-                      className="flex items-center gap-2 text-xs bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                      className="flex items-center gap-2 text-xs bg-[#d97706] hover:bg-[#b45309] disabled:opacity-50 text-[#0a0a09] px-3 py-1.5 rounded-sm transition-colors font-medium"
                     >
                       {pullState === 'pulling' ? '⏳ Téléchargement…' : `↓ Télécharger ${aiModel || 'mistral:7b'}`}
                     </button>
@@ -453,17 +453,17 @@ function Settings() {
               </div>
               {/* Zone de progression du téléchargement de modèle */}
               {pullState && pullState !== 'done' && pullState !== 'error' && pullState !== 'pulling' && (
-                <div className="bg-[#0f1117] rounded-lg p-3 space-y-1.5">
+                <div className="bg-[#0a0a09] rounded-sm p-3 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">{pullState.status || 'Téléchargement…'}</span>
+                    <span className="text-xs text-stone-400">{pullState.status || 'Téléchargement…'}</span>
                     {pullState.pct !== null && (
-                      <span className="text-xs text-[#6366f1] font-medium">{pullState.pct}%</span>
+                      <span className="text-xs text-[#d97706] font-medium">{pullState.pct}%</span>
                     )}
                   </div>
                   {pullState.pct !== null && (
-                    <div className="h-1.5 bg-[#1a1d2e] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#111110] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#6366f1] rounded-full transition-all duration-300"
+                        className="h-full bg-[#d97706] rounded-full transition-all duration-300"
                         style={{ width: `${pullState.pct}%` }}
                       />
                     </div>
@@ -471,7 +471,7 @@ function Settings() {
                 </div>
               )}
               {pullState === 'done' && (
-                <p className="text-green-400 text-xs flex items-center gap-1">
+                <p className="text-[#86efac] text-xs flex items-center gap-1">
                   <span>✓</span> Modèle téléchargé et activé comme modèle par défaut.
                 </p>
               )}
@@ -483,12 +483,12 @@ function Settings() {
               <button
                 onClick={testConnection}
                 disabled={testState === 'testing' || pullState === 'pulling'}
-                className="flex items-center gap-2 text-sm bg-[#232640] hover:bg-[#2d3258] text-slate-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 text-sm bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 px-4 py-2 rounded-sm transition-colors disabled:opacity-50"
               >
                 {testState === 'testing' ? (
                   <>⏳ Test en cours…</>
                 ) : testState?.ok && !testState?.modelWarning ? (
-                  <><span className="text-green-400">✓</span> Ollama OK — modèle disponible</>
+                  <><span className="text-[#86efac]">✓</span> Ollama OK — modèle disponible</>
                 ) : testState?.ok && testState?.modelWarning ? (
                   <><span className="text-amber-400">⚠</span> Ollama OK — modèle introuvable</>
                 ) : testState?.ok === false ? (
@@ -502,15 +502,15 @@ function Settings() {
         </div>
 
         {/* Rappels quotidiens */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-1">Rappels</h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-stone-400 text-sm mb-4">
             Recevoir une notification si vous n'avez pas pratiqué dans la journée.
           </p>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-slate-300 text-sm font-medium">Rappel quotidien</p>
-              <p className="text-slate-500 text-xs mt-0.5">
+              <p className="text-stone-300 text-sm font-medium">Rappel quotidien</p>
+              <p className="text-stone-500 text-xs mt-0.5">
                 {remindersEnabled ? `Actif — notification à ${reminderTime}` : 'Inactif'}
               </p>
             </div>
@@ -518,22 +518,22 @@ function Settings() {
           </div>
           {remindersEnabled && (
             <div>
-              <label className="text-slate-400 text-xs uppercase tracking-widest block mb-1.5">Heure</label>
+              <label className="text-stone-400 text-xs uppercase tracking-widest block mb-1.5">Heure</label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={e => setReminderTime(e.target.value)}
                 onBlur={() => persist({ reminderTime })}
-                className="bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
+                className="bg-[#0a0a09] border border-[#2e2b26] rounded-sm px-3 py-2 text-sm text-stone-200 font-mono focus:outline-none focus:border-[#d97706] transition-colors"
               />
             </div>
           )}
         </div>
 
         {/* Objectif hebdomadaire */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-1">Objectif hebdomadaire</h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-stone-400 text-sm mb-4">
             Nombre d'exercices à compléter chaque semaine (visible sur le tableau de bord).
           </p>
           <div className="flex items-center gap-3">
@@ -544,30 +544,30 @@ function Settings() {
               value={weeklyGoalInput}
               onChange={e => setWeeklyGoalInput(e.target.value)}
               onBlur={handleWeeklyGoalBlur}
-              className="w-24 bg-[#0f1117] border border-[#2d3748] rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#6366f1] transition-colors"
+              className="w-24 bg-[#0a0a09] border border-[#2e2b26] rounded-sm px-3 py-2 text-sm text-stone-200 font-mono focus:outline-none focus:border-[#d97706] transition-colors"
             />
-            <span className="text-slate-400 text-sm">exercices / semaine</span>
+            <span className="text-stone-400 text-sm">exercices / semaine</span>
           </div>
         </div>
 
         {/* Apparence */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-4">Apparence</h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-300 text-sm font-medium">Thème</p>
-              <p className="text-slate-500 text-xs mt-0.5">Thème clair à venir dans une prochaine version</p>
+              <p className="text-stone-300 text-sm font-medium">Thème</p>
+              <p className="text-stone-500 text-xs mt-0.5">Thème clair à venir dans une prochaine version</p>
             </div>
-            <span className="text-xs text-slate-400 bg-[#0f1117] px-3 py-1.5 rounded-lg border border-[#2d3748]">
+            <span className="text-xs text-stone-400 bg-[#0a0a09] px-3 py-1.5 rounded-sm border border-[#2e2b26]">
               Sombre
             </span>
           </div>
         </div>
 
         {/* Progression */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-1">Progression</h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-stone-400 text-sm mb-4">
             Réinitialiser efface tous les exercices complétés pour le profil actif ({profile?.name ?? '…'}).
             Cette action est irréversible.
           </p>
@@ -575,10 +575,10 @@ function Settings() {
           <button
             onClick={handleExportProgress}
             disabled={exportState === 'generating'}
-            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-sm transition-colors ${
               exportState === 'done'
-                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                : 'bg-[#232640] hover:bg-[#2d3258] text-slate-300 border border-[#2d3748] disabled:opacity-50'
+                ? 'bg-[#86efac]/10 text-[#86efac] border border-[#86efac]/30'
+                : 'bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 border border-[#2e2b26] disabled:opacity-50'
             }`}
           >
             {exportState === 'generating' ? '⏳ Génération…' : exportState === 'done' ? '✓ Exporté' : '⬇ Exporter ma progression'}
@@ -594,18 +594,18 @@ function Settings() {
               a.click()
               URL.revokeObjectURL(url)
             })}
-            className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors bg-[#232640] hover:bg-[#2d3258] text-slate-300 border border-[#2d3748]"
+            className="flex items-center gap-2 text-sm px-4 py-2 rounded-sm transition-colors bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 border border-[#2e2b26]"
           >
             📦 Sauvegarder le profil (JSON)
           </button>
           <button
             onClick={handleImportProfile}
-            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors border ${
+            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-sm transition-colors border ${
               importState === 'done'
-                ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                ? 'bg-[#86efac]/10 text-[#86efac] border-[#86efac]/30'
                 : importState === 'error'
                 ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                : 'bg-[#232640] hover:bg-[#2d3258] text-slate-300 border-[#2d3748]'
+                : 'bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 border-[#2e2b26]'
             }`}
           >
             {importState === 'reading' ? '⏳ Import…'
@@ -615,12 +615,12 @@ function Settings() {
           </button>
           <button
             onClick={handleResetProgress}
-            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-sm transition-colors ${
               resetState === 'done'
-                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                ? 'bg-[#86efac]/10 text-[#86efac] border border-[#86efac]/30'
                 : resetState === 'confirm'
                 ? 'bg-red-500 hover:bg-red-600 text-white font-medium'
-                : 'bg-[#232640] hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-[#2d3748] hover:border-red-500/30'
+                : 'bg-[#1c1c1a] hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-[#2e2b26] hover:border-red-500/30'
             }`}
           >
             {resetState === 'done'
@@ -638,39 +638,39 @@ function Settings() {
         </div>
 
         {/* Mises à jour */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-white font-semibold">Mises à jour</h2>
             {updateAvailable && updateStatus !== UPDATE_STATUS.ready && (
-              <span className="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-[#86efac]/15 text-[#86efac] px-2 py-0.5 rounded-full font-medium">
                 Mise à jour disponible
               </span>
             )}
           </div>
-          <p className="text-slate-400 text-sm mb-4">
-            Version actuelle : <span className="text-slate-300 font-mono">{appVersion}</span>
+          <p className="text-stone-400 text-sm mb-4">
+            Version actuelle : <span className="text-stone-300 font-mono">{appVersion}</span>
           </p>
 
           {/* État : disponible ou prête à installer */}
           {(updateStatus === UPDATE_STATUS.available || updateStatus === UPDATE_STATUS.ready) && updateInfo && (
-            <div className="bg-[#0f1117] border border-green-500/20 rounded-lg p-4 mb-4">
-              <p className="text-green-400 font-medium text-sm mb-1">
+            <div className="bg-[#0a0a09] border border-[#86efac]/20 rounded-sm p-4 mb-4">
+              <p className="text-[#86efac] font-medium text-sm mb-1">
                 Version {updateInfo.remoteVersion} disponible
               </p>
               {updateInfo.releaseNotes && (
-                <p className="text-slate-500 text-xs mb-3 line-clamp-3">{updateInfo.releaseNotes}</p>
+                <p className="text-stone-500 text-xs mb-3 line-clamp-3">{updateInfo.releaseNotes}</p>
               )}
               {updateStatus === UPDATE_STATUS.ready ? (
                 <button
                   onClick={installUpdate}
-                  className="w-full bg-green-500 hover:bg-green-400 text-white text-sm py-2 rounded-lg transition-colors font-medium"
+                  className="w-full bg-[#86efac] hover:bg-[#86efac]/80 text-[#0a0a09] text-sm py-2 rounded-sm transition-colors font-medium"
                 >
                   ↺ Redémarrer et installer
                 </button>
               ) : (
                 <button
                   onClick={downloadUpdate}
-                  className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm py-2 rounded-lg transition-colors font-medium"
+                  className="w-full bg-[#d97706] hover:bg-[#b45309] text-[#0a0a09] text-sm py-2 rounded-sm transition-colors font-medium"
                 >
                   ↓ Télécharger ({updateInfo.assetSize ? `${Math.round(updateInfo.assetSize / 1024 / 1024)} Mo` : '…'})
                 </button>
@@ -681,13 +681,13 @@ function Settings() {
           {/* Barre de progression */}
           {updateStatus === UPDATE_STATUS.downloading && (
             <div className="mb-4">
-              <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+              <div className="flex justify-between text-xs text-stone-400 mb-1.5">
                 <span>Téléchargement en cours…</span>
                 <span>{dlProgress}%</span>
               </div>
-              <div className="h-2 bg-[#0f1117] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#6366f1] rounded-full transition-all duration-300"
+                  className="h-full bg-[#d97706] rounded-full transition-all duration-300"
                   style={{ width: `${dlProgress}%` }}
                 />
               </div>
@@ -696,7 +696,7 @@ function Settings() {
 
           {/* État à jour */}
           {updateStatus === UPDATE_STATUS.uptodate && (
-            <p className="text-green-400/80 text-sm mb-4 flex items-center gap-2">
+            <p className="text-[#86efac]/80 text-sm mb-4 flex items-center gap-2">
               <span>✓</span> Vous utilisez la dernière version.
             </p>
           )}
@@ -713,7 +713,7 @@ function Settings() {
             <button
               onClick={checkUpdate}
               disabled={updateStatus === UPDATE_STATUS.checking}
-              className="flex items-center gap-2 text-sm bg-[#232640] hover:bg-[#2d3258] text-slate-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 text-sm bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 px-4 py-2 rounded-sm transition-colors disabled:opacity-50"
             >
               {updateStatus === UPDATE_STATUS.checking ? (
                 <><span className="animate-spin inline-block">↻</span> Vérification…</>
@@ -725,24 +725,24 @@ function Settings() {
         </div>
 
         {/* À propos */}
-        <div className="bg-[#1a1d2e] rounded-xl p-6 border border-[#2d3748]">
+        <div className="bg-[#111110] rounded p-6 border border-[#2e2b26]">
           <h2 className="text-white font-semibold mb-4">À propos</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">Version</span>
-              <span className="text-slate-300">{appVersion}</span>
+              <span className="text-stone-400">Version</span>
+              <span className="text-stone-300">{appVersion}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Modules</span>
-              <span className="text-slate-300">118 modules · 8 niveaux</span>
+              <span className="text-stone-400">Modules</span>
+              <span className="text-stone-300">118 modules · 8 niveaux</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Licence</span>
-              <span className="text-slate-300">Gratuit & open-source</span>
+              <span className="text-stone-400">Licence</span>
+              <span className="text-stone-300">Gratuit & open-source</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Langages</span>
-              <span className="text-slate-300">Bash · Python · PowerShell · KQL · SQL · Git · Regex · SPL · YAML</span>
+              <span className="text-stone-400">Langages</span>
+              <span className="text-stone-300">Bash · Python · PowerShell · KQL · SQL · Git · Regex · SPL · YAML</span>
             </div>
           </div>
         </div>

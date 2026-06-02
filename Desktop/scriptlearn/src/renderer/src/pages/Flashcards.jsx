@@ -6,7 +6,7 @@ import contentIndex from '../content/index.json'
 import { parseMarkdown } from '../utils/markdown'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 
 const FILTERS = [
@@ -84,7 +84,7 @@ export default function Flashcards() {
   }, [filter, langFilter])
 
   const card = filteredCards[cardIdx] ?? null
-  const langColor = card ? (LANG_COLORS[card.lang] ?? '#6366f1') : '#6366f1'
+  const langColor = card ? (LANG_COLORS[card.lang] ?? '#d97706') : '#d97706'
   const langLabel = card ? (LANG_LABELS[card.lang] ?? card.lang) : ''
 
   const goNext = () => {
@@ -103,9 +103,9 @@ export default function Flashcards() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Révision / Flashcards</h1>
-          <p className="text-slate-400 text-sm mt-1">Entraîne-toi sur les exercices qui te posent problème</p>
+          <p className="text-stone-400 text-sm mt-1">Entraîne-toi sur les exercices qui te posent problème</p>
         </div>
-        <span className="text-slate-500 text-sm bg-[#1a1d2e] border border-[#2d3748] px-3 py-1 rounded-lg">
+        <span className="text-stone-500 text-sm bg-[#111110] border border-[#2e2b26] px-3 py-1 rounded-sm">
           {filteredCards.length} carte{filteredCards.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -116,10 +116,10 @@ export default function Flashcards() {
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-colors border ${
               filter === f.id
-                ? 'bg-[#6366f1] text-white border-[#6366f1]'
-                : 'bg-[#1a1d2e] text-slate-400 hover:text-white border-[#2d3748]'
+                ? 'bg-[#d97706] text-[#0a0a09] border-[#d97706]'
+                : 'bg-[#111110] text-stone-400 hover:text-white border-[#2e2b26]'
             }`}
           >
             {f.label}
@@ -132,7 +132,7 @@ export default function Flashcards() {
               key={lang}
               onClick={() => setLangFilter(langFilter === lang ? null : lang)}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                langFilter === lang ? 'text-[#0f1117]' : 'text-slate-500 hover:text-slate-300 bg-[#1a1d2e]'
+                langFilter === lang ? 'text-[#0a0a09]' : 'text-stone-500 hover:text-stone-300 bg-[#111110]'
               }`}
               style={langFilter === lang ? { backgroundColor: LANG_COLORS[lang] } : {}}
             >
@@ -148,7 +148,7 @@ export default function Flashcards() {
           <div className="text-center">
             <p className="text-4xl mb-3">🎉</p>
             <p className="text-white font-semibold mb-1">Aucune carte dans cette catégorie</p>
-            <p className="text-slate-400 text-sm">
+            <p className="text-stone-400 text-sm">
               {filter === 'difficult' ? 'Aucun exercice avec 3+ tentatives.' :
                filter === 'pending'   ? 'Tous les exercices sont terminés !' :
                filter === 'completed' ? 'Commencez d\'abord des exercices.' :
@@ -165,12 +165,12 @@ export default function Flashcards() {
                 key={i}
                 onClick={() => { setFlipped(false); setCardIdx(i) }}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  i === cardIdx ? 'bg-white scale-125' : 'bg-[#374151] hover:bg-slate-400'
+                  i === cardIdx ? 'bg-white scale-125' : 'bg-[#2e2b26] hover:bg-stone-400'
                 }`}
               />
             ))}
           </div>
-          <p className="text-slate-500 text-xs">{cardIdx + 1} / {filteredCards.length}</p>
+          <p className="text-stone-500 text-xs">{cardIdx + 1} / {filteredCards.length}</p>
 
           {/* Card */}
           <div
@@ -188,7 +188,7 @@ export default function Flashcards() {
             >
               {/* Recto */}
               <div
-                className="absolute inset-0 bg-[#1a1d2e] border border-[#2d3748] rounded-2xl p-7 flex flex-col"
+                className="absolute inset-0 bg-[#111110] border border-[#2e2b26] rounded p-7 flex flex-col"
                 style={{ backfaceVisibility: 'hidden' }}
               >
                 <div className="flex items-center justify-between mb-4">
@@ -203,23 +203,23 @@ export default function Flashcards() {
                       </span>
                     )}
                     {card.entry.completed && (
-                      <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded">✓ Terminé</span>
+                      <span className="text-xs text-[#86efac] bg-[#86efac]/10 px-2 py-0.5 rounded">✓ Terminé</span>
                     )}
                   </div>
                 </div>
                 <h3 className="text-white font-semibold text-lg mb-3">{card.ex.title}</h3>
-                <div className="text-slate-300 text-sm leading-relaxed flex-1"
+                <div className="text-stone-300 text-sm leading-relaxed flex-1"
                   dangerouslySetInnerHTML={{ __html: parseMarkdown(card.ex.instructions) }} />
-                <p className="text-slate-600 text-xs text-center mt-4">Cliquez pour voir la correction</p>
+                <p className="text-stone-600 text-xs text-center mt-4">Cliquez pour voir la correction</p>
               </div>
 
               {/* Verso */}
               <div
-                className="absolute inset-0 bg-[#1a1d2e] border rounded-2xl p-7 flex flex-col"
+                className="absolute inset-0 bg-[#111110] border rounded p-7 flex flex-col"
                 style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', borderColor: `${langColor}40` }}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-slate-500 uppercase tracking-widest">Correction</span>
+                  <span className="text-xs text-stone-500 uppercase tracking-widest">Correction</span>
                   <span className="text-xs px-2 py-0.5 rounded font-medium"
                     style={{ backgroundColor: `${langColor}20`, color: langColor }}>
                     {langLabel}
@@ -229,10 +229,10 @@ export default function Flashcards() {
                   {card.ex.correction}
                 </pre>
                 {card.ex.explanation && (
-                  <div className="text-slate-400 text-xs leading-relaxed border-t border-[#2d3748] pt-3"
+                  <div className="text-stone-400 text-xs leading-relaxed border-t border-[#2e2b26] pt-3"
                     dangerouslySetInnerHTML={{ __html: parseMarkdown(card.ex.explanation) }} />
                 )}
-                <p className="text-slate-600 text-xs text-center mt-3">Cliquez pour retourner</p>
+                <p className="text-stone-600 text-xs text-center mt-3">Cliquez pour retourner</p>
               </div>
             </div>
           </div>
@@ -242,20 +242,20 @@ export default function Flashcards() {
             <button
               onClick={goPrev}
               disabled={cardIdx === 0}
-              className="px-4 py-2 bg-[#1a1d2e] hover:bg-[#232640] text-slate-300 rounded-lg text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-[#2d3748]"
+              className="px-4 py-2 bg-[#111110] hover:bg-[#1c1c1a] text-stone-300 rounded-sm text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-[#2e2b26]"
             >
               ← Précédent
             </button>
             <button
               onClick={() => navigate(`/course/${card.lang}/${card.levelId}/${card.moduleId}`)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-xs transition-colors"
+              className="px-4 py-2 text-stone-400 hover:text-white text-xs transition-colors"
             >
               Voir le cours →
             </button>
             <button
               onClick={goNext}
               disabled={cardIdx === filteredCards.length - 1}
-              className="px-4 py-2 bg-[#1a1d2e] hover:bg-[#232640] text-slate-300 rounded-lg text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-[#2d3748]"
+              className="px-4 py-2 bg-[#111110] hover:bg-[#1c1c1a] text-stone-300 rounded-sm text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-[#2e2b26]"
             >
               Suivant →
             </button>

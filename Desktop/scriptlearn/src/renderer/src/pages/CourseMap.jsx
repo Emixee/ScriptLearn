@@ -7,7 +7,7 @@ import { getModule } from '../content/loader'
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 const LANG_COLORS = {
-  bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1',
+  bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706',
   kql: '#e879f9', sql: '#3b82f6', regex: '#8b5cf6',
   git: '#f97316', spl: '#10b981', yaml: '#f59e0b',
   html: '#e34c26', php: '#8892bf'
@@ -78,23 +78,23 @@ export default function CourseMap() {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-white">Carte du parcours</h1>
           {/* Toggle Standard / Complémentaires */}
-          <div className="flex bg-[#1a1d2e] border border-[#2d3748] rounded-lg p-1 gap-1">
+          <div className="flex bg-[#111110] border border-[#2e2b26] rounded-sm p-1 gap-1">
             <button
               onClick={() => setViewMode('standard')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-colors ${
                 viewMode === 'standard'
-                  ? 'bg-[#6366f1] text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#d97706] text-[#0a0a09]'
+                  : 'text-stone-400 hover:text-white'
               }`}
             >
               Scripting
             </button>
             <button
               onClick={() => setViewMode('complementary')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-colors ${
                 viewMode === 'complementary'
-                  ? 'bg-[#6366f1] text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#d97706] text-[#0a0a09]'
+                  : 'text-stone-400 hover:text-white'
               }`}
             >
               Complémentaires
@@ -109,10 +109,10 @@ export default function CourseMap() {
               <button
                 key={lang}
                 onClick={() => setSelectedLang(lang)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-colors ${
                   selectedLang === lang
                     ? 'text-white'
-                    : 'bg-[#1a1d2e] text-slate-400 hover:text-white border border-[#2d3748]'
+                    : 'bg-[#111110] text-stone-400 hover:text-white border border-[#2e2b26]'
                 }`}
                 style={selectedLang === lang
                   ? { backgroundColor: LANG_COLORS[lang] }
@@ -129,7 +129,7 @@ export default function CourseMap() {
       {viewMode === 'standard' && (
         <div className="relative">
           {/* Ligne verticale de connexion */}
-          <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-[#2d3748]" />
+          <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-[#2e2b26]" />
 
           <div className="space-y-8">
             {langData.map((level) => (
@@ -138,21 +138,21 @@ export default function CourseMap() {
                 <div
                   className="absolute left-3.5 top-3 w-5 h-5 rounded-full border-2 flex items-center justify-center"
                   style={{
-                    backgroundColor: level.locked ? '#1a1d2e' : level.color,
-                    borderColor: level.locked ? '#374151' : level.color
+                    backgroundColor: level.locked ? '#111110' : level.color,
+                    borderColor: level.locked ? '#2e2b26' : level.color
                   }}
                 >
-                  {level.locked && <span className="text-slate-600 text-xs">🔒</span>}
+                  {level.locked && <span className="text-stone-600 text-xs">🔒</span>}
                 </div>
 
                 {/* En-tête niveau */}
                 <div className="mb-4">
                   <h2 className="text-white font-bold">Niveau {level.id} — {level.name}</h2>
-                  {level.description && <p className="text-slate-500 text-xs mt-0.5">{level.description}</p>}
+                  {level.description && <p className="text-stone-500 text-xs mt-0.5">{level.description}</p>}
                 </div>
 
                 {level.modules.length === 0 ? (
-                  <p className="text-slate-600 text-sm italic">Aucun module {LANG_LABELS[selectedLang]} à ce niveau.</p>
+                  <p className="text-stone-600 text-sm italic">Aucun module {LANG_LABELS[selectedLang]} à ce niveau.</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
                     {level.modules.map((mod) => (
@@ -160,21 +160,21 @@ export default function CourseMap() {
                         key={mod.id}
                         disabled={level.locked}
                         onClick={() => !level.locked && navigate(`/course/${selectedLang}/${level.id}/${mod.id}`)}
-                        className={`bg-[#1a1d2e] rounded-xl p-4 border text-left transition-all ${
+                        className={`bg-[#111110] rounded-sm p-4 border text-left transition-all ${
                           level.locked
-                            ? 'border-[#2d3748] opacity-50 cursor-not-allowed'
+                            ? 'border-[#2e2b26] opacity-50 cursor-not-allowed'
                             : mod.pct === 100
-                            ? 'border-green-500/40 hover:border-green-500/70'
+                            ? 'border-[#86efac]/40 hover:border-[#86efac]/70'
                             : mod.pct > 0
-                            ? 'border-[#6366f1]/40 hover:border-[#6366f1]'
-                            : 'border-[#2d3748] hover:border-[#3d4756]'
+                            ? 'border-[#d97706]/40 hover:border-[#d97706]'
+                            : 'border-[#2e2b26] hover:border-[#3d3a34]'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <span className="text-white text-sm font-medium leading-snug">{mod.title}</span>
-                          {mod.pct === 100 && <span className="text-green-400 text-xs flex-shrink-0">✓</span>}
+                          {mod.pct === 100 && <span className="text-[#86efac] text-xs flex-shrink-0">✓</span>}
                         </div>
-                        <div className="h-1 bg-[#0f1117] rounded-full overflow-hidden mb-1">
+                        <div className="h-1 bg-[#0a0a09] rounded-full overflow-hidden mb-1">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
@@ -183,7 +183,7 @@ export default function CourseMap() {
                             }}
                           />
                         </div>
-                        <p className="text-slate-500 text-xs">{mod.done}/{mod.total} exercices</p>
+                        <p className="text-stone-500 text-xs">{mod.done}/{mod.total} exercices</p>
                       </button>
                     ))}
                   </div>
@@ -203,37 +203,37 @@ export default function CourseMap() {
               <button
                 key={track.key}
                 onClick={() => setSelectedTrack(selectedTrack === track.key ? null : track.key)}
-                className={`bg-[#1a1d2e] rounded-xl p-4 border text-left transition-all ${
+                className={`bg-[#111110] rounded-sm p-4 border text-left transition-all ${
                   selectedTrack === track.key
-                    ? 'border-[#6366f1]'
-                    : 'border-[#2d3748] hover:border-[#3d4756]'
+                    ? 'border-[#d97706]'
+                    : 'border-[#2e2b26] hover:border-[#3d3a34]'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{track.icon}</span>
                   <div>
                     <div className="text-white font-bold">{track.name}</div>
-                    <div className="text-slate-500 text-xs">{track.levels.length} niveaux</div>
+                    <div className="text-stone-500 text-xs">{track.levels.length} niveaux</div>
                   </div>
                   <div className="ml-auto text-right">
                     <div
                       className="text-sm font-bold"
-                      style={{ color: track.key in LANG_COLORS ? LANG_COLORS[track.key] : '#6366f1' }}
+                      style={{ color: track.key in LANG_COLORS ? LANG_COLORS[track.key] : '#d97706' }}
                     >
                       {track.overallPct}%
                     </div>
                   </div>
                 </div>
-                <div className="h-1.5 bg-[#0f1117] rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#0a0a09] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${track.overallPct}%`,
-                      backgroundColor: track.key in LANG_COLORS ? LANG_COLORS[track.key] : '#6366f1'
+                      backgroundColor: track.key in LANG_COLORS ? LANG_COLORS[track.key] : '#d97706'
                     }}
                   />
                 </div>
-                <p className="text-slate-500 text-xs mt-2">{track.description}</p>
+                <p className="text-stone-500 text-xs mt-2">{track.description}</p>
               </button>
             ))}
           </div>
@@ -242,7 +242,7 @@ export default function CourseMap() {
           {activeTrackData && (
             <div className="relative">
               {/* Ligne verticale */}
-              <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-[#2d3748]" />
+              <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-[#2e2b26]" />
 
               <h2 className="text-lg font-bold text-white mb-6 pl-16">
                 {activeTrackData.icon} {activeTrackData.name} — Progression par niveau
@@ -250,15 +250,15 @@ export default function CourseMap() {
 
               <div className="space-y-8">
                 {activeTrackData.levels.map((level) => {
-                  const trackColor = LANG_COLORS[activeTrackData.key] ?? '#6366f1'
+                  const trackColor = LANG_COLORS[activeTrackData.key] ?? '#d97706'
                   return (
                     <div key={level.id} className="relative pl-16">
                       {/* Nœud niveau */}
                       <div
                         className="absolute left-3.5 top-3 w-5 h-5 rounded-full border-2"
                         style={{
-                          backgroundColor: level.pct > 0 ? trackColor : '#1a1d2e',
-                          borderColor: level.pct > 0 ? trackColor : '#374151'
+                          backgroundColor: level.pct > 0 ? trackColor : '#111110',
+                          borderColor: level.pct > 0 ? trackColor : '#2e2b26'
                         }}
                       />
 
@@ -278,19 +278,19 @@ export default function CourseMap() {
                           <button
                             key={mod.id}
                             onClick={() => navigate(`/course/${activeTrackData.key}/${level.id}/${mod.id}`)}
-                            className={`bg-[#1a1d2e] rounded-xl p-4 border text-left transition-all ${
+                            className={`bg-[#111110] rounded-sm p-4 border text-left transition-all ${
                               mod.pct === 100
-                                ? 'border-green-500/40 hover:border-green-500/70'
+                                ? 'border-[#86efac]/40 hover:border-[#86efac]/70'
                                 : mod.pct > 0
-                                ? 'border-[#6366f1]/40 hover:border-[#6366f1]'
-                                : 'border-[#2d3748] hover:border-[#3d4756]'
+                                ? 'border-[#d97706]/40 hover:border-[#d97706]'
+                                : 'border-[#2e2b26] hover:border-[#3d3a34]'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <span className="text-white text-sm font-medium leading-snug">{mod.title}</span>
-                              {mod.pct === 100 && <span className="text-green-400 text-xs flex-shrink-0">✓</span>}
+                              {mod.pct === 100 && <span className="text-[#86efac] text-xs flex-shrink-0">✓</span>}
                             </div>
-                            <div className="h-1 bg-[#0f1117] rounded-full overflow-hidden mb-1">
+                            <div className="h-1 bg-[#0a0a09] rounded-full overflow-hidden mb-1">
                               <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
@@ -299,7 +299,7 @@ export default function CourseMap() {
                                 }}
                               />
                             </div>
-                            <p className="text-slate-500 text-xs">{mod.done}/{mod.total} exercices</p>
+                            <p className="text-stone-500 text-xs">{mod.done}/{mod.total} exercices</p>
                           </button>
                         ))}
                       </div>

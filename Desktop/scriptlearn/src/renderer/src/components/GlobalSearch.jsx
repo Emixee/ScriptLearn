@@ -4,7 +4,7 @@ import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 
 // Construire l'index de recherche une seule fois au chargement du module
@@ -125,30 +125,30 @@ export default function GlobalSearch({ onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-[#1a1d2e] border border-[#2d3748] rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden"
+        className="bg-[#111110] border border-[#2e2b26] rounded w-full max-w-xl shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#2d3748]">
-          <span className="text-slate-500 text-lg">🔍</span>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#2e2b26]">
+          <span className="text-stone-500 text-lg">🔍</span>
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKey}
             placeholder="Rechercher un cours, un exercice…"
-            className="flex-1 bg-transparent text-white placeholder-slate-500 outline-none text-sm"
+            className="flex-1 bg-transparent text-white placeholder-stone-500 outline-none text-sm"
           />
-          <kbd className="text-slate-600 text-xs border border-[#374151] px-1.5 py-0.5 rounded">Esc</kbd>
+          <kbd className="text-stone-600 text-xs border border-[#2e2b26] px-1.5 py-0.5 rounded">Esc</kbd>
         </div>
 
         {/* Résultats */}
         {query.trim() === '' ? (
-          <div className="px-4 py-8 text-center text-slate-500 text-sm">
+          <div className="px-4 py-8 text-center text-stone-500 text-sm">
             Tapez pour rechercher dans {SEARCH_INDEX.length} éléments…
           </div>
         ) : results.length === 0 ? (
-          <div className="px-4 py-8 text-center text-slate-500 text-sm">
+          <div className="px-4 py-8 text-center text-stone-500 text-sm">
             Aucun résultat pour « {query} »
           </div>
         ) : (
@@ -158,7 +158,7 @@ export default function GlobalSearch({ onClose }) {
                 key={item.id + item.url}
                 onClick={() => go(item)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                  i === selected ? 'bg-[#232640]' : 'hover:bg-[#1e2235]'
+                  i === selected ? 'bg-[#1c1c1a]' : 'hover:bg-[#1c1c1a]'
                 }`}
               >
                 <span className="text-base flex-shrink-0">
@@ -166,7 +166,7 @@ export default function GlobalSearch({ onClose }) {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm truncate">{item.title}</p>
-                  <p className="text-slate-500 text-xs">
+                  <p className="text-stone-500 text-xs">
                     Niv. {item.levelId} · {item.levelName}
                     {item.moduleTitle && ` · ${item.moduleTitle}`}
                   </p>
@@ -183,7 +183,7 @@ export default function GlobalSearch({ onClose }) {
         )}
 
         {results.length > 0 && (
-          <div className="px-4 py-2 border-t border-[#2d3748] flex items-center gap-4 text-xs text-slate-600">
+          <div className="px-4 py-2 border-t border-[#2e2b26] flex items-center gap-4 text-xs text-stone-600">
             <span>↑↓ Naviguer</span>
             <span>↵ Ouvrir</span>
             <span>{results.length} résultat{results.length > 1 ? 's' : ''}</span>

@@ -4,7 +4,7 @@ import { useProfile } from '../contexts/ProfileContext'
 import { getModule } from '../content/loader'
 import contentIndex from '../content/index.json'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#6366f1', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 
 const CAREER_PATHS = {
@@ -150,12 +150,12 @@ export default function Roadmap() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Parcours guidé</h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-stone-400 text-sm mt-1">
               {changing ? 'Choisissez un nouveau parcours' : 'Choisissez votre parcours selon votre objectif professionnel'}
             </p>
           </div>
           {changing && (
-            <button onClick={() => setChanging(false)} className="text-slate-400 hover:text-white text-sm transition-colors">
+            <button onClick={() => setChanging(false)} className="text-stone-400 hover:text-white text-sm transition-colors">
               ← Annuler
             </button>
           )}
@@ -165,16 +165,16 @@ export default function Roadmap() {
             <button
               key={key}
               onClick={() => selectCareer(key)}
-              className="bg-[#1a1d2e] hover:bg-[#232640] border border-[#2d3748] hover:border-[#3d4756] rounded-xl p-5 text-left transition-all group"
+              className="bg-[#111110] hover:bg-[#1c1c1a] border border-[#2e2b26] hover:border-[#3d3a34] rounded p-5 text-left transition-all group"
             >
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">{cp.icon}</span>
                 <span className="text-white font-semibold">{cp.label}</span>
               </div>
-              <p className="text-slate-400 text-sm">{cp.desc}</p>
+              <p className="text-stone-400 text-sm">{cp.desc}</p>
               <div className="flex gap-1.5 mt-3 flex-wrap">
                 {cp.phases.map((phase, i) => (
-                  <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-[#0f1117] text-slate-500">
+                  <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-[#0a0a09] text-stone-500">
                     {phase.label}
                   </span>
                 ))}
@@ -199,23 +199,23 @@ export default function Roadmap() {
             <span className="text-3xl">{path.icon}</span>
             <h1 className="text-2xl font-bold text-white">{path.label}</h1>
           </div>
-          <p className="text-slate-400 text-sm">{path.desc}</p>
+          <p className="text-stone-400 text-sm">{path.desc}</p>
         </div>
         <button
           onClick={() => setChanging(true)}
-          className="text-xs text-slate-400 hover:text-white bg-[#1a1d2e] hover:bg-[#232640] border border-[#2d3748] px-3 py-2 rounded-lg transition-colors"
+          className="text-xs text-stone-400 hover:text-white bg-[#111110] hover:bg-[#1c1c1a] border border-[#2e2b26] px-3 py-2 rounded-sm transition-colors"
         >
           Changer de parcours
         </button>
       </div>
 
       {/* Progression globale */}
-      <div className="bg-[#1a1d2e] border border-[#2d3748] rounded-xl p-4 mb-6">
+      <div className="bg-[#111110] border border-[#2e2b26] rounded p-4 mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-white">Progression globale</span>
-          <span className="text-sm text-slate-400">{totalDone} / {totalItems} exercices · {globalPct}%</span>
+          <span className="text-sm text-stone-400">{totalDone} / {totalItems} exercices · {globalPct}%</span>
         </div>
-        <div className="h-2 bg-[#0f1117] rounded-full overflow-hidden">
+        <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{ width: `${globalPct}%`, backgroundColor: path.color }}
@@ -232,15 +232,15 @@ export default function Roadmap() {
             <div key={phaseIdx} className={`${isUnlocked ? '' : 'opacity-50'}`}>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: stats.pct === 100 ? '#4ade80' : path.color + '30', color: stats.pct === 100 ? '#0f1117' : path.color }}>
+                  style={{ backgroundColor: stats.pct === 100 ? '#4ade80' : path.color + '30', color: stats.pct === 100 ? '#0a0a09' : path.color }}>
                   {stats.pct === 100 ? '✓' : phaseIdx + 1}
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <span className="text-white font-medium text-sm">{phase.label}</span>
-                    <span className="text-slate-500 text-xs">{stats.done}/{stats.total} · {stats.pct}%</span>
+                    <span className="text-stone-500 text-xs">{stats.done}/{stats.total} · {stats.pct}%</span>
                   </div>
-                  <div className="h-1 bg-[#0f1117] rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-1 bg-[#0a0a09] rounded-full mt-1.5 overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-500"
                       style={{ width: `${stats.pct}%`, backgroundColor: stats.pct === 100 ? '#4ade80' : path.color }} />
                   </div>
@@ -255,14 +255,14 @@ export default function Roadmap() {
                   const done = mod.exercises.filter(ex => progress[ex.id]?.completed).length
                   const total = mod.exercises.length
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0
-                  const langColor = LANG_COLORS[meta.lang] ?? '#6366f1'
+                  const langColor = LANG_COLORS[meta.lang] ?? '#d97706'
                   const langLabel = LANG_LABELS[meta.lang] ?? meta.lang
                   return (
                     <button
                       key={id}
                       disabled={!isUnlocked}
                       onClick={() => navigate(`/course/${meta.lang}/${meta.levelId}/${id}`)}
-                      className="bg-[#1a1d2e] hover:bg-[#232640] border border-[#2d3748] hover:border-[#3d4756] rounded-lg p-3 text-left transition-all group disabled:cursor-not-allowed"
+                      className="bg-[#111110] hover:bg-[#1c1c1a] border border-[#2e2b26] hover:border-[#3d3a34] rounded-sm p-3 text-left transition-all group disabled:cursor-not-allowed"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <span className="text-slate-200 text-xs font-medium leading-snug flex-1">{meta.ref.title}</span>
@@ -272,11 +272,11 @@ export default function Roadmap() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1 bg-[#0f1117] rounded-full overflow-hidden">
+                        <div className="flex-1 h-1 bg-[#0a0a09] rounded-full overflow-hidden">
                           <div className="h-full rounded-full transition-all duration-300"
                             style={{ width: `${pct}%`, backgroundColor: pct === 100 ? '#4ade80' : langColor }} />
                         </div>
-                        <span className="text-[10px] text-slate-500 flex-shrink-0">{done}/{total}</span>
+                        <span className="text-[10px] text-stone-500 flex-shrink-0">{done}/{total}</span>
                       </div>
                     </button>
                   )

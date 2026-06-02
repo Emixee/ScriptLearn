@@ -41,18 +41,18 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex h-screen items-center justify-center bg-[#0f1117] p-8">
-          <div className="bg-[#1a1d2e] border border-red-500/30 rounded-2xl p-8 max-w-lg w-full text-center">
+        <div className="flex h-screen items-center justify-center bg-[#0a0a09] p-8">
+          <div className="bg-[#111110] border border-red-500/30 rounded p-8 max-w-lg w-full text-center">
             <div className="text-4xl mb-4">⚠️</div>
             <h2 className="text-white text-xl font-bold mb-2">
               Une erreur est survenue
             </h2>
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-stone-400 text-sm mb-4">
               Un problème inattendu a interrompu l'affichage de cette page.
             </p>
             {/* Afficher le message d'erreur technique pour faciliter le débogage */}
             {this.state.error && (
-              <pre className="text-red-400 text-xs bg-[#0f1117] rounded-lg p-3 mb-5 text-left overflow-x-auto">
+              <pre className="text-red-400 text-xs bg-[#0a0a09] rounded-sm p-3 mb-5 text-left overflow-x-auto">
                 {this.state.error.message}
               </pre>
             )}
@@ -63,7 +63,7 @@ export default class ErrorBoundary extends Component {
                 this.setState({ hasError: false, error: null })
                 window.location.hash = '#/'
               }}
-              className="bg-[#6366f1] hover:bg-[#4f46e5] text-white px-6 py-2.5 rounded-xl font-medium transition-colors text-sm"
+              className="bg-[#d97706] hover:bg-[#b45309] text-[#0a0a09] px-6 py-2.5 rounded font-medium transition-colors text-sm"
             >
               ← Retour à l'accueil
             </button>
