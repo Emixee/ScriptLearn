@@ -265,7 +265,7 @@ export default function Roadmap() {
                       className="bg-[#111110] hover:bg-[#1c1c1a] border border-[#2e2b26] hover:border-[#3d3a34] rounded-sm p-3 text-left transition-all group disabled:cursor-not-allowed"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <span className="text-slate-200 text-xs font-medium leading-snug flex-1">{meta.ref.title}</span>
+                        <span className="text-stone-200 text-xs font-medium leading-snug flex-1">{meta.ref.title}</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 font-medium"
                           style={{ backgroundColor: `${langColor}20`, color: langColor }}>
                           {langLabel}

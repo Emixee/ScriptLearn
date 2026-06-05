@@ -32,6 +32,15 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ── Sélection de texte ─────────────────────────────────────────────────
+   user-select: none sur body est volontaire : évite les sélections accidentelles
+   en cliquant dans l'UI (boutons, nav, cartes). Mais dans un outil pédagogique,
+   les contenus texte (instructions, cours, feedback) doivent rester copiables —
+   un étudiant doit pouvoir copier une commande depuis les instructions d'un exercice. */
+p, li, td, dt, dd, h1, h2, h3, h4, h5, h6, blockquote {
+  user-select: text;
+}
+
 /* ── Scrollbars ────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track  { background: #111110; }

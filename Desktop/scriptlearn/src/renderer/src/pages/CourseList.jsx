@@ -409,7 +409,7 @@ export default function CourseList() {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Rechercher…"
-                    className="bg-[#111110] border border-[#2e2b26] rounded-sm pl-7 pr-3 py-1.5 text-sm text-slate-200 placeholder-stone-600 focus:outline-none focus:border-[#d97706] w-40 transition-colors"
+                    className="bg-[#111110] border border-[#2e2b26] rounded-sm pl-7 pr-3 py-1.5 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-[#d97706] w-40 transition-colors"
                   />
                 </div>
                 {/* Toggle langue */}
@@ -614,7 +614,7 @@ export default function CourseList() {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Rechercher un module…"
-                    className="bg-[#111110] border border-[#2e2b26] rounded-sm pl-7 pr-3 py-1.5 text-sm text-slate-200 placeholder-stone-600 focus:outline-none focus:border-[#d97706] w-60 transition-colors"
+                    className="bg-[#111110] border border-[#2e2b26] rounded-sm pl-7 pr-3 py-1.5 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-[#d97706] w-60 transition-colors"
                   />
                 </div>
 

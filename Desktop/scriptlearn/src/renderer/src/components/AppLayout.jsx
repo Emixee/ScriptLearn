@@ -20,7 +20,9 @@ function AppLayout() {
   return (
     <div className="flex h-screen bg-[#0a0a09]">
       <Sidebar onSearch={() => setShowSearch(true)} />
-      <main className="flex-1 overflow-y-auto">
+      {/* min-w-0 empêche le débordement horizontal quand un enfant a une largeur fixe
+          ou un contenu large (tableaux, blocs de code) — comportement par défaut de flex */}
+      <main className="flex-1 overflow-y-auto min-w-0">
         <Outlet />
       </main>
       {showSearch && <GlobalSearch onClose={() => setShowSearch(false)} />}

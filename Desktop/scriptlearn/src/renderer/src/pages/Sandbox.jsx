@@ -44,9 +44,10 @@ function getLangExtension(lang) {
 
 const cmTheme = EditorView.theme({
   '&': { fontSize: '13px', backgroundColor: '#080807' },
-  '.cm-content': { padding: '8px', fontFamily: "'Fira Code', 'Cascadia Code', monospace" },
+  // JetBrains Mono en premier — cohérence avec le reste de l'UI (body, Terminal, code blocks)
+  '.cm-content': { padding: '8px', fontFamily: "'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace" },
   '.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: "'Fira Code', 'Cascadia Code', monospace" },
+  '.cm-scroller': { fontFamily: "'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace" },
 })
 
 export default function Sandbox() {

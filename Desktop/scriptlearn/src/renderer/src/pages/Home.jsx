@@ -76,7 +76,7 @@ export default function Home() {
         {/* ── Zone gauche : identité ──────────────────────────────────────
             Fond légèrement plus chaud que la droite pour créer la distinction.
             Le prompt >_ évoque directement la ligne de commande. */}
-        <div className="w-2/5 flex flex-col justify-between p-12 border-r border-[#2e2b26] flex-shrink-0">
+        <div className="w-2/5 flex flex-col justify-between p-8 border-r border-[#2e2b26] flex-shrink-0">
           <div>
             {/* Logo / identité */}
             <div className="flex items-center gap-3 mb-8">
@@ -116,7 +116,7 @@ export default function Home() {
         </div>
 
         {/* ── Zone droite : sélection / création de profil ──────────────── */}
-        <div className="flex-1 flex flex-col justify-center p-12 overflow-y-auto">
+        <div className="flex-1 flex flex-col justify-center p-8 overflow-y-auto">
 
           {/* État par défaut : liste des profils */}
           {step === null && (
