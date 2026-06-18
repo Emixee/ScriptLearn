@@ -27,17 +27,14 @@ export function useCodeRunner(termId, lang) {
     return cleanup
   }, [termId])
 
-  // Prépend la « mise en place » cachée (création des fichiers de données d'un acte)
-  // au code de l'apprenant. Le setup n'est JAMAIS montré dans l'éditeur — il évite
-  // d'encombrer et surtout de dévoiler la réponse (les données qu'on doit découvrir
-  // avec ls/cat/grep). Comme le setup n'imprime rien, il ne pollue pas la sortie.
-  const withSetup = (code, setup) => (setup ? `${setup}\n${code}` : code)
-
   // Exécute le code sans valider (bouton « Exécuter »).
-  const run = useCallback((code, setup = '') => {
+  // La « mise en place » (fichiers de données) est créée EN COULISSES par MissionPlay
+  // via terminal.runSetup, hors de cette session — donc on n'envoie QUE le code de
+  // l'apprenant ici. Ainsi le setup n'apparaît jamais dans le terminal affiché.
+  const run = useCallback((code) => {
     if (!code.trim() || isStatic(lang)) return
     outputBuffer.current = ''
-    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, withSetup(code, setup)) })
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, code) })
   }, [termId, lang])
 
   // Validation des langages statiques (mots-clés requis présents dans le code).
@@ -66,9 +63,9 @@ export function useCodeRunner(termId, lang) {
 
     const sentinel = `${SENTINEL_PREFIX}${Date.now()}__`
     outputBuffer.current = ''
-    // L'anti-triche reste basé sur le code APPRENANT (trimmed) : si l'éditeur est
-    // vide, on a déjà échoué plus haut. Le setup n'est ajouté que pour l'exécution.
-    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, withSetup(trimmed, chapter.setup)) })
+    // Seul le code APPRENANT est envoyé à la session affichée ; les données de l'acte
+    // ont déjà été créées en coulisses (MissionPlay → terminal.runSetup).
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, trimmed) })
     await new Promise(r => setTimeout(r, 80))
     // En REPL Python, une ligne vide ferme un bloc indenté resté ouvert.
     if (lang === 'python') {

@@ -96,6 +96,23 @@ export function setupTerminalIPC(mainWindow) {
   ipcMain.handle('terminal:phpAvailable',    () => checkPhpAvailable())
   ipcMain.handle('terminal:toolAvailable',   (_, { tool }) => checkToolAvailable(tool))
 
+  // Exécute la « mise en place » (setup) d'un acte de mission EN COULISSES, dans une
+  // invocation WSL séparée et NON affichée — pas dans la session bash du terminal.
+  // POURQUOI : si on envoyait le setup dans la session interactive affichée, bash
+  // l'écho à l'écran et dévoile les données (le fichier que l'élève doit découvrir).
+  // Comme /tmp est partagé au sein de la même instance WSL, les fichiers créés ici
+  // restent accessibles à la session du terminal — mais la commande reste invisible.
+  // Le script est passé via stdin (input) pour éviter tout problème de guillemets.
+  ipcMain.handle('terminal:runSetup', (_, { setup }) => {
+    if (!setup) return { ok: true }
+    try {
+      execSync('wsl.exe -e bash', { input: setup, timeout: 10000, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] })
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: String(e?.message ?? e) }
+    }
+  })
+
   ipcMain.handle('terminal:create', (_, { id, shell }) => {
     if (sessions.has(id)) return { ok: true }
     createSession(id, shell)

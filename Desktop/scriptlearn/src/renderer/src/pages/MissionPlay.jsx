@@ -72,17 +72,14 @@ export default function MissionPlay() {
     setShowHint(false)
   }, [chapterIdx, campaign?.id])
 
-  // Prépare les données de l'acte EN COULISSES dès l'ouverture, pour que l'apprenant
-  // puisse aussi explorer librement (taper ls/cat directement dans le terminal) avant
-  // tout clic. Le setup n'imprime rien → le terminal reste propre. Le délai laisse la
-  // session bash WSL démarrer (créée de façon asynchrone par le composant Terminal).
+  // Prépare les données de l'acte EN COULISSES dès l'ouverture (invocation WSL séparée,
+  // NON affichée). Les fichiers atterrissent dans /tmp (partagé avec la session du
+  // terminal) sans que la commande de préparation n'apparaisse jamais à l'écran —
+  // sinon elle dévoilerait les données que l'élève doit découvrir avec ls/cat/grep.
   useEffect(() => {
     if (!chapter || staticLang || !chapter.setup) return
-    const t = setTimeout(() => {
-      window.electronAPI.terminal.write({ id: termId, data: chapter.setup + '\r' })
-    }, 700)
-    return () => clearTimeout(t)
-  }, [termId, chapter?.id, staticLang])
+    window.electronAPI.terminal.runSetup(chapter.setup)
+  }, [chapter?.id, staticLang])
 
   if (!campaign) {
     return (
@@ -95,15 +92,19 @@ export default function MissionPlay() {
     )
   }
 
-  const handleRun = () => {
+  const handleRun = async () => {
     if (staticLang) return
     setStatus(STATUS.idle)
-    run(code, chapter.setup)
+    // S'assurer que les fichiers de données existent (créés en coulisses), au cas où
+    // l'élève clique avant la fin de la préparation au chargement. Idempotent.
+    if (chapter.setup) await window.electronAPI.terminal.runSetup(chapter.setup)
+    run(code)
   }
 
   const handleValidate = async () => {
     if (!code.trim() || status === STATUS.running) return
     setStatus(STATUS.running)
+    if (chapter.setup) await window.electronAPI.terminal.runSetup(chapter.setup)
     const { correct } = await validate(chapter, code)
     if (correct) {
       setStatus(STATUS.success)

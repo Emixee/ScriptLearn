@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     phpAvailable:    () => ipcRenderer.invoke('terminal:phpAvailable'),
     // Vérifie une toolchain compilée (gcc, g++, javac, java, mcs, mono) côté WSL.
     toolAvailable:   (tool) => ipcRenderer.invoke('terminal:toolAvailable', { tool }),
+    // Exécute la mise en place d'un acte (création de fichiers /tmp) en coulisses,
+    // hors de la session terminal affichée — pour ne pas dévoiler les données.
+    runSetup:        (setup) => ipcRenderer.invoke('terminal:runSetup', { setup }),
     onData: (cb) => {
       const handler = (_, payload) => cb(payload)
       ipcRenderer.on('terminal:data', handler)

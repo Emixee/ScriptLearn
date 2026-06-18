@@ -1,9 +1,17 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.13.0
+## Version actuelle : 0.13.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.13.1 — Setup de mission réellement invisible (2026-06-18)
+
+- **Problème** : la commande de préparation (`setup`, ex. `mkdir … && printf "…OUVERTE…" > portes.txt`) s'exécutait dans la session bash **affichée** (au chargement de l'acte et à chaque exécution/validation). Bash interactif l'écho à l'écran → les données (et donc la réponse) étaient **dévoilées dans le terminal**.
+- **Correctif** : nouveau IPC `terminal:runSetup` qui exécute le `setup` dans une **invocation WSL séparée et non affichée** (`wsl.exe -e bash`, script via stdin). Comme `/tmp` est partagé dans la même instance WSL, les fichiers restent accessibles à la session du terminal, mais la commande n'apparaît jamais.
+- `useCodeRunner` ne préfixe plus le setup au code (run/validate envoient uniquement le code de l'élève) ; `MissionPlay` appelle `runSetup` en coulisses au chargement de l'acte et avant chaque Exécuter/Valider (idempotent).
 
 ---
 
