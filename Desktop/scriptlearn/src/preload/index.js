@@ -13,7 +13,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   terminal: {
     create: (opts) => ipcRenderer.invoke('terminal:create', opts),
     write: (opts) => ipcRenderer.invoke('terminal:write', opts),
+    resize: (opts) => ipcRenderer.invoke('terminal:resize', opts),
     kill: (opts) => ipcRenderer.invoke('terminal:kill', opts),
+    // Validation en coulisses : exécute le code (one-shot, sans écho) et renvoie { output }.
+    runValidation: (opts) => ipcRenderer.invoke('terminal:runValidation', opts),
     bashAvailable:   () => ipcRenderer.invoke('terminal:bashAvailable'),
     pythonAvailable: () => ipcRenderer.invoke('terminal:pythonAvailable'),
     phpAvailable:    () => ipcRenderer.invoke('terminal:phpAvailable'),

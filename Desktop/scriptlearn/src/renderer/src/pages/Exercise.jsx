@@ -17,7 +17,7 @@ import contentIndex from '../content/index.json'
 // Avant, ces tables étaient dupliquées ici ET dans Sandbox — voir lib/langs.js.
 import {
   LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension,
-  buildRunData, sentinelCommand, termShellFor, stripAnsi, SENTINEL_PREFIX,
+  buildRunData, termShellFor,
 } from '../lib/langs'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
@@ -628,43 +628,18 @@ export default function Exercise() {
     if (!trimmed || status === STATUS.running) return
     setStatus(STATUS.running)
     setFeedback(null)
-    const sentinelId = Date.now()
-    const sentinel = `${SENTINEL_PREFIX}${sentinelId}__`
-    // Pour PHP et les langages compilés, la commande sentinel est un echo bash :
-    // l'exécution est terminée et on est de retour dans le shell bash, donc `echo`
-    // fonctionne. sentinelCommand gère la syntaxe par interpréteur (Write-Host / print / echo).
-    const sentinelCmd = sentinelCommand(lang, sentinel)
-    outputBuffer.current = ''
-
     if (lang === 'php') setPreviewSrc('')
-    // buildRunData : heredoc PHP, compilation C/C++/C#/Java, ou envoi direct.
-    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, trimmed) })
-    await new Promise(r => setTimeout(r, 80))
-    if (lang === 'python') {
-      window.electronAPI.terminal.write({ id: termId, data: '\r' })
-      await new Promise(r => setTimeout(r, 50))
-    }
-    window.electronAPI.terminal.write({ id: termId, data: sentinelCmd + '\r' })
-    // 25 s : marge pour la compilation (gcc/javac/mono) plus lente qu'un script interprété.
-    const maxWait = 25000
-    const pollInterval = 120
-    let elapsed = 0
-    while (elapsed < maxWait) {
-      if (stripAnsi(outputBuffer.current).includes(sentinel)) break
-      await new Promise(r => setTimeout(r, pollInterval))
-      elapsed += pollInterval
-    }
-    const cleanOutput = stripAnsi(outputBuffer.current)
 
-    // Pour PHP : mettre à jour le panneau de prévisualisation avec la sortie HTML
-    // On prend le contenu AVANT la ligne du sentinel pour ne pas inclure le marqueur
+    // Validation EN COULISSES : on exécute le code dans un processus jetable (sans PTY,
+    // donc sans écho de la commande) et on récupère une sortie propre et déterministe.
+    // Cela évite que l'écho du PTY ne fausse la comparaison, et règle les soucis de
+    // REPL (Python multi-lignes) et de compilation.
+    const { output } = await window.electronAPI.terminal.runValidation({ lang, code: trimmed })
+    const cleanOutput = output ?? ''
+
+    // PHP : la sortie est déjà propre → on alimente directement l'aperçu HTML.
     if (lang === 'php') {
-      const sentinelIdx = cleanOutput.indexOf(sentinel)
-      const phpOut = sentinelIdx !== -1 ? cleanOutput.slice(0, sentinelIdx) : cleanOutput
-      // Supprimer les lignes de prompt bash (commencent par $ suivi d'un espace)
-      // et la ligne du heredoc elle-même pour ne garder que la sortie PHP réelle
-      const lines = phpOut.split('\n').filter(l => !l.match(/^\$\s/) && !l.includes('PHPEOF') && !l.startsWith('php <<'))
-      const phpHtmlOut = lines.join('\n').trim()
+      const phpHtmlOut = cleanOutput.trim()
       const isFullHtml = phpHtmlOut.toLowerCase().startsWith('<!doctype') || phpHtmlOut.toLowerCase().startsWith('<html')
       setPreviewSrc(isFullHtml
         ? phpHtmlOut
@@ -676,8 +651,7 @@ export default function Exercise() {
     if (exercise.validationType === 'output_nonempty') {
       isCorrect = trimmed.length > 0
     } else {
-      // Validation par correspondance : la sortie RÉELLE du terminal doit contenir l'attendu.
-      isCorrect = cleanOutput.toLowerCase().includes(exercise.expectedOutput.toLowerCase())
+      isCorrect = cleanOutput.toLowerCase().includes((exercise.expectedOutput ?? '').toLowerCase())
     }
     finalize(isCorrect, trimmed)
   }

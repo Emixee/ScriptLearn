@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.13.1
+## Version actuelle : 0.14.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.14.0 — Vrai terminal (node-pty) : Tab, historique, édition de ligne (2026-06-18)
+
+- **Problème** : le terminal lançait bash/powershell/python via `spawn` à tubes (pas de pseudo-terminal). Sans TTY, readline restait en mode dégradé → pas de complétion Tab, pas d'historique ↑, pas d'édition de ligne, pas de Ctrl+C.
+- **Correctif** : passage à **node-pty** (vrai PTY, comme le terminal de VS Code). `terminal.js` crée les sessions via `pty.spawn` (write/resize/kill/onData) ; `Terminal.jsx` écrit le flux **brut** dans xterm (plus de découpage par lignes) et envoie la taille (cols/rows) + le resize au PTY.
+- **Validation découplée** : avec un PTY, le shell réaffiche (écho) la commande, ce qui fausserait la comparaison. La validation passe donc par un nouvel IPC **`terminal:runValidation`** qui exécute le code **en coulisses** (processus jetable, sans écho) et renvoie une sortie propre. `useCodeRunner` (missions) et `Exercise.jsx` (cours) l'utilisent ; le sentinel/poll est supprimé. Bonus : règle les soucis de REPL Python multi-lignes et rend les langages compilés déterministes. L'aperçu PHP est alimenté directement par cette sortie.
+- **Packaging** : node-pty est un module natif **N-API** (binaires prébuildés portables Node↔Electron). `npmRebuild: false` (pas de Visual Studio requis) + `files`/`asarUnpack` incluent `node_modules/node-pty/**`.
+
+> ⚠️ À tester dans l'app packagée : complétion Tab, historique, Ctrl+C, et que la validation reste correcte (réussite/échec) sur un échantillon (bash, python, powershell, sql, php, C).
 
 ---
 

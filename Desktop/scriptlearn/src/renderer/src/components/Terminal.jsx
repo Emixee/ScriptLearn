@@ -30,17 +30,11 @@ const THEME = {
   brightWhite:     '#f5f0e8'   // crème le plus clair
 }
 
-const SENTINEL_RE = /__SL_DONE_/
-const ANSI_RE = /\x1b\[[^A-Za-z]*[A-Za-z]/g
-
-function stripAnsi(s) { return s.replace(ANSI_RE, '').replace(/\r/g, '') }
-
 export default function Terminal({ id, shell = 'powershell', className = '' }) {
   const containerRef = useRef(null)
   const xtermRef = useRef(null)
   const fitRef = useRef(null)
   const unsubRef = useRef(null)
-  const lineBuffer = useRef('')
 
   const init = useCallback(async () => {
     if (!containerRef.current || xtermRef.current) return
@@ -65,22 +59,20 @@ export default function Terminal({ id, shell = 'powershell', className = '' }) {
     xtermRef.current = term
     fitRef.current = fitAddon
 
-    // Créer la session côté main process
-    await window.electronAPI.terminal.create({ id, shell })
+    // Créer la session côté main process avec la taille initiale (cols/rows) —
+    // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
+    await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows })
 
-    // Afficher sortie reçue
+    // Afficher la sortie BRUTE du PTY (prompt, écho, séquences de complétion/curseur).
+    // Surtout PAS de découpage par lignes : un PTY émet des fragments sans \n (le prompt,
+    // les redraws de readline lors d'un Tab) qu'xterm doit recevoir tels quels pour
+    // s'afficher correctement.
     unsubRef.current = window.electronAPI.terminal.onData(({ id: sid, chunk }) => {
       if (sid !== id) return
-      lineBuffer.current += chunk
-      const parts = lineBuffer.current.split('\n')
-      lineBuffer.current = parts.pop() ?? ''
-      const toWrite = parts
-        .filter(line => !SENTINEL_RE.test(stripAnsi(line)))
-        .join('\n')
-      if (toWrite) term.write(toWrite + '\n')
+      term.write(chunk)
     })
 
-    // Envoyer l'input utilisateur
+    // Envoyer l'input utilisateur (y compris Tab, flèches, Ctrl+C) au PTY.
     term.onData((data) => {
       window.electronAPI.terminal.write({ id, data })
     })
@@ -97,6 +89,10 @@ export default function Terminal({ id, shell = 'powershell', className = '' }) {
 
     const observer = new ResizeObserver(() => {
       fitRef.current?.fit()
+      // Informer le PTY de la nouvelle taille pour aligner le retour à la ligne
+      // et la mise en page de la complétion.
+      const t = xtermRef.current
+      if (t) window.electronAPI.terminal.resize({ id, cols: t.cols, rows: t.rows })
     })
     if (containerRef.current) observer.observe(containerRef.current)
 

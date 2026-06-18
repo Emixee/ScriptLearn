@@ -1,7 +1,12 @@
 import { ipcMain } from 'electron'
-import { spawn, execSync } from 'child_process'
+import { execSync, execFileSync } from 'child_process'
 import { existsSync } from 'fs'
 import { EventEmitter } from 'events'
+// node-pty fournit un VRAI pseudo-terminal (PTY). Sans lui (ancien `spawn` à tubes),
+// le shell ne voit pas de TTY et readline désactive la complétion Tab, l'historique
+// et l'édition de ligne. Module natif : recompilé pour Electron au packaging
+// (@electron/rebuild) et embarqué via asarUnpack (binaires .node hors de l'asar).
+import nodePty from 'node-pty'
 
 // Sur Windows 11 / WSL2 récent, bash.exe n'est plus créé.
 // On détecte WSL via wsl.exe (toujours présent si WSL est installé).
@@ -24,8 +29,6 @@ function checkPythonAvailable() {
 }
 
 // Vérifie que PHP est disponible DANS WSL — pas le php.exe Windows natif.
-// Les exercices PHP utilisent le terminal WSL bash (wsl php ...).
-// Tester le php.exe natif donnerait un faux positif si PHP n'est pas dans WSL.
 function checkPhpAvailable() {
   try {
     execSync('wsl.exe -e php --version', { timeout: 5000, windowsHide: true, stdio: 'pipe' })
@@ -36,11 +39,7 @@ function checkPhpAvailable() {
 }
 
 // Vérifie qu'une toolchain (gcc, g++, javac, mono…) est installée DANS WSL.
-// Les langages compilés (C/C++/C#/Java) sont compilés et exécutés via la session
-// bash WSL — on teste donc l'outil côté WSL, pas son équivalent Windows natif,
-// pour éviter un faux positif (ex: un gcc MinGW Windows alors que WSL ne l'a pas).
-// On valide le nom de l'outil avec une allow-list : la valeur vient du renderer,
-// on ne veut surtout pas l'injecter telle quelle dans une commande shell.
+// Allow-list : la valeur vient du renderer, on ne l'injecte jamais telle quelle.
 const KNOWN_TOOLS = ['gcc', 'g++', 'javac', 'java', 'mcs', 'mono']
 function checkToolAvailable(tool) {
   if (!KNOWN_TOOLS.includes(tool)) return false
@@ -55,39 +54,74 @@ function checkToolAvailable(tool) {
 const sessions = new Map()
 const emitter = new EventEmitter()
 
-function createSession(id, shell) {
-  let cmd, args
+// Crée une session terminal interactive dans un vrai PTY (node-pty).
+// cols/rows : taille initiale fournie par xterm (après fit) — le shell s'en sert
+// pour le retour à la ligne et l'alignement de la complétion.
+function createSession(id, shell, cols = 80, rows = 24) {
+  let file, args
   if (shell === 'powershell') {
-    cmd = 'powershell.exe'
-    args = ['-NoLogo', '-NoExit', '-Command', '-']
+    file = 'powershell.exe'
+    args = ['-NoLogo', '-NoExit']
   } else if (shell === 'python') {
-    cmd = 'python'
+    file = 'python'
     args = ['-i', '-u']
   } else {
-    // wsl.exe lance le shell de la distro par défaut (Ubuntu-24.04 / Ubuntu-22.04)
-    cmd = 'wsl.exe'
+    // wsl.exe lance le shell de la distro par défaut
+    file = 'wsl.exe'
     args = ['--', 'bash', '--login', '-i']
   }
 
-  const proc = spawn(cmd, args, {
-    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8' },
-    windowsHide: true
+  const proc = nodePty.spawn(file, args, {
+    name: 'xterm-256color',
+    cols, rows,
+    cwd: process.env.USERPROFILE || process.cwd(),
+    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8' }
   })
 
   sessions.set(id, proc)
-
-  proc.stdout.on('data', (data) => {
-    emitter.emit(`data:${id}`, data.toString())
-  })
-  proc.stderr.on('data', (data) => {
-    emitter.emit(`data:${id}`, data.toString())
-  })
-  proc.on('exit', () => {
-    sessions.delete(id)
-    emitter.emit(`exit:${id}`)
-  })
-
+  // node-pty fusionne stdout/stderr dans un seul flux onData.
+  proc.onData((data) => emitter.emit(`data:${id}`, data))
+  proc.onExit(() => { sessions.delete(id); emitter.emit(`exit:${id}`) })
   return proc
+}
+
+// ── Validation EN COULISSES (one-shot, sans PTY donc sans écho) ──────────────
+// POURQUOI : avec un PTY, le shell réaffiche la commande tapée. Si on validait en
+// lisant la sortie de la session affichée, l'écho de la commande fausserait la
+// comparaison (ex. `echo SESAME` contient déjà « SESAME »). On exécute donc le code
+// dans un processus jetable, non affiché : sortie propre et déterministe.
+
+// Exécute un programme en lui passant le code par stdin, et renvoie stdout+stderr
+// quel que soit le code de sortie (les erreurs de compilation sont ainsi visibles).
+function runCapture(fileName, args, input) {
+  try {
+    return execFileSync(fileName, args, {
+      input, timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024
+    }) ?? ''
+  } catch (e) {
+    return String((e.stdout ?? '') + (e.stderr ?? '')) || String(e.message ?? e)
+  }
+}
+
+// Construit le script bash one-shot pour les langages de la famille bash (WSL).
+// Mêmes recettes que buildRunData côté renderer (heredoc PHP, compilation C/C++/C#/Java).
+function buildBashScript(lang, code) {
+  const heredoc = (path, c) => `cat > ${path} <<'SLEOF'\n${c}\nSLEOF\n`
+  switch (lang) {
+    case 'php':    return `php << 'PHPEOF'\n${code}\nPHPEOF`
+    case 'c':      return heredoc('/tmp/sl.c', code) + 'gcc /tmp/sl.c -o /tmp/sl_bin 2>&1 && /tmp/sl_bin'
+    case 'cpp':    return heredoc('/tmp/sl.cpp', code) + 'g++ /tmp/sl.cpp -o /tmp/sl_bin 2>&1 && /tmp/sl_bin'
+    case 'java':   return heredoc('/tmp/Main.java', code) + 'cd /tmp && javac Main.java 2>&1 && java Main'
+    case 'csharp': return heredoc('/tmp/Main.cs', code) + 'cd /tmp && mcs Main.cs 2>&1 && mono Main.exe'
+    default:       return code // bash : le code tel quel
+  }
+}
+
+function runValidation(lang, code) {
+  if (lang === 'python')     return runCapture('python', [], code)
+  if (lang === 'powershell') return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
+  // bash, php, c, cpp, csharp, java → via une invocation bash WSL jetable
+  return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code))
 }
 
 export function setupTerminalIPC(mainWindow) {
@@ -96,13 +130,8 @@ export function setupTerminalIPC(mainWindow) {
   ipcMain.handle('terminal:phpAvailable',    () => checkPhpAvailable())
   ipcMain.handle('terminal:toolAvailable',   (_, { tool }) => checkToolAvailable(tool))
 
-  // Exécute la « mise en place » (setup) d'un acte de mission EN COULISSES, dans une
-  // invocation WSL séparée et NON affichée — pas dans la session bash du terminal.
-  // POURQUOI : si on envoyait le setup dans la session interactive affichée, bash
-  // l'écho à l'écran et dévoile les données (le fichier que l'élève doit découvrir).
-  // Comme /tmp est partagé au sein de la même instance WSL, les fichiers créés ici
-  // restent accessibles à la session du terminal — mais la commande reste invisible.
-  // Le script est passé via stdin (input) pour éviter tout problème de guillemets.
+  // Mise en place d'un acte de mission EN COULISSES (création de fichiers /tmp),
+  // dans une invocation WSL séparée et NON affichée — pour ne pas dévoiler les données.
   ipcMain.handle('terminal:runSetup', (_, { setup }) => {
     if (!setup) return { ok: true }
     try {
@@ -113,24 +142,40 @@ export function setupTerminalIPC(mainWindow) {
     }
   })
 
-  ipcMain.handle('terminal:create', (_, { id, shell }) => {
+  // Validation : exécute le code en coulisses et renvoie la sortie à comparer.
+  ipcMain.handle('terminal:runValidation', (_, { lang, code }) => {
+    try {
+      return { output: runValidation(lang, code) }
+    } catch (e) {
+      return { output: String(e?.message ?? e) }
+    }
+  })
+
+  ipcMain.handle('terminal:create', (_, { id, shell, cols, rows }) => {
     if (sessions.has(id)) return { ok: true }
-    createSession(id, shell)
+    createSession(id, shell, cols, rows)
     return { ok: true }
   })
 
   ipcMain.handle('terminal:write', (_, { id, data }) => {
     const proc = sessions.get(id)
-    if (proc) proc.stdin.write(data)
+    if (proc) proc.write(data)
+  })
+
+  ipcMain.handle('terminal:resize', (_, { id, cols, rows }) => {
+    const proc = sessions.get(id)
+    if (proc && cols > 0 && rows > 0) {
+      try { proc.resize(cols, rows) } catch { /* session en cours de fermeture */ }
+    }
   })
 
   ipcMain.handle('terminal:kill', (_, { id }) => {
     const proc = sessions.get(id)
-    if (proc) proc.kill()
+    if (proc) { try { proc.kill() } catch { /* déjà mort */ } }
     sessions.delete(id)
   })
 
-  // Réémettre avec l'id encodé dans le nom d'événement
+  // Réémettre les données avec l'id encodé dans le nom d'événement → renderer.
   const originalEmit = emitter.emit.bind(emitter)
   emitter.emit = (event, ...args) => {
     if (event.startsWith('data:')) {
