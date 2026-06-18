@@ -1,9 +1,17 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.9.1
+## Version actuelle : 0.9.2
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.9.2 — Ollama non reconfiguré à chaque mise à jour (2026-06-18)
+
+- **Problème** : `build/setup-ollama.ps1` est relancé à chaque installation (mises à jour comprises). Le binaire Ollama n'était déjà pas réinstallé s'il était présent, mais la fenêtre de sélection du modèle, `ollama pull` et les dialogues se rejouaient à chaque mise à jour.
+- **Correctif** : bloc de **détection « déjà configuré »** ajouté en tête du script. Sortie anticipée silencieuse (`exit 0`) si les trois conditions sont réunies : Ollama installé + `installer-ai-config.json` présent + modèle configuré présent dans `ollama list`. Sinon, flux normal (installation fraîche ou auto-réparation si le modèle a été supprimé).
+- ⚠️ Ne profite qu'aux mises à jour **futures** (l'installateur corrigé doit être en place ; la prochaine mise à jour exécute encore l'ancien script).
 
 ---
 

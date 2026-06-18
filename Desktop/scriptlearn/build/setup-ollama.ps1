@@ -14,6 +14,49 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
+# ==============================================================================
+# DÉTECTION D'UNE MISE À JOUR DÉJÀ CONFIGURÉE — sortie anticipée
+# POURQUOI : ce script est relancé à CHAQUE installation, mises à jour comprises.
+# Sans ce garde-fou, l'utilisateur reverrait à chaque mise à jour la fenêtre de
+# sélection du modèle, un nouveau `ollama pull` et plusieurs boîtes de dialogue —
+# alors qu'Ollama et le modèle sont déjà installés.
+#
+# On sort donc immédiatement (exit 0), sans afficher aucune fenêtre, SI les trois
+# conditions sont réunies :
+#   1. Ollama est installé (ollama.exe présent)
+#   2. ScriptLearn a déjà été configuré (installer-ai-config.json existe — il n'est
+#      écrit que lorsqu'un vrai modèle a été choisi, jamais pour « none »)
+#   3. Le modèle configuré est réellement téléchargé (présent dans `ollama list`)
+#
+# Sinon, le flux normal ci-dessous s'exécute (installation fraîche, ou auto-
+# réparation si le modèle a été supprimé manuellement).
+# ==============================================================================
+$earlyCfgFile = Join-Path $env:APPDATA 'ScriptLearn\installer-ai-config.json'
+$earlyExeUser = Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe'
+$earlyExeSys  = Join-Path $env:ProgramFiles 'Ollama\ollama.exe'
+$earlyExe     = if (Test-Path $earlyExeUser) { $earlyExeUser }
+                elseif (Test-Path $earlyExeSys) { $earlyExeSys }
+                else { $null }
+
+if ($earlyExe -and (Test-Path $earlyCfgFile)) {
+    try {
+        $earlyCfg   = Get-Content $earlyCfgFile -Raw | ConvertFrom-Json
+        $earlyModel = $earlyCfg.model
+        if ($earlyModel -and $earlyModel -ne 'none') {
+            # `ollama list` affiche "llama3.2:latest" pour un modèle "llama3.2",
+            # et "mistral:7b" tel quel — un -match sur la chaîne échappée couvre
+            # les deux (recherche de sous-chaîne).
+            $earlyList = & $earlyExe list 2>$null
+            if ($LASTEXITCODE -eq 0 -and ($earlyList -match [regex]::Escape($earlyModel))) {
+                exit 0
+            }
+        }
+    } catch {
+        # En cas d'erreur de lecture/parsing, on ne bloque pas : on laisse le
+        # flux normal décider (il ne réinstalle de toute façon pas Ollama si présent).
+    }
+}
+
 # ------------------------------------------------------------------------------
 # FENÊTRE DE SÉLECTION DU MODÈLE
 # Utilise Windows Forms pour une UI native Windows sans dépendances supplémentaires.
