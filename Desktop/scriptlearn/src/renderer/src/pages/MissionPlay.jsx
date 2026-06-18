@@ -70,6 +70,18 @@ export default function MissionPlay() {
     setShowHint(false)
   }, [chapterIdx, campaign?.id])
 
+  // Prépare les données de l'acte EN COULISSES dès l'ouverture, pour que l'apprenant
+  // puisse aussi explorer librement (taper ls/cat directement dans le terminal) avant
+  // tout clic. Le setup n'imprime rien → le terminal reste propre. Le délai laisse la
+  // session bash WSL démarrer (créée de façon asynchrone par le composant Terminal).
+  useEffect(() => {
+    if (!chapter || staticLang || !chapter.setup) return
+    const t = setTimeout(() => {
+      window.electronAPI.terminal.write({ id: termId, data: chapter.setup + '\r' })
+    }, 700)
+    return () => clearTimeout(t)
+  }, [termId, chapter?.id, staticLang])
+
   if (!campaign) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0a0a09]">
@@ -84,7 +96,7 @@ export default function MissionPlay() {
   const handleRun = () => {
     if (staticLang) return
     setStatus(STATUS.idle)
-    run(code)
+    run(code, chapter.setup)
   }
 
   const handleValidate = async () => {

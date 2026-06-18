@@ -27,11 +27,17 @@ export function useCodeRunner(termId, lang) {
     return cleanup
   }, [termId])
 
+  // Prépend la « mise en place » cachée (création des fichiers de données d'un acte)
+  // au code de l'apprenant. Le setup n'est JAMAIS montré dans l'éditeur — il évite
+  // d'encombrer et surtout de dévoiler la réponse (les données qu'on doit découvrir
+  // avec ls/cat/grep). Comme le setup n'imprime rien, il ne pollue pas la sortie.
+  const withSetup = (code, setup) => (setup ? `${setup}\n${code}` : code)
+
   // Exécute le code sans valider (bouton « Exécuter »).
-  const run = useCallback((code) => {
+  const run = useCallback((code, setup = '') => {
     if (!code.trim() || isStatic(lang)) return
     outputBuffer.current = ''
-    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, code) })
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, withSetup(code, setup)) })
   }, [termId, lang])
 
   // Validation des langages statiques (mots-clés requis présents dans le code).
@@ -60,7 +66,9 @@ export function useCodeRunner(termId, lang) {
 
     const sentinel = `${SENTINEL_PREFIX}${Date.now()}__`
     outputBuffer.current = ''
-    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, trimmed) })
+    // L'anti-triche reste basé sur le code APPRENANT (trimmed) : si l'éditeur est
+    // vide, on a déjà échoué plus haut. Le setup n'est ajouté que pour l'exécution.
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, withSetup(trimmed, chapter.setup)) })
     await new Promise(r => setTimeout(r, 80))
     // En REPL Python, une ligne vide ferme un bloc indenté resté ouvert.
     if (lang === 'python') {

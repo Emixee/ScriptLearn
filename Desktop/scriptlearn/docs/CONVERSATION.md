@@ -1,9 +1,27 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.8.1
+## Version actuelle : 0.9.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.9.0 — Missions débutant → expert + préparation cachée (2026-06-18)
+
+### Préparation des données cachée (`setup`)
+- Nouveau champ chapitre **`setup`** : commandes bash qui créent les fichiers de données d'un acte. Exécutées **en coulisses** (avant le code de l'apprenant, via `useCodeRunner`), **jamais affichées dans l'éditeur**. Corrige le défaut où la ligne `mkdir && printf "…"` encombrait l'éditeur et **dévoilait la réponse**.
+- `MissionPlay.jsx` : exécute le `setup` au chargement de l'acte (exploration libre) et le préfixe à chaque exécution/validation. L'anti-triche reste basé sur le code apprenant (éditeur vide → échec).
+- `starterCode` ne contient plus que le commentaire-guide.
+
+### Progression complète débutant → expert (apprentissage par répétition)
+Catalogue à **4 niveaux** (Débutant / Intermédiaire / Avancé / Expert) ; chaque campagne **réutilise** les commandes vues avant et en introduit de nouvelles. **7 campagnes** :
+- **Débutant** : *Le Terminal Perdu* (echo, ls, cat, grep, pipe) · *SOS Robot* (Python : print, variables, calculs, if, for).
+- **Intermédiaire** : *Blackout* (SOC multi-langages) · *La Boutique en Panne* (SQL + bash) · *Le Serveur Oublié* (cd/pwd, head/tail, sort/uniq, redirection `>`, cp/mv — réutilise ls/cat/grep/wc).
+- **Avancé** : *La Trace* (find, cut, awk, sed — réutilise grep/wc).
+- **Expert** : *L'Automate* (scripting : variables/calculs, for, if/test, while, fonctions — réutilise grep/wc/echo).
+
+Exécution via WSL conservée pour les missions (choix utilisateur : pas de terminal simulé). `MissionPlay` mis à jour : `index.js` (DIFF_RANK + niveau expert), `Missions.jsx` (4 sections).
 
 ---
 

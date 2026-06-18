@@ -3,8 +3,8 @@
   "order": 1,
   "title": "Blackout",
   "tagline": "Ton premier jour au SOC tourne au cauchemar.",
-  "synopsis": "03:14 du matin. Une alerte réveille le centre d'opérations de sécurité. Quelqu'un force une porte sur le réseau de l'entreprise. Tu es l'analyste de garde — mène l'enquête, du log brut jusqu'au rapport d'incident.",
-  "objective": "Identifier l'attaquant, retrouver le compte compromis et produire le rapport d'incident.",
+  "synopsis": "03:14 du matin. Une alerte réveille le centre d'opérations de sécurité. Quelqu'un force une porte sur le réseau. Tu es l'analyste de garde — mène l'enquête, du log brut au rapport d'incident.",
+  "objective": "Identifier l'attaquant, retrouver le compte compromis et produire le rapport.",
   "career": "soc",
   "difficulty": "intermediaire",
   "estimatedMinutes": 50,
@@ -14,38 +14,39 @@
       "id": "act1",
       "title": "Acte I — L'alerte",
       "lang": "bash",
-      "story": "Il est **03:14**. Pic de connexions échouées sur le serveur d'authentification. Tu as un extrait du journal : chaque ligne porte une **IP**, un **résultat** (`OK`/`FAIL`) et un **compte**. Trouve l'IP qui martèle le portail.",
-      "teach": "On enchaîne des filtres avec `|`. Exemple sur un autre journal pour trouver l'IP la plus fréquente parmi des erreurs :\n\n```bash\necho \"$data\" | grep ERREUR | awk \"{print \\$1}\" | sort | uniq -c | sort -rn | head -1\n```\n\n`grep` filtre, `awk \"{print \\$1}\"` garde la 1re colonne, `sort | uniq -c` compte, `sort -rn | head -1` garde le plus fréquent.",
-      "brief": "À partir de la variable `logs` (déjà fournie), affiche l'adresse IP responsable du plus grand nombre d'échecs (`FAIL`).",
-      "starterCode": "logs='185.220.101.5 FAIL j.martin\n10.0.0.42 OK admin\n185.220.101.5 FAIL j.martin\n203.0.113.9 OK alice\n185.220.101.5 FAIL root\n10.0.0.42 OK admin'\n\n# À toi : écris la commande qui fait ressortir l'IP la plus fréquente parmi les FAIL\n",
+      "story": "Il est **03:14**. Pic de connexions échouées. Le fichier `/tmp/sl_blackout/auth.log` liste les tentatives : une **IP**, un **résultat** (`OK`/`FAIL`) et un **compte** par ligne. Trouve l'IP qui martèle le portail.",
+      "teach": "On enchaîne des filtres avec `|` (tu connais déjà `grep` et `|`). `awk '{print $1}'` garde la 1re colonne, `sort | uniq -c` compte, `sort -rn | head -1` garde le plus fréquent :\n\n```bash\ngrep ERREUR f.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -1\n```",
+      "brief": "Fais ressortir l'adresse IP responsable du plus grand nombre d'échecs (`FAIL`) dans `/tmp/sl_blackout/auth.log`.",
+      "setup": "mkdir -p /tmp/sl_blackout && printf \"185.220.101.5 FAIL j.martin\\n10.0.0.42 OK admin\\n185.220.101.5 FAIL j.martin\\n203.0.113.9 OK alice\\n185.220.101.5 FAIL root\\n10.0.0.42 OK admin\\n\" > /tmp/sl_blackout/auth.log",
+      "starterCode": "# À toi : l'IP la plus fréquente parmi les FAIL de /tmp/sl_blackout/auth.log\n",
       "validationType": "contains",
       "expectedOutput": "185.220.101.5",
-      "hint": "Adapte l'exemple : `echo \"$logs\" | grep FAIL | awk \"{print \\$1}\" | sort | uniq -c | sort -rn | head -1`",
-      "correction": "logs='185.220.101.5 FAIL j.martin\n10.0.0.42 OK admin\n185.220.101.5 FAIL j.martin\n203.0.113.9 OK alice\n185.220.101.5 FAIL root\n10.0.0.42 OK admin'\n\necho \"$logs\" | grep FAIL | awk '{print $1}' | sort | uniq -c | sort -rn | head -1",
-      "reward": "Trois échecs en quelques secondes, tous depuis **`185.220.101.5`** — un **nœud de sortie Tor**. C'est une attaque par force brute. L'IP est noyée dans d'autres outils : il te faut un moyen fiable de l'**extraire automatiquement**. Place aux expressions régulières."
+      "hint": "`grep FAIL /tmp/sl_blackout/auth.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -1`",
+      "correction": "grep FAIL /tmp/sl_blackout/auth.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -1",
+      "reward": "Trois échecs en quelques secondes, tous depuis **`185.220.101.5`** — un **nœud de sortie Tor**. Attaque par force brute. Il te faut un moyen fiable d'**extraire** cette IP partout. Place aux expressions régulières."
     },
     {
       "id": "act2",
       "title": "Acte II — L'empreinte",
       "lang": "regex",
-      "story": "Tu exportes des centaines d'alertes hétérogènes. Au milieu du bruit, tu dois **capturer les adresses IPv4** pour les passer à la suite de la chaîne.",
-      "teach": "Une regex décrit un motif. Exemple : capturer une **date** au format `JJ/MM/AAAA` :\n\n```\n\\d{2}/\\d{2}/\\d{4}\n```\n\n`\\d` = un chiffre, `\\d{2}` = exactement 2 chiffres. Le `/` est littéral. Pour une IPv4, c'est **quatre nombres de 1 à 3 chiffres séparés par des points** (le point s'échappe en `\\.`).",
+      "story": "Tu exportes des centaines d'alertes hétérogènes. Tu dois **capturer les adresses IPv4** au milieu du bruit.",
+      "teach": "Une regex décrit un motif. Exemple : une **date** `JJ/MM/AAAA` :\n\n```\n\\d{2}/\\d{2}/\\d{4}\n```\n\n`\\d` = un chiffre. Une IPv4 = **quatre nombres de 1 à 3 chiffres séparés par des points** (point = `\\.`).",
       "brief": "Écris une expression régulière qui capture une adresse IPv4 (ex. `185.220.101.5`).",
       "validationType": "keywords",
       "requiredKeywords": [
         "\\d",
         "{1,3}"
       ],
-      "hint": "`\\d{1,3}` = un à trois chiffres ; le point se note `\\.` → `\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}`",
+      "hint": "`\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}`",
       "correction": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
-      "reward": "Ton motif moissonne toutes les IP du flux. `185.220.101.5` revient encore et encore — l'attaquant a ciblé **plusieurs services**. Il faut **pivoter dans le SIEM** pour savoir s'il a réussi quelque part. Place à KQL."
+      "reward": "Ton motif moissonne toutes les IP du flux. L'attaquant a ciblé **plusieurs services**. Il faut **pivoter dans le SIEM**. Place à KQL."
     },
     {
       "id": "act3",
       "title": "Acte III — Le pivot",
       "lang": "kql",
-      "story": "Dans **Microsoft Sentinel**, la table `SigninLogs` recense les tentatives de connexion Azure AD. Tu veux toute l'activité de `185.220.101.5`.",
-      "teach": "En KQL, on part d'une table puis on filtre avec `| where`. Exemple sur une autre table, pour les événements d'une machine :\n\n```kql\nSecurityEvent\n| where Computer == \"SRV-01\"\n```\n\nIci tu filtreras `SigninLogs` sur la colonne `IPAddress`.",
+      "story": "Dans **Microsoft Sentinel**, la table `SigninLogs` recense les connexions Azure AD. Tu veux toute l'activité de `185.220.101.5`.",
+      "teach": "En KQL, on part d'une table puis on filtre avec `| where` :\n\n```kql\nSecurityEvent\n| where Computer == \"SRV-01\"\n```\n\nIci tu filtreras `SigninLogs` sur la colonne `IPAddress`.",
       "brief": "Écris une requête KQL sur `SigninLogs` qui filtre les événements provenant de l'IP `185.220.101.5`.",
       "validationType": "keywords",
       "requiredTable": "SigninLogs",
@@ -55,15 +56,15 @@
       ],
       "hint": "`SigninLogs`\n`| where IPAddress == \"185.220.101.5\"`",
       "correction": "SigninLogs\n| where IPAddress == \"185.220.101.5\"\n| project TimeGenerated, UserPrincipalName, ResultType",
-      "reward": "Le résultat te glace : **47 échecs… et UNE réussite**. À 03:16, le compte **`j.martin`** s'est connecté **avec succès** depuis l'IP de l'attaquant. Le compte est **compromis**. Confirme son niveau d'accès — cap sur la base de données, en SQL."
+      "reward": "Le résultat te glace : **47 échecs… et UNE réussite**. À 03:16, le compte **`j.martin`** s'est connecté **avec succès** depuis l'IP de l'attaquant. Compte **compromis**. Cap sur la base, en SQL."
     },
     {
       "id": "act4",
       "title": "Acte IV — Le compte",
       "lang": "sql",
-      "story": "La table `users` contient `username`, `full_name`, `role` et `department`. Sors la fiche de l'utilisateur **`j.martin`**.",
-      "teach": "En SQL, on sélectionne des lignes avec `SELECT ... FROM ... WHERE`. Exemple, retrouver un produit par son nom :\n\n```sql\nSELECT * FROM produits WHERE nom = \"clavier\";\n```\n\nMême principe pour retrouver un utilisateur par son `username`.",
-      "brief": "Écris une requête SQL qui sélectionne l'utilisateur dont le `username` est `j.martin` dans la table `users`.",
+      "story": "La table `users` contient `username`, `full_name`, `role` et `department`. Sors la fiche de **`j.martin`**.",
+      "teach": "En SQL : `SELECT ... FROM ... WHERE`. Exemple :\n\n```sql\nSELECT * FROM produits WHERE nom = \"clavier\";\n```\n\nMême principe par `username`.",
+      "brief": "Sélectionne l'utilisateur dont le `username` est `j.martin` dans la table `users`.",
       "validationType": "keywords",
       "requiredKeywords": [
         "select",
@@ -74,22 +75,22 @@
       ],
       "hint": "`SELECT * FROM users WHERE username = 'j.martin';`",
       "correction": "SELECT * FROM users WHERE username = 'j.martin';",
-      "reward": "Tu retiens ton souffle : **Jean Martin — Administrateur Infrastructure**. L'attaquant tient les **clés du datacenter**. Il faut **consigner l'incident** immédiatement. Un dernier effort, en Python."
+      "reward": "**Jean Martin — Administrateur Infrastructure**. L'attaquant tient les **clés du datacenter**. Consigne l'incident, vite. Un dernier effort, en Python."
     },
     {
       "id": "act5",
       "title": "Acte V — Le rapport",
       "lang": "python",
-      "story": "Tu as tout : l'IP, la méthode, le compte compromis et son privilège. Assemble ces indices dans un **rapport d'incident** clair pour l'équipe de réponse.",
-      "teach": "Une **f-string** insère des variables dans un texte (le `f` avant les guillemets, variables entre `{}`) :\n\n```python\nip = \"10.0.0.9\"\nprint(f\"Source : {ip}\")\n```\n\nCela affiche : `Source : 10.0.0.9`.",
-      "brief": "Affiche un rapport qui contient le mot `INCIDENT`, l'adresse IP et le compte compromis (variables déjà fournies).",
-      "starterCode": "# Indices rassemblés au fil de l'enquête\nip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\n\n# À toi : affiche un rapport contenant le mot INCIDENT, l'IP et le compte\n",
+      "story": "Tu as tout : l'IP, la méthode, le compte compromis et son privilège. Assemble un **rapport d'incident**.",
+      "teach": "Une **f-string** insère des variables (le `f`, variables entre `{}`) :\n\n```python\nip = \"10.0.0.9\"\nprint(f\"Source : {ip}\")\n```\n\nAffiche : `Source : 10.0.0.9`.",
+      "brief": "Affiche un rapport contenant le mot `INCIDENT`, l'IP et le compte (variables déjà fournies).",
+      "starterCode": "ip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\n# À toi : affiche un rapport contenant INCIDENT, l'IP et le compte\n",
       "validationType": "contains",
       "expectedOutput": "INCIDENT",
-      "hint": "Par exemple : `print(f\"INCIDENT — IP {ip} — compte {compte} ({role})\")`",
-      "correction": "ip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\n\nprint(f\"INCIDENT CONFIRME : force brute reussie\")\nprint(f\"Source : {ip} (noeud Tor)\")\nprint(f\"Compte : {compte} ({role})\")",
+      "hint": "`print(f\"INCIDENT — IP {ip} — compte {compte} ({role})\")`",
+      "correction": "ip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\nprint(f\"INCIDENT CONFIRME : force brute reussie\")\nprint(f\"Source : {ip} (noeud Tor)\")\nprint(f\"Compte : {compte} ({role})\")",
       "reward": "Rapport transmis. **03:21** — sept minutes après l'alerte, l'équipe isole le compte et coupe l'accès. Le datacenter est sauf."
     }
   ],
-  "finale": "## Incident clôturé\n\nEn une nuit, tu as mené une **investigation complète de bout en bout** :\n\n- **Bash** — trié et compté des logs pour isoler l'IP hostile\n- **Regex** — extrait automatiquement les indicateurs de compromission (IOC)\n- **KQL** — pivoté dans le SIEM et trouvé la connexion réussie\n- **SQL** — identifié le compte privilégié compromis\n- **Python** — corrélé les indices en un rapport exploitable\n\nSur un CV, ça se dit :\n\n> *« Investigation d'incident multi-outils : analyse de logs (Bash), extraction d'IOC (regex), threat hunting (KQL/Sentinel), corrélation et reporting (Python). »*"
+  "finale": "## Incident clôturé\n\nInvestigation complète de bout en bout : **Bash** (tri/comptage de logs), **Regex** (extraction d'IOC), **KQL** (threat hunting), **SQL** (compte compromis), **Python** (reporting).\n\nSur un CV :\n> *« Investigation d'incident multi-outils : analyse de logs (Bash), extraction d'IOC (regex), threat hunting (KQL/Sentinel), corrélation et reporting (Python). »*"
 }

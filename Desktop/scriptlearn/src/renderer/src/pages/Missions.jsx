@@ -4,20 +4,20 @@ import { useProfile } from '../contexts/ProfileContext'
 import { listCampaigns } from '../content/missions'
 import { LANG_LABELS } from '../lib/langs'
 
-// Campagnes encore à écrire — affichées en « à venir » dans la section Avancé pour
+// Campagnes encore à écrire — affichées en « à venir » dans la section Expert pour
 // donner à voir la suite (défis multi-langages, scénarios métier) sans contenu réel.
 const COMING_SOON = [
   { title: 'Faille Zero Day', tagline: 'Analyse un binaire suspect et neutralise la menace (Python + C).', career: 'Sécurité offensive', accent: '#f87171' },
-  { title: 'Pipeline sous tension', tagline: 'Le déploiement casse en production. Répare la chaîne CI/CD.', career: 'DevOps', accent: '#a78bfa' },
 ]
 
 // Niveaux affichés dans l'ordre, du plus accessible au plus exigeant.
 const TIERS = [
   { key: 'debutant', label: 'Débutant', desc: 'Aucun prérequis — on apprend en jouant.' },
-  { key: 'intermediaire', label: 'Intermédiaire', desc: 'Quelques bases utiles, enseignées au fil de l\'histoire.' },
-  { key: 'avance', label: 'Avancé', desc: 'Pour aller plus loin.' },
+  { key: 'intermediaire', label: 'Intermédiaire', desc: 'On réutilise les acquis et on enchaîne.' },
+  { key: 'avance', label: 'Avancé', desc: 'Combiner les outils, manipuler les données.' },
+  { key: 'expert', label: 'Expert', desc: 'Scripting et automatisation complète.' },
 ]
-const DIFF_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé' }
+const DIFF_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé', expert: 'Expert' }
 
 export default function Missions() {
   const navigate = useNavigate()
@@ -90,7 +90,7 @@ export default function Missions() {
       {/* Sections par niveau */}
       {TIERS.map(tier => {
         const inTier = campaigns.filter(c => (c.difficulty ?? 'intermediaire') === tier.key)
-        const showComingSoon = tier.key === 'avance'
+        const showComingSoon = tier.key === 'expert'
         if (inTier.length === 0 && !showComingSoon) return null
         return (
           <section key={tier.key} className="mb-8">

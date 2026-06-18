@@ -11,7 +11,7 @@ for (const path in files) {
 }
 
 // Ordre des niveaux pour le catalogue : débutant d'abord, avancé en dernier.
-const DIFF_RANK = { debutant: 0, intermediaire: 1, avance: 2 }
+const DIFF_RANK = { debutant: 0, intermediaire: 1, avance: 2, expert: 3 }
 
 // Liste triée par niveau puis par `order` (défaut 99) — le catalogue présente
 // ainsi naturellement les campagnes du plus accessible au plus exigeant.
