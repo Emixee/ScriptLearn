@@ -1,0 +1,47 @@
+{
+  "id": "csharp-l1-m2",
+  "title": "Variables et conditions",
+  "level": 1,
+  "lang": "csharp",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Types",
+      "content": "```csharp\nint n = 5;\ndouble prix = 9.99;\nbool actif = true;\nstring mot = \"salut\";\n```\n\n`var` laisse le compilateur déduire le type : `var x = 10;`."
+    },
+    {
+      "title": "if / else et boucles",
+      "content": "```csharp\nfor (int i = 1; i <= 3; i++) {\n    System.Console.WriteLine(i);\n}\n```\n\nConditions et boucles ont la même syntaxe qu'en C/C++/Java."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-csharp-l1-m2-1",
+      "title": "Test de signe",
+      "instructions": "Pour `int n = 7;`, affiche `positif` si n > 0.",
+      "validationType": "output_contains",
+      "expectedOutput": "positif",
+      "correction": "class Program {\n    static void Main() {\n        int n = 7;\n        if (n > 0) System.Console.WriteLine(\"positif\");\n    }\n}",
+      "explanation": "La condition `n > 0` est vraie pour 7."
+    },
+    {
+      "id": "ex-csharp-l1-m2-2",
+      "title": "Compter",
+      "instructions": "Affiche les entiers de 1 à 5, un par ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "5",
+      "correction": "class Program {\n    static void Main() {\n        for (int i = 1; i <= 5; i++) System.Console.WriteLine(i);\n    }\n}",
+      "explanation": "La boucle `for` affiche chaque valeur de `i`."
+    },
+    {
+      "id": "ex-csharp-l1-m2-3",
+      "title": "Pair ou impair",
+      "instructions": "Pour `int n = 8;`, affiche `pair` si n est pair.",
+      "validationType": "output_contains",
+      "expectedOutput": "pair",
+      "correction": "class Program {\n    static void Main() {\n        int n = 8;\n        System.Console.WriteLine(n % 2 == 0 ? \"pair\" : \"impair\");\n    }\n}",
+      "explanation": "L'opérateur ternaire `condition ? a : b` choisit entre deux valeurs selon la condition."
+    }
+  ]
+}

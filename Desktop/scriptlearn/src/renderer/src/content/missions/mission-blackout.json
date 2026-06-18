@@ -1,0 +1,78 @@
+{
+  "id": "mission-blackout",
+  "order": 1,
+  "title": "Blackout",
+  "tagline": "Ton premier jour au SOC tourne au cauchemar.",
+  "synopsis": "03:14 du matin. Une alerte réveille le centre d'opérations de sécurité. Quelqu'un force une porte sur le réseau de l'entreprise. Tu es l'analyste de garde — à toi de mener l'enquête, du log brut jusqu'au rapport d'incident.",
+  "objective": "Identifier l'attaquant, retrouver le compte compromis et produire le rapport d'incident.",
+  "career": "soc",
+  "difficulty": "intermediaire",
+  "estimatedMinutes": 60,
+  "accent": "#e879f9",
+  "chapters": [
+    {
+      "id": "act1",
+      "title": "Acte I — L'alerte",
+      "lang": "bash",
+      "story": "Il est **03:14**. Le tableau de bord vire au rouge : un pic de connexions échouées sur le serveur d'authentification.\n\nTu récupères un extrait du journal `auth.log`. Chaque ligne : une **adresse IP**, le **résultat** (`OK` ou `FAIL`) et le **compte** visé.\n\nQuelqu'un martèle le portail. Trouve **qui**.",
+      "brief": "Complète la commande pour isoler les échecs (`FAIL`) et faire ressortir l'adresse IP responsable du pic.",
+      "starterCode": "logs='185.220.101.5 FAIL j.martin\n10.0.0.42 OK admin\n185.220.101.5 FAIL j.martin\n203.0.113.9 OK alice\n185.220.101.5 FAIL root\n10.0.0.42 OK admin'\n\n# Complète : ne garde que les échecs (FAIL), compte par adresse IP\n# et affiche la plus fréquente.\necho \"$logs\" | grep FAIL\n",
+      "validationType": "contains",
+      "expectedOutput": "185.220.101.5",
+      "hint": "Enchaîne les filtres : `grep FAIL` puis `awk '{print $1}'` puis `sort | uniq -c | sort -rn | head -1`.",
+      "correction": "logs='185.220.101.5 FAIL j.martin\n10.0.0.42 OK admin\n185.220.101.5 FAIL j.martin\n203.0.113.9 OK alice\n185.220.101.5 FAIL root\n10.0.0.42 OK admin'\n\necho \"$logs\" | grep FAIL | awk '{print $1}' | sort | uniq -c | sort -rn | head -1",
+      "reward": "Trois échecs en quelques secondes, tous depuis **`185.220.101.5`**. Une recherche rapide : l'adresse appartient à un **nœud de sortie Tor**. Ce n'est pas une faute de frappe d'un employé — c'est une attaque par force brute.\n\nMais l'IP apparaît noyée dans des lignes bruitées ailleurs dans tes outils. Il te faut un moyen fiable de l'**extraire automatiquement**. Direction : les expressions régulières."
+    },
+    {
+      "id": "act2",
+      "title": "Acte II — L'empreinte",
+      "lang": "regex",
+      "story": "Tu exportes des centaines de lignes d'alertes hétérogènes. Au milieu du bruit (ports, horodatages, identifiants), tu dois **capturer les adresses IPv4** pour les passer à la suite de la chaîne.\n\nUne adresse IPv4, c'est **quatre nombres de 1 à 3 chiffres séparés par des points** : `185.220.101.5`.",
+      "brief": "Écris une expression régulière qui capture une adresse IPv4 (quatre groupes de chiffres séparés par des points).",
+      "validationType": "keywords",
+      "requiredKeywords": ["\\d", "{1,3}"],
+      "hint": "`\\d` correspond à un chiffre. `\\d{1,3}` à un à trois chiffres. Le point doit être échappé : `\\.`",
+      "correction": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
+      "reward": "Parfait. Ton motif moissonne toutes les IP du flux d'un coup. `185.220.101.5` ressort encore et encore — l'attaquant a ciblé **plusieurs services**.\n\nIl est temps de **pivoter dans le SIEM** : qu'a fait cette IP, exactement, et **a-t-elle réussi quelque part** ? On passe à KQL, le langage de requête de Microsoft Sentinel."
+    },
+    {
+      "id": "act3",
+      "title": "Acte III — Le pivot",
+      "lang": "kql",
+      "story": "Dans **Microsoft Sentinel**, la table `SigninLogs` recense toutes les tentatives de connexion Azure AD.\n\nTu veux tout savoir sur l'activité de `185.220.101.5` : quand, quel compte, et surtout **le résultat** de chaque tentative.",
+      "brief": "Écris une requête KQL sur `SigninLogs` qui filtre les événements provenant de l'IP `185.220.101.5`.",
+      "validationType": "keywords",
+      "requiredTable": "SigninLogs",
+      "requiredKeywords": ["where", "185.220.101.5"],
+      "hint": "Commence par la table `SigninLogs`, puis `| where IPAddress == \"185.220.101.5\"`. Ajoute un `| project` pour ne garder que les colonnes utiles.",
+      "correction": "SigninLogs\n| where IPAddress == \"185.220.101.5\"\n| project TimeGenerated, UserPrincipalName, ResultType",
+      "reward": "Le résultat te glace : **47 échecs… et UNE réussite**. À 03:16, le compte **`j.martin@corp.local`** s'est connecté **avec succès** depuis l'IP de l'attaquant.\n\nLe mot de passe de Jean Martin est tombé. Son compte est **compromis**. Tu dois confirmer qui il est et son niveau d'accès — cap sur la base de données des utilisateurs, en SQL."
+    },
+    {
+      "id": "act4",
+      "title": "Acte IV — Le compte",
+      "lang": "sql",
+      "story": "La table `users` de l'annuaire interne contient les colonnes `username`, `full_name`, `role` et `department`.\n\nTu dois sortir la fiche complète de l'utilisateur **`j.martin`** pour évaluer l'ampleur des dégâts.",
+      "brief": "Écris une requête SQL qui sélectionne l'utilisateur dont le `username` est `j.martin` dans la table `users`.",
+      "validationType": "keywords",
+      "requiredKeywords": ["select", "from", "users", "where", "j.martin"],
+      "hint": "`SELECT * FROM users WHERE username = 'j.martin';`",
+      "correction": "SELECT * FROM users WHERE username = 'j.martin';",
+      "reward": "Tu retiens ton souffle. **Jean Martin — Administrateur Infrastructure**. L'attaquant n'a pas compromis un compte lambda : il tient les **clés du datacenter**.\n\nChaque minute compte. Tu dois **consigner l'incident** : corréler tous tes indices dans un rapport clair que l'équipe de réponse pourra exploiter immédiatement. Un dernier effort, en Python."
+    },
+    {
+      "id": "act5",
+      "title": "Acte V — Le rapport",
+      "lang": "python",
+      "story": "Tu as tout : l'IP, la méthode, le compte compromis et son niveau de privilège.\n\nÉcris un script qui **assemble ces indices** et imprime un **rapport d'incident** lisible — celui que tu passeras à l'équipe de réponse pour déclencher la containment.",
+      "brief": "Écris un script Python qui affiche un rapport contenant le mot `INCIDENT`, l'adresse IP et le compte compromis.",
+      "starterCode": "# Les indices rassemblés au fil de l'enquête\nip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\n\n# Affiche un rapport d'incident clair (il doit contenir le mot INCIDENT).\n",
+      "validationType": "contains",
+      "expectedOutput": "INCIDENT",
+      "hint": "Utilise plusieurs `print(...)`, ou une f-string : `print(f\"INCIDENT — IP {ip} — compte {compte}\")`.",
+      "correction": "ip = \"185.220.101.5\"\ncompte = \"j.martin\"\nrole = \"Administrateur Infrastructure\"\n\nprint(\"==== RAPPORT D'INCIDENT ====\")\nprint(f\"INCIDENT CONFIRME : force brute reussie\")\nprint(f\"Source       : {ip} (noeud Tor)\")\nprint(f\"Compte       : {compte} ({role})\")\nprint(f\"Action       : isoler le compte et reinitialiser le mot de passe\")",
+      "reward": "Rapport transmis. **03:21** — sept minutes après l'alerte, l'équipe de réponse isole le compte et coupe l'accès. Le datacenter est sauf."
+    }
+  ],
+  "finale": "## Incident clôturé\n\nEn une nuit, tu as mené une **investigation complète de bout en bout** :\n\n- **Bash** — trié et compté des logs bruts pour isoler l'IP hostile\n- **Regex** — extrait automatiquement les indicateurs de compromission (IOC)\n- **KQL** — pivoté dans le SIEM et découvert la connexion réussie\n- **SQL** — identifié le compte privilégié compromis\n- **Python** — corrélé les indices en un rapport d'incident exploitable\n\nC'est exactement le réflexe qu'on attend d'un **analyste SOC junior**. Sur ton CV, ça se dit :\n\n> *« Investigation d'incident de sécurité multi-outils : analyse de logs (Bash), extraction d'IOC (regex), threat hunting (KQL/Sentinel), corrélation et reporting (Python). »*\n\nL'attaquant reviendra. Mais toi aussi."
+}

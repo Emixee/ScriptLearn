@@ -35,6 +35,23 @@ function checkPhpAvailable() {
   }
 }
 
+// Vérifie qu'une toolchain (gcc, g++, javac, mono…) est installée DANS WSL.
+// Les langages compilés (C/C++/C#/Java) sont compilés et exécutés via la session
+// bash WSL — on teste donc l'outil côté WSL, pas son équivalent Windows natif,
+// pour éviter un faux positif (ex: un gcc MinGW Windows alors que WSL ne l'a pas).
+// On valide le nom de l'outil avec une allow-list : la valeur vient du renderer,
+// on ne veut surtout pas l'injecter telle quelle dans une commande shell.
+const KNOWN_TOOLS = ['gcc', 'g++', 'javac', 'java', 'mcs', 'mono']
+function checkToolAvailable(tool) {
+  if (!KNOWN_TOOLS.includes(tool)) return false
+  try {
+    execSync(`wsl.exe -e ${tool} --version`, { timeout: 5000, windowsHide: true, stdio: 'pipe' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 const sessions = new Map()
 const emitter = new EventEmitter()
 
@@ -77,6 +94,7 @@ export function setupTerminalIPC(mainWindow) {
   ipcMain.handle('terminal:bashAvailable',   () => checkBashAvailable())
   ipcMain.handle('terminal:pythonAvailable', () => checkPythonAvailable())
   ipcMain.handle('terminal:phpAvailable',    () => checkPhpAvailable())
+  ipcMain.handle('terminal:toolAvailable',   (_, { tool }) => checkToolAvailable(tool))
 
   ipcMain.handle('terminal:create', (_, { id, shell }) => {
     if (sessions.has(id)) return { ok: true }

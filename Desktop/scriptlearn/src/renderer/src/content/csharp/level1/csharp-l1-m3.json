@@ -1,0 +1,47 @@
+{
+  "id": "csharp-l1-m3",
+  "title": "Méthodes et tableaux",
+  "level": 1,
+  "lang": "csharp",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Méthodes",
+      "content": "```csharp\nstatic int Somme(int a, int b) {\n    return a + b;\n}\n```\n\nUne méthode `static` peut être appelée directement depuis `Main`."
+    },
+    {
+      "title": "Tableaux",
+      "content": "```csharp\nint[] t = {10, 20, 30};\nSystem.Console.WriteLine(t[0]);   // 10\nforeach (int x in t) { /* ... */ }\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-csharp-l1-m3-1",
+      "title": "Méthode somme",
+      "instructions": "Écris `Somme(a, b)` et affiche `Somme(3, 4)`, soit `7`.",
+      "validationType": "output_contains",
+      "expectedOutput": "7",
+      "correction": "class Program {\n    static int Somme(int a, int b) { return a + b; }\n    static void Main() {\n        System.Console.WriteLine(Somme(3, 4));\n    }\n}",
+      "explanation": "La méthode `Somme` renvoie `a + b` ; on affiche le résultat."
+    },
+    {
+      "id": "ex-csharp-l1-m3-2",
+      "title": "foreach",
+      "instructions": "Affiche chaque élément de `{5, 10, 15}` sur sa propre ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "class Program {\n    static void Main() {\n        int[] t = {5, 10, 15};\n        foreach (int x in t) System.Console.WriteLine(x);\n    }\n}",
+      "explanation": "`foreach` parcourt chaque élément du tableau sans gérer d'indice."
+    },
+    {
+      "id": "ex-csharp-l1-m3-3",
+      "title": "Somme d'un tableau",
+      "instructions": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}`, soit `15`.",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "class Program {\n    static void Main() {\n        int[] t = {1, 2, 3, 4, 5};\n        int total = 0;\n        foreach (int x in t) total += x;\n        System.Console.WriteLine(total);\n    }\n}",
+      "explanation": "On additionne chaque élément dans `total`."
+    }
+  ]
+}

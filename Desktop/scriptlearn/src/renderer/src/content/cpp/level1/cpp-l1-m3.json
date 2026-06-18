@@ -1,0 +1,47 @@
+{
+  "id": "cpp-l1-m3",
+  "title": "Fonctions et vecteurs",
+  "level": 1,
+  "lang": "cpp",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Fonctions",
+      "content": "```cpp\nint somme(int a, int b) {\n    return a + b;\n}\n```\n\nIdentique au C. On peut aussi passer des paramètres par référence (`int &x`)."
+    },
+    {
+      "title": "std::vector",
+      "content": "Le `std::vector` est un tableau dynamique pratique.\n\n```cpp\n#include <vector>\nstd::vector<int> v = {10, 20, 30};\nfor (int x : v) std::cout << x << std::endl;  // boucle \"range-based\"\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-cpp-l1-m3-1",
+      "title": "Fonction produit",
+      "instructions": "Écris `produit(a, b)` et affiche `produit(6, 7)`, soit `42`.",
+      "validationType": "output_contains",
+      "expectedOutput": "42",
+      "correction": "#include <iostream>\nint produit(int a, int b) {\n    return a * b;\n}\nint main() {\n    std::cout << produit(6, 7) << std::endl;\n    return 0;\n}",
+      "explanation": "La fonction renvoie le produit ; le résultat est envoyé dans `cout`."
+    },
+    {
+      "id": "ex-cpp-l1-m3-2",
+      "title": "Parcourir un vecteur",
+      "instructions": "Affiche chaque élément de `{3, 6, 9}` sur sa propre ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "9",
+      "correction": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {3, 6, 9};\n    for (int x : v) std::cout << x << std::endl;\n    return 0;\n}",
+      "explanation": "La boucle `for (int x : v)` parcourt chaque élément du vecteur."
+    },
+    {
+      "id": "ex-cpp-l1-m3-3",
+      "title": "Somme d'un vecteur",
+      "instructions": "Calcule et affiche la somme de `{2, 4, 6, 8}`, soit `20`.",
+      "validationType": "output_contains",
+      "expectedOutput": "20",
+      "correction": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {2, 4, 6, 8};\n    int total = 0;\n    for (int x : v) total += x;\n    std::cout << total << std::endl;\n    return 0;\n}",
+      "explanation": "On accumule chaque élément dans `total`."
+    }
+  ]
+}

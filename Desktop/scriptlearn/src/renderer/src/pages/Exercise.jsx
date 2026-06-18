@@ -1,36 +1,26 @@
 import { useState, useId, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import CodeMirror from '@uiw/react-codemirror'
-import { python } from '@codemirror/lang-python'
-import { StreamLanguage } from '@codemirror/language'
-import { shell } from '@codemirror/legacy-modes/mode/shell'
-// html est dans @codemirror/legacy-modes/mode/xml (déjà en package.json ^6.5.3)
-// Le module xml.js exporte xml et html — on utilise html pour la coloration HTML
-// Pour PHP, on utilise javascript (syntaxe C-like proche) — pas de mode php disponible
-import { html as htmlMode } from '@codemirror/legacy-modes/mode/xml'
-import { javascript as jsMode } from '@codemirror/legacy-modes/mode/javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorView } from '@codemirror/view'
 import Terminal from '../components/Terminal'
 import PreviewPane from '../components/PreviewPane'
 import AIAssistant from '../components/AIAssistant'
 import WindowControls from '../components/WindowControls'
+import ToolchainBanner from '../components/ToolchainBanner'
 import { getModule } from '../content/loader'
 import { parseMarkdown } from '../utils/markdown'
 import { useProfile } from '../contexts/ProfileContext'
 import { askOllama } from '../utils/ollama'
 import contentIndex from '../content/index.json'
+// Métadonnées langages centralisées (couleurs, labels, exécution, coloration).
+// Avant, ces tables étaient dupliquées ici ET dans Sandbox — voir lib/langs.js.
+import {
+  LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension,
+  buildRunData, sentinelCommand, termShellFor, stripAnsi, SENTINEL_PREFIX,
+} from '../lib/langs'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
-const SENTINEL_PREFIX = '__SL_DONE_'
-
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-// STATIC_LANGS : langages validés par mots-clés (pas d'exécution terminal)
-// HTML est statique — la prévisualisation vient du srcDoc direct, pas d'une exécution
-const STATIC_LANGS = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml', 'html']
-// PREVIEW_LANGS : langages qui affichent un panneau d'aperçu HTML en plus du terminal
-const PREVIEW_LANGS = ['html', 'php']
 
 const KQL_REFERENCE = `Tables fréquentes
 ─────────────────
@@ -399,10 +389,6 @@ function getStaticReference(lang) {
   return ''
 }
 
-function stripAnsi(str) {
-  return str.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '').replace(/\r/g, '')
-}
-
 function findNextModule(currentLang, currentLevelId, currentModuleId) {
   const level = contentIndex.levels.find(l => l.id === parseInt(currentLevelId))
   if (!level) return null
@@ -415,19 +401,6 @@ function findNextModule(currentLang, currentLevelId, currentModuleId) {
   const nextRefs = nextLevel.languages[currentLang] ?? []
   if (nextRefs.length === 0) return null
   return { lang: currentLang, levelId: nextLevel.id, ref: nextRefs[0], sameLevel: false }
-}
-
-// Choisit l'extension CodeMirror selon le langage
-// htmlmixed active la coloration HTML + CSS inline + JS inline en une seule extension
-// php active la coloration PHP (les blocs <?php ?> sont reconnus)
-function getLangExtension(lang) {
-  if (lang === 'python') return python()
-  if (lang === 'bash' || lang === 'powershell') return StreamLanguage.define(shell)
-  // html : mode xml avec support HTML (balises, attributs, entités)
-  // php : mode javascript pour la coloration de base (C-like — accolades, strings, commentaires)
-  if (lang === 'html') return StreamLanguage.define(htmlMode)
-  if (lang === 'php')  return StreamLanguage.define(jsMode)
-  return []
 }
 
 const cmTheme = EditorView.theme({
@@ -622,17 +595,12 @@ export default function Exercise() {
     setFeedback(null)
     setStatus(STATUS.idle)
 
-    if (lang === 'php') {
-      // PHP s'exécute dans le terminal bash WSL existant (shell='bash').
-      // On envoie un heredoc bash : le délimiteur 'PHPEOF' en single-quotes empêche
-      // bash d'expandre les variables PHP ($name, $arr) avant que PHP les voie.
-      // Sans les quotes autour de PHPEOF, bash remplacerait $name par une chaîne vide.
-      setPreviewSrc('')
-      const heredoc = `php << 'PHPEOF'\n${code}\nPHPEOF\r`
-      window.electronAPI.terminal.write({ id: termId, data: heredoc })
-    } else {
-      window.electronAPI.terminal.write({ id: termId, data: code + '\r' })
-    }
+    // buildRunData centralise la façon d'exécuter chaque langage :
+    //  - PHP : heredoc vers l'interpréteur php
+    //  - C/C++/C#/Java : écriture d'un fichier temporaire WSL + compilation + run
+    //  - bash/python/powershell : envoi direct
+    if (lang === 'php') setPreviewSrc('')
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, code) })
   }
 
   const validateStatic = async () => {
@@ -662,31 +630,23 @@ export default function Exercise() {
     setFeedback(null)
     const sentinelId = Date.now()
     const sentinel = `${SENTINEL_PREFIX}${sentinelId}__`
-    // Pour PHP : la commande echo "${sentinel}" est un echo bash (pas PHP).
-    // Le heredoc PHP a déjà terminé avant l'envoi du sentinel — on est de retour
-    // dans le shell bash, donc `echo` fonctionne normalement.
-    const sentinelCmd = lang === 'powershell'
-      ? `Write-Host "${sentinel}"`
-      : lang === 'python'
-      ? `print("${sentinel}")`
-      : `echo "${sentinel}"`
+    // Pour PHP et les langages compilés, la commande sentinel est un echo bash :
+    // l'exécution est terminée et on est de retour dans le shell bash, donc `echo`
+    // fonctionne. sentinelCommand gère la syntaxe par interpréteur (Write-Host / print / echo).
+    const sentinelCmd = sentinelCommand(lang, sentinel)
     outputBuffer.current = ''
 
-    if (lang === 'php') {
-      // Pour PHP : exécution via heredoc (même logique que handleRun)
-      setPreviewSrc('')
-      const heredoc = `php << 'PHPEOF'\n${trimmed}\nPHPEOF\r`
-      window.electronAPI.terminal.write({ id: termId, data: heredoc })
-    } else {
-      window.electronAPI.terminal.write({ id: termId, data: trimmed + '\r' })
-    }
+    if (lang === 'php') setPreviewSrc('')
+    // buildRunData : heredoc PHP, compilation C/C++/C#/Java, ou envoi direct.
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, trimmed) })
     await new Promise(r => setTimeout(r, 80))
     if (lang === 'python') {
       window.electronAPI.terminal.write({ id: termId, data: '\r' })
       await new Promise(r => setTimeout(r, 50))
     }
     window.electronAPI.terminal.write({ id: termId, data: sentinelCmd + '\r' })
-    const maxWait = 20000
+    // 25 s : marge pour la compilation (gcc/javac/mono) plus lente qu'un script interprété.
+    const maxWait = 25000
     const pollInterval = 120
     let elapsed = 0
     while (elapsed < maxWait) {
@@ -862,6 +822,8 @@ export default function Exercise() {
       <div className="flex flex-1 overflow-hidden">
         {/* Panneau gauche (redimensionnable) */}
         <div className="flex flex-col border-r border-[#2e2b26] flex-shrink-0" style={{ width: panelWidth }}>
+          {/* Avertissement si la toolchain compilée (gcc/g++/javac/mono) manque dans WSL */}
+          <ToolchainBanner lang={lang} />
           {/* Badge boss/debug */}
           {(isBoss || isDebug) && (
             <div className={`px-4 py-2 text-xs font-medium flex items-center gap-2 ${
@@ -1089,7 +1051,9 @@ export default function Exercise() {
             ) : isStaticLang ? (
               <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
             ) : (
-              <Terminal id={termId} shell={lang} className="h-full" />
+              // termShellFor : bash/python/powershell gardent leur interpréteur ;
+              // C/C++/C#/Java passent par la session bash WSL (compilation + run).
+              <Terminal id={termId} shell={termShellFor(lang)} className="h-full" />
             )}
           </div>
         </div>

@@ -1,0 +1,47 @@
+{
+  "id": "java-l1-m3",
+  "title": "Méthodes et tableaux",
+  "level": 1,
+  "lang": "java",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Méthodes statiques",
+      "content": "```java\nstatic int somme(int a, int b) {\n    return a + b;\n}\n```\n\nUne méthode `static` est appelable directement depuis `main`."
+    },
+    {
+      "title": "Tableaux",
+      "content": "```java\nint[] t = {10, 20, 30};\nSystem.out.println(t[0]);          // 10\nfor (int x : t) { /* ... */ }      // boucle for-each\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-java-l1-m3-1",
+      "title": "Méthode somme",
+      "instructions": "Écris `somme(a, b)` et affiche `somme(3, 4)`, soit `7`.",
+      "validationType": "output_contains",
+      "expectedOutput": "7",
+      "correction": "public class Main {\n    static int somme(int a, int b) { return a + b; }\n    public static void main(String[] args) {\n        System.out.println(somme(3, 4));\n    }\n}",
+      "explanation": "La méthode renvoie `a + b` ; le résultat est affiché."
+    },
+    {
+      "id": "ex-java-l1-m3-2",
+      "title": "for-each",
+      "instructions": "Affiche chaque élément de `{5, 10, 15}` sur sa propre ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {5, 10, 15};\n        for (int x : t) System.out.println(x);\n    }\n}",
+      "explanation": "La boucle `for (int x : t)` parcourt chaque élément."
+    },
+    {
+      "id": "ex-java-l1-m3-3",
+      "title": "Somme d'un tableau",
+      "instructions": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}`, soit `15`.",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {1, 2, 3, 4, 5};\n        int total = 0;\n        for (int x : t) total += x;\n        System.out.println(total);\n    }\n}",
+      "explanation": "On accumule chaque élément dans `total`."
+    }
+  ]
+}

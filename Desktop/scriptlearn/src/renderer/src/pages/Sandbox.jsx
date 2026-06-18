@@ -1,29 +1,12 @@
 import { useState, useEffect, useRef, useId, useCallback } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
-import { python } from '@codemirror/lang-python'
-import { StreamLanguage } from '@codemirror/language'
-import { shell } from '@codemirror/legacy-modes/mode/shell'
-import { html as htmlMode } from '@codemirror/legacy-modes/mode/xml'
-import { javascript as jsMode } from '@codemirror/legacy-modes/mode/javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorView } from '@codemirror/view'
 import Terminal from '../components/Terminal'
 import PreviewPane from '../components/PreviewPane'
-
-const LANG_COLORS = {
-  bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706',
-  kql: '#e879f9', sql: '#34d399', regex: '#fb923c',
-  git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15',
-  html: '#e34c26', php: '#8892bf'
-}
-const LANG_LABELS = {
-  bash: 'Bash', python: 'Python', powershell: 'PowerShell',
-  kql: 'KQL', sql: 'SQL', regex: 'Regex',
-  git: 'Git', spl: 'SPL', yaml: 'YAML',
-  html: 'HTML', php: 'PHP'
-}
-// HTML est statique (pas de bouton Exécuter) — la prévisualisation vient du code direct
-const STATIC_LANGS = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml', 'html']
+import ToolchainBanner from '../components/ToolchainBanner'
+// Métadonnées langages centralisées — partagées avec Exercise et MissionPlay.
+import { LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension, buildRunData, termShellFor } from '../lib/langs'
 
 const REFERENCE = {
   kql: `Tables : SecurityEvent · SigninLogs · Syslog · DnsEvents · AuditLogs · SecurityAlert\n\nStructure :\nTable\n| where TimeGenerated > ago(24h)\n| project Col1, Col2\n| summarize Count=count() by IpAddress\n| sort by Count desc\n| take 100`,
@@ -32,14 +15,6 @@ const REFERENCE = {
   git: `git init / clone URL / status / log --oneline\ngit add . / commit -m "msg"\ngit branch nom / switch nom / switch -c nom\ngit merge branche / rebase main\ngit remote -v / push / pull / fetch\ngit stash / stash pop\ngit tag -a v1.0 -m "" / revert abc123`,
   spl: `index=security EventCode=4625\n| head 10 | fields host, user\n| where EventCode=4625\n| eval f = if(code<400,"OK","ERR")\n| stats count BY user\n| top 10 src_ip\n| timechart span=1h count`,
   yaml: `clé: valeur  |  actif: true  |  port: 8080  |  vide: null\n\nListe :\nitems:\n  - nginx\n  - redis\n\nImbriqué :\nserver:\n  host: localhost\n  port: 8080\n\nAncre & Alias :\ndefaults: &defaults\n  timeout: 30\nprod:\n  <<: *defaults\n  timeout: 5\n\n--- # séparateur multi-documents`,
-}
-
-function getLangExtension(lang) {
-  if (lang === 'python') return python()
-  if (lang === 'bash' || lang === 'powershell') return StreamLanguage.define(shell)
-  if (lang === 'html') return StreamLanguage.define(htmlMode)
-  if (lang === 'php')  return StreamLanguage.define(jsMode)
-  return []
 }
 
 const cmTheme = EditorView.theme({
@@ -83,15 +58,9 @@ export default function Sandbox() {
     if (!code.trim() || isStatic) return
     outputBuffer.current = ''
     setPhpPreviewSrc('')
-
-    if (lang === 'php') {
-      // PHP : heredoc bash → même logique que dans Exercise.jsx
-      // Le délimiteur 'PHPEOF' en single-quotes protège les variables PHP de bash
-      const heredoc = `php << 'PHPEOF'\n${code}\nPHPEOF\r`
-      window.electronAPI.terminal.write({ id: termId, data: heredoc })
-    } else {
-      window.electronAPI.terminal.write({ id: termId, data: code + '\r' })
-    }
+    // buildRunData gère PHP (heredoc), C/C++/C#/Java (compilation WSL) et l'envoi
+    // direct pour bash/python/powershell — même logique que dans Exercise.jsx.
+    window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, code) })
   }, [code, termId, isStatic, lang])
 
   // Actualiser l'aperçu PHP avec la sortie capturée dans outputBuffer
@@ -160,6 +129,9 @@ export default function Sandbox() {
           )}
         </div>
       </div>
+
+      {/* Avertissement toolchain compilée manquante (C/C++/C#/Java) */}
+      <ToolchainBanner lang={lang} />
 
       {/* Corps */}
       <div className="flex flex-1 overflow-hidden">
@@ -242,7 +214,9 @@ export default function Sandbox() {
                     {REFERENCE[lang] ?? ''}
                   </pre>
                 ) : (
-                  <Terminal id={termId} shell={lang} className="h-full" />
+                  // termShellFor : C/C++/C#/Java passent par bash WSL (compilation) ;
+                  // bash/python/powershell gardent leur interpréteur.
+                  <Terminal id={termId} shell={termShellFor(lang)} className="h-full" />
                 )}
               </div>
             </>

@@ -6,6 +6,7 @@ import AIAssistant from '../components/AIAssistant'
 import WindowControls from '../components/WindowControls'
 import Terminal from '../components/Terminal'
 import { useProfile } from '../contexts/ProfileContext'
+import { LANG_COLORS, LANG_LABELS, termShellFor } from '../lib/langs'
 
 export default function Course() {
   const { lang, level, moduleId } = useParams()
@@ -52,8 +53,8 @@ export default function Course() {
   const isStaticLang = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml'].includes(lang)
   const isKQL = lang === 'kql'
 
-  const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
-  const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
+  // Couleurs/labels centralisés (lib/langs) — incluent html, php et les langages
+  // compilés C/C++/C#/Java, contrairement aux anciennes tables locales.
   const langAccent = LANG_COLORS[lang] ?? '#22d3ee'
   const langLabel = LANG_LABELS[lang] ?? lang
 
@@ -221,7 +222,7 @@ export default function Course() {
                 </button>
               </div>
               <div style={{ height: 'calc(100% - 32px)' }} className="bg-[#080807]">
-                <Terminal id={termId} shell={lang} className="h-full" />
+                <Terminal id={termId} shell={termShellFor(lang)} className="h-full" />
               </div>
             </div>
           )}

@@ -1,9 +1,40 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.6.0
+## Version actuelle : 0.8.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.8.0 — Mode jeu « Missions » + langages compilés C/C++/C#/Java (2026-06-18)
+
+### Mode jeu narratif « Missions » (nouvelle section)
+
+Nouvelle entrée de barre latérale `missions`, distincte des cours. Une **campagne** est une histoire découpée en **actes** ; chaque acte présente une narration puis une **énigme de code** à résoudre. La réussite révèle la suite de l'intrigue (`reward`) et débloque l'acte suivant, jusqu'à un écran de **finale** (débrief formulé pour un CV).
+
+- **Campagne livrée — « Blackout »** (parcours SOC, 5 actes multi-langages) : enquête d'incident `bash` → `regex` → `kql` → `sql` → `python`. Les indices se chaînent d'un acte à l'autre.
+- Le catalogue affiche aussi des campagnes « à venir » (portfolio dev web, journée d'entretien, astreinte sysadmin).
+
+**Fichiers :**
+- `content/missions/<id>.json` : schéma campagne (`chapters[]` avec `story`, `brief`, `starterCode`, `validationType`, `expectedOutput`/`requiredKeywords`, `hint`, `correction`, `reward` + `finale`).
+- `content/missions/index.js` : loader séparé (`listCampaigns`, `getCampaign`).
+- `pages/Missions.jsx` (catalogue) + `pages/MissionPlay.jsx` (jeu plein écran, route `/mission/:campaignId` hors AppLayout).
+- Progression réutilise le store générique : chapitre réussi = `markExerciseDone(profileId, "<campagne>:<chapitre>")`.
+
+### Langages compilés C, C++, C#, Java
+
+Ajout de 4 langages (track « Fondamentaux » chacun : 1 niveau, 3 modules, exécutés via WSL).
+
+- **Exécution** : compilation + run dans la session bash WSL via heredoc (même principe que PHP) — `gcc`, `g++`, `javac/java`, `mcs/mono`. Java impose la classe `Main` ; C# utilise Mono.
+- **Détection toolchain** : `terminal:toolAvailable` (IPC) + `ToolchainBanner.jsx` affiche la commande d'installation si l'outil manque dans WSL.
+- **Coloration** : modes `clike` (c, cpp, java, csharp) de `@codemirror/legacy-modes`.
+
+### Socle technique partagé (refactoring)
+
+- **`lib/langs.js`** : source de vérité UNIQUE des langages (`LANG_META`, `LANG_COLORS`, `LANG_LABELS`, `STATIC_LANGS`, `isStatic`, `termShellFor`, `getLangExtension`, `buildRunData`, `sentinelCommand`, `stripAnsi`, `TOOLCHAINS`). Remplace les tables dupliquées d'Exercise/Sandbox/Course.
+- **`lib/useCodeRunner.js`** : hook d'exécution + validation (sentinel pour exécuté, mots-clés pour statique) utilisé par MissionPlay.
+- `Exercise.jsx`, `Sandbox.jsx`, `Course.jsx` adoptent `lib/langs` — comportement inchangé pour les exercices existants.
 
 ---
 

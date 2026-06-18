@@ -1,0 +1,48 @@
+{
+  "id": "c-l1-m1",
+  "title": "Premiers pas en C",
+  "level": 1,
+  "lang": "c",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "La fonction main et printf",
+      "content": "Tout programme C démarre par la fonction `main`. On affiche du texte avec `printf`, déclarée dans `<stdio.h>`.\n\n```c\n#include <stdio.h>\n\nint main(void) {\n    printf(\"Bonjour, C !\\n\");\n    return 0;\n}\n```\n\n- `#include <stdio.h>` : importe les fonctions d'entrée/sortie (dont `printf`).\n- `\\n` : saut de ligne. `printf` n'en ajoute pas automatiquement (contrairement à `puts`).\n- `return 0;` : indique au système que tout s'est bien passé."
+    },
+    {
+      "title": "Compilation",
+      "content": "Dans ScriptLearn, ton code C est écrit dans un fichier temporaire puis compilé avec `gcc` dans WSL, et exécuté. Si `gcc` n'est pas installé, lance `sudo apt install gcc` dans WSL."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-c-l1-m1-1",
+      "title": "Bonjour",
+      "instructions": "Affiche exactement `Bonjour, C !` suivi d'un saut de ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour, C !",
+      "correction": "#include <stdio.h>\nint main(void) {\n    printf(\"Bonjour, C !\\n\");\n    return 0;\n}",
+      "explanation": "`printf` envoie le texte sur la sortie standard. Le `\\n` ajoute le retour à la ligne.",
+      "starterCode": "#include <stdio.h>\nint main(void) {\n    // Affiche le message ici\n    return 0;\n}"
+    },
+    {
+      "id": "ex-c-l1-m1-2",
+      "title": "Deux lignes",
+      "instructions": "Affiche `Ligne 1` puis `Ligne 2`, chacune sur sa propre ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "Ligne 2",
+      "correction": "#include <stdio.h>\nint main(void) {\n    printf(\"Ligne 1\\n\");\n    printf(\"Ligne 2\\n\");\n    return 0;\n}",
+      "explanation": "Deux appels `printf` successifs écrivent l'un après l'autre. Chaque `\\n` termine une ligne."
+    },
+    {
+      "id": "ex-c-l1-m1-3",
+      "title": "Afficher un nombre",
+      "instructions": "Affiche le nombre `42` avec `printf` et le format `%d`.",
+      "validationType": "output_contains",
+      "expectedOutput": "42",
+      "correction": "#include <stdio.h>\nint main(void) {\n    printf(\"%d\\n\", 42);\n    return 0;\n}",
+      "explanation": "`%d` est un marqueur de format remplacé par l'entier donné en argument. C'est ainsi qu'on insère des valeurs dans une chaîne en C."
+    }
+  ]
+}

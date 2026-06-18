@@ -1,0 +1,47 @@
+{
+  "id": "c-l1-m3",
+  "title": "Fonctions et tableaux",
+  "level": 1,
+  "lang": "c",
+  "order": 3,
+  "estimatedMinutes": 40,
+  "course": [
+    {
+      "title": "Définir une fonction",
+      "content": "Une fonction encapsule un calcul réutilisable.\n\n```c\nint carre(int x) {\n    return x * x;\n}\n```\n\nOn la déclare avant `main` (ou via un prototype) puis on l'appelle : `carre(5)` vaut 25."
+    },
+    {
+      "title": "Tableaux",
+      "content": "Un tableau stocke plusieurs valeurs du même type.\n\n```c\nint notes[3] = {12, 15, 18};\nprintf(\"%d\\n\", notes[0]);  // 12 (les indices commencent à 0)\n```\n\nOn parcourt souvent un tableau avec une boucle `for`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-c-l1-m3-1",
+      "title": "Fonction somme",
+      "instructions": "Écris une fonction `somme(a, b)` et affiche `somme(3, 4)`, soit `7`.",
+      "validationType": "output_contains",
+      "expectedOutput": "7",
+      "correction": "#include <stdio.h>\nint somme(int a, int b) {\n    return a + b;\n}\nint main(void) {\n    printf(\"%d\\n\", somme(3, 4));\n    return 0;\n}",
+      "explanation": "La fonction renvoie `a + b`. Le résultat (7) est affiché via `%d`."
+    },
+    {
+      "id": "ex-c-l1-m3-2",
+      "title": "Premier élément",
+      "instructions": "Pour `int t[3] = {15, 20, 25};`, affiche le premier élément (`15`).",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "#include <stdio.h>\nint main(void) {\n    int t[3] = {15, 20, 25};\n    printf(\"%d\\n\", t[0]);\n    return 0;\n}",
+      "explanation": "Les indices commencent à 0 : `t[0]` est le premier élément."
+    },
+    {
+      "id": "ex-c-l1-m3-3",
+      "title": "Somme d'un tableau",
+      "instructions": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}`, soit `15`.",
+      "validationType": "output_contains",
+      "expectedOutput": "15",
+      "correction": "#include <stdio.h>\nint main(void) {\n    int t[5] = {1, 2, 3, 4, 5};\n    int total = 0;\n    for (int i = 0; i < 5; i++) total += t[i];\n    printf(\"%d\\n\", total);\n    return 0;\n}",
+      "explanation": "On accumule chaque élément dans `total` au fil de la boucle."
+    }
+  ]
+}

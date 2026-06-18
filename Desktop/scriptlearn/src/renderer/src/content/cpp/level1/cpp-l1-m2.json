@@ -1,0 +1,47 @@
+{
+  "id": "cpp-l1-m2",
+  "title": "Variables et boucles",
+  "level": 1,
+  "lang": "cpp",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Types et std::string",
+      "content": "C++ ajoute le type `std::string` pour les chaînes.\n\n```cpp\n#include <string>\nstd::string nom = \"Ada\";\nint n = 5;\nbool actif = true;\n```"
+    },
+    {
+      "title": "Boucles",
+      "content": "```cpp\nfor (int i = 1; i <= 3; i++) {\n    std::cout << i << std::endl;\n}\n```\n\nLa syntaxe des boucles `for`/`while` est identique à celle du C."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-cpp-l1-m2-1",
+      "title": "Saluer par son nom",
+      "instructions": "Avec `std::string nom = \"Ada\";`, affiche `Bonjour Ada`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour Ada",
+      "correction": "#include <iostream>\n#include <string>\nint main() {\n    std::string nom = \"Ada\";\n    std::cout << \"Bonjour \" << nom << std::endl;\n    return 0;\n}",
+      "explanation": "`std::string` se concatène naturellement dans le flux `cout`."
+    },
+    {
+      "id": "ex-cpp-l1-m2-2",
+      "title": "Compter jusqu'à 5",
+      "instructions": "Affiche les entiers de 1 à 5, un par ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "5",
+      "correction": "#include <iostream>\nint main() {\n    for (int i = 1; i <= 5; i++) {\n        std::cout << i << std::endl;\n    }\n    return 0;\n}",
+      "explanation": "La boucle `for` répète l'affichage en incrémentant `i`."
+    },
+    {
+      "id": "ex-cpp-l1-m2-3",
+      "title": "Condition",
+      "instructions": "Pour `int n = 8;`, affiche `pair` si n est pair (utilise `n % 2 == 0`).",
+      "validationType": "output_contains",
+      "expectedOutput": "pair",
+      "correction": "#include <iostream>\nint main() {\n    int n = 8;\n    if (n % 2 == 0) std::cout << \"pair\" << std::endl;\n    else std::cout << \"impair\" << std::endl;\n    return 0;\n}",
+      "explanation": "L'opérateur `%` donne le reste de la division : un reste nul signifie que `n` est pair."
+    }
+  ]
+}

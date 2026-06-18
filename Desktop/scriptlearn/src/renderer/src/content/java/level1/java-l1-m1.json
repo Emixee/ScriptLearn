@@ -1,0 +1,48 @@
+{
+  "id": "java-l1-m1",
+  "title": "Premiers pas en Java",
+  "level": 1,
+  "lang": "java",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "La classe Main",
+      "content": "Tout programme Java vit dans une classe. ScriptLearn impose la classe `Main`.\n\n```java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Bonjour, Java !\");\n    }\n}\n```\n\n`System.out.println` affiche une ligne. Le nom du fichier doit correspondre à la classe publique (`Main`) — c'est géré pour toi."
+    },
+    {
+      "title": "Compilation",
+      "content": "Le code est compilé avec `javac` puis exécuté avec `java` dans WSL. Installation : `sudo apt install default-jdk`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-java-l1-m1-1",
+      "title": "Bonjour",
+      "instructions": "Affiche exactement `Bonjour, Java !`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour, Java !",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Bonjour, Java !\");\n    }\n}",
+      "explanation": "`System.out.println` écrit le texte suivi d'un saut de ligne.",
+      "starterCode": "public class Main {\n    public static void main(String[] args) {\n        // Affiche le message ici\n    }\n}"
+    },
+    {
+      "id": "ex-java-l1-m1-2",
+      "title": "Variable",
+      "instructions": "Déclare `int x = 42;` et affiche `x = 42`.",
+      "validationType": "output_contains",
+      "expectedOutput": "x = 42",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        int x = 42;\n        System.out.println(\"x = \" + x);\n    }\n}",
+      "explanation": "En Java, `\"x = \" + x` concatène texte et valeur."
+    },
+    {
+      "id": "ex-java-l1-m1-3",
+      "title": "Deux lignes",
+      "instructions": "Affiche `Ligne 1` puis `Ligne 2`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Ligne 2",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Ligne 1\");\n        System.out.println(\"Ligne 2\");\n    }\n}",
+      "explanation": "Deux appels `println` écrivent deux lignes successives."
+    }
+  ]
+}

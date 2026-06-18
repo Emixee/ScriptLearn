@@ -1,0 +1,47 @@
+{
+  "id": "java-l1-m2",
+  "title": "Variables et boucles",
+  "level": 1,
+  "lang": "java",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Types",
+      "content": "```java\nint n = 5;\ndouble prix = 9.99;\nboolean actif = true;\nString mot = \"salut\";\n```\n\n`String` (avec un S majuscule) est le type des chaînes en Java."
+    },
+    {
+      "title": "Boucles et conditions",
+      "content": "```java\nfor (int i = 1; i <= 3; i++) {\n    System.out.println(i);\n}\n```"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-java-l1-m2-1",
+      "title": "Saluer",
+      "instructions": "Avec `String nom = \"Ada\";`, affiche `Bonjour Ada`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour Ada",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        String nom = \"Ada\";\n        System.out.println(\"Bonjour \" + nom);\n    }\n}",
+      "explanation": "La concaténation `+` assemble le texte et la valeur de `nom`."
+    },
+    {
+      "id": "ex-java-l1-m2-2",
+      "title": "Compter",
+      "instructions": "Affiche les entiers de 1 à 5, un par ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "5",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 5; i++) System.out.println(i);\n    }\n}",
+      "explanation": "La boucle `for` affiche chaque valeur de `i`."
+    },
+    {
+      "id": "ex-java-l1-m2-3",
+      "title": "Pair ou impair",
+      "instructions": "Pour `int n = 8;`, affiche `pair` si n est pair.",
+      "validationType": "output_contains",
+      "expectedOutput": "pair",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        int n = 8;\n        if (n % 2 == 0) System.out.println(\"pair\");\n        else System.out.println(\"impair\");\n    }\n}",
+      "explanation": "`n % 2` donne le reste de la division par 2 : nul ⇒ pair."
+    }
+  ]
+}

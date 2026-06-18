@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     bashAvailable:   () => ipcRenderer.invoke('terminal:bashAvailable'),
     pythonAvailable: () => ipcRenderer.invoke('terminal:pythonAvailable'),
     phpAvailable:    () => ipcRenderer.invoke('terminal:phpAvailable'),
+    // Vérifie une toolchain compilée (gcc, g++, javac, java, mcs, mono) côté WSL.
+    toolAvailable:   (tool) => ipcRenderer.invoke('terminal:toolAvailable', { tool }),
     onData: (cb) => {
       const handler = (_, payload) => cb(payload)
       ipcRenderer.on('terminal:data', handler)

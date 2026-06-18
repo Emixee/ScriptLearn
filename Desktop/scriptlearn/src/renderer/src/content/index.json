@@ -8,28 +8,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l1-m1", "title": "Introduction au terminal",                "order": 1, "estimatedMinutes": 40 },
-          { "id": "bash-l1-m2", "title": "Navigation dans le système de fichiers",  "order": 2, "estimatedMinutes": 45 },
-          { "id": "bash-l1-m3", "title": "Variables et affichage",                  "order": 3, "estimatedMinutes": 40 },
-          { "id": "bash-l1-m4", "title": "Créer et exécuter un script",             "order": 4, "estimatedMinutes": 45 },
-          { "id": "bash-l1-m5", "title": "Lire et écrire des fichiers",             "order": 5, "estimatedMinutes": 45 },
-          { "id": "bash-l1-m6", "title": "Structure d'un script",                   "order": 6, "estimatedMinutes": 50 }
+          {
+            "id": "bash-l1-m1",
+            "title": "Introduction au terminal",
+            "order": 1,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "bash-l1-m2",
+            "title": "Navigation dans le système de fichiers",
+            "order": 2,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l1-m3",
+            "title": "Variables et affichage",
+            "order": 3,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "bash-l1-m4",
+            "title": "Créer et exécuter un script",
+            "order": 4,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l1-m5",
+            "title": "Lire et écrire des fichiers",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l1-m6",
+            "title": "Structure d'un script",
+            "order": 6,
+            "estimatedMinutes": 50
+          }
         ],
         "python": [
-          { "id": "py-l1-m1", "title": "Introduction à Python",                     "order": 1, "estimatedMinutes": 40 },
-          { "id": "py-l1-m2", "title": "Variables et types de données",             "order": 2, "estimatedMinutes": 40 },
-          { "id": "py-l1-m3", "title": "Conditions et boucles",                     "order": 3, "estimatedMinutes": 45 },
-          { "id": "py-l1-m4", "title": "Fonctions et modules standards",            "order": 4, "estimatedMinutes": 45 },
-          { "id": "py-l1-m5", "title": "Listes et dictionnaires",                   "order": 5, "estimatedMinutes": 45 },
-          { "id": "py-l1-m6", "title": "Lecture et écriture de fichiers",           "order": 6, "estimatedMinutes": 50 }
+          {
+            "id": "py-l1-m1",
+            "title": "Introduction à Python",
+            "order": 1,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "py-l1-m2",
+            "title": "Variables et types de données",
+            "order": 2,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "py-l1-m3",
+            "title": "Conditions et boucles",
+            "order": 3,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "py-l1-m4",
+            "title": "Fonctions et modules standards",
+            "order": 4,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "py-l1-m5",
+            "title": "Listes et dictionnaires",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "py-l1-m6",
+            "title": "Lecture et écriture de fichiers",
+            "order": 6,
+            "estimatedMinutes": 50
+          }
         ],
         "powershell": [
-          { "id": "ps-l1-m1", "title": "Découvrir PowerShell",                  "order": 1, "estimatedMinutes": 40 },
-          { "id": "ps-l1-m2", "title": "Navigation dans le système de fichiers", "order": 2, "estimatedMinutes": 45 },
-          { "id": "ps-l1-m3", "title": "Variables et affichage",                 "order": 3, "estimatedMinutes": 40 },
-          { "id": "ps-l1-m4", "title": "Créer et exécuter un script .ps1",       "order": 4, "estimatedMinutes": 45 },
-          { "id": "ps-l1-m5", "title": "Lire et écrire des fichiers",            "order": 5, "estimatedMinutes": 45 },
-          { "id": "ps-l1-m6", "title": "Structure d'un script",                  "order": 6, "estimatedMinutes": 50 }
+          {
+            "id": "ps-l1-m1",
+            "title": "Découvrir PowerShell",
+            "order": 1,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "ps-l1-m2",
+            "title": "Navigation dans le système de fichiers",
+            "order": 2,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l1-m3",
+            "title": "Variables et affichage",
+            "order": 3,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "ps-l1-m4",
+            "title": "Créer et exécuter un script .ps1",
+            "order": 4,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l1-m5",
+            "title": "Lire et écrire des fichiers",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l1-m6",
+            "title": "Structure d'un script",
+            "order": 6,
+            "estimatedMinutes": 50
+          }
         ]
       }
     },
@@ -41,28 +131,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l2-m1", "title": "Conditions avancées",     "order": 1, "estimatedMinutes": 45 },
-          { "id": "bash-l2-m2", "title": "Boucles",                 "order": 2, "estimatedMinutes": 50 },
-          { "id": "bash-l2-m3", "title": "Tableaux",                "order": 3, "estimatedMinutes": 40 },
-          { "id": "bash-l2-m4", "title": "Traitement de texte",     "order": 4, "estimatedMinutes": 55 },
-          { "id": "bash-l2-m5", "title": "Fonctions avancées",      "order": 5, "estimatedMinutes": 45 },
-          { "id": "bash-l2-m6", "title": "Débogage et robustesse",  "order": 6, "estimatedMinutes": 45 }
+          {
+            "id": "bash-l2-m1",
+            "title": "Conditions avancées",
+            "order": 1,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l2-m2",
+            "title": "Boucles",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "bash-l2-m3",
+            "title": "Tableaux",
+            "order": 3,
+            "estimatedMinutes": 40
+          },
+          {
+            "id": "bash-l2-m4",
+            "title": "Traitement de texte",
+            "order": 4,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l2-m5",
+            "title": "Fonctions avancées",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l2-m6",
+            "title": "Débogage et robustesse",
+            "order": 6,
+            "estimatedMinutes": 45
+          }
         ],
         "python": [
-          { "id": "py-l2-m1", "title": "Expressions régulières en Python",      "order": 1, "estimatedMinutes": 50 },
-          { "id": "py-l2-m2", "title": "Traitement de fichiers et logs texte",  "order": 2, "estimatedMinutes": 50 },
-          { "id": "py-l2-m3", "title": "JSON, CSV et données structurées",      "order": 3, "estimatedMinutes": 50 },
-          { "id": "py-l2-m4", "title": "Dates et timestamps",                   "order": 4, "estimatedMinutes": 45 },
-          { "id": "py-l2-m5", "title": "Requêtes HTTP et APIs Web",             "order": 5, "estimatedMinutes": 50 },
-          { "id": "py-l2-m6", "title": "Manipulation du système (os, subprocess)", "order": 6, "estimatedMinutes": 50 }
+          {
+            "id": "py-l2-m1",
+            "title": "Expressions régulières en Python",
+            "order": 1,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "py-l2-m2",
+            "title": "Traitement de fichiers et logs texte",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "py-l2-m3",
+            "title": "JSON, CSV et données structurées",
+            "order": 3,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "py-l2-m4",
+            "title": "Dates et timestamps",
+            "order": 4,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "py-l2-m5",
+            "title": "Requêtes HTTP et APIs Web",
+            "order": 5,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "py-l2-m6",
+            "title": "Manipulation du système (os, subprocess)",
+            "order": 6,
+            "estimatedMinutes": 50
+          }
         ],
         "powershell": [
-          { "id": "ps-l2-m1", "title": "Conditions avancées",       "order": 1, "estimatedMinutes": 45 },
-          { "id": "ps-l2-m2", "title": "Boucles",                   "order": 2, "estimatedMinutes": 50 },
-          { "id": "ps-l2-m3", "title": "Tableaux et hashtables",    "order": 3, "estimatedMinutes": 45 },
-          { "id": "ps-l2-m4", "title": "Pipeline et filtrage",      "order": 4, "estimatedMinutes": 50 },
-          { "id": "ps-l2-m5", "title": "Gestion des erreurs",       "order": 5, "estimatedMinutes": 45 },
-          { "id": "ps-l2-m6", "title": "Fonctions avancées",        "order": 6, "estimatedMinutes": 50 }
+          {
+            "id": "ps-l2-m1",
+            "title": "Conditions avancées",
+            "order": 1,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l2-m2",
+            "title": "Boucles",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l2-m3",
+            "title": "Tableaux et hashtables",
+            "order": 3,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l2-m4",
+            "title": "Pipeline et filtrage",
+            "order": 4,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l2-m5",
+            "title": "Gestion des erreurs",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l2-m6",
+            "title": "Fonctions avancées",
+            "order": 6,
+            "estimatedMinutes": 50
+          }
         ]
       }
     },
@@ -74,28 +254,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l3-m1", "title": "Expressions régulières", "order": 1, "estimatedMinutes": 50 },
-          { "id": "bash-l3-m2", "title": "Processus et jobs",      "order": 2, "estimatedMinutes": 50 },
-          { "id": "bash-l3-m3", "title": "Réseau et HTTP",         "order": 3, "estimatedMinutes": 55 },
-          { "id": "bash-l3-m4", "title": "Scripting système",      "order": 4, "estimatedMinutes": 55 },
-          { "id": "bash-l3-m5", "title": "Cron et planification",  "order": 5, "estimatedMinutes": 45 },
-          { "id": "bash-l3-m6", "title": "sed et awk avancés",     "order": 6, "estimatedMinutes": 55 }
+          {
+            "id": "bash-l3-m1",
+            "title": "Expressions régulières",
+            "order": 1,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "bash-l3-m2",
+            "title": "Processus et jobs",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "bash-l3-m3",
+            "title": "Réseau et HTTP",
+            "order": 3,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l3-m4",
+            "title": "Scripting système",
+            "order": 4,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l3-m5",
+            "title": "Cron et planification",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "bash-l3-m6",
+            "title": "sed et awk avancés",
+            "order": 6,
+            "estimatedMinutes": 55
+          }
         ],
         "python": [
-          { "id": "py-l3-m1", "title": "Parsing de logs Linux (auth, syslog)",    "order": 1, "estimatedMinutes": 55 },
-          { "id": "py-l3-m2", "title": "Parsing de logs Windows (Event XML/CSV)", "order": 2, "estimatedMinutes": 55 },
-          { "id": "py-l3-m3", "title": "Hachage et intégrité des fichiers",       "order": 3, "estimatedMinutes": 50 },
-          { "id": "py-l3-m4", "title": "Analyse de fichiers suspects",            "order": 4, "estimatedMinutes": 55 },
-          { "id": "py-l3-m5", "title": "Sockets et communication réseau",         "order": 5, "estimatedMinutes": 55 },
-          { "id": "py-l3-m6", "title": "APIs de renseignement cyber",             "order": 6, "estimatedMinutes": 60 }
+          {
+            "id": "py-l3-m1",
+            "title": "Parsing de logs Linux (auth, syslog)",
+            "order": 1,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "py-l3-m2",
+            "title": "Parsing de logs Windows (Event XML/CSV)",
+            "order": 2,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "py-l3-m3",
+            "title": "Hachage et intégrité des fichiers",
+            "order": 3,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "py-l3-m4",
+            "title": "Analyse de fichiers suspects",
+            "order": 4,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "py-l3-m5",
+            "title": "Sockets et communication réseau",
+            "order": 5,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "py-l3-m6",
+            "title": "APIs de renseignement cyber",
+            "order": 6,
+            "estimatedMinutes": 60
+          }
         ],
         "powershell": [
-          { "id": "ps-l3-m1", "title": "Expressions régulières",  "order": 1, "estimatedMinutes": 50 },
-          { "id": "ps-l3-m2", "title": "Gestion des processus",   "order": 2, "estimatedMinutes": 50 },
-          { "id": "ps-l3-m3", "title": "Réseau et Web",           "order": 3, "estimatedMinutes": 50 },
-          { "id": "ps-l3-m4", "title": "WMI et CIM",              "order": 4, "estimatedMinutes": 50 },
-          { "id": "ps-l3-m5", "title": "Tâches planifiées",       "order": 5, "estimatedMinutes": 45 },
-          { "id": "ps-l3-m6", "title": "Format, export et import","order": 6, "estimatedMinutes": 45 }
+          {
+            "id": "ps-l3-m1",
+            "title": "Expressions régulières",
+            "order": 1,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l3-m2",
+            "title": "Gestion des processus",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l3-m3",
+            "title": "Réseau et Web",
+            "order": 3,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l3-m4",
+            "title": "WMI et CIM",
+            "order": 4,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l3-m5",
+            "title": "Tâches planifiées",
+            "order": 5,
+            "estimatedMinutes": 45
+          },
+          {
+            "id": "ps-l3-m6",
+            "title": "Format, export et import",
+            "order": 6,
+            "estimatedMinutes": 45
+          }
         ]
       }
     },
@@ -107,28 +377,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l4-m1", "title": "Scripts de déploiement",    "order": 1, "estimatedMinutes": 60 },
-          { "id": "bash-l4-m2", "title": "Sécurité et cryptographie", "order": 2, "estimatedMinutes": 55 },
-          { "id": "bash-l4-m3", "title": "Performance et optimisation","order": 3, "estimatedMinutes": 55 },
-          { "id": "bash-l4-m4", "title": "APIs et intégrations",       "order": 4, "estimatedMinutes": 60 },
-          { "id": "bash-l4-m5", "title": "Tests et CI/CD",             "order": 5, "estimatedMinutes": 55 },
-          { "id": "bash-l4-m6", "title": "Scripts système avancés",   "order": 6, "estimatedMinutes": 60 }
+          {
+            "id": "bash-l4-m1",
+            "title": "Scripts de déploiement",
+            "order": 1,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "bash-l4-m2",
+            "title": "Sécurité et cryptographie",
+            "order": 2,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l4-m3",
+            "title": "Performance et optimisation",
+            "order": 3,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l4-m4",
+            "title": "APIs et intégrations",
+            "order": 4,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "bash-l4-m5",
+            "title": "Tests et CI/CD",
+            "order": 5,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "bash-l4-m6",
+            "title": "Scripts système avancés",
+            "order": 6,
+            "estimatedMinutes": 60
+          }
         ],
         "python": [
-          { "id": "py-l4-m1", "title": "Collecte de preuves automatisée (triage)",   "order": 1, "estimatedMinutes": 60 },
-          { "id": "py-l4-m2", "title": "Corrélation d'événements et détection",      "order": 2, "estimatedMinutes": 60 },
-          { "id": "py-l4-m3", "title": "Génération de rapports SOC",                 "order": 3, "estimatedMinutes": 55 },
-          { "id": "py-l4-m4", "title": "Automatisation d'investigation",             "order": 4, "estimatedMinutes": 60 },
-          { "id": "py-l4-m5", "title": "Analyse de fichiers PCAP (paquets réseau)",  "order": 5, "estimatedMinutes": 60 },
-          { "id": "py-l4-m6", "title": "Base d'IOC et détection de menaces",        "order": 6, "estimatedMinutes": 60 }
+          {
+            "id": "py-l4-m1",
+            "title": "Collecte de preuves automatisée (triage)",
+            "order": 1,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "py-l4-m2",
+            "title": "Corrélation d'événements et détection",
+            "order": 2,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "py-l4-m3",
+            "title": "Génération de rapports SOC",
+            "order": 3,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "py-l4-m4",
+            "title": "Automatisation d'investigation",
+            "order": 4,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "py-l4-m5",
+            "title": "Analyse de fichiers PCAP (paquets réseau)",
+            "order": 5,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "py-l4-m6",
+            "title": "Base d'IOC et détection de menaces",
+            "order": 6,
+            "estimatedMinutes": 60
+          }
         ],
         "powershell": [
-          { "id": "ps-l4-m1", "title": "Classes PowerShell",          "order": 1, "estimatedMinutes": 55 },
-          { "id": "ps-l4-m2", "title": "PowerShell Remoting",         "order": 2, "estimatedMinutes": 50 },
-          { "id": "ps-l4-m3", "title": "Active Directory",            "order": 3, "estimatedMinutes": 55 },
-          { "id": "ps-l4-m4", "title": "Tests avec Pester",           "order": 4, "estimatedMinutes": 55 },
-          { "id": "ps-l4-m5", "title": "Modules avancés",             "order": 5, "estimatedMinutes": 55 },
-          { "id": "ps-l4-m6", "title": "DSC et Infrastructure as Code","order": 6, "estimatedMinutes": 55 }
+          {
+            "id": "ps-l4-m1",
+            "title": "Classes PowerShell",
+            "order": 1,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "ps-l4-m2",
+            "title": "PowerShell Remoting",
+            "order": 2,
+            "estimatedMinutes": 50
+          },
+          {
+            "id": "ps-l4-m3",
+            "title": "Active Directory",
+            "order": 3,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "ps-l4-m4",
+            "title": "Tests avec Pester",
+            "order": 4,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "ps-l4-m5",
+            "title": "Modules avancés",
+            "order": 5,
+            "estimatedMinutes": 55
+          },
+          {
+            "id": "ps-l4-m6",
+            "title": "DSC et Infrastructure as Code",
+            "order": 6,
+            "estimatedMinutes": 55
+          }
         ]
       }
     },
@@ -140,28 +500,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l5-m1", "title": "Parsing et DSL",                          "order": 1, "estimatedMinutes": 65 },
-          { "id": "bash-l5-m2", "title": "Monitoring haute disponibilité",           "order": 2, "estimatedMinutes": 65 },
-          { "id": "bash-l5-m3", "title": "Débogage avancé",                          "order": 3, "estimatedMinutes": 60 },
-          { "id": "bash-l5-m4", "title": "Architecture de scripts complexes",        "order": 4, "estimatedMinutes": 65 },
-          { "id": "bash-l5-m5", "title": "Interopérabilité et intégrations",         "order": 5, "estimatedMinutes": 65 },
-          { "id": "bash-l5-m6", "title": "Projets et bonnes pratiques finales",      "order": 6, "estimatedMinutes": 65 }
+          {
+            "id": "bash-l5-m1",
+            "title": "Parsing et DSL",
+            "order": 1,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l5-m2",
+            "title": "Monitoring haute disponibilité",
+            "order": 2,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l5-m3",
+            "title": "Débogage avancé",
+            "order": 3,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "bash-l5-m4",
+            "title": "Architecture de scripts complexes",
+            "order": 4,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l5-m5",
+            "title": "Interopérabilité et intégrations",
+            "order": 5,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l5-m6",
+            "title": "Projets et bonnes pratiques finales",
+            "order": 6,
+            "estimatedMinutes": 65
+          }
         ],
         "python": [
-          { "id": "py-l5-m1", "title": "Moteur de détection basé sur des règles",   "order": 1, "estimatedMinutes": 65 },
-          { "id": "py-l5-m2", "title": "Analyse comportementale et anomalies",      "order": 2, "estimatedMinutes": 65 },
-          { "id": "py-l5-m3", "title": "Automatisation de réponse (playbooks)",     "order": 3, "estimatedMinutes": 65 },
-          { "id": "py-l5-m4", "title": "Reverse engineering basique en Python",     "order": 4, "estimatedMinutes": 65 },
-          { "id": "py-l5-m5", "title": "Plateforme de Threat Intelligence",         "order": 5, "estimatedMinutes": 65 },
-          { "id": "py-l5-m6", "title": "Projet final — outil SOC complet",          "order": 6, "estimatedMinutes": 75 }
+          {
+            "id": "py-l5-m1",
+            "title": "Moteur de détection basé sur des règles",
+            "order": 1,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "py-l5-m2",
+            "title": "Analyse comportementale et anomalies",
+            "order": 2,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "py-l5-m3",
+            "title": "Automatisation de réponse (playbooks)",
+            "order": 3,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "py-l5-m4",
+            "title": "Reverse engineering basique en Python",
+            "order": 4,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "py-l5-m5",
+            "title": "Plateforme de Threat Intelligence",
+            "order": 5,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "py-l5-m6",
+            "title": "Projet final — outil SOC complet",
+            "order": 6,
+            "estimatedMinutes": 75
+          }
         ],
         "powershell": [
-          { "id": "ps-l5-m1", "title": "Réflexion et métaprogrammation",   "order": 1, "estimatedMinutes": 65 },
-          { "id": "ps-l5-m2", "title": "Performance et optimisation",      "order": 2, "estimatedMinutes": 60 },
-          { "id": "ps-l5-m3", "title": "Sécurité avancée",                 "order": 3, "estimatedMinutes": 60 },
-          { "id": "ps-l5-m4", "title": "Extensibilité du pipeline",        "order": 4, "estimatedMinutes": 60 },
-          { "id": "ps-l5-m5", "title": "Interopérabilité et intégrations", "order": 5, "estimatedMinutes": 60 },
-          { "id": "ps-l5-m6", "title": "Projet final et bonnes pratiques", "order": 6, "estimatedMinutes": 75 }
+          {
+            "id": "ps-l5-m1",
+            "title": "Réflexion et métaprogrammation",
+            "order": 1,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "ps-l5-m2",
+            "title": "Performance et optimisation",
+            "order": 2,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "ps-l5-m3",
+            "title": "Sécurité avancée",
+            "order": 3,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "ps-l5-m4",
+            "title": "Extensibilité du pipeline",
+            "order": 4,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "ps-l5-m5",
+            "title": "Interopérabilité et intégrations",
+            "order": 5,
+            "estimatedMinutes": 60
+          },
+          {
+            "id": "ps-l5-m6",
+            "title": "Projet final et bonnes pratiques",
+            "order": 6,
+            "estimatedMinutes": 75
+          }
         ]
       }
     },
@@ -173,28 +623,118 @@
       "locked": false,
       "languages": {
         "bash": [
-          { "id": "bash-l6-m1", "title": "Analyse des logs Linux (auth, syslog)",    "order": 1, "estimatedMinutes": 65 },
-          { "id": "bash-l6-m2", "title": "Analyse du trafic réseau (tcpdump/tshark)","order": 2, "estimatedMinutes": 65 },
-          { "id": "bash-l6-m3", "title": "Détection d'intrusion et anomalies",       "order": 3, "estimatedMinutes": 65 },
-          { "id": "bash-l6-m4", "title": "Forensics Linux — artefacts et timeline",  "order": 4, "estimatedMinutes": 70 },
-          { "id": "bash-l6-m5", "title": "Automatisation Incident Response Linux",   "order": 5, "estimatedMinutes": 70 },
-          { "id": "bash-l6-m6", "title": "Scripts de threat hunting Bash",           "order": 6, "estimatedMinutes": 70 }
+          {
+            "id": "bash-l6-m1",
+            "title": "Analyse des logs Linux (auth, syslog)",
+            "order": 1,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l6-m2",
+            "title": "Analyse du trafic réseau (tcpdump/tshark)",
+            "order": 2,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l6-m3",
+            "title": "Détection d'intrusion et anomalies",
+            "order": 3,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "bash-l6-m4",
+            "title": "Forensics Linux — artefacts et timeline",
+            "order": 4,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "bash-l6-m5",
+            "title": "Automatisation Incident Response Linux",
+            "order": 5,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "bash-l6-m6",
+            "title": "Scripts de threat hunting Bash",
+            "order": 6,
+            "estimatedMinutes": 70
+          }
         ],
         "python": [
-          { "id": "py-l6-m1", "title": "Analyse de malware avec Python",             "order": 1, "estimatedMinutes": 70 },
-          { "id": "py-l6-m2", "title": "DFIR — forensics mémoire et disque",         "order": 2, "estimatedMinutes": 70 },
-          { "id": "py-l6-m3", "title": "Corrélation multi-sources et SIEM-like",     "order": 3, "estimatedMinutes": 70 },
-          { "id": "py-l6-m4", "title": "Threat hunting avancé en Python",            "order": 4, "estimatedMinutes": 70 },
-          { "id": "py-l6-m5", "title": "Intégrations SOAR et APIs tierces",          "order": 5, "estimatedMinutes": 70 },
-          { "id": "py-l6-m6", "title": "Projet expert — plateforme SOC Python",      "order": 6, "estimatedMinutes": 80 }
+          {
+            "id": "py-l6-m1",
+            "title": "Analyse de malware avec Python",
+            "order": 1,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "py-l6-m2",
+            "title": "DFIR — forensics mémoire et disque",
+            "order": 2,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "py-l6-m3",
+            "title": "Corrélation multi-sources et SIEM-like",
+            "order": 3,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "py-l6-m4",
+            "title": "Threat hunting avancé en Python",
+            "order": 4,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "py-l6-m5",
+            "title": "Intégrations SOAR et APIs tierces",
+            "order": 5,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "py-l6-m6",
+            "title": "Projet expert — plateforme SOC Python",
+            "order": 6,
+            "estimatedMinutes": 80
+          }
         ],
         "powershell": [
-          { "id": "ps-l6-m1", "title": "Analyse des événements Windows (WinEvent)",  "order": 1, "estimatedMinutes": 65 },
-          { "id": "ps-l6-m2", "title": "Threat hunting Active Directory",            "order": 2, "estimatedMinutes": 65 },
-          { "id": "ps-l6-m3", "title": "Forensics Windows — registre et artefacts",  "order": 3, "estimatedMinutes": 70 },
-          { "id": "ps-l6-m4", "title": "PowerShell Blue Team (AMSI, logging, JEA)",  "order": 4, "estimatedMinutes": 65 },
-          { "id": "ps-l6-m5", "title": "Incident Response Windows automation",       "order": 5, "estimatedMinutes": 70 },
-          { "id": "ps-l6-m6", "title": "Intégration Microsoft Defender / Sentinel",  "order": 6, "estimatedMinutes": 70 }
+          {
+            "id": "ps-l6-m1",
+            "title": "Analyse des événements Windows (WinEvent)",
+            "order": 1,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "ps-l6-m2",
+            "title": "Threat hunting Active Directory",
+            "order": 2,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "ps-l6-m3",
+            "title": "Forensics Windows — registre et artefacts",
+            "order": 3,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "ps-l6-m4",
+            "title": "PowerShell Blue Team (AMSI, logging, JEA)",
+            "order": 4,
+            "estimatedMinutes": 65
+          },
+          {
+            "id": "ps-l6-m5",
+            "title": "Incident Response Windows automation",
+            "order": 5,
+            "estimatedMinutes": 70
+          },
+          {
+            "id": "ps-l6-m6",
+            "title": "Intégration Microsoft Defender / Sentinel",
+            "order": 6,
+            "estimatedMinutes": 70
+          }
         ]
       }
     }
@@ -213,10 +753,30 @@
             "name": "SQL Débutant",
             "order": 1,
             "modules": [
-              { "id": "sql-l1-m1", "title": "SELECT, FROM et DISTINCT",        "order": 1, "estimatedMinutes": 40 },
-              { "id": "sql-l1-m2", "title": "WHERE et opérateurs logiques",     "order": 2, "estimatedMinutes": 40 },
-              { "id": "sql-l1-m3", "title": "ORDER BY, LIKE et LIMIT",          "order": 3, "estimatedMinutes": 40 },
-              { "id": "sql-l1-m4", "title": "INSERT, UPDATE et DELETE",         "order": 4, "estimatedMinutes": 40 }
+              {
+                "id": "sql-l1-m1",
+                "title": "SELECT, FROM et DISTINCT",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "sql-l1-m2",
+                "title": "WHERE et opérateurs logiques",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "sql-l1-m3",
+                "title": "ORDER BY, LIKE et LIMIT",
+                "order": 3,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "sql-l1-m4",
+                "title": "INSERT, UPDATE et DELETE",
+                "order": 4,
+                "estimatedMinutes": 40
+              }
             ]
           },
           {
@@ -224,10 +784,30 @@
             "name": "SQL Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "sql-l2-m1", "title": "Fonctions d'agrégation",           "order": 1, "estimatedMinutes": 45 },
-              { "id": "sql-l2-m2", "title": "GROUP BY et HAVING",               "order": 2, "estimatedMinutes": 45 },
-              { "id": "sql-l2-m3", "title": "INNER JOIN et jointures multiples","order": 3, "estimatedMinutes": 45 },
-              { "id": "sql-l2-m4", "title": "LEFT, RIGHT et FULL JOIN",         "order": 4, "estimatedMinutes": 45 }
+              {
+                "id": "sql-l2-m1",
+                "title": "Fonctions d'agrégation",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "sql-l2-m2",
+                "title": "GROUP BY et HAVING",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "sql-l2-m3",
+                "title": "INNER JOIN et jointures multiples",
+                "order": 3,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "sql-l2-m4",
+                "title": "LEFT, RIGHT et FULL JOIN",
+                "order": 4,
+                "estimatedMinutes": 45
+              }
             ]
           },
           {
@@ -235,10 +815,30 @@
             "name": "SQL Avancé",
             "order": 3,
             "modules": [
-              { "id": "sql-l3-m1", "title": "Sous-requêtes",                    "order": 1, "estimatedMinutes": 50 },
-              { "id": "sql-l3-m2", "title": "EXISTS, UNION et ensembles",       "order": 2, "estimatedMinutes": 50 },
-              { "id": "sql-l3-m3", "title": "Vues (VIEW)",                      "order": 3, "estimatedMinutes": 45 },
-              { "id": "sql-l3-m4", "title": "Schéma et DDL",                    "order": 4, "estimatedMinutes": 50 }
+              {
+                "id": "sql-l3-m1",
+                "title": "Sous-requêtes",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "sql-l3-m2",
+                "title": "EXISTS, UNION et ensembles",
+                "order": 2,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "sql-l3-m3",
+                "title": "Vues (VIEW)",
+                "order": 3,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "sql-l3-m4",
+                "title": "Schéma et DDL",
+                "order": 4,
+                "estimatedMinutes": 50
+              }
             ]
           },
           {
@@ -246,10 +846,30 @@
             "name": "SQL Expert",
             "order": 4,
             "modules": [
-              { "id": "sql-l4-m1", "title": "CTEs et requêtes récursives",      "order": 1, "estimatedMinutes": 55 },
-              { "id": "sql-l4-m2", "title": "Fonctions fenêtrées — Ranking",    "order": 2, "estimatedMinutes": 55 },
-              { "id": "sql-l4-m3", "title": "Fonctions fenêtrées — Analytics",  "order": 3, "estimatedMinutes": 55 },
-              { "id": "sql-l4-m4", "title": "Transactions et ACID",             "order": 4, "estimatedMinutes": 50 }
+              {
+                "id": "sql-l4-m1",
+                "title": "CTEs et requêtes récursives",
+                "order": 1,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "sql-l4-m2",
+                "title": "Fonctions fenêtrées — Ranking",
+                "order": 2,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "sql-l4-m3",
+                "title": "Fonctions fenêtrées — Analytics",
+                "order": 3,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "sql-l4-m4",
+                "title": "Transactions et ACID",
+                "order": 4,
+                "estimatedMinutes": 50
+              }
             ]
           },
           {
@@ -257,10 +877,30 @@
             "name": "SQL Maîtrise",
             "order": 5,
             "modules": [
-              { "id": "sql-l5-m1", "title": "Index et optimisation",            "order": 1, "estimatedMinutes": 55 },
-              { "id": "sql-l5-m2", "title": "Procédures, fonctions et triggers","order": 2, "estimatedMinutes": 60 },
-              { "id": "sql-l5-m3", "title": "Normalisation et modélisation",    "order": 3, "estimatedMinutes": 55 },
-              { "id": "sql-l5-m4", "title": "UPSERT, CASE et fonctions avancées","order": 4, "estimatedMinutes": 55 }
+              {
+                "id": "sql-l5-m1",
+                "title": "Index et optimisation",
+                "order": 1,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "sql-l5-m2",
+                "title": "Procédures, fonctions et triggers",
+                "order": 2,
+                "estimatedMinutes": 60
+              },
+              {
+                "id": "sql-l5-m3",
+                "title": "Normalisation et modélisation",
+                "order": 3,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "sql-l5-m4",
+                "title": "UPSERT, CASE et fonctions avancées",
+                "order": 4,
+                "estimatedMinutes": 55
+              }
             ]
           }
         ]
@@ -276,10 +916,30 @@
             "name": "Git Débutant",
             "order": 1,
             "modules": [
-              { "id": "git-l1-m1", "title": "Init, add, commit, log",           "order": 1, "estimatedMinutes": 40 },
-              { "id": "git-l1-m2", "title": "Config, .gitignore et rm",         "order": 2, "estimatedMinutes": 40 },
-              { "id": "git-l1-m3", "title": "log, diff, show et blame",         "order": 3, "estimatedMinutes": 40 },
-              { "id": "git-l1-m4", "title": "restore, reset et amend",          "order": 4, "estimatedMinutes": 45 }
+              {
+                "id": "git-l1-m1",
+                "title": "Init, add, commit, log",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "git-l1-m2",
+                "title": "Config, .gitignore et rm",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "git-l1-m3",
+                "title": "log, diff, show et blame",
+                "order": 3,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "git-l1-m4",
+                "title": "restore, reset et amend",
+                "order": 4,
+                "estimatedMinutes": 45
+              }
             ]
           },
           {
@@ -287,10 +947,30 @@
             "name": "Git Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "git-l2-m1", "title": "Branches, switch et merge",        "order": 1, "estimatedMinutes": 45 },
-              { "id": "git-l2-m2", "title": "Résolution de conflits",           "order": 2, "estimatedMinutes": 45 },
-              { "id": "git-l2-m3", "title": "Stash, revert et undo",            "order": 3, "estimatedMinutes": 45 },
-              { "id": "git-l2-m4", "title": "Commits atomiques et best practices","order": 4, "estimatedMinutes": 50 }
+              {
+                "id": "git-l2-m1",
+                "title": "Branches, switch et merge",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "git-l2-m2",
+                "title": "Résolution de conflits",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "git-l2-m3",
+                "title": "Stash, revert et undo",
+                "order": 3,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "git-l2-m4",
+                "title": "Commits atomiques et best practices",
+                "order": 4,
+                "estimatedMinutes": 50
+              }
             ]
           },
           {
@@ -298,10 +978,30 @@
             "name": "Git Collaboration",
             "order": 3,
             "modules": [
-              { "id": "git-l3-m1", "title": "Remote, clone, push et fetch",     "order": 1, "estimatedMinutes": 45 },
-              { "id": "git-l3-m2", "title": "Fork, upstream et Pull Requests",  "order": 2, "estimatedMinutes": 50 },
-              { "id": "git-l3-m3", "title": "Tags, SemVer et releases",         "order": 3, "estimatedMinutes": 45 },
-              { "id": "git-l3-m4", "title": "Workflows d'équipe",               "order": 4, "estimatedMinutes": 50 }
+              {
+                "id": "git-l3-m1",
+                "title": "Remote, clone, push et fetch",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "git-l3-m2",
+                "title": "Fork, upstream et Pull Requests",
+                "order": 2,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "git-l3-m3",
+                "title": "Tags, SemVer et releases",
+                "order": 3,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "git-l3-m4",
+                "title": "Workflows d'équipe",
+                "order": 4,
+                "estimatedMinutes": 50
+              }
             ]
           },
           {
@@ -309,10 +1009,30 @@
             "name": "Git Avancé",
             "order": 4,
             "modules": [
-              { "id": "git-l4-m1", "title": "rebase et rebase interactif",      "order": 1, "estimatedMinutes": 50 },
-              { "id": "git-l4-m2", "title": "cherry-pick, bisect et reflog",    "order": 2, "estimatedMinutes": 50 },
-              { "id": "git-l4-m3", "title": "Hooks et intégration CI",          "order": 3, "estimatedMinutes": 50 },
-              { "id": "git-l4-m4", "title": "Submodules, worktrees et archive", "order": 4, "estimatedMinutes": 50 }
+              {
+                "id": "git-l4-m1",
+                "title": "rebase et rebase interactif",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "git-l4-m2",
+                "title": "cherry-pick, bisect et reflog",
+                "order": 2,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "git-l4-m3",
+                "title": "Hooks et intégration CI",
+                "order": 3,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "git-l4-m4",
+                "title": "Submodules, worktrees et archive",
+                "order": 4,
+                "estimatedMinutes": 50
+              }
             ]
           }
         ]
@@ -328,10 +1048,30 @@
             "name": "Regex Fondamentaux",
             "order": 1,
             "modules": [
-              { "id": "regex-l1-m1", "title": "Métacaractères et ancres",        "order": 1, "estimatedMinutes": 40 },
-              { "id": "regex-l1-m2", "title": "Quantificateurs",                 "order": 2, "estimatedMinutes": 40 },
-              { "id": "regex-l1-m3", "title": "Groupes et alternance",           "order": 3, "estimatedMinutes": 40 },
-              { "id": "regex-l1-m4", "title": "Regex en pratique — grep et sed", "order": 4, "estimatedMinutes": 40 }
+              {
+                "id": "regex-l1-m1",
+                "title": "Métacaractères et ancres",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "regex-l1-m2",
+                "title": "Quantificateurs",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "regex-l1-m3",
+                "title": "Groupes et alternance",
+                "order": 3,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "regex-l1-m4",
+                "title": "Regex en pratique — grep et sed",
+                "order": 4,
+                "estimatedMinutes": 40
+              }
             ]
           },
           {
@@ -339,10 +1079,30 @@
             "name": "Regex Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "regex-l2-m1", "title": "Lookahead et lookbehind",         "order": 1, "estimatedMinutes": 45 },
-              { "id": "regex-l2-m2", "title": "Groupes nommés et backreferences","order": 2, "estimatedMinutes": 40 },
-              { "id": "regex-l2-m3", "title": "Flags et modes",                  "order": 3, "estimatedMinutes": 35 },
-              { "id": "regex-l2-m4", "title": "Regex en Python — module re",     "order": 4, "estimatedMinutes": 45 }
+              {
+                "id": "regex-l2-m1",
+                "title": "Lookahead et lookbehind",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "regex-l2-m2",
+                "title": "Groupes nommés et backreferences",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "regex-l2-m3",
+                "title": "Flags et modes",
+                "order": 3,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "regex-l2-m4",
+                "title": "Regex en Python — module re",
+                "order": 4,
+                "estimatedMinutes": 45
+              }
             ]
           },
           {
@@ -350,10 +1110,30 @@
             "name": "Regex Avancé",
             "order": 3,
             "modules": [
-              { "id": "regex-l3-m1", "title": "Patterns complexes et logs",      "order": 1, "estimatedMinutes": 50 },
-              { "id": "regex-l3-m2", "title": "Performance et anti-patterns",    "order": 2, "estimatedMinutes": 45 },
-              { "id": "regex-l3-m3", "title": "Regex en sécurité",               "order": 3, "estimatedMinutes": 50 },
-              { "id": "regex-l3-m4", "title": "Projet final — extraction d'IOCs","order": 4, "estimatedMinutes": 55 }
+              {
+                "id": "regex-l3-m1",
+                "title": "Patterns complexes et logs",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "regex-l3-m2",
+                "title": "Performance et anti-patterns",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "regex-l3-m3",
+                "title": "Regex en sécurité",
+                "order": 3,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "regex-l3-m4",
+                "title": "Projet final — extraction d'IOCs",
+                "order": 4,
+                "estimatedMinutes": 55
+              }
             ]
           }
         ]
@@ -369,10 +1149,30 @@
             "name": "KQL Débutant",
             "order": 1,
             "modules": [
-              { "id": "kql-l1-m1", "title": "Introduction à KQL et Sentinel",   "order": 1, "estimatedMinutes": 35 },
-              { "id": "kql-l1-m2", "title": "where, project et extend",         "order": 2, "estimatedMinutes": 40 },
-              { "id": "kql-l1-m3", "title": "sort, count et summarize",         "order": 3, "estimatedMinutes": 40 },
-              { "id": "kql-l1-m4", "title": "search, contains et has",          "order": 4, "estimatedMinutes": 35 }
+              {
+                "id": "kql-l1-m1",
+                "title": "Introduction à KQL et Sentinel",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "kql-l1-m2",
+                "title": "where, project et extend",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "kql-l1-m3",
+                "title": "sort, count et summarize",
+                "order": 3,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "kql-l1-m4",
+                "title": "search, contains et has",
+                "order": 4,
+                "estimatedMinutes": 35
+              }
             ]
           },
           {
@@ -380,10 +1180,30 @@
             "name": "KQL Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "kql-l2-m1", "title": "Agrégations avancées",             "order": 1, "estimatedMinutes": 45 },
-              { "id": "kql-l2-m2", "title": "Jointures — join et lookup",       "order": 2, "estimatedMinutes": 45 },
-              { "id": "kql-l2-m3", "title": "Analyse de logs Windows",          "order": 3, "estimatedMinutes": 50 },
-              { "id": "kql-l2-m4", "title": "Fonctions temporelles",            "order": 4, "estimatedMinutes": 45 }
+              {
+                "id": "kql-l2-m1",
+                "title": "Agrégations avancées",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "kql-l2-m2",
+                "title": "Jointures — join et lookup",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "kql-l2-m3",
+                "title": "Analyse de logs Windows",
+                "order": 3,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "kql-l2-m4",
+                "title": "Fonctions temporelles",
+                "order": 4,
+                "estimatedMinutes": 45
+              }
             ]
           },
           {
@@ -391,9 +1211,24 @@
             "name": "KQL Avancé",
             "order": 3,
             "modules": [
-              { "id": "kql-l3-m1", "title": "Fonctions et requêtes réutilisables","order": 1, "estimatedMinutes": 50 },
-              { "id": "kql-l3-m2", "title": "Détection d'anomalies et UEBA",    "order": 2, "estimatedMinutes": 55 },
-              { "id": "kql-l3-m3", "title": "Règles analytiques et Threat Hunting","order": 3, "estimatedMinutes": 55 }
+              {
+                "id": "kql-l3-m1",
+                "title": "Fonctions et requêtes réutilisables",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "kql-l3-m2",
+                "title": "Détection d'anomalies et UEBA",
+                "order": 2,
+                "estimatedMinutes": 55
+              },
+              {
+                "id": "kql-l3-m3",
+                "title": "Règles analytiques et Threat Hunting",
+                "order": 3,
+                "estimatedMinutes": 55
+              }
             ]
           }
         ]
@@ -409,9 +1244,24 @@
             "name": "SPL Débutant",
             "order": 1,
             "modules": [
-              { "id": "spl-l1-m1", "title": "Introduction à SPL et Splunk",     "order": 1, "estimatedMinutes": 35 },
-              { "id": "spl-l1-m2", "title": "Filtrer et sélectionner",          "order": 2, "estimatedMinutes": 40 },
-              { "id": "spl-l1-m3", "title": "stats, top et rare",               "order": 3, "estimatedMinutes": 40 }
+              {
+                "id": "spl-l1-m1",
+                "title": "Introduction à SPL et Splunk",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "spl-l1-m2",
+                "title": "Filtrer et sélectionner",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "spl-l1-m3",
+                "title": "stats, top et rare",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
             ]
           },
           {
@@ -419,9 +1269,24 @@
             "name": "SPL Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "spl-l2-m1", "title": "eval, rex et spath",               "order": 1, "estimatedMinutes": 45 },
-              { "id": "spl-l2-m2", "title": "Sous-recherches et append",        "order": 2, "estimatedMinutes": 45 },
-              { "id": "spl-l2-m3", "title": "Lookup et enrichissement",         "order": 3, "estimatedMinutes": 40 }
+              {
+                "id": "spl-l2-m1",
+                "title": "eval, rex et spath",
+                "order": 1,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "spl-l2-m2",
+                "title": "Sous-recherches et append",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "spl-l2-m3",
+                "title": "Lookup et enrichissement",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
             ]
           },
           {
@@ -429,8 +1294,18 @@
             "name": "SPL Avancé",
             "order": 3,
             "modules": [
-              { "id": "spl-l3-m1", "title": "Macros, tstats et optimisation",   "order": 1, "estimatedMinutes": 50 },
-              { "id": "spl-l3-m2", "title": "Alertes, dashboards et rapports",  "order": 2, "estimatedMinutes": 50 }
+              {
+                "id": "spl-l3-m1",
+                "title": "Macros, tstats et optimisation",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "spl-l3-m2",
+                "title": "Alertes, dashboards et rapports",
+                "order": 2,
+                "estimatedMinutes": 50
+              }
             ]
           }
         ]
@@ -446,9 +1321,24 @@
             "name": "YAML Fondamentaux",
             "order": 1,
             "modules": [
-              { "id": "yaml-l1-m1", "title": "Syntaxe YAML de base",            "order": 1, "estimatedMinutes": 35 },
-              { "id": "yaml-l1-m2", "title": "Listes et mappings imbriqués",    "order": 2, "estimatedMinutes": 35 },
-              { "id": "yaml-l1-m3", "title": "Types avancés et multilignes",    "order": 3, "estimatedMinutes": 35 }
+              {
+                "id": "yaml-l1-m1",
+                "title": "Syntaxe YAML de base",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "yaml-l1-m2",
+                "title": "Listes et mappings imbriqués",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "yaml-l1-m3",
+                "title": "Types avancés et multilignes",
+                "order": 3,
+                "estimatedMinutes": 35
+              }
             ]
           },
           {
@@ -456,9 +1346,24 @@
             "name": "YAML Pratique",
             "order": 2,
             "modules": [
-              { "id": "yaml-l2-m1", "title": "Ancres et alias",                 "order": 1, "estimatedMinutes": 40 },
-              { "id": "yaml-l2-m2", "title": "Docker Compose",                  "order": 2, "estimatedMinutes": 45 },
-              { "id": "yaml-l2-m3", "title": "GitHub Actions CI/CD",            "order": 3, "estimatedMinutes": 50 }
+              {
+                "id": "yaml-l2-m1",
+                "title": "Ancres et alias",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "yaml-l2-m2",
+                "title": "Docker Compose",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "yaml-l2-m3",
+                "title": "GitHub Actions CI/CD",
+                "order": 3,
+                "estimatedMinutes": 50
+              }
             ]
           }
         ]
@@ -474,10 +1379,30 @@
             "name": "HTML Fondamentaux",
             "order": 1,
             "modules": [
-              { "id": "html-l1-m1", "title": "Structure de base",                 "order": 1, "estimatedMinutes": 30 },
-              { "id": "html-l1-m2", "title": "Texte et mise en forme",            "order": 2, "estimatedMinutes": 30 },
-              { "id": "html-l1-m3", "title": "Liens et images",                   "order": 3, "estimatedMinutes": 35 },
-              { "id": "html-l1-m4", "title": "Listes et tableaux",                "order": 4, "estimatedMinutes": 35 }
+              {
+                "id": "html-l1-m1",
+                "title": "Structure de base",
+                "order": 1,
+                "estimatedMinutes": 30
+              },
+              {
+                "id": "html-l1-m2",
+                "title": "Texte et mise en forme",
+                "order": 2,
+                "estimatedMinutes": 30
+              },
+              {
+                "id": "html-l1-m3",
+                "title": "Liens et images",
+                "order": 3,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "html-l1-m4",
+                "title": "Listes et tableaux",
+                "order": 4,
+                "estimatedMinutes": 35
+              }
             ]
           },
           {
@@ -485,9 +1410,24 @@
             "name": "HTML Intermédiaire",
             "order": 2,
             "modules": [
-              { "id": "html-l2-m1", "title": "Formulaires",                       "order": 1, "estimatedMinutes": 40 },
-              { "id": "html-l2-m2", "title": "Sémantique HTML5",                  "order": 2, "estimatedMinutes": 35 },
-              { "id": "html-l2-m3", "title": "Attributs et classes",              "order": 3, "estimatedMinutes": 30 }
+              {
+                "id": "html-l2-m1",
+                "title": "Formulaires",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "html-l2-m2",
+                "title": "Sémantique HTML5",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "html-l2-m3",
+                "title": "Attributs et classes",
+                "order": 3,
+                "estimatedMinutes": 30
+              }
             ]
           },
           {
@@ -495,9 +1435,24 @@
             "name": "HTML Avancé",
             "order": 3,
             "modules": [
-              { "id": "html-l3-m1", "title": "Accessibilité ARIA",                "order": 1, "estimatedMinutes": 40 },
-              { "id": "html-l3-m2", "title": "Métadonnées et SEO",                "order": 2, "estimatedMinutes": 35 },
-              { "id": "html-l3-m3", "title": "Projet final — page complète",      "order": 3, "estimatedMinutes": 50 }
+              {
+                "id": "html-l3-m1",
+                "title": "Accessibilité ARIA",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "html-l3-m2",
+                "title": "Métadonnées et SEO",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "html-l3-m3",
+                "title": "Projet final — page complète",
+                "order": 3,
+                "estimatedMinutes": 50
+              }
             ]
           }
         ]
@@ -513,10 +1468,30 @@
             "name": "PHP Fondamentaux",
             "order": 1,
             "modules": [
-              { "id": "php-l1-m1", "title": "Syntaxe de base",                    "order": 1, "estimatedMinutes": 35 },
-              { "id": "php-l1-m2", "title": "Variables et opérateurs",            "order": 2, "estimatedMinutes": 35 },
-              { "id": "php-l1-m3", "title": "Conditions et boucles",              "order": 3, "estimatedMinutes": 40 },
-              { "id": "php-l1-m4", "title": "Fonctions et portée",                "order": 4, "estimatedMinutes": 40 }
+              {
+                "id": "php-l1-m1",
+                "title": "Syntaxe de base",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "php-l1-m2",
+                "title": "Variables et opérateurs",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "php-l1-m3",
+                "title": "Conditions et boucles",
+                "order": 3,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "php-l1-m4",
+                "title": "Fonctions et portée",
+                "order": 4,
+                "estimatedMinutes": 40
+              }
             ]
           },
           {
@@ -524,9 +1499,24 @@
             "name": "PHP Web",
             "order": 2,
             "modules": [
-              { "id": "php-l2-m1", "title": "Tableaux",                           "order": 1, "estimatedMinutes": 40 },
-              { "id": "php-l2-m2", "title": "Chaînes de caractères",              "order": 2, "estimatedMinutes": 40 },
-              { "id": "php-l2-m3", "title": "Fichiers et JSON",                   "order": 3, "estimatedMinutes": 45 }
+              {
+                "id": "php-l2-m1",
+                "title": "Tableaux",
+                "order": 1,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "php-l2-m2",
+                "title": "Chaînes de caractères",
+                "order": 2,
+                "estimatedMinutes": 40
+              },
+              {
+                "id": "php-l2-m3",
+                "title": "Fichiers et JSON",
+                "order": 3,
+                "estimatedMinutes": 45
+              }
             ]
           },
           {
@@ -534,9 +1524,156 @@
             "name": "PHP Avancé",
             "order": 3,
             "modules": [
-              { "id": "php-l3-m1", "title": "Programmation Orientée Objet",       "order": 1, "estimatedMinutes": 50 },
-              { "id": "php-l3-m2", "title": "Sécurité PHP",                       "order": 2, "estimatedMinutes": 45 },
-              { "id": "php-l3-m3", "title": "Projet final — générateur de page",  "order": 3, "estimatedMinutes": 50 }
+              {
+                "id": "php-l3-m1",
+                "title": "Programmation Orientée Objet",
+                "order": 1,
+                "estimatedMinutes": 50
+              },
+              {
+                "id": "php-l3-m2",
+                "title": "Sécurité PHP",
+                "order": 2,
+                "estimatedMinutes": 45
+              },
+              {
+                "id": "php-l3-m3",
+                "title": "Projet final — générateur de page",
+                "order": 3,
+                "estimatedMinutes": 50
+              }
+            ]
+          }
+        ]
+      },
+      "c": {
+        "name": "C",
+        "icon": "🔧",
+        "color": "#a8b9cc",
+        "description": "Le langage système par excellence — pointeurs en devenir, mémoire, fondations de tout le reste.",
+        "levels": [
+          {
+            "id": "c-l1",
+            "name": "C Fondamentaux",
+            "order": 1,
+            "modules": [
+              {
+                "id": "c-l1-m1",
+                "title": "Premiers pas en C",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "c-l1-m2",
+                "title": "Variables et conditions",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "c-l1-m3",
+                "title": "Fonctions et tableaux",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
+            ]
+          }
+        ]
+      },
+      "cpp": {
+        "name": "C++",
+        "icon": "⚙️",
+        "color": "#00599c",
+        "description": "C avec objets, std::string et std::vector — la puissance avec plus de confort.",
+        "levels": [
+          {
+            "id": "cpp-l1",
+            "name": "C++ Fondamentaux",
+            "order": 1,
+            "modules": [
+              {
+                "id": "cpp-l1-m1",
+                "title": "Premiers pas en C++",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "cpp-l1-m2",
+                "title": "Variables et boucles",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "cpp-l1-m3",
+                "title": "Fonctions et vecteurs",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
+            ]
+          }
+        ]
+      },
+      "csharp": {
+        "name": "C#",
+        "icon": "🟣",
+        "color": "#178600",
+        "description": "Le langage de l'écosystème .NET — syntaxe moderne, orientée objet.",
+        "levels": [
+          {
+            "id": "csharp-l1",
+            "name": "C# Fondamentaux",
+            "order": 1,
+            "modules": [
+              {
+                "id": "csharp-l1-m1",
+                "title": "Premiers pas en C#",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "csharp-l1-m2",
+                "title": "Variables et conditions",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "csharp-l1-m3",
+                "title": "Méthodes et tableaux",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
+            ]
+          }
+        ]
+      },
+      "java": {
+        "name": "Java",
+        "icon": "☕",
+        "color": "#b07219",
+        "description": "Incontournable en entreprise — typage fort, classes, portable partout.",
+        "levels": [
+          {
+            "id": "java-l1",
+            "name": "Java Fondamentaux",
+            "order": 1,
+            "modules": [
+              {
+                "id": "java-l1-m1",
+                "title": "Premiers pas en Java",
+                "order": 1,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "java-l1-m2",
+                "title": "Variables et boucles",
+                "order": 2,
+                "estimatedMinutes": 35
+              },
+              {
+                "id": "java-l1-m3",
+                "title": "Méthodes et tableaux",
+                "order": 3,
+                "estimatedMinutes": 40
+              }
             ]
           }
         ]

@@ -1,0 +1,48 @@
+{
+  "id": "cpp-l1-m1",
+  "title": "Premiers pas en C++",
+  "level": 1,
+  "lang": "cpp",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "std::cout",
+      "content": "En C++, on affiche avec `std::cout` et l'opérateur `<<`.\n\n```cpp\n#include <iostream>\n\nint main() {\n    std::cout << \"Bonjour, C++ !\" << std::endl;\n    return 0;\n}\n```\n\n- `#include <iostream>` : flux d'entrée/sortie.\n- `std::endl` : saut de ligne (équivalent à `\"\\n\"`)."
+    },
+    {
+      "title": "Compilation",
+      "content": "Ton code C++ est compilé avec `g++` dans WSL puis exécuté. S'il manque : `sudo apt install g++`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-cpp-l1-m1-1",
+      "title": "Bonjour",
+      "instructions": "Affiche exactement `Bonjour, C++ !`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour, C++ !",
+      "correction": "#include <iostream>\nint main() {\n    std::cout << \"Bonjour, C++ !\" << std::endl;\n    return 0;\n}",
+      "explanation": "`std::cout << ...` envoie le texte vers la sortie standard ; `std::endl` ajoute le saut de ligne.",
+      "starterCode": "#include <iostream>\nint main() {\n    // Affiche le message ici\n    return 0;\n}"
+    },
+    {
+      "id": "ex-cpp-l1-m1-2",
+      "title": "Chaîner les sorties",
+      "instructions": "Affiche `2 + 3 = 5` en chaînant texte et calcul dans `cout`.",
+      "validationType": "output_contains",
+      "expectedOutput": "2 + 3 = 5",
+      "correction": "#include <iostream>\nint main() {\n    std::cout << \"2 + 3 = \" << (2 + 3) << std::endl;\n    return 0;\n}",
+      "explanation": "On peut enchaîner plusieurs `<<` : C++ convertit l'entier 5 en texte automatiquement."
+    },
+    {
+      "id": "ex-cpp-l1-m1-3",
+      "title": "Variable",
+      "instructions": "Déclare `int x = 42;` et affiche `x = 42`.",
+      "validationType": "output_contains",
+      "expectedOutput": "x = 42",
+      "correction": "#include <iostream>\nint main() {\n    int x = 42;\n    std::cout << \"x = \" << x << std::endl;\n    return 0;\n}",
+      "explanation": "La variable `x` est insérée dans le flux via `<<`."
+    }
+  ]
+}

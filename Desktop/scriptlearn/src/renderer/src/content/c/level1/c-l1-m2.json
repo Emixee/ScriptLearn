@@ -1,0 +1,47 @@
+{
+  "id": "c-l1-m2",
+  "title": "Variables et conditions",
+  "level": 1,
+  "lang": "c",
+  "order": 2,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Déclarer des variables",
+      "content": "En C, chaque variable a un type fixé à la déclaration.\n\n```c\nint age = 30;        // entier\ndouble prix = 9.99;  // nombre à virgule\nchar lettre = 'A';   // un caractère\n```\n\nOn affiche un entier avec `%d`, un `double` avec `%f`, un caractère avec `%c`."
+    },
+    {
+      "title": "Conditions if / else",
+      "content": "```c\nif (x > 0) {\n    printf(\"positif\\n\");\n} else {\n    printf(\"negatif ou nul\\n\");\n}\n```\n\nLes comparaisons (`>`, `<`, `==`, `!=`, `>=`, `<=`) renvoient vrai (1) ou faux (0)."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-c-l1-m2-1",
+      "title": "Variable entière",
+      "instructions": "Déclare une variable `int x = 10;` puis affiche `x = 10`.",
+      "validationType": "output_contains",
+      "expectedOutput": "x = 10",
+      "correction": "#include <stdio.h>\nint main(void) {\n    int x = 10;\n    printf(\"x = %d\\n\", x);\n    return 0;\n}",
+      "explanation": "On insère la valeur de `x` dans la chaîne via `%d`."
+    },
+    {
+      "id": "ex-c-l1-m2-2",
+      "title": "Test de signe",
+      "instructions": "Pour `int n = 7;`, affiche `positif` si n > 0.",
+      "validationType": "output_contains",
+      "expectedOutput": "positif",
+      "correction": "#include <stdio.h>\nint main(void) {\n    int n = 7;\n    if (n > 0) {\n        printf(\"positif\\n\");\n    }\n    return 0;\n}",
+      "explanation": "La condition `n > 0` est vraie pour 7, donc le bloc `if` s'exécute."
+    },
+    {
+      "id": "ex-c-l1-m2-3",
+      "title": "Boucle for",
+      "instructions": "Avec une boucle `for`, affiche les nombres de 1 à 5, un par ligne.",
+      "validationType": "output_contains",
+      "expectedOutput": "5",
+      "correction": "#include <stdio.h>\nint main(void) {\n    for (int i = 1; i <= 5; i++) {\n        printf(\"%d\\n\", i);\n    }\n    return 0;\n}",
+      "explanation": "La boucle `for (init; condition; incrément)` répète le bloc tant que la condition est vraie. Ici i va de 1 à 5."
+    }
+  ]
+}

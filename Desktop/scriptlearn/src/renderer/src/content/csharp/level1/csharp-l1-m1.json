@@ -1,0 +1,48 @@
+{
+  "id": "csharp-l1-m1",
+  "title": "Premiers pas en C#",
+  "level": 1,
+  "lang": "csharp",
+  "order": 1,
+  "estimatedMinutes": 35,
+  "course": [
+    {
+      "title": "Console.WriteLine",
+      "content": "Un programme C# classique définit une classe avec une méthode `Main`.\n\n```csharp\nclass Program {\n    static void Main() {\n        System.Console.WriteLine(\"Bonjour, C# !\");\n    }\n}\n```\n\n`Console.WriteLine` affiche une ligne (saut de ligne inclus)."
+    },
+    {
+      "title": "Compilation (Mono)",
+      "content": "Dans ScriptLearn, le code C# est compilé avec `mcs` (Mono) dans WSL puis exécuté avec `mono`. Installation : `sudo apt install mono-complete`."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex-csharp-l1-m1-1",
+      "title": "Bonjour",
+      "instructions": "Affiche exactement `Bonjour, C# !`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour, C# !",
+      "correction": "class Program {\n    static void Main() {\n        System.Console.WriteLine(\"Bonjour, C# !\");\n    }\n}",
+      "explanation": "`Console.WriteLine` écrit le texte suivi d'un saut de ligne.",
+      "starterCode": "class Program {\n    static void Main() {\n        // Affiche le message ici\n    }\n}"
+    },
+    {
+      "id": "ex-csharp-l1-m1-2",
+      "title": "Variable",
+      "instructions": "Déclare `int x = 42;` et affiche `x = 42`.",
+      "validationType": "output_contains",
+      "expectedOutput": "x = 42",
+      "correction": "class Program {\n    static void Main() {\n        int x = 42;\n        System.Console.WriteLine(\"x = \" + x);\n    }\n}",
+      "explanation": "En C#, `\"x = \" + x` concatène le texte et la valeur (convertie automatiquement)."
+    },
+    {
+      "id": "ex-csharp-l1-m1-3",
+      "title": "Interpolation",
+      "instructions": "Avec `string nom = \"Lin\";`, affiche `Bonjour Lin` via une chaîne interpolée `$\"...\"`.",
+      "validationType": "output_contains",
+      "expectedOutput": "Bonjour Lin",
+      "correction": "class Program {\n    static void Main() {\n        string nom = \"Lin\";\n        System.Console.WriteLine($\"Bonjour {nom}\");\n    }\n}",
+      "explanation": "Le préfixe `$` active l'interpolation : `{nom}` est remplacé par la valeur de la variable."
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import WindowControls from './WindowControls'
 const navItems = [
   { to: '/app/dashboard',   label: 'tableau de bord'  },
   { to: '/app/courses',     label: 'cours'             },
+  { to: '/app/missions',    label: 'missions'          },
   { to: '/app/roadmap',     label: 'parcours'          },
   { to: '/app/flashcards',  label: 'révision'          },
   { to: '/app/sandbox',     label: 'sandbox'           },
