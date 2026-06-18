@@ -1,9 +1,25 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.10.0
+## Version actuelle : 0.11.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.11.0 — Voies (vagues 2 & 3) : PowerShell, SQL, Regex, Git (2026-06-18)
+
+Poursuite des « Voies » (parcours débutant→expert par langage), par vagues.
+
+### Vague 2
+- **La Voie de PowerShell** (17 actes, exécutée en session, données en mémoire) : Write-Output, variables, calculs, if, foreach → tableaux, Where-Object, Measure-Object → Sort-Object, hashtables, méthodes → fonctions, paramètres, synthèse.
+- **La Voie du SQL** (17 actes, statique/mots-clés) : SELECT, DISTINCT, WHERE, ORDER BY → comparaisons, AND, IN, LIKE → COUNT, AVG, GROUP BY, HAVING → JOIN, sous-requêtes, synthèse.
+
+### Vague 3
+- **La Voie du Regex** (17 actes, statique) : littéraux, `.`, `\d`, `\w`, `+` → `[a-z]`, `{n,m}`, ancres, `\s` → alternative, optionnel, échappement → groupes, classes négatives, email.
+- **La Voie de Git** (17 actes, statique) : init/status/add/commit/log → branch/switch/merge/diff → remote/push/pull/clone → stash/revert/cycle complet.
+
+Tous suivent le format Voie (paliers + tier + actes de révision réutilisant les acquis). Couverture actuelle : Bash, Python, PowerShell, SQL, Regex, Git. Restent à venir : KQL, SPL, YAML, HTML, PHP, C, C++, C#, Java.
 
 ---
 

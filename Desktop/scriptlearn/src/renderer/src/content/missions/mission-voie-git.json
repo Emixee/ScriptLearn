@@ -1,0 +1,327 @@
+{
+  "id": "mission-voie-git",
+  "kind": "voie",
+  "language": "git",
+  "order": 6,
+  "title": "La Voie de Git",
+  "tagline": "Le contrôle de version : du premier commit jusqu'au travail collaboratif. Débutant → expert.",
+  "synopsis": "Git enregistre l'historique de ton code et permet de travailler à plusieurs. Commande après commande, tu apprends à gérer un projet comme un pro.",
+  "objective": "Maîtriser Git : commits, branches, fusion, dépôts distants, collaboration.",
+  "career": "developer",
+  "difficulty": "progressive",
+  "estimatedMinutes": 70,
+  "accent": "#60a5fa",
+  "chapters": [
+    {
+      "id": "d1",
+      "tier": "debutant",
+      "title": "Initialiser un dépôt",
+      "lang": "git",
+      "story": "Tout commence par créer un dépôt Git dans ton projet.",
+      "teach": "```\ngit init\n```\nCrée un dépôt Git dans le dossier courant.",
+      "brief": "Initialise un dépôt Git.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "init"
+      ],
+      "hint": "`git init`",
+      "correction": "git init",
+      "reward": "Le dépôt est créé. Que se passe-t-il dedans ?"
+    },
+    {
+      "id": "d2",
+      "tier": "debutant",
+      "title": "Voir l'état",
+      "lang": "git",
+      "story": "`git status` montre les fichiers modifiés, ajoutés ou non suivis.",
+      "teach": "```\ngit status\n```",
+      "brief": "Affiche l'état actuel du dépôt.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "status"
+      ],
+      "hint": "`git status`",
+      "correction": "git status",
+      "reward": "Tu vois ce qui a changé. Préparons un fichier."
+    },
+    {
+      "id": "d3",
+      "tier": "debutant",
+      "title": "Indexer un fichier",
+      "lang": "git",
+      "story": "`git add` ajoute un fichier à la « zone d'index » (prêt à être enregistré).",
+      "teach": "```\ngit add fichier.txt\n```\n`git add .` ajoute tout.",
+      "brief": "Ajoute le fichier `app.js` à l'index.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "add",
+        "app.js"
+      ],
+      "hint": "`git add app.js`",
+      "correction": "git add app.js",
+      "reward": "Le fichier est prêt. Enregistrons-le."
+    },
+    {
+      "id": "d4",
+      "tier": "debutant",
+      "title": "Enregistrer (commit)",
+      "lang": "git",
+      "story": "`git commit -m \"message\"` enregistre les fichiers indexés avec une description.",
+      "teach": "```\ngit commit -m \"Ajout login\"\n```",
+      "brief": "Crée un commit avec le message `Premier commit`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "commit",
+        "-m",
+        "premier commit"
+      ],
+      "hint": "`git commit -m \"Premier commit\"`",
+      "correction": "git commit -m \"Premier commit\"",
+      "reward": "Ton premier commit ! Et l'historique ?"
+    },
+    {
+      "id": "d5",
+      "tier": "debutant",
+      "title": "Voir l'historique",
+      "lang": "git",
+      "story": "`git log` affiche la liste des commits.",
+      "teach": "```\ngit log --oneline\n```\n`--oneline` = format compact.",
+      "brief": "Affiche l'historique des commits.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "log"
+      ],
+      "hint": "`git log`",
+      "correction": "git log",
+      "reward": "**Palier Débutant terminé !** Place aux branches."
+    },
+    {
+      "id": "i1",
+      "tier": "intermediaire",
+      "title": "Créer une branche",
+      "lang": "git",
+      "story": "Une **branche** est une ligne de travail parallèle. `git branch` les liste ou en crée.",
+      "teach": "```\ngit branch nouvelle-fonction\n```",
+      "brief": "Crée une branche nommée `feature`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "branch",
+        "feature"
+      ],
+      "hint": "`git branch feature`",
+      "correction": "git branch feature",
+      "reward": "Une branche existe. Allons-y."
+    },
+    {
+      "id": "i2",
+      "tier": "intermediaire",
+      "title": "Changer de branche",
+      "lang": "git",
+      "story": "`git switch` se déplace sur une branche ; `-c` la crée et s'y place.",
+      "teach": "```\ngit switch -c nouvelle\n```",
+      "brief": "Crée et bascule sur une nouvelle branche `dev` (`switch -c`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "switch",
+        "dev"
+      ],
+      "hint": "`git switch -c dev`",
+      "correction": "git switch -c dev",
+      "reward": "Tu travailles à part. Fusionnons ensuite."
+    },
+    {
+      "id": "i3",
+      "tier": "intermediaire",
+      "title": "Fusionner (merge)",
+      "lang": "git",
+      "story": "`git merge` intègre une branche dans la branche courante.",
+      "teach": "```\ngit merge dev\n```",
+      "brief": "Fusionne la branche `dev` dans la branche courante.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "merge",
+        "dev"
+      ],
+      "hint": "`git merge dev`",
+      "correction": "git merge dev",
+      "reward": "Les travaux sont réunis. Et voir les différences ?"
+    },
+    {
+      "id": "i4",
+      "tier": "intermediaire",
+      "title": "Voir les différences",
+      "lang": "git",
+      "story": "`git diff` montre ce qui a changé, ligne par ligne.",
+      "teach": "```\ngit diff\n```",
+      "brief": "Affiche les différences non indexées.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "diff"
+      ],
+      "hint": "`git diff`",
+      "correction": "git diff",
+      "reward": "Révision !"
+    },
+    {
+      "id": "ir",
+      "tier": "intermediaire",
+      "title": "Révision — indexer puis commiter",
+      "lang": "git",
+      "story": "Tu **réutilises** `git add` et `git commit -m` (palier Débutant) en une séquence.",
+      "teach": "```\ngit add .\ngit commit -m \"maj\"\n```",
+      "brief": "Indexe tout (`git add .`) puis crée un commit avec le message `Correctif`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "add",
+        "commit",
+        "-m",
+        "correctif"
+      ],
+      "hint": "`git add . && git commit -m \"Correctif\"`",
+      "correction": "git add . && git commit -m \"Correctif\"",
+      "reward": "**Palier Intermédiaire terminé !** Place au travail distant."
+    },
+    {
+      "id": "a1",
+      "tier": "avance",
+      "title": "Lier un dépôt distant",
+      "lang": "git",
+      "story": "Un **dépôt distant** (GitHub…) héberge ton code. `git remote add origin <url>` le relie.",
+      "teach": "```\ngit remote add origin https://github.com/u/projet.git\n```",
+      "brief": "Ajoute un dépôt distant nommé `origin` (`git remote add origin`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "remote",
+        "add",
+        "origin"
+      ],
+      "hint": "`git remote add origin <url>`",
+      "correction": "git remote add origin https://github.com/user/projet.git",
+      "reward": "Le distant est relié. Envoyons le code."
+    },
+    {
+      "id": "a2",
+      "tier": "avance",
+      "title": "Envoyer (push)",
+      "lang": "git",
+      "story": "`git push` envoie tes commits vers le dépôt distant.",
+      "teach": "```\ngit push origin main\n```",
+      "brief": "Envoie la branche `main` vers `origin` (`git push origin main`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "push",
+        "origin",
+        "main"
+      ],
+      "hint": "`git push origin main`",
+      "correction": "git push origin main",
+      "reward": "Ton code est en ligne. Et récupérer les changements ?"
+    },
+    {
+      "id": "a3",
+      "tier": "avance",
+      "title": "Récupérer (pull)",
+      "lang": "git",
+      "story": "`git pull` récupère et intègre les changements du dépôt distant.",
+      "teach": "```\ngit pull origin main\n```",
+      "brief": "Récupère les changements de `main` depuis `origin` (`git pull origin main`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "pull",
+        "origin",
+        "main"
+      ],
+      "hint": "`git pull origin main`",
+      "correction": "git pull origin main",
+      "reward": "Tu restes à jour. Révision avancée !"
+    },
+    {
+      "id": "ar",
+      "tier": "avance",
+      "title": "Révision — cloner un dépôt",
+      "lang": "git",
+      "story": "`git clone <url>` copie un dépôt distant complet en local — le point de départ de tout projet d'équipe.",
+      "teach": "```\ngit clone https://github.com/u/projet.git\n```",
+      "brief": "Clone le dépôt distant `https://github.com/equipe/app.git`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "clone"
+      ],
+      "hint": "`git clone <url>`",
+      "correction": "git clone https://github.com/equipe/app.git",
+      "reward": "**Palier Avancé terminé !** Dernier palier : les outils de pro."
+    },
+    {
+      "id": "e1",
+      "tier": "expert",
+      "title": "Mettre de côté (stash)",
+      "lang": "git",
+      "story": "`git stash` range temporairement tes modifications non commitées pour revenir à un état propre.",
+      "teach": "```\ngit stash\n```\n`git stash pop` les restaure.",
+      "brief": "Mets de côté tes modifications en cours (`git stash`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "stash"
+      ],
+      "hint": "`git stash`",
+      "correction": "git stash",
+      "reward": "Espace de travail propre. Et annuler un commit ?"
+    },
+    {
+      "id": "e2",
+      "tier": "expert",
+      "title": "Annuler (revert)",
+      "lang": "git",
+      "story": "`git revert <commit>` crée un nouveau commit qui **annule** les changements d'un commit donné, sans réécrire l'historique.",
+      "teach": "```\ngit revert abc123\n```",
+      "brief": "Annule le commit `abc123` avec `git revert`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "revert",
+        "abc123"
+      ],
+      "hint": "`git revert abc123`",
+      "correction": "git revert abc123",
+      "reward": "Tu corriges proprement. Synthèse finale !"
+    },
+    {
+      "id": "e3",
+      "tier": "expert",
+      "title": "Synthèse — le cycle complet",
+      "lang": "git",
+      "story": "Synthèse : tu enchaînes `add`, `commit` (Débutant) et `push` (Avancé) — le cycle quotidien du développeur.",
+      "teach": "```\ngit add .\ngit commit -m \"feat\"\ngit push origin main\n```",
+      "brief": "Écris la séquence complète : indexer tout, commiter avec le message `Nouvelle feature`, puis pousser sur `origin main`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "git",
+        "add",
+        "commit",
+        "-m",
+        "push",
+        "origin",
+        "main"
+      ],
+      "hint": "`git add . && git commit -m \"Nouvelle feature\" && git push origin main`",
+      "correction": "git add . && git commit -m \"Nouvelle feature\" && git push origin main",
+      "reward": "Tu maîtrises le cycle de versionnage complet. **Tu es expert en Git.**"
+    }
+  ],
+  "finale": "## Niveau Expert atteint — La Voie de Git\n\nQuatre paliers gravis :\n\n- **Débutant** : init, status, add, commit, log\n- **Intermédiaire** : branch, switch, merge, diff\n- **Avancé** : remote, push, pull, clone\n- **Expert** : stash, revert, cycle complet\n\nGit est indispensable dans toute équipe de développement. **Tu es désormais expert en Git.**"
+}

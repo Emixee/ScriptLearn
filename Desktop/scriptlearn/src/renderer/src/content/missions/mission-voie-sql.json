@@ -1,0 +1,373 @@
+{
+  "id": "mission-voie-sql",
+  "kind": "voie",
+  "language": "sql",
+  "order": 4,
+  "title": "La Voie du SQL",
+  "tagline": "Interroger une base de données, de SELECT jusqu'aux jointures. Débutant → expert.",
+  "synopsis": "Une base d'entreprise t'attend : tables `employes`, `commandes`, `produits`. Requête après requête, tu apprends à en extraire exactement ce que tu veux.",
+  "objective": "Maîtriser SQL : SELECT, filtres, tri, agrégations, regroupements, jointures.",
+  "career": "developer",
+  "difficulty": "progressive",
+  "estimatedMinutes": 75,
+  "accent": "#34d399",
+  "chapters": [
+    {
+      "id": "d1",
+      "tier": "debutant",
+      "title": "Tout afficher",
+      "lang": "sql",
+      "story": "On lit des données avec `SELECT colonnes FROM table`. Pour tout voir : `*`.",
+      "teach": "```sql\nSELECT * FROM clients;\n```",
+      "brief": "Affiche tout le contenu de la table `employes`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes"
+      ],
+      "requiredTable": "employes",
+      "hint": "`SELECT * FROM employes;`",
+      "correction": "SELECT * FROM employes;",
+      "reward": "La table entière s'affiche. Trop de colonnes ? Choisis-les."
+    },
+    {
+      "id": "d2",
+      "tier": "debutant",
+      "title": "Choisir des colonnes",
+      "lang": "sql",
+      "story": "On peut ne demander que certaines colonnes en les listant.",
+      "teach": "```sql\nSELECT nom, ville FROM clients;\n```",
+      "brief": "Affiche seulement les colonnes `nom` et `prenom` de la table `employes`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "nom",
+        "prenom",
+        "from",
+        "employes"
+      ],
+      "requiredTable": "employes",
+      "hint": "`SELECT nom, prenom FROM employes;`",
+      "correction": "SELECT nom, prenom FROM employes;",
+      "reward": "Plus net. Et si on supprimait les doublons ?"
+    },
+    {
+      "id": "d3",
+      "tier": "debutant",
+      "title": "Valeurs uniques",
+      "lang": "sql",
+      "story": "`DISTINCT` retire les doublons d'une colonne.",
+      "teach": "```sql\nSELECT DISTINCT pays FROM clients;\n```",
+      "brief": "Affiche la liste des `ville` **distinctes** de la table `employes`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "distinct",
+        "ville",
+        "from",
+        "employes"
+      ],
+      "requiredTable": "employes",
+      "hint": "`SELECT DISTINCT ville FROM employes;`",
+      "correction": "SELECT DISTINCT ville FROM employes;",
+      "reward": "Chaque ville une seule fois. Filtrons maintenant."
+    },
+    {
+      "id": "d4",
+      "tier": "debutant",
+      "title": "Filtrer avec WHERE",
+      "lang": "sql",
+      "story": "`WHERE` ne garde que les lignes remplissant une condition.",
+      "teach": "```sql\nSELECT * FROM clients WHERE age > 30;\n```",
+      "brief": "Sélectionne les employés dont le `salaire` est supérieur à 3000.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "salaire"
+      ],
+      "requiredTable": "employes",
+      "hint": "`SELECT * FROM employes WHERE salaire > 3000;`",
+      "correction": "SELECT * FROM employes WHERE salaire > 3000;",
+      "reward": "Tu cibles les bonnes lignes. Et pour les ranger ?"
+    },
+    {
+      "id": "d5",
+      "tier": "debutant",
+      "title": "Trier avec ORDER BY",
+      "lang": "sql",
+      "story": "`ORDER BY colonne` trie le résultat (`DESC` pour décroissant).",
+      "teach": "```sql\nSELECT * FROM clients ORDER BY age DESC;\n```",
+      "brief": "Affiche les employés triés par `salaire` décroissant (`ORDER BY ... DESC`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "order by",
+        "salaire"
+      ],
+      "requiredTable": "employes",
+      "hint": "`SELECT * FROM employes ORDER BY salaire DESC;`",
+      "correction": "SELECT * FROM employes ORDER BY salaire DESC;",
+      "reward": "**Palier Débutant terminé !** Affinons les filtres."
+    },
+    {
+      "id": "i1",
+      "tier": "intermediaire",
+      "title": "Comparaisons",
+      "lang": "sql",
+      "story": "Les opérateurs `>`, `<`, `>=`, `<=`, `=`, `<>` (différent) affinent un `WHERE` (revu du palier Débutant).",
+      "teach": "```sql\nSELECT * FROM clients WHERE age >= 18;\n```",
+      "brief": "Sélectionne les employés dont le `salaire` est **inférieur ou égal** à 2000.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "salaire",
+        "<="
+      ],
+      "hint": "`SELECT * FROM employes WHERE salaire <= 2000;`",
+      "correction": "SELECT * FROM employes WHERE salaire <= 2000;",
+      "reward": "Précis. On peut combiner plusieurs conditions."
+    },
+    {
+      "id": "i2",
+      "tier": "intermediaire",
+      "title": "Combiner avec AND",
+      "lang": "sql",
+      "story": "`AND` exige que **deux** conditions soient vraies (`OR` = au moins une).",
+      "teach": "```sql\nSELECT * FROM clients WHERE age > 18 AND ville = \"Lyon\";\n```",
+      "brief": "Sélectionne les employés du `departement` \"IT\" **ET** dont le `salaire` > 3000.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "and",
+        "departement",
+        "salaire"
+      ],
+      "hint": "`SELECT * FROM employes WHERE departement = 'IT' AND salaire > 3000;`",
+      "correction": "SELECT * FROM employes WHERE departement = 'IT' AND salaire > 3000;",
+      "reward": "Deux critères d'un coup. Et une liste de valeurs ?"
+    },
+    {
+      "id": "i3",
+      "tier": "intermediaire",
+      "title": "Une liste avec IN",
+      "lang": "sql",
+      "story": "`IN (...)` teste si une valeur figure dans une liste.",
+      "teach": "```sql\nSELECT * FROM clients WHERE ville IN (\"Lyon\", \"Paris\");\n```",
+      "brief": "Sélectionne les employés dont le `departement` est dans la liste `IN ('IT', 'RH')`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "departement",
+        "in"
+      ],
+      "hint": "`SELECT * FROM employes WHERE departement IN ('IT', 'RH');`",
+      "correction": "SELECT * FROM employes WHERE departement IN ('IT', 'RH');",
+      "reward": "Pratique. Et une recherche par motif ?"
+    },
+    {
+      "id": "i4",
+      "tier": "intermediaire",
+      "title": "Rechercher avec LIKE",
+      "lang": "sql",
+      "story": "`LIKE` cherche un motif ; `%` remplace n'importe quels caractères.",
+      "teach": "```sql\nSELECT * FROM clients WHERE nom LIKE \"A%\";\n```",
+      "brief": "Sélectionne les employés dont le `nom` commence par `D` (`LIKE 'D%'`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "nom",
+        "like"
+      ],
+      "hint": "`SELECT * FROM employes WHERE nom LIKE 'D%';`",
+      "correction": "SELECT * FROM employes WHERE nom LIKE 'D%';",
+      "reward": "Recherche souple. Révision !"
+    },
+    {
+      "id": "ir",
+      "tier": "intermediaire",
+      "title": "Révision — filtrer, combiner, trier",
+      "lang": "sql",
+      "story": "Tu **réutilises** `WHERE` + `AND` (palier) et `ORDER BY` (Débutant) dans une seule requête.",
+      "teach": "Combine une condition `WHERE ... AND ...` avec un `ORDER BY`.",
+      "brief": "Sélectionne les employés du `departement` \"IT\" **ET** `salaire` > 2000, triés par `salaire` décroissant.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "and",
+        "order by"
+      ],
+      "hint": "`SELECT * FROM employes WHERE departement = 'IT' AND salaire > 2000 ORDER BY salaire DESC;`",
+      "correction": "SELECT * FROM employes WHERE departement = 'IT' AND salaire > 2000 ORDER BY salaire DESC;",
+      "reward": "**Palier Intermédiaire terminé !** Place aux statistiques."
+    },
+    {
+      "id": "a1",
+      "tier": "avance",
+      "title": "Compter avec COUNT",
+      "lang": "sql",
+      "story": "Les **fonctions d'agrégation** résument des lignes. `COUNT(*)` compte les lignes.",
+      "teach": "```sql\nSELECT COUNT(*) FROM clients;\n```",
+      "brief": "Compte le nombre total d'employés (`COUNT(*)`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "count",
+        "from",
+        "employes"
+      ],
+      "hint": "`SELECT COUNT(*) FROM employes;`",
+      "correction": "SELECT COUNT(*) FROM employes;",
+      "reward": "Un seul chiffre résume la table. Et la moyenne ?"
+    },
+    {
+      "id": "a2",
+      "tier": "avance",
+      "title": "Moyenne avec AVG",
+      "lang": "sql",
+      "story": "`AVG(colonne)` calcule la moyenne ; `SUM`, `MIN`, `MAX` existent aussi.",
+      "teach": "```sql\nSELECT AVG(age) FROM clients;\n```",
+      "brief": "Calcule le **salaire moyen** des employés (`AVG(salaire)`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "avg",
+        "from",
+        "employes",
+        "salaire"
+      ],
+      "hint": "`SELECT AVG(salaire) FROM employes;`",
+      "correction": "SELECT AVG(salaire) FROM employes;",
+      "reward": "Une statistique globale. Et par groupe ?"
+    },
+    {
+      "id": "a3",
+      "tier": "avance",
+      "title": "Regrouper avec GROUP BY",
+      "lang": "sql",
+      "story": "`GROUP BY` calcule une agrégation **par groupe**.",
+      "teach": "```sql\nSELECT pays, COUNT(*) FROM clients GROUP BY pays;\n```",
+      "brief": "Compte le nombre d'employés **par** `departement` (`COUNT(*)` + `GROUP BY departement`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "count",
+        "from",
+        "employes",
+        "group by",
+        "departement"
+      ],
+      "hint": "`SELECT departement, COUNT(*) FROM employes GROUP BY departement;`",
+      "correction": "SELECT departement, COUNT(*) FROM employes GROUP BY departement;",
+      "reward": "Une ligne par groupe. On peut filtrer les groupes."
+    },
+    {
+      "id": "ar",
+      "tier": "avance",
+      "title": "Révision — GROUP BY + HAVING",
+      "lang": "sql",
+      "story": "`HAVING` filtre les **groupes** (alors que `WHERE` filtre les lignes). Tu réutilises `COUNT` et `GROUP BY`.",
+      "teach": "```sql\nSELECT pays, COUNT(*) FROM clients GROUP BY pays HAVING COUNT(*) > 5;\n```",
+      "brief": "Affiche les `departement` ayant **plus de 3 employés** (`GROUP BY` + `HAVING COUNT(*) > 3`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "count",
+        "from",
+        "employes",
+        "group by",
+        "having"
+      ],
+      "hint": "`SELECT departement, COUNT(*) FROM employes GROUP BY departement HAVING COUNT(*) > 3;`",
+      "correction": "SELECT departement, COUNT(*) FROM employes GROUP BY departement HAVING COUNT(*) > 3;",
+      "reward": "**Palier Avancé terminé !** Dernier palier : relier les tables."
+    },
+    {
+      "id": "e1",
+      "tier": "expert",
+      "title": "Joindre deux tables",
+      "lang": "sql",
+      "story": "Une **jointure** relie deux tables par une colonne commune. `JOIN ... ON`.",
+      "teach": "```sql\nSELECT * FROM commandes\nJOIN clients ON commandes.client_id = clients.id;\n```",
+      "brief": "Relie `commandes` et `employes` : `JOIN employes ON commandes.employe_id = employes.id`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "commandes",
+        "join",
+        "employes",
+        "on"
+      ],
+      "hint": "`SELECT * FROM commandes JOIN employes ON commandes.employe_id = employes.id;`",
+      "correction": "SELECT * FROM commandes JOIN employes ON commandes.employe_id = employes.id;",
+      "reward": "Les données de deux tables réunies. Et une requête dans une requête ?"
+    },
+    {
+      "id": "e2",
+      "tier": "expert",
+      "title": "Sous-requête",
+      "lang": "sql",
+      "story": "Une **sous-requête** est une requête imbriquée entre parenthèses.",
+      "teach": "```sql\nSELECT * FROM clients\nWHERE age > (SELECT AVG(age) FROM clients);\n```",
+      "brief": "Sélectionne les employés dont le `salaire` est supérieur à la **moyenne** : `WHERE salaire > (SELECT AVG(salaire) FROM employes)`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "employes",
+        "where",
+        "salaire",
+        "(select",
+        "avg"
+      ],
+      "hint": "`SELECT * FROM employes WHERE salaire > (SELECT AVG(salaire) FROM employes);`",
+      "correction": "SELECT * FROM employes WHERE salaire > (SELECT AVG(salaire) FROM employes);",
+      "reward": "Tu compares à une valeur calculée. Synthèse finale !"
+    },
+    {
+      "id": "e3",
+      "tier": "expert",
+      "title": "Synthèse — jointure + regroupement",
+      "lang": "sql",
+      "story": "Synthèse : une **jointure** (palier) combinée à `GROUP BY` + `COUNT` (Avancé).",
+      "teach": "```sql\nSELECT clients.ville, COUNT(*)\nFROM commandes\nJOIN clients ON commandes.client_id = clients.id\nGROUP BY clients.ville;\n```",
+      "brief": "Compte le nombre de `commandes` **par** `departement`, en joignant `commandes` et `employes`, puis en regroupant (`JOIN ... ON ... GROUP BY`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "count",
+        "from",
+        "commandes",
+        "join",
+        "employes",
+        "on",
+        "group by"
+      ],
+      "hint": "`SELECT employes.departement, COUNT(*) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;`",
+      "correction": "SELECT employes.departement, COUNT(*) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;",
+      "reward": "Tu combines jointure et agrégation. **Tu es expert en SQL.**"
+    }
+  ],
+  "finale": "## Niveau Expert atteint — La Voie du SQL\n\nQuatre paliers gravis :\n\n- **Débutant** : SELECT, colonnes, DISTINCT, WHERE, ORDER BY\n- **Intermédiaire** : comparaisons, AND, IN, LIKE\n- **Avancé** : COUNT, AVG, GROUP BY, HAVING\n- **Expert** : JOIN, sous-requêtes, synthèse\n\nInterroger une base de données est une compétence clé (dev, data, BI). **Tu es désormais expert en SQL.**"
+}

@@ -7,8 +7,8 @@ import { LANG_LABELS } from '../lib/langs'
 // Langages dont la « Voie » (parcours débutant→expert) n'existe pas encore —
 // affichés en « à venir » pour montrer que la couverture s'élargira par vagues.
 const VOIES_A_VENIR = [
-  { title: 'La Voie de PowerShell', lang: 'powershell', accent: '#d97706' },
-  { title: 'La Voie du SQL', lang: 'sql', accent: '#34d399' },
+  { title: 'La Voie du KQL', lang: 'kql', accent: '#e879f9' },
+  { title: 'La Voie du HTML', lang: 'html', accent: '#e34c26' },
   { title: 'La Voie du C', lang: 'c', accent: '#a8b9cc' },
 ]
 
