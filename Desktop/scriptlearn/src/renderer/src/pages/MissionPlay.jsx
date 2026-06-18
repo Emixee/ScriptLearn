@@ -145,6 +145,18 @@ export default function MissionPlay() {
             <div className="text-stone-300 text-sm leading-relaxed mb-5"
               dangerouslySetInnerHTML={{ __html: parseMarkdown(chapter.story) }} />
 
+            {/* Encart pédagogique « Comment t'y prendre » — enseigne la notion AVANT
+                de demander de l'appliquer. C'est ce qui rend les missions jouables
+                sans aucun prérequis : on apprend en jouant. Affiché si l'acte fournit
+                un exemple `teach`. */}
+            {chapter.teach && (
+              <div className="rounded p-3 mb-4 border" style={{ borderColor: `${accent}33`, backgroundColor: `${accent}0d` }}>
+                <div className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: accent }}>Comment t'y prendre</div>
+                <div className="text-stone-300 text-sm leading-relaxed sl-prose"
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(chapter.teach) }} />
+              </div>
+            )}
+
             {/* Objectif concret de l'acte */}
             <div className="bg-[#111110] border border-[#2e2b26] rounded p-3 mb-4">
               <div className="text-stone-500 text-[10px] uppercase tracking-widest mb-1.5">Ta tâche</div>

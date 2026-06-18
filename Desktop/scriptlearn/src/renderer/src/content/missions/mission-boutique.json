@@ -1,0 +1,104 @@
+{
+  "id": "mission-boutique",
+  "order": 2,
+  "title": "La Boutique en Panne",
+  "tagline": "Une boutique en ligne facture des montants négatifs. Trouve le bug dans les données.",
+  "synopsis": "Lundi matin, le service client crie au secours : des clients sont remboursés au lieu d'être facturés, et le stock affiche n'importe quoi. On te confie l'accès à la base de données et aux logs du serveur. À toi de trouver d'où vient le bug.",
+  "objective": "Diagnostiquer une anomalie de facturation en interrogeant la base et les logs.",
+  "career": "developer",
+  "difficulty": "intermediaire",
+  "estimatedMinutes": 40,
+  "accent": "#34d399",
+  "chapters": [
+    {
+      "id": "act1",
+      "title": "Acte I — L'inventaire",
+      "lang": "sql",
+      "story": "Avant tout, fais connaissance avec les données. La table `produits` contient le catalogue de la boutique.",
+      "teach": "On lit des données avec `SELECT colonnes FROM table`. Pour tout voir, on utilise `*`.\n\n```sql\nSELECT * FROM clients;\n```\n\nCela affiche toutes les colonnes de toutes les lignes de la table `clients`.",
+      "brief": "Affiche tout le contenu de la table `produits`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "produits"
+      ],
+      "hint": "`SELECT * FROM produits;`",
+      "correction": "SELECT * FROM produits;",
+      "reward": "Le catalogue défile : claviers, souris, écrans… Tout semble normal côté noms. Mais le service compta parle de **commandes au montant négatif**. Il faut les débusquer."
+    },
+    {
+      "id": "act2",
+      "title": "Acte II — Les commandes fantômes",
+      "lang": "sql",
+      "story": "La table `commandes` a une colonne `total`. Une commande saine a un total positif. Tu cherches les **anomalies** : celles dont le `total` est inférieur à 0.",
+      "teach": "La clause `WHERE` ne garde que les lignes qui remplissent une condition.\n\n```sql\nSELECT * FROM clients WHERE age < 18;\n```\n\nCela ne renvoie que les clients de moins de 18 ans. On compare avec `<`, `>`, `=`…",
+      "brief": "Sélectionne dans `commandes` toutes les lignes dont le `total` est inférieur à 0.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "commandes",
+        "where",
+        "total"
+      ],
+      "hint": "`SELECT * FROM commandes WHERE total < 0;`",
+      "correction": "SELECT * FROM commandes WHERE total < 0;",
+      "reward": "Sept commandes ressortent, toutes avec un total **négatif**. Étrange : elles concernent des clients différents. Y a-t-il un **point commun** ? Comptons par client."
+    },
+    {
+      "id": "act3",
+      "title": "Acte III — Le point commun",
+      "lang": "sql",
+      "story": "Pour repérer un motif, on **regroupe** et on **compte**. Combien de commandes chaque client a-t-il passées ?",
+      "teach": "`COUNT(*)` compte les lignes ; `GROUP BY` regroupe par valeur.\n\n```sql\nSELECT pays, COUNT(*) FROM clients GROUP BY pays;\n```\n\nCela donne le nombre de clients par pays. On peut regrouper n'importe quelle colonne.",
+      "brief": "Affiche, pour la table `commandes`, le nombre de commandes par `client_id` (avec `COUNT(*)` et `GROUP BY`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "count",
+        "from",
+        "commandes",
+        "group by",
+        "client_id"
+      ],
+      "hint": "`SELECT client_id, COUNT(*) FROM commandes GROUP BY client_id;`",
+      "correction": "SELECT client_id, COUNT(*) FROM commandes GROUP BY client_id;",
+      "reward": "Rien d'anormal côté clients — les commandes sont réparties. Le problème ne vient donc pas d'un client, mais sûrement du **serveur**. Direction les logs applicatifs."
+    },
+    {
+      "id": "act4",
+      "title": "Acte IV — Les logs du serveur",
+      "lang": "bash",
+      "story": "Le serveur écrit ses incidents dans un fichier de log. Tu veux savoir **combien d'erreurs** il a enregistrées pendant la panne.",
+      "teach": "On combine `grep` (filtrer) et `wc -l` (compter les lignes) avec un `|` :\n\n```bash\ngrep \"WARN\" app.log | wc -l\n```\n\nCela affiche le nombre de lignes contenant `WARN`.",
+      "brief": "Compte le nombre de lignes contenant `ERROR` dans `/tmp/sl_boutique/serveur.log`.",
+      "starterCode": "# (préparé pour toi) le log du serveur\nmkdir -p /tmp/sl_boutique && printf \"INFO commande ok\\nERROR total negatif produit=42\\nINFO commande ok\\nERROR total negatif produit=42\\nWARN stock bas\\n\" > /tmp/sl_boutique/serveur.log\n\n# À toi : compte les lignes ERROR en branchant grep dans wc -l\n",
+      "validationType": "contains",
+      "expectedOutput": "2",
+      "hint": "`grep \"ERROR\" /tmp/sl_boutique/serveur.log | wc -l`",
+      "correction": "mkdir -p /tmp/sl_boutique && printf \"INFO commande ok\\nERROR total negatif produit=42\\nINFO commande ok\\nERROR total negatif produit=42\\nWARN stock bas\\n\" > /tmp/sl_boutique/serveur.log\ngrep \"ERROR\" /tmp/sl_boutique/serveur.log | wc -l",
+      "reward": "Deux erreurs, identiques : *« total negatif produit=42 »*. Le coupable a un identifiant : le **produit 42**. Retour à la base pour l'inculper."
+    },
+    {
+      "id": "act5",
+      "title": "Acte V — Le coupable",
+      "lang": "sql",
+      "story": "Les logs accusent un produit dont le **stock est négatif** : une valeur impossible qui fait planter le calcul du total. Trouve-le dans la table `produits`.",
+      "teach": "On combine ce que tu sais : `SELECT ... FROM ... WHERE` avec une condition numérique.\n\n```sql\nSELECT nom FROM produits WHERE prix > 1000;\n```\n\nIci tu chercheras plutôt les produits dont le `stock` est inférieur à 0.",
+      "brief": "Sélectionne le `nom` des produits de la table `produits` dont le `stock` est inférieur à 0.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "select",
+        "from",
+        "produits",
+        "where",
+        "stock"
+      ],
+      "hint": "`SELECT nom FROM produits WHERE stock < 0;`",
+      "correction": "SELECT nom FROM produits WHERE stock < 0;",
+      "reward": "Le coupable s'affiche : un produit au **stock négatif**, qui faisait basculer le total des commandes dans le rouge. Tu corriges la valeur, relances la facturation… et la boutique repart. Crise évitée."
+    }
+  ],
+  "finale": "## Boutique réparée !\n\nTu as diagnostiqué un bug de production **en suivant la donnée**, exactement comme en entreprise :\n\n- `SELECT` / `WHERE` — explorer et filtrer une base de données\n- `COUNT` / `GROUP BY` — agréger pour repérer un motif\n- `grep` + `wc -l` — fouiller les logs serveur\n- raisonnement : croiser logs et base pour remonter à la cause racine\n\nC'est le quotidien d'un **développeur** ou d'un **analyste data**. Sur un CV :\n\n> *« Diagnostic d'incident applicatif : analyse SQL (filtres, agrégations) et corrélation avec les logs serveur pour identifier une cause racine en production. »*"
+}

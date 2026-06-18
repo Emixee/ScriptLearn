@@ -1,9 +1,32 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.8.0
+## Version actuelle : 0.8.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.8.1 — Missions jouables & progressives (2026-06-18)
+
+Correctif + extension du mode jeu suite aux retours de test.
+
+### Problèmes corrigés
+- **Solution pré-remplie** : l'Acte I de *Blackout* contenait déjà la commande dans `starterCode` → l'acte se validait sans rien écrire. Règle appliquée à toutes les campagnes : `starterCode` ne contient que la mise en place (commentaires/données qui n'impriment rien), jamais la ligne-solution ; `expectedOutput` n'est produit que par l'action correcte du joueur.
+- **Niveau inadapté aux débutants** : *Blackout* (multi-langages) supposait des bases. Le catalogue est désormais **structuré par niveaux**.
+
+### Missions auto-apprenantes
+- Nouveau champ chapitre **`teach`** : un exemple corrigé et commenté de la notion, affiché dans un encart « Comment t'y prendre » **avant** la saisie (rendu dans `MissionPlay.jsx`). On apprend en jouant, sans prérequis.
+
+### Catalogue par niveaux
+- `Missions.jsx` affiche 3 sections **Débutant / Intermédiaire / Avancé** ; tri par niveau puis `order` dans `content/missions/index.js` (`DIFF_RANK`).
+
+### Campagnes livrées (4)
+- **Débutant — « Le Terminal Perdu »** (Bash) : echo, ls, cat, grep, pipe `|`/`wc -l`, narration d'évasion.
+- **Débutant — « SOS Robot »** (Python) : print, variables, calculs, `if`, boucle `for`.
+- **Intermédiaire — « Blackout »** (réécrite) : enquête SOC bash→regex→kql→sql→python, avec `teach` par acte et starters sans solution.
+- **Intermédiaire — « La Boutique en Panne »** (SQL + Bash) : diagnostic d'un bug de facturation (SELECT/WHERE/COUNT/GROUP BY + logs serveur).
+- Section Avancé : cartes « à venir » (format prêt pour de nouvelles campagnes).
 
 ---
 
