@@ -1,9 +1,16 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.9.0
+## Version actuelle : 0.9.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.9.1 — Contrôles fenêtre + calendrier d'activité (2026-06-18)
+
+- **Contrôles fenêtre repositionnés** : réduire/agrandir/fermer déplacés de l'en-tête de la sidebar (haut gauche, collés au logo) vers une fine barre de titre en **haut à droite** de la fenêtre (convention Windows). `AppLayout.jsx` ajoute une colonne droite avec barre draggable + `WindowControls` ; `Sidebar.jsx` ne contient plus les contrôles (logo seul).
+- **Calendrier d'activité visible** : les cases vides du heatmap 365 jours utilisaient `#111110` (= fond de la carte) → grille invisible. Passées à `#2e2b26` (`Dashboard.jsx` `ActivityCalendar`).
 
 ---
 

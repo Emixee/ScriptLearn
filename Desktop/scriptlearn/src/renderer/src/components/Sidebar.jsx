@@ -1,6 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
-import WindowControls from './WindowControls'
 
 // Labels seuls — les indicateurs ASCII (▸ / ·) sont gérés dynamiquement dans le rendu
 const navItems = [
@@ -23,12 +22,14 @@ function Sidebar({ onSearch }) {
   return (
     <aside className="w-56 bg-[#111110] border-r border-[#2e2b26] flex flex-col flex-shrink-0">
 
-      {/* ── En-tête : marque + contrôles fenêtre ────────────────────────
+      {/* ── En-tête : marque ─────────────────────────────────────────────
           WebkitAppRegion:'drag' rend la zone draggable pour déplacer la fenêtre
           (nécessaire car frame:false supprime la barre de titre native).
-          Les contrôles et le logo doivent être no-drag pour rester cliquables. */}
+          Le logo doit être no-drag pour rester cliquable.
+          Les contrôles fenêtre (réduire/agrandir/fermer) sont désormais en haut
+          à DROITE de la fenêtre (convention Windows), gérés par AppLayout. */}
       <div
-        className="px-4 py-4 border-b border-[#2e2b26] flex items-center justify-between flex-shrink-0"
+        className="px-4 py-4 border-b border-[#2e2b26] flex items-center flex-shrink-0"
         style={{ WebkitAppRegion: 'drag' }}
       >
         <div className="flex items-center gap-2.5" style={{ WebkitAppRegion: 'no-drag' }}>
@@ -46,7 +47,6 @@ function Sidebar({ onSearch }) {
             </div>
           </div>
         </div>
-        <WindowControls />
       </div>
 
       {/* ── Recherche (Ctrl+K) ─────────────────────────────────────────── */}

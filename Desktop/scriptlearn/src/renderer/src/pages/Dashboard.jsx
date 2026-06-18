@@ -146,7 +146,9 @@ function ActivityCalendar({ dates }) {
               key={d.iso}
               title={d.iso}
               className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-              style={{ backgroundColor: d.active ? '#d97706' : '#111110' }}
+              // Case vide en #2e2b26 (et non #111110 = fond de la carte) : sinon la
+              // grille du calendrier se fond dans le fond et devient invisible.
+              style={{ backgroundColor: d.active ? '#d97706' : '#2e2b26' }}
             />
           ))}
         </div>
