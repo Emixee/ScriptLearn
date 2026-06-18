@@ -4,13 +4,9 @@ import { useProfile } from '../contexts/ProfileContext'
 import { listCampaigns } from '../content/missions'
 import { LANG_LABELS } from '../lib/langs'
 
-// Langages dont la « Voie » (parcours débutant→expert) n'existe pas encore —
-// affichés en « à venir » pour montrer que la couverture s'élargira par vagues.
-const VOIES_A_VENIR = [
-  { title: 'La Voie du PHP', lang: 'php', accent: '#8892bf' },
-  { title: 'La Voie du C', lang: 'c', accent: '#a8b9cc' },
-  { title: 'La Voie de Java', lang: 'java', accent: '#b07219' },
-]
+// Tous les langages disposent désormais de leur Voie (parcours débutant→expert) —
+// plus aucune carte « à venir ».
+const VOIES_A_VENIR = []
 
 const TIER_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé', expert: 'Expert' }
 const DIFF_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé', expert: 'Expert' }

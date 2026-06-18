@@ -1,9 +1,24 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.12.0
+## Version actuelle : 0.13.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.13.0 — Voies (vague 5) : PHP, C, C++, C#, Java — couverture complète (2026-06-18)
+
+Cinq dernières Voies (langages **compilés/exécutés via WSL**) :
+- **La Voie du PHP** (15 actes) : echo/variables/calculs/if/for → tableaux/foreach/fonctions/associatifs → chaînes/ternaire → classes/synthèse. (php-cli)
+- **La Voie du C** (13 actes) : printf/variables/if/for → tableaux/fonctions → while/compter → multi-params/synthèse. (gcc)
+- **La Voie du C++** (13 actes) : cout/string → vecteurs/fonctions → while → structs/synthèse. (g++)
+- **La Voie du C#** (13 actes) : WriteLine → tableaux/méthodes → while → classes/synthèse. (mono)
+- **La Voie de Java** (13 actes) : println → tableaux/méthodes → while → classes/synthèse. (default-jdk)
+
+Acts exécutés : `starterCode` = squelette (boilerplate non révélateur), sortie validée par `expectedOutput`. Nécessitent la toolchain WSL correspondante (ToolchainBanner avertit sinon).
+
+**Couverture COMPLÈTE : 15 langages** ont leur Voie débutant→expert (Bash, Python, PowerShell, SQL, Regex, Git, KQL, SPL, YAML, HTML, PHP, C, C++, C#, Java). Section « à venir » retirée.
 
 ---
 
