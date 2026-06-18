@@ -1,9 +1,31 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.9.2
+## Version actuelle : 0.10.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.10.0 — Missions « Voies » : parcours débutant → expert (2026-06-18)
+
+Refonte des missions en **parcours complets par langage** : jouer une Voie mène un débutant jusqu'au niveau **expert**, avec apprentissage par répétition (livraison **par vagues** — vague 1 : Bash + Python).
+
+### Concept « Voie »
+- Une Voie = une grande campagne mono-langage, ordonnée en **4 paliers** (Débutant → Intermédiaire → Avancé → Expert).
+- Schéma campagne : `kind: "voie" | "scenario"`, `language`. Schéma chapitre : `tier` (palier).
+- **Répétition** : actes de **révision/synthèse** qui réutilisent explicitement des commandes des paliers précédents ; les `teach` rappellent « (revu de l'acte X) ».
+
+### Contenu livré (vague 1)
+- **La Voie du Bash** (21 actes) : fusion des 4 anciennes campagnes bash + 2 actes de révision. echo/ls/cat/grep/pipe → cd/head/sort/redirection/cp → find/cut/awk/sed → variables/for/if/while/fonctions.
+- **La Voie du Python** (17 actes) : SOS Robot étendu jusqu'à expert. print/var/if/for → listes/dict/fonctions → f-strings/compréhensions/try-except → fonctions multi-params/classes/synthèse.
+- Anciennes campagnes bash/python fusionnées **supprimées** ; Blackout + Boutique conservées comme **Scénarios** (`kind: "scenario"`).
+
+### UI
+- `Missions.jsx` : sections **« Parcours complets »** (Voies, + Voies « à venir » pour les autres langages) et **« Scénarios »**. Carte de Voie avec **palier qui grimpe** (échelle Débutant→Expert) et badge **« Expert ✓ »** à 100 %.
+- `MissionPlay.jsx` : palier courant affiché (`Acte X / N · Intermédiaire`) + séparateurs de palier dans le fil d'actes.
+
+> Note : la progression des anciennes missions (ids fusionnés) est repartie de zéro (les Voies ont de nouveaux identifiants).
 
 ---
 

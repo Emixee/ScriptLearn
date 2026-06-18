@@ -92,5 +92,6 @@
       "reward": "Rapport transmis. **03:21** — sept minutes après l'alerte, l'équipe isole le compte et coupe l'accès. Le datacenter est sauf."
     }
   ],
-  "finale": "## Incident clôturé\n\nInvestigation complète de bout en bout : **Bash** (tri/comptage de logs), **Regex** (extraction d'IOC), **KQL** (threat hunting), **SQL** (compte compromis), **Python** (reporting).\n\nSur un CV :\n> *« Investigation d'incident multi-outils : analyse de logs (Bash), extraction d'IOC (regex), threat hunting (KQL/Sentinel), corrélation et reporting (Python). »*"
+  "finale": "## Incident clôturé\n\nInvestigation complète de bout en bout : **Bash** (tri/comptage de logs), **Regex** (extraction d'IOC), **KQL** (threat hunting), **SQL** (compte compromis), **Python** (reporting).\n\nSur un CV :\n> *« Investigation d'incident multi-outils : analyse de logs (Bash), extraction d'IOC (regex), threat hunting (KQL/Sentinel), corrélation et reporting (Python). »*",
+  "kind": "scenario"
 }

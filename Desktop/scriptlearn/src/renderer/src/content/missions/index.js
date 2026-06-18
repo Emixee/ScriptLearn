@@ -10,16 +10,10 @@ for (const path in files) {
   if (c?.id) MISSIONS[c.id] = c
 }
 
-// Ordre des niveaux pour le catalogue : débutant d'abord, avancé en dernier.
-const DIFF_RANK = { debutant: 0, intermediaire: 1, avance: 2, expert: 3 }
-
-// Liste triée par niveau puis par `order` (défaut 99) — le catalogue présente
-// ainsi naturellement les campagnes du plus accessible au plus exigeant.
+// Liste triée par `order` (défaut 99). Le catalogue (Missions.jsx) sépare ensuite
+// les « Voies » (parcours complets, kind:"voie") des « Scénarios » (kind:"scenario").
 export function listCampaigns() {
-  return Object.values(MISSIONS).sort((a, b) => {
-    const d = (DIFF_RANK[a.difficulty] ?? 1) - (DIFF_RANK[b.difficulty] ?? 1)
-    return d !== 0 ? d : (a.order ?? 99) - (b.order ?? 99)
-  })
+  return Object.values(MISSIONS).sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
 }
 
 export function getCampaign(id) {

@@ -13,6 +13,8 @@ import { useCodeRunner } from '../lib/useCodeRunner'
 import { getLangExtension, isStatic, termShellFor, LANG_LABELS, LANG_COLORS } from '../lib/langs'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
+// Libellés des paliers d'une Voie (parcours débutant → expert).
+const TIER_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé', expert: 'Expert' }
 
 const cmTheme = EditorView.theme({
   '&': { fontSize: '13px', backgroundColor: '#080807' },
@@ -131,16 +133,26 @@ export default function MissionPlay() {
           <h1 className="text-white font-medium text-sm truncate">{campaign.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
-          {/* Fil des actes : ✓ réussi · ▸ courant · · à venir */}
-          <div className="flex items-center gap-1.5">
-            {campaign.chapters.map((ch, i) => (
-              <span key={ch.id} className="text-xs" title={ch.title}
-                style={{ color: completed[ch.id] ? '#86efac' : i === chapterIdx ? accent : '#3d3a34' }}>
-                {completed[ch.id] ? '✓' : i === chapterIdx ? '▸' : '·'}
-              </span>
-            ))}
+          {/* Fil des actes : ✓ réussi · ▸ courant · · à venir.
+              Un fin séparateur « | » matérialise chaque changement de palier. */}
+          <div className="flex items-center gap-1">
+            {campaign.chapters.map((ch, i) => {
+              const tierBreak = i > 0 && ch.tier && campaign.chapters[i - 1].tier && ch.tier !== campaign.chapters[i - 1].tier
+              return (
+                <span key={ch.id} className="flex items-center gap-1">
+                  {tierBreak && <span className="text-[#2e2b26] text-xs">|</span>}
+                  <span className="text-xs" title={`${ch.title}${ch.tier ? ' · ' + (TIER_LABELS[ch.tier] ?? ch.tier) : ''}`}
+                    style={{ color: completed[ch.id] ? '#86efac' : i === chapterIdx ? accent : '#3d3a34' }}>
+                    {completed[ch.id] ? '✓' : i === chapterIdx ? '▸' : '·'}
+                  </span>
+                </span>
+              )
+            })}
           </div>
-          <span className="text-stone-500 text-xs">Acte {chapterIdx + 1} / {campaign.chapters.length}</span>
+          <span className="text-stone-500 text-xs">
+            Acte {chapterIdx + 1} / {campaign.chapters.length}
+            {chapter.tier && <span style={{ color: accent }}> · {TIER_LABELS[chapter.tier] ?? chapter.tier}</span>}
+          </span>
           <WindowControls />
         </div>
       </div>

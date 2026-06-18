@@ -101,5 +101,6 @@
       "reward": "Le coupable s'affiche : un produit au **stock négatif** qui faisait basculer les totaux. Tu corriges, relances la facturation… et la boutique repart."
     }
   ],
-  "finale": "## Boutique réparée !\n\nTu as suivi la donnée comme en entreprise : `SELECT`/`WHERE`, `COUNT`/`GROUP BY`, puis `grep`+`wc -l` sur les logs.\n\n> *« Diagnostic d'incident applicatif : analyse SQL (filtres, agrégations) et corrélation avec les logs serveur pour identifier une cause racine. »*"
+  "finale": "## Boutique réparée !\n\nTu as suivi la donnée comme en entreprise : `SELECT`/`WHERE`, `COUNT`/`GROUP BY`, puis `grep`+`wc -l` sur les logs.\n\n> *« Diagnostic d'incident applicatif : analyse SQL (filtres, agrégations) et corrélation avec les logs serveur pour identifier une cause racine. »*",
+  "kind": "scenario"
 }
