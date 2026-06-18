@@ -7,9 +7,9 @@ import { LANG_LABELS } from '../lib/langs'
 // Langages dont la « Voie » (parcours débutant→expert) n'existe pas encore —
 // affichés en « à venir » pour montrer que la couverture s'élargira par vagues.
 const VOIES_A_VENIR = [
-  { title: 'La Voie du KQL', lang: 'kql', accent: '#e879f9' },
-  { title: 'La Voie du HTML', lang: 'html', accent: '#e34c26' },
+  { title: 'La Voie du PHP', lang: 'php', accent: '#8892bf' },
   { title: 'La Voie du C', lang: 'c', accent: '#a8b9cc' },
+  { title: 'La Voie de Java', lang: 'java', accent: '#b07219' },
 ]
 
 const TIER_LABELS = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé', expert: 'Expert' }

@@ -1,0 +1,289 @@
+{
+  "id": "mission-voie-yaml",
+  "kind": "voie",
+  "language": "yaml",
+  "order": 9,
+  "title": "La Voie du YAML",
+  "tagline": "Le format de configuration de DevOps, de la paire clé-valeur aux ancres. Débutant → expert.",
+  "synopsis": "YAML configure Docker, Kubernetes, CI/CD… Ligne après ligne, tu apprends à écrire des fichiers de configuration clairs et corrects.",
+  "objective": "Maîtriser YAML : clés-valeurs, types, listes, imbrication, ancres.",
+  "career": "devops",
+  "difficulty": "progressive",
+  "estimatedMinutes": 50,
+  "accent": "#facc15",
+  "chapters": [
+    {
+      "id": "d1",
+      "tier": "debutant",
+      "title": "Clé et valeur",
+      "lang": "yaml",
+      "story": "YAML associe une **clé** à une **valeur** : `cle: valeur`.",
+      "teach": "```yaml\nname: nginx\n```",
+      "brief": "Écris une paire `name` valant `nginx`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "name:",
+        "nginx"
+      ],
+      "hint": "`name: nginx`",
+      "correction": "name: nginx",
+      "reward": "La brique de base. Et un nombre ?"
+    },
+    {
+      "id": "d2",
+      "tier": "debutant",
+      "title": "Les nombres",
+      "lang": "yaml",
+      "story": "Les nombres s'écrivent sans guillemets.",
+      "teach": "```yaml\nport: 8080\n```",
+      "brief": "Écris une paire `port` valant `8080`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "port:",
+        "8080"
+      ],
+      "hint": "`port: 8080`",
+      "correction": "port: 8080",
+      "reward": "Un entier. Et un booléen ?"
+    },
+    {
+      "id": "d3",
+      "tier": "debutant",
+      "title": "Les booléens",
+      "lang": "yaml",
+      "story": "Les booléens valent `true` ou `false`.",
+      "teach": "```yaml\nenabled: true\n```",
+      "brief": "Écris une paire `enabled` valant `true`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "enabled:",
+        "true"
+      ],
+      "hint": "`enabled: true`",
+      "correction": "enabled: true",
+      "reward": "Vrai/faux. Et une valeur vide ?"
+    },
+    {
+      "id": "d4",
+      "tier": "debutant",
+      "title": "La valeur nulle",
+      "lang": "yaml",
+      "story": "`null` (ou `~`) représente une valeur vide.",
+      "teach": "```yaml\ncache: null\n```",
+      "brief": "Écris une paire `cache` valant `null`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "cache:",
+        "null"
+      ],
+      "hint": "`cache: null`",
+      "correction": "cache: null",
+      "reward": "Une absence explicite. Et un commentaire ?"
+    },
+    {
+      "id": "d5",
+      "tier": "debutant",
+      "title": "Les commentaires",
+      "lang": "yaml",
+      "story": "Un commentaire commence par `#` et est ignoré.",
+      "teach": "```yaml\n# Configuration du serveur\nport: 80\n```",
+      "brief": "Écris un commentaire `# config` suivi d'une paire `port: 80`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "#",
+        "config",
+        "port:"
+      ],
+      "hint": "`# config`\n`port: 80`",
+      "correction": "# config\nport: 80",
+      "reward": "**Palier Débutant terminé !** Place aux structures."
+    },
+    {
+      "id": "i1",
+      "tier": "intermediaire",
+      "title": "Les listes",
+      "lang": "yaml",
+      "story": "Une **liste** : chaque élément sur une ligne, préfixé par `- `.",
+      "teach": "```yaml\nservices:\n  - nginx\n  - redis\n```",
+      "brief": "Écris une clé `services` avec deux éléments : `nginx` et `redis`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "services:",
+        "nginx",
+        "redis"
+      ],
+      "hint": "`services:`\n`  - nginx`\n`  - redis`",
+      "correction": "services:\n  - nginx\n  - redis",
+      "reward": "Une collection. Et imbriquer ?"
+    },
+    {
+      "id": "i2",
+      "tier": "intermediaire",
+      "title": "L'imbrication",
+      "lang": "yaml",
+      "story": "On imbrique avec l'**indentation** (espaces). Une clé peut contenir d'autres clés.",
+      "teach": "```yaml\nserver:\n  host: localhost\n  port: 80\n```",
+      "brief": "Écris une clé `server` contenant `host: localhost` et `port: 8080`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "server:",
+        "host:",
+        "localhost",
+        "port:"
+      ],
+      "hint": "`server:`\n`  host: localhost`\n`  port: 8080`",
+      "correction": "server:\n  host: localhost\n  port: 8080",
+      "reward": "Une hiérarchie. Et une liste en ligne ?"
+    },
+    {
+      "id": "i3",
+      "tier": "intermediaire",
+      "title": "Liste en ligne",
+      "lang": "yaml",
+      "story": "Une liste peut aussi s'écrire en **ligne** : `[a, b, c]`.",
+      "teach": "```yaml\nports: [80, 443]\n```",
+      "brief": "Écris une clé `ports` valant la liste en ligne `[80, 443]`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "ports:",
+        "[",
+        "80",
+        "443"
+      ],
+      "hint": "`ports: [80, 443]`",
+      "correction": "ports: [80, 443]",
+      "reward": "Compact. Révision !"
+    },
+    {
+      "id": "ir",
+      "tier": "intermediaire",
+      "title": "Révision — une liste imbriquée",
+      "lang": "yaml",
+      "story": "Tu **réutilises** l'imbrication et les listes (palier).",
+      "teach": "```yaml\nserver:\n  noms:\n    - web1\n    - web2\n```",
+      "brief": "Écris une clé `server` contenant une clé `noms` avec deux éléments : `web1` et `web2`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "server:",
+        "noms:",
+        "web1",
+        "web2"
+      ],
+      "hint": "`server:`\n`  noms:`\n`    - web1`\n`    - web2`",
+      "correction": "server:\n  noms:\n    - web1\n    - web2",
+      "reward": "**Palier Intermédiaire terminé !** Outils avancés."
+    },
+    {
+      "id": "a1",
+      "tier": "avance",
+      "title": "Les ancres (&)",
+      "lang": "yaml",
+      "story": "Une **ancre** `&nom` marque un bloc réutilisable.",
+      "teach": "```yaml\ndefaults: &def\n  timeout: 30\n```",
+      "brief": "Crée une clé `defaults` avec une ancre `&def` contenant `timeout: 30`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "defaults:",
+        "&def",
+        "timeout:"
+      ],
+      "hint": "`defaults: &def`\n`  timeout: 30`",
+      "correction": "defaults: &def\n  timeout: 30",
+      "reward": "Un bloc nommé. Et le réutiliser ?"
+    },
+    {
+      "id": "a2",
+      "tier": "avance",
+      "title": "Les alias (*)",
+      "lang": "yaml",
+      "story": "Un **alias** `*nom` réutilise une ancre.",
+      "teach": "```yaml\nprod:\n  <<: *def\n```",
+      "brief": "Dans une clé `prod`, fusionne l'ancre avec `<<: *def`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "prod:",
+        "<<:",
+        "*def"
+      ],
+      "hint": "`prod:`\n`  <<: *def`",
+      "correction": "prod:\n  <<: *def",
+      "reward": "Pas de duplication. Et plusieurs documents ?"
+    },
+    {
+      "id": "a3",
+      "tier": "avance",
+      "title": "Plusieurs documents (---)",
+      "lang": "yaml",
+      "story": "Le séparateur `---` permet plusieurs documents dans un même fichier (courant en Kubernetes).",
+      "teach": "```yaml\nname: a\n---\nname: b\n```",
+      "brief": "Écris deux documents séparés par `---` : `name: a` puis `name: b`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "name:",
+        "---"
+      ],
+      "hint": "`name: a`\n`---`\n`name: b`",
+      "correction": "name: a\n---\nname: b",
+      "reward": "Révision avancée !"
+    },
+    {
+      "id": "ar",
+      "tier": "avance",
+      "title": "Révision — ancre et alias",
+      "lang": "yaml",
+      "story": "Tu **réutilises** ancre `&` et alias `*` (palier) dans une config réaliste.",
+      "teach": "```yaml\nbase: &base\n  retries: 3\nservice:\n  <<: *base\n```",
+      "brief": "Crée une ancre `&base` (avec `retries: 3`) et réutilise-la dans `service` via `<<: *base`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "&base",
+        "retries:",
+        "<<:",
+        "*base"
+      ],
+      "hint": "`base: &base`\n`  retries: 3`\n`service:`\n`  <<: *base`",
+      "correction": "base: &base\n  retries: 3\nservice:\n  <<: *base",
+      "reward": "**Palier Avancé terminé !** Dernier palier."
+    },
+    {
+      "id": "e1",
+      "tier": "expert",
+      "title": "Texte multi-ligne (|)",
+      "lang": "yaml",
+      "story": "Le `|` conserve un **bloc de texte multi-ligne** tel quel (sauts de ligne préservés).",
+      "teach": "```yaml\nscript: |\n  echo bonjour\n  echo fin\n```",
+      "brief": "Écris une clé `script` avec un bloc `|` contenant deux lignes.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "script:",
+        "|",
+        "echo"
+      ],
+      "hint": "`script: |`\n`  echo bonjour`\n`  echo fin`",
+      "correction": "script: |\n  echo bonjour\n  echo fin",
+      "reward": "Du texte préservé. Synthèse finale !"
+    },
+    {
+      "id": "e2",
+      "tier": "expert",
+      "title": "Synthèse — un manifeste complet",
+      "lang": "yaml",
+      "story": "Synthèse : tu combines imbrication, liste et clé-valeur — comme un vrai fichier `docker-compose`.",
+      "teach": "```yaml\nservices:\n  web:\n    image: nginx\n    ports:\n      - 80\n```",
+      "brief": "Écris une clé `services` contenant une clé `web` avec `image: nginx` et une liste `ports` contenant `80`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "services:",
+        "web:",
+        "image:",
+        "nginx",
+        "ports:",
+        "80"
+      ],
+      "hint": "`services:`\n`  web:`\n`    image: nginx`\n`    ports:`\n`      - 80`",
+      "correction": "services:\n  web:\n    image: nginx\n    ports:\n      - 80",
+      "reward": "Tu écris des configurations complètes. **Tu es expert en YAML.**"
+    }
+  ],
+  "finale": "## Niveau Expert atteint — La Voie du YAML\n\nQuatre paliers gravis : clés-valeurs & types → listes & imbrication → ancres & alias & multi-doc → multi-ligne & manifeste complet.\n\nYAML configure Docker, Kubernetes et les pipelines CI/CD. **Tu es désormais expert en YAML.**"
+}

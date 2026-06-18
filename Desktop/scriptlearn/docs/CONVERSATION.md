@@ -1,9 +1,21 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.11.0
+## Version actuelle : 0.12.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.12.0 — Voies (vague 4) : KQL, SPL, YAML, HTML (2026-06-18)
+
+Quatre nouvelles Voies, toutes **statiques** (validation par mots-clés) :
+- **La Voie du KQL** (17 actes) : take/where/project/count/sort → summarize/extend/ago/contains → top/dcount/let → join/bin/synthèse.
+- **La Voie du SPL** (17 actes) : index/table/head/where → stats/eval/sort → top/dedup/rename → timechart/lookup/synthèse.
+- **La Voie du YAML** (15 actes) : clés-valeurs/types → listes/imbrication → ancres/alias/multi-doc → multi-ligne/manifeste.
+- **La Voie du HTML** (17 actes) : structure/texte/liens/images → listes/tableaux/div → formulaires → sémantique/meta/page complète.
+
+**Couverture : 10 langages** (Bash, Python, PowerShell, SQL, Regex, Git, KQL, SPL, YAML, HTML). Restent : PHP, C, C++, C#, Java (langages compilés, prochaine vague).
 
 ---
 

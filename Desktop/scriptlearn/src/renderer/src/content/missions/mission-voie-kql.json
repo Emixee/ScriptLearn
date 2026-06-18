@@ -1,0 +1,327 @@
+{
+  "id": "mission-voie-kql",
+  "kind": "voie",
+  "language": "kql",
+  "order": 7,
+  "title": "La Voie du KQL",
+  "tagline": "Le langage de requête de Microsoft Sentinel, du filtre au threat hunting. Débutant → expert.",
+  "synopsis": "KQL interroge les journaux de sécurité (Sentinel, Azure). Tables `SecurityEvent`, `SigninLogs`, `Syslog`. Requête après requête, tu apprends à chasser les menaces.",
+  "objective": "Maîtriser KQL : filtrer, projeter, agréger, regrouper, joindre.",
+  "career": "soc",
+  "difficulty": "progressive",
+  "estimatedMinutes": 70,
+  "accent": "#e879f9",
+  "chapters": [
+    {
+      "id": "d1",
+      "tier": "debutant",
+      "title": "Limiter les résultats",
+      "lang": "kql",
+      "story": "Une requête KQL part d'une **table** et enchaîne des opérateurs avec `|`. `take N` renvoie N lignes.",
+      "teach": "```kql\nSecurityEvent\n| take 10\n```",
+      "brief": "Affiche les 10 premières lignes de la table `SecurityEvent`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "take"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`SecurityEvent`\n`| take 10`",
+      "correction": "SecurityEvent\n| take 10",
+      "reward": "Un aperçu. Filtrons les événements."
+    },
+    {
+      "id": "d2",
+      "tier": "debutant",
+      "title": "Filtrer avec where",
+      "lang": "kql",
+      "story": "`where` ne garde que les lignes remplissant une condition.",
+      "teach": "```kql\nSecurityEvent\n| where EventID == 4625\n```",
+      "brief": "Filtre la table `SecurityEvent` sur `EventID == 4625` (échecs de connexion).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "where",
+        "eventid"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| where EventID == 4625`",
+      "correction": "SecurityEvent\n| where EventID == 4625",
+      "reward": "Tu cibles les bons événements. Et choisir les colonnes ?"
+    },
+    {
+      "id": "d3",
+      "tier": "debutant",
+      "title": "Choisir les colonnes",
+      "lang": "kql",
+      "story": "`project` ne garde que certaines colonnes.",
+      "teach": "```kql\nSecurityEvent\n| project TimeGenerated, Account\n```",
+      "brief": "Sur `SecurityEvent`, ne garde que les colonnes `TimeGenerated` et `Account` (`project`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "project",
+        "account"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| project TimeGenerated, Account`",
+      "correction": "SecurityEvent\n| project TimeGenerated, Account",
+      "reward": "Plus lisible. Comptons."
+    },
+    {
+      "id": "d4",
+      "tier": "debutant",
+      "title": "Compter",
+      "lang": "kql",
+      "story": "`count` renvoie le nombre de lignes.",
+      "teach": "```kql\nSecurityEvent\n| count\n```",
+      "brief": "Compte le nombre de lignes de `SecurityEvent` (`count`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "count"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| count`",
+      "correction": "SecurityEvent\n| count",
+      "reward": "Un chiffre résume. Et trier ?"
+    },
+    {
+      "id": "d5",
+      "tier": "debutant",
+      "title": "Trier",
+      "lang": "kql",
+      "story": "`sort by colonne desc` trie le résultat.",
+      "teach": "```kql\nSecurityEvent\n| sort by TimeGenerated desc\n```",
+      "brief": "Trie `SecurityEvent` par `TimeGenerated` décroissant (`sort by ... desc`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "sort by",
+        "timegenerated"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| sort by TimeGenerated desc`",
+      "correction": "SecurityEvent\n| sort by TimeGenerated desc",
+      "reward": "**Palier Débutant terminé !** Place aux agrégations."
+    },
+    {
+      "id": "i1",
+      "tier": "intermediaire",
+      "title": "Regrouper avec summarize",
+      "lang": "kql",
+      "story": "`summarize` agrège ; `by` regroupe par colonne.",
+      "teach": "```kql\nSecurityEvent\n| summarize count() by Account\n```",
+      "brief": "Compte les événements **par** `Account` (`summarize count() by Account`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "summarize",
+        "by",
+        "account"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| summarize count() by Account`",
+      "correction": "SecurityEvent\n| summarize count() by Account",
+      "reward": "Une ligne par compte. Et créer une colonne ?"
+    },
+    {
+      "id": "i2",
+      "tier": "intermediaire",
+      "title": "Créer une colonne (extend)",
+      "lang": "kql",
+      "story": "`extend` ajoute une colonne calculée.",
+      "teach": "```kql\nSecurityEvent\n| extend Heure = hourofday(TimeGenerated)\n```",
+      "brief": "Ajoute une colonne calculée avec `extend` sur `SecurityEvent`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "extend"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| extend Heure = hourofday(TimeGenerated)`",
+      "correction": "SecurityEvent\n| extend Heure = hourofday(TimeGenerated)",
+      "reward": "Données enrichies. Et filtrer par temps ?"
+    },
+    {
+      "id": "i3",
+      "tier": "intermediaire",
+      "title": "Filtrer par temps (ago)",
+      "lang": "kql",
+      "story": "`ago(24h)` représente « il y a 24 heures » — pratique pour les fenêtres temporelles.",
+      "teach": "```kql\nSecurityEvent\n| where TimeGenerated > ago(24h)\n```",
+      "brief": "Garde les événements `SecurityEvent` des dernières 24 heures (`where TimeGenerated > ago(24h)`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "where",
+        "ago("
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| where TimeGenerated > ago(24h)`",
+      "correction": "SecurityEvent\n| where TimeGenerated > ago(24h)",
+      "reward": "Tu cadres le temps. Recherche de sous-chaîne ?"
+    },
+    {
+      "id": "i4",
+      "tier": "intermediaire",
+      "title": "Rechercher (contains)",
+      "lang": "kql",
+      "story": "`contains` teste si une colonne contient un texte.",
+      "teach": "```kql\nSyslog\n| where SyslogMessage contains \"failed\"\n```",
+      "brief": "Sur `Syslog`, garde les lignes dont `SyslogMessage` contient `\"failed\"` (`contains`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "where",
+        "contains",
+        "failed"
+      ],
+      "requiredTable": "Syslog",
+      "hint": "`| where SyslogMessage contains \"failed\"`",
+      "correction": "Syslog\n| where SyslogMessage contains \"failed\"",
+      "reward": "Révision !"
+    },
+    {
+      "id": "ir",
+      "tier": "intermediaire",
+      "title": "Révision — filtrer puis regrouper",
+      "lang": "kql",
+      "story": "Tu **réutilises** `where` (Débutant) et `summarize ... by` (palier) dans une seule requête.",
+      "teach": "```kql\nSecurityEvent\n| where EventID == 4625\n| summarize count() by Account\n```",
+      "brief": "Sur `SecurityEvent`, filtre `EventID == 4625` puis compte **par** `Account`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "where",
+        "eventid",
+        "summarize",
+        "by"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| where EventID == 4625`\n`| summarize count() by Account`",
+      "correction": "SecurityEvent\n| where EventID == 4625\n| summarize count() by Account",
+      "reward": "**Palier Intermédiaire terminé !** Outils avancés."
+    },
+    {
+      "id": "a1",
+      "tier": "avance",
+      "title": "Le top N",
+      "lang": "kql",
+      "story": "`top N by colonne` garde les N plus grandes valeurs.",
+      "teach": "```kql\nSecurityEvent\n| summarize c = count() by Account\n| top 5 by c\n```",
+      "brief": "Après un `summarize`, garde le `top 10 by` le compte.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "top",
+        "by"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| top 10 by c`",
+      "correction": "SecurityEvent\n| summarize c = count() by Account\n| top 10 by c",
+      "reward": "Le palmarès. Et compter les valeurs distinctes ?"
+    },
+    {
+      "id": "a2",
+      "tier": "avance",
+      "title": "Valeurs distinctes (dcount)",
+      "lang": "kql",
+      "story": "`dcount(colonne)` compte les valeurs **distinctes**.",
+      "teach": "```kql\nSigninLogs\n| summarize dcount(IPAddress)\n```",
+      "brief": "Sur `SigninLogs`, compte le nombre d'`IPAddress` **distinctes** (`summarize dcount(IPAddress)`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "summarize",
+        "dcount"
+      ],
+      "requiredTable": "SigninLogs",
+      "hint": "`| summarize dcount(IPAddress)`",
+      "correction": "SigninLogs\n| summarize dcount(IPAddress)",
+      "reward": "Une statistique fine. Variables réutilisables ?"
+    },
+    {
+      "id": "a3",
+      "tier": "avance",
+      "title": "Variables (let)",
+      "lang": "kql",
+      "story": "`let nom = valeur;` définit une variable réutilisable en tête de requête.",
+      "teach": "```kql\nlet seuil = 10;\nSecurityEvent\n| where EventID == seuil\n```",
+      "brief": "Définis une variable avec `let seuil = 10;` puis utilise-la.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "let",
+        "seuil"
+      ],
+      "hint": "`let seuil = 10;`",
+      "correction": "let seuil = 10;\nSecurityEvent\n| where EventID == seuil",
+      "reward": "Révision avancée !"
+    },
+    {
+      "id": "ar",
+      "tier": "avance",
+      "title": "Révision — regrouper et distinguer",
+      "lang": "kql",
+      "story": "Tu **réutilises** `summarize`, `dcount` et `by` pour une statistique par groupe.",
+      "teach": "```kql\nSigninLogs\n| summarize dcount(IPAddress) by UserPrincipalName\n```",
+      "brief": "Sur `SigninLogs`, compte les `IPAddress` distinctes **par** `UserPrincipalName`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "summarize",
+        "dcount",
+        "by"
+      ],
+      "requiredTable": "SigninLogs",
+      "hint": "`| summarize dcount(IPAddress) by UserPrincipalName`",
+      "correction": "SigninLogs\n| summarize dcount(IPAddress) by UserPrincipalName",
+      "reward": "**Palier Avancé terminé !** Dernier palier."
+    },
+    {
+      "id": "e1",
+      "tier": "expert",
+      "title": "Joindre deux tables",
+      "lang": "kql",
+      "story": "Une **jointure** `join` relie deux tables sur une colonne commune.",
+      "teach": "```kql\nSigninLogs\n| join kind=inner (AuditLogs) on UserPrincipalName\n```",
+      "brief": "Joins `SigninLogs` avec une autre table via `join kind=inner (...) on ...`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "join",
+        "on"
+      ],
+      "requiredTable": "SigninLogs",
+      "hint": "`| join kind=inner (AuditLogs) on UserPrincipalName`",
+      "correction": "SigninLogs\n| join kind=inner (AuditLogs) on UserPrincipalName",
+      "reward": "Données croisées. Et une vue temporelle ?"
+    },
+    {
+      "id": "e2",
+      "tier": "expert",
+      "title": "Regrouper par intervalle (bin)",
+      "lang": "kql",
+      "story": "`bin(TimeGenerated, 1h)` regroupe par tranches de temps — idéal pour les tendances.",
+      "teach": "```kql\nSecurityEvent\n| summarize count() by bin(TimeGenerated, 1h)\n```",
+      "brief": "Compte les événements `SecurityEvent` **par tranche d'1 heure** (`summarize count() by bin(TimeGenerated, 1h)`).",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "summarize",
+        "bin("
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| summarize count() by bin(TimeGenerated, 1h)`",
+      "correction": "SecurityEvent\n| summarize count() by bin(TimeGenerated, 1h)",
+      "reward": "Une courbe temporelle. Synthèse finale !"
+    },
+    {
+      "id": "e3",
+      "tier": "expert",
+      "title": "Synthèse — une chasse complète",
+      "lang": "kql",
+      "story": "Synthèse : tu enchaînes `where` (Débutant), `summarize ... by` (Intermédiaire) et `sort by` (Débutant) — une vraie requête de threat hunting.",
+      "teach": "```kql\nSecurityEvent\n| where EventID == 4625\n| summarize Tentatives = count() by Account\n| sort by Tentatives desc\n```",
+      "brief": "Sur `SecurityEvent` : filtre `EventID == 4625`, compte **par** `Account`, puis trie par le compte décroissant.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "where",
+        "eventid",
+        "summarize",
+        "by",
+        "sort by"
+      ],
+      "requiredTable": "SecurityEvent",
+      "hint": "`| where EventID == 4625`\n`| summarize Tentatives = count() by Account`\n`| sort by Tentatives desc`",
+      "correction": "SecurityEvent\n| where EventID == 4625\n| summarize Tentatives = count() by Account\n| sort by Tentatives desc",
+      "reward": "Tu mènes une investigation complète. **Tu es expert en KQL.**"
+    }
+  ],
+  "finale": "## Niveau Expert atteint — La Voie du KQL\n\nQuatre paliers gravis : filtres & projection → summarize/extend/ago/contains → top/dcount/let → join/bin/synthèse.\n\nKQL est le langage de Microsoft Sentinel et d'Azure Monitor — incontournable en SOC. **Tu es désormais expert en KQL.**"
+}

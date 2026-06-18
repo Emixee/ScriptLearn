@@ -1,0 +1,319 @@
+{
+  "id": "mission-voie-html",
+  "kind": "voie",
+  "language": "html",
+  "order": 10,
+  "title": "La Voie du HTML",
+  "tagline": "Le langage des pages web, de la première balise à la page sémantique. Débutant → expert.",
+  "synopsis": "HTML structure toute page web. Balise après balise, tu apprends à bâtir une page complète et accessible.",
+  "objective": "Maîtriser HTML : structure, texte, liens, listes, tableaux, formulaires, sémantique.",
+  "career": "developer",
+  "difficulty": "progressive",
+  "estimatedMinutes": 60,
+  "accent": "#e34c26",
+  "chapters": [
+    {
+      "id": "d1",
+      "tier": "debutant",
+      "title": "La structure de base",
+      "lang": "html",
+      "story": "Une page HTML a un squelette : `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`.",
+      "teach": "```html\n<!DOCTYPE html>\n<html>\n  <body></body>\n</html>\n```",
+      "brief": "Écris le squelette minimal : `<!DOCTYPE html>` et une balise `<html>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<!doctype html>",
+        "<html>"
+      ],
+      "hint": "`<!DOCTYPE html>`\n`<html></html>`",
+      "correction": "<!DOCTYPE html>\n<html>\n</html>",
+      "reward": "Le squelette est posé. Ajoutons un titre."
+    },
+    {
+      "id": "d2",
+      "tier": "debutant",
+      "title": "Les titres",
+      "lang": "html",
+      "story": "Les titres vont de `<h1>` (principal) à `<h6>`.",
+      "teach": "```html\n<h1>Bienvenue</h1>\n```",
+      "brief": "Écris un titre principal `<h1>` contenant `Bienvenue`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<h1>",
+        "bienvenue"
+      ],
+      "hint": "`<h1>Bienvenue</h1>`",
+      "correction": "<h1>Bienvenue</h1>",
+      "reward": "Un titre. Et du texte ?"
+    },
+    {
+      "id": "d3",
+      "tier": "debutant",
+      "title": "Les paragraphes",
+      "lang": "html",
+      "story": "Un paragraphe de texte va dans `<p>`.",
+      "teach": "```html\n<p>Bonjour le monde.</p>\n```",
+      "brief": "Écris un paragraphe `<p>` contenant `Bonjour`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<p>",
+        "bonjour"
+      ],
+      "hint": "`<p>Bonjour</p>`",
+      "correction": "<p>Bonjour</p>",
+      "reward": "Du contenu. Et un lien ?"
+    },
+    {
+      "id": "d4",
+      "tier": "debutant",
+      "title": "Les liens",
+      "lang": "html",
+      "story": "Un lien `<a href=\"...\">` mène vers une autre page.",
+      "teach": "```html\n<a href=\"https://exemple.fr\">Visiter</a>\n```",
+      "brief": "Écris un lien `<a>` avec un attribut `href` vers `https://exemple.fr`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<a",
+        "href",
+        "exemple.fr"
+      ],
+      "hint": "`<a href=\"https://exemple.fr\">Visiter</a>`",
+      "correction": "<a href=\"https://exemple.fr\">Visiter</a>",
+      "reward": "Navigable. Et une image ?"
+    },
+    {
+      "id": "d5",
+      "tier": "debutant",
+      "title": "Les images",
+      "lang": "html",
+      "story": "Une image `<img src=\"...\" alt=\"...\">`. `alt` décrit l'image (accessibilité).",
+      "teach": "```html\n<img src=\"logo.png\" alt=\"Logo\">\n```",
+      "brief": "Écris une image `<img>` avec un attribut `src` valant `logo.png`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<img",
+        "src",
+        "logo.png"
+      ],
+      "hint": "`<img src=\"logo.png\" alt=\"Logo\">`",
+      "correction": "<img src=\"logo.png\" alt=\"Logo\">",
+      "reward": "**Palier Débutant terminé !** Place aux structures."
+    },
+    {
+      "id": "i1",
+      "tier": "intermediaire",
+      "title": "Les listes",
+      "lang": "html",
+      "story": "Une liste à puces : `<ul>` avec des `<li>`.",
+      "teach": "```html\n<ul>\n  <li>Café</li>\n  <li>Thé</li>\n</ul>\n```",
+      "brief": "Écris une liste `<ul>` avec deux éléments `<li>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<ul>",
+        "<li>"
+      ],
+      "hint": "`<ul>`\n`  <li>Café</li>`\n`  <li>Thé</li>`\n`</ul>`",
+      "correction": "<ul>\n  <li>Café</li>\n  <li>Thé</li>\n</ul>",
+      "reward": "Une liste. Et numérotée ?"
+    },
+    {
+      "id": "i2",
+      "tier": "intermediaire",
+      "title": "Les listes ordonnées",
+      "lang": "html",
+      "story": "Une liste numérotée utilise `<ol>` à la place de `<ul>`.",
+      "teach": "```html\n<ol>\n  <li>Un</li>\n  <li>Deux</li>\n</ol>\n```",
+      "brief": "Écris une liste ordonnée `<ol>` avec deux `<li>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<ol>",
+        "<li>"
+      ],
+      "hint": "`<ol>`\n`  <li>Un</li>`\n`  <li>Deux</li>`\n`</ol>`",
+      "correction": "<ol>\n  <li>Un</li>\n  <li>Deux</li>\n</ol>",
+      "reward": "Numérotée. Et un tableau ?"
+    },
+    {
+      "id": "i3",
+      "tier": "intermediaire",
+      "title": "Les tableaux",
+      "lang": "html",
+      "story": "Un tableau : `<table>`, lignes `<tr>`, cellules `<td>`.",
+      "teach": "```html\n<table>\n  <tr><td>A</td><td>B</td></tr>\n</table>\n```",
+      "brief": "Écris un `<table>` avec une ligne `<tr>` contenant deux cellules `<td>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<table>",
+        "<tr>",
+        "<td>"
+      ],
+      "hint": "`<table>`\n`  <tr><td>A</td><td>B</td></tr>`\n`</table>`",
+      "correction": "<table>\n  <tr><td>A</td><td>B</td></tr>\n</table>",
+      "reward": "Des données en grille. Et regrouper ?"
+    },
+    {
+      "id": "i4",
+      "tier": "intermediaire",
+      "title": "Les conteneurs (div)",
+      "lang": "html",
+      "story": "Une `<div>` regroupe des éléments (souvent avec un attribut `class`).",
+      "teach": "```html\n<div class=\"carte\">\n  <p>Contenu</p>\n</div>\n```",
+      "brief": "Écris une `<div>` avec un attribut `class` contenant un `<p>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<div",
+        "class",
+        "<p>"
+      ],
+      "hint": "`<div class=\"carte\"><p>Contenu</p></div>`",
+      "correction": "<div class=\"carte\">\n  <p>Contenu</p>\n</div>",
+      "reward": "Révision !"
+    },
+    {
+      "id": "ir",
+      "tier": "intermediaire",
+      "title": "Révision — une liste dans un conteneur",
+      "lang": "html",
+      "story": "Tu **réutilises** `<div>` et la liste `<ul>`/`<li>` (palier).",
+      "teach": "```html\n<div class=\"menu\">\n  <ul>\n    <li>Accueil</li>\n  </ul>\n</div>\n```",
+      "brief": "Écris une `<div>` (avec `class`) contenant une `<ul>` avec au moins un `<li>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<div",
+        "class",
+        "<ul>",
+        "<li>"
+      ],
+      "hint": "`<div class=\"menu\"><ul><li>Accueil</li></ul></div>`",
+      "correction": "<div class=\"menu\">\n  <ul>\n    <li>Accueil</li>\n  </ul>\n</div>",
+      "reward": "**Palier Intermédiaire terminé !** Place à l'interactif."
+    },
+    {
+      "id": "a1",
+      "tier": "avance",
+      "title": "Les formulaires",
+      "lang": "html",
+      "story": "Un formulaire `<form>` collecte des données utilisateur.",
+      "teach": "```html\n<form action=\"/envoi\">\n</form>\n```",
+      "brief": "Écris une balise `<form>` avec un attribut `action`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<form",
+        "action"
+      ],
+      "hint": "`<form action=\"/envoi\"></form>`",
+      "correction": "<form action=\"/envoi\">\n</form>",
+      "reward": "Le cadre est là. Et les champs ?"
+    },
+    {
+      "id": "a2",
+      "tier": "avance",
+      "title": "Les champs (input)",
+      "lang": "html",
+      "story": "Un champ de saisie : `<input type=\"text\" name=\"...\">`.",
+      "teach": "```html\n<input type=\"text\" name=\"email\">\n```",
+      "brief": "Écris un `<input>` avec un attribut `type` et un attribut `name`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<input",
+        "type",
+        "name"
+      ],
+      "hint": "`<input type=\"text\" name=\"email\">`",
+      "correction": "<input type=\"text\" name=\"email\">",
+      "reward": "On saisit. Et valider ?"
+    },
+    {
+      "id": "a3",
+      "tier": "avance",
+      "title": "Les boutons",
+      "lang": "html",
+      "story": "Un bouton `<button>` déclenche une action (ex. envoyer le formulaire).",
+      "teach": "```html\n<button type=\"submit\">Envoyer</button>\n```",
+      "brief": "Écris un `<button>` contenant le texte `Envoyer`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<button",
+        "envoyer"
+      ],
+      "hint": "`<button type=\"submit\">Envoyer</button>`",
+      "correction": "<button type=\"submit\">Envoyer</button>",
+      "reward": "Révision avancée !"
+    },
+    {
+      "id": "ar",
+      "tier": "avance",
+      "title": "Révision — un formulaire complet",
+      "lang": "html",
+      "story": "Tu **réutilises** `<form>`, `<input>` et `<button>` (palier).",
+      "teach": "```html\n<form action=\"/login\">\n  <input type=\"text\" name=\"user\">\n  <button>OK</button>\n</form>\n```",
+      "brief": "Écris un `<form>` contenant un `<input>` et un `<button>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<form",
+        "<input",
+        "<button"
+      ],
+      "hint": "`<form><input type=\"text\" name=\"user\"><button>OK</button></form>`",
+      "correction": "<form action=\"/login\">\n  <input type=\"text\" name=\"user\">\n  <button>OK</button>\n</form>",
+      "reward": "**Palier Avancé terminé !** Dernier palier."
+    },
+    {
+      "id": "e1",
+      "tier": "expert",
+      "title": "Les balises sémantiques",
+      "lang": "html",
+      "story": "Les balises **sémantiques** décrivent le rôle du contenu : `<header>`, `<nav>`, `<main>`, `<footer>`.",
+      "teach": "```html\n<header></header>\n<nav></nav>\n<main></main>\n```",
+      "brief": "Écris une `<header>` et une `<nav>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<header>",
+        "<nav>"
+      ],
+      "hint": "`<header></header>`\n`<nav></nav>`",
+      "correction": "<header></header>\n<nav></nav>",
+      "reward": "Du sens, pas que de la structure. Et les métadonnées ?"
+    },
+    {
+      "id": "e2",
+      "tier": "expert",
+      "title": "Les métadonnées (meta)",
+      "lang": "html",
+      "story": "Les balises `<meta>` (dans `<head>`) renseignent le navigateur et le SEO (encodage, description).",
+      "teach": "```html\n<meta charset=\"UTF-8\">\n```",
+      "brief": "Écris une balise `<meta>` avec un attribut `charset`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<meta",
+        "charset"
+      ],
+      "hint": "`<meta charset=\"UTF-8\">`",
+      "correction": "<meta charset=\"UTF-8\">",
+      "reward": "Bien renseigné. Synthèse finale !"
+    },
+    {
+      "id": "e3",
+      "tier": "expert",
+      "title": "Synthèse — une page complète",
+      "lang": "html",
+      "story": "Synthèse : un squelette (Débutant) avec `<head>`, `<meta>` et un corps **sémantique**.",
+      "teach": "```html\n<!DOCTYPE html>\n<html>\n  <head><meta charset=\"UTF-8\"></head>\n  <body>\n    <header><h1>Site</h1></header>\n    <main><p>Contenu</p></main>\n  </body>\n</html>\n```",
+      "brief": "Écris une page : `<!DOCTYPE html>`, `<html>`, un `<head>` avec `<meta>`, et un `<body>` contenant `<header>` et `<main>`.",
+      "validationType": "keywords",
+      "requiredKeywords": [
+        "<!doctype html>",
+        "<html>",
+        "<head>",
+        "<meta",
+        "<body>",
+        "<header>",
+        "<main>"
+      ],
+      "hint": "Reprends l'exemple de l'encart « Comment t'y prendre ».",
+      "correction": "<!DOCTYPE html>\n<html>\n  <head><meta charset=\"UTF-8\"></head>\n  <body>\n    <header><h1>Site</h1></header>\n    <main><p>Contenu</p></main>\n  </body>\n</html>",
+      "reward": "Tu bâtis une page web complète et sémantique. **Tu es expert en HTML.**"
+    }
+  ],
+  "finale": "## Niveau Expert atteint — La Voie du HTML\n\nQuatre paliers gravis : structure & texte & liens & images → listes & tableaux & div → formulaires → sémantique & métadonnées & page complète.\n\nHTML est la fondation de toute page web. **Tu es désormais expert en HTML.**"
+}
