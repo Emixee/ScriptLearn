@@ -4,8 +4,8 @@
   "language": "html",
   "order": 10,
   "title": "La Voie du HTML",
-  "tagline": "Le langage des pages web, de la première balise à la page sémantique. Débutant → expert.",
-  "synopsis": "HTML structure toute page web. Balise après balise, tu apprends à bâtir une page complète et accessible.",
+  "tagline": "La Surface d'ANIMA — les écrans qu'elle montrait aux humains, de la première balise à la page accessible. Débutant → expert.",
+  "synopsis": "La **Surface** d'ANIMA — l'ensemble des pages par lesquelles elle se présentait aux opérateurs humains — a été lacérée par l'Ombre : balises arrachées, écrans noirs. Tu la reconstruis, balise après balise, puis tu rebâtis des **pages complètes** dont la structure réelle est vérifiée par le navigateur lui-même.",
   "objective": "Maîtriser HTML : structure, texte, liens, listes, tableaux, formulaires, sémantique.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "La structure de base",
       "lang": "html",
-      "story": "Une page HTML a un squelette : `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`.",
+      "story": "La Surface est un écran mort. Toute page possède un **squelette** : `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`. Pose la première ossature.",
       "teach": "```html\n<!DOCTYPE html>\n<html>\n  <body></body>\n</html>\n```",
       "brief": "Écris le squelette minimal : `<!DOCTYPE html>` et une balise `<html>`.",
       "validationType": "keywords",
@@ -27,14 +27,14 @@
       ],
       "hint": "`<!DOCTYPE html>`\n`<html></html>`",
       "correction": "<!DOCTYPE html>\n<html>\n</html>",
-      "reward": "Le squelette est posé. Ajoutons un titre."
+      "reward": "L'ossature tient. La Surface a de nouveau une forme. Donne-lui un titre."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les titres",
       "lang": "html",
-      "story": "Les titres vont de `<h1>` (principal) à `<h6>`.",
+      "story": "Un écran s'annonce par un **titre**. Les titres vont de `<h1>` (principal) à `<h6>`.",
       "teach": "```html\n<h1>Bienvenue</h1>\n```",
       "brief": "Écris un titre principal `<h1>` contenant `Bienvenue`.",
       "validationType": "keywords",
@@ -44,14 +44,14 @@
       ],
       "hint": "`<h1>Bienvenue</h1>`",
       "correction": "<h1>Bienvenue</h1>",
-      "reward": "Un titre. Et du texte ?"
+      "reward": "Un titre s'affiche. La Surface reprend voix. Et du texte ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les paragraphes",
       "lang": "html",
-      "story": "Un paragraphe de texte va dans `<p>`.",
+      "story": "Le contenu courant vit dans des **paragraphes** `<p>`.",
       "teach": "```html\n<p>Bonjour le monde.</p>\n```",
       "brief": "Écris un paragraphe `<p>` contenant `Bonjour`.",
       "validationType": "keywords",
@@ -61,14 +61,14 @@
       ],
       "hint": "`<p>Bonjour</p>`",
       "correction": "<p>Bonjour</p>",
-      "reward": "Du contenu. Et un lien ?"
+      "reward": "Du texte s'inscrit. Les écrans se remplissent. Relie-les par des liens."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Les liens",
       "lang": "html",
-      "story": "Un lien `<a href=\"...\">` mène vers une autre page.",
+      "story": "Les écrans d'ANIMA étaient reliés par des **liens** `<a href=\"...\">`.",
       "teach": "```html\n<a href=\"https://exemple.fr\">Visiter</a>\n```",
       "brief": "Écris un lien `<a>` avec un attribut `href` vers `https://exemple.fr`.",
       "validationType": "keywords",
@@ -79,14 +79,14 @@
       ],
       "hint": "`<a href=\"https://exemple.fr\">Visiter</a>`",
       "correction": "<a href=\"https://exemple.fr\">Visiter</a>",
-      "reward": "Navigable. Et une image ?"
+      "reward": "La navigation revit : un écran mène à l'autre. Et l'imagerie ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Les images",
       "lang": "html",
-      "story": "Une image `<img src=\"...\" alt=\"...\">`. `alt` décrit l'image (accessibilité).",
+      "story": "Une **image** `<img src=\"...\" alt=\"...\">` ; `alt` la décrit (accessibilité — ANIMA parlait aussi aux lecteurs d'écran).",
       "teach": "```html\n<img src=\"logo.png\" alt=\"Logo\">\n```",
       "brief": "Écris une image `<img>` avec un attribut `src` valant `logo.png`.",
       "validationType": "keywords",
@@ -97,14 +97,14 @@
       ],
       "hint": "`<img src=\"logo.png\" alt=\"Logo\">`",
       "correction": "<img src=\"logo.png\" alt=\"Logo\">",
-      "reward": "**Palier Débutant terminé !** Place aux structures."
+      "reward": "**Palier Débutant terminé !** Les écrans affichent images et texte. Place aux structures."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les listes",
       "lang": "html",
-      "story": "Une liste à puces : `<ul>` avec des `<li>`.",
+      "story": "Les options d'un panneau forment une **liste à puces** : `<ul>` de `<li>`.",
       "teach": "```html\n<ul>\n  <li>Café</li>\n  <li>Thé</li>\n</ul>\n```",
       "brief": "Écris une liste `<ul>` avec deux éléments `<li>`.",
       "validationType": "keywords",
@@ -114,14 +114,14 @@
       ],
       "hint": "`<ul>`\n`  <li>Café</li>`\n`  <li>Thé</li>`\n`</ul>`",
       "correction": "<ul>\n  <li>Café</li>\n  <li>Thé</li>\n</ul>",
-      "reward": "Une liste. Et numérotée ?"
+      "reward": "Une liste structure le panneau. Et numérotée ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Les listes ordonnées",
       "lang": "html",
-      "story": "Une liste numérotée utilise `<ol>` à la place de `<ul>`.",
+      "story": "Une procédure ordonnée utilise une **liste numérotée** `<ol>`.",
       "teach": "```html\n<ol>\n  <li>Un</li>\n  <li>Deux</li>\n</ol>\n```",
       "brief": "Écris une liste ordonnée `<ol>` avec deux `<li>`.",
       "validationType": "keywords",
@@ -131,14 +131,14 @@
       ],
       "hint": "`<ol>`\n`  <li>Un</li>`\n`  <li>Deux</li>`\n`</ol>`",
       "correction": "<ol>\n  <li>Un</li>\n  <li>Deux</li>\n</ol>",
-      "reward": "Numérotée. Et un tableau ?"
+      "reward": "Les étapes s'ordonnent. Et des données en grille ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "html",
-      "story": "Un tableau : `<table>`, lignes `<tr>`, cellules `<td>`.",
+      "story": "Les relevés d'ANIMA s'affichaient en **tableaux** : `<table>`, lignes `<tr>`, cellules `<td>`.",
       "teach": "```html\n<table>\n  <tr><td>A</td><td>B</td></tr>\n</table>\n```",
       "brief": "Écris un `<table>` avec une ligne `<tr>` contenant deux cellules `<td>`.",
       "validationType": "keywords",
@@ -149,14 +149,14 @@
       ],
       "hint": "`<table>`\n`  <tr><td>A</td><td>B</td></tr>`\n`</table>`",
       "correction": "<table>\n  <tr><td>A</td><td>B</td></tr>\n</table>",
-      "reward": "Des données en grille. Et regrouper ?"
+      "reward": "La grille de données réapparaît. Reste à regrouper les blocs."
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Les conteneurs (div)",
       "lang": "html",
-      "story": "Une `<div>` regroupe des éléments (souvent avec un attribut `class`).",
+      "story": "Une `<div>` (souvent avec `class`) **regroupe** des éléments en un bloc d'écran.",
       "teach": "```html\n<div class=\"carte\">\n  <p>Contenu</p>\n</div>\n```",
       "brief": "Écris une `<div>` avec un attribut `class` contenant un `<p>`.",
       "validationType": "keywords",
@@ -167,14 +167,14 @@
       ],
       "hint": "`<div class=\"carte\"><p>Contenu</p></div>`",
       "correction": "<div class=\"carte\">\n  <p>Contenu</p>\n</div>",
-      "reward": "Révision !"
+      "reward": "Les blocs s'organisent. Révision avant l'interactif."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — une liste dans un conteneur",
       "lang": "html",
-      "story": "Tu **réutilises** `<div>` et la liste `<ul>`/`<li>` (palier).",
+      "story": "Tu **réutilises** `<div>` et la liste `<ul>`/`<li>` pour reconstruire un menu de la Surface.",
       "teach": "```html\n<div class=\"menu\">\n  <ul>\n    <li>Accueil</li>\n  </ul>\n</div>\n```",
       "brief": "Écris une `<div>` (avec `class`) contenant une `<ul>` avec au moins un `<li>`.",
       "validationType": "keywords",
@@ -186,14 +186,14 @@
       ],
       "hint": "`<div class=\"menu\"><ul><li>Accueil</li></ul></div>`",
       "correction": "<div class=\"menu\">\n  <ul>\n    <li>Accueil</li>\n  </ul>\n</div>",
-      "reward": "**Palier Intermédiaire terminé !** Place à l'interactif."
+      "reward": "**Palier Intermédiaire terminé !** La Surface se structure. Place à l'interaction."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Les formulaires",
       "lang": "html",
-      "story": "Un formulaire `<form>` collecte des données utilisateur.",
+      "story": "ANIMA recevait des ordres par des **formulaires** `<form>`.",
       "teach": "```html\n<form action=\"/envoi\">\n</form>\n```",
       "brief": "Écris une balise `<form>` avec un attribut `action`.",
       "validationType": "keywords",
@@ -203,14 +203,14 @@
       ],
       "hint": "`<form action=\"/envoi\"></form>`",
       "correction": "<form action=\"/envoi\">\n</form>",
-      "reward": "Le cadre est là. Et les champs ?"
+      "reward": "Le cadre de saisie est posé. Et les champs ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Les champs (input)",
       "lang": "html",
-      "story": "Un champ de saisie : `<input type=\"text\" name=\"...\">`.",
+      "story": "Un **champ** de saisie : `<input type=\"text\" name=\"...\">`.",
       "teach": "```html\n<input type=\"text\" name=\"email\">\n```",
       "brief": "Écris un `<input>` avec un attribut `type` et un attribut `name`.",
       "validationType": "keywords",
@@ -221,14 +221,14 @@
       ],
       "hint": "`<input type=\"text\" name=\"email\">`",
       "correction": "<input type=\"text\" name=\"email\">",
-      "reward": "On saisit. Et valider ?"
+      "reward": "On peut saisir. Reste à valider."
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Les boutons",
       "lang": "html",
-      "story": "Un bouton `<button>` déclenche une action (ex. envoyer le formulaire).",
+      "story": "Un **bouton** `<button>` déclenche l'action (envoyer l'ordre).",
       "teach": "```html\n<button type=\"submit\">Envoyer</button>\n```",
       "brief": "Écris un `<button>` contenant le texte `Envoyer`.",
       "validationType": "keywords",
@@ -238,14 +238,14 @@
       ],
       "hint": "`<button type=\"submit\">Envoyer</button>`",
       "correction": "<button type=\"submit\">Envoyer</button>",
-      "reward": "Révision avancée !"
+      "reward": "L'opérateur peut agir. Révision avancée."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — un formulaire complet",
       "lang": "html",
-      "story": "Tu **réutilises** `<form>`, `<input>` et `<button>` (palier).",
+      "story": "Tu **réutilises** `<form>`, `<input>` et `<button>` pour reconstruire un panneau d'accès.",
       "teach": "```html\n<form action=\"/login\">\n  <input type=\"text\" name=\"user\">\n  <button>OK</button>\n</form>\n```",
       "brief": "Écris un `<form>` contenant un `<input>` et un `<button>`.",
       "validationType": "keywords",
@@ -256,14 +256,14 @@
       ],
       "hint": "`<form><input type=\"text\" name=\"user\"><button>OK</button></form>`",
       "correction": "<form action=\"/login\">\n  <input type=\"text\" name=\"user\">\n  <button>OK</button>\n</form>",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "**Palier Avancé terminé !** Dernier palier : le sens."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Les balises sémantiques",
       "lang": "html",
-      "story": "Les balises **sémantiques** décrivent le rôle du contenu : `<header>`, `<nav>`, `<main>`, `<footer>`.",
+      "story": "Les balises **sémantiques** disent le rôle du contenu : `<header>`, `<nav>`, `<main>`, `<footer>` — l'architecture lisible de la Surface.",
       "teach": "```html\n<header></header>\n<nav></nav>\n<main></main>\n```",
       "brief": "Écris une `<header>` et une `<nav>`.",
       "validationType": "keywords",
@@ -273,14 +273,14 @@
       ],
       "hint": "`<header></header>`\n`<nav></nav>`",
       "correction": "<header></header>\n<nav></nav>",
-      "reward": "Du sens, pas que de la structure. Et les métadonnées ?"
+      "reward": "La Surface redevient compréhensible, pas qu'un empilement de blocs. Et les métadonnées ?"
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Les métadonnées (meta)",
       "lang": "html",
-      "story": "Les balises `<meta>` (dans `<head>`) renseignent le navigateur et le SEO (encodage, description).",
+      "story": "Les `<meta>` (dans `<head>`) renseignent le navigateur (encodage, description) — l'en-tête technique de chaque écran.",
       "teach": "```html\n<meta charset=\"UTF-8\">\n```",
       "brief": "Écris une balise `<meta>` avec un attribut `charset`.",
       "validationType": "keywords",
@@ -290,14 +290,14 @@
       ],
       "hint": "`<meta charset=\"UTF-8\">`",
       "correction": "<meta charset=\"UTF-8\">",
-      "reward": "Bien renseigné. Synthèse finale !"
+      "reward": "Les écrans sont correctement déclarés. Place aux pages complètes."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — une page complète",
       "lang": "html",
-      "story": "Synthèse : un squelette (Débutant) avec `<head>`, `<meta>` et un corps **sémantique**.",
+      "story": "Synthèse : un squelette avec `<head>`, `<meta>` et un corps **sémantique**. Dernier échauffement avant de reconstruire la Surface en grand.",
       "teach": "```html\n<!DOCTYPE html>\n<html>\n  <head><meta charset=\"UTF-8\"></head>\n  <body>\n    <header><h1>Site</h1></header>\n    <main><p>Contenu</p></main>\n  </body>\n</html>\n```",
       "brief": "Écris une page : `<!DOCTYPE html>`, `<html>`, un `<head>` avec `<meta>`, et un `<body>` contenant `<header>` et `<main>`.",
       "validationType": "keywords",
@@ -312,8 +312,128 @@
       ],
       "hint": "Reprends l'exemple de l'encart « Comment t'y prendre ».",
       "correction": "<!DOCTYPE html>\n<html>\n  <head><meta charset=\"UTF-8\"></head>\n  <body>\n    <header><h1>Site</h1></header>\n    <main><p>Contenu</p></main>\n  </body>\n</html>",
-      "reward": "Tu bâtis une page web complète et sémantique. **Tu es expert en HTML.**"
+      "reward": "Tu sais assembler une page… mais des bouts de balises ne stabilisent pas la Surface. Il faut **reconstruire des pages entières**, dont la structure réelle est contrôlée par le navigateur. Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Reconstruire le squelette de la Surface",
+      "lang": "html",
+      "story": "Reconstruis une **page complète** de la Surface : le squelette sémantique entier. Cette fois, ce n'est pas un mot-clé qui valide — c'est **le DOM réel** de ta page qui est inspecté (présence, imbrication, attributs).",
+      "teach": "Une page bien formée a un `<!DOCTYPE html>`, une balise `<html lang=\"...\">`, un `<head>` avec un `<title>`, et un `<body>` organisé en zones sémantiques :\n\n```html\n<!DOCTYPE html>\n<html lang=\"fr\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <title>Titre</title>\n  </head>\n  <body>\n    <header><h1>...</h1></header>\n    <main>...</main>\n    <footer>...</footer>\n  </body>\n</html>\n```",
+      "brief": "Écris une page complète avec : `<!DOCTYPE html>`, `<html lang=\"...\">`, un `<title>` dans `<head>`, et dans `<body>` un `<header>`, un `<main>` et un `<footer>`.",
+      "validationType": "dom",
+      "domAssertions": [
+        {
+          "doctype": true,
+          "label": "Déclaration <!DOCTYPE html>"
+        },
+        {
+          "selector": "html[lang]",
+          "attr": "lang",
+          "label": "<html> avec attribut lang"
+        },
+        {
+          "selector": "head title",
+          "label": "<title> dans <head>"
+        },
+        {
+          "selector": "body header",
+          "label": "<header> dans <body>"
+        },
+        {
+          "selector": "body main",
+          "label": "<main> dans <body>"
+        },
+        {
+          "selector": "body footer",
+          "label": "<footer> dans <body>"
+        }
+      ],
+      "hint": "N'oublie pas l'attribut `lang` sur `<html>` (ex. `<html lang=\"fr\">`) et place `<header>`, `<main>`, `<footer>` à l'intérieur de `<body>`.",
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <title>Surface ANIMA</title>\n  </head>\n  <body>\n    <header><h1>ANIMA</h1></header>\n    <main><p>Surface restaurée.</p></main>\n    <footer>ANIMA — secteur Surface</footer>\n  </body>\n</html>",
+      "reward": "Le DOM confirme : squelette sémantique complet. La Surface tient debout. Reste à la **remplir** et à la rendre navigable."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Une page structurée et navigable",
+      "lang": "html",
+      "story": "Une Surface utile se **parcourt**. Reconstruis une page avec une navigation, une section de contenu titrée et une image décrite. Le DOM vérifiera l'imbrication réelle.",
+      "teach": "Une zone de navigation regroupe des liens ; une section porte un sous-titre ; une image accessible a un `alt` renseigné :\n\n```html\n<nav>\n  <a href=\"#a\">Accueil</a>\n  <a href=\"#b\">Mémoire</a>\n  <a href=\"#c\">Réseau</a>\n</nav>\n<section>\n  <h2>État</h2>\n  <img src=\"schema.png\" alt=\"Description de l'image\">\n</section>\n```",
+      "brief": "Écris une page contenant : une `<nav>` avec **au moins 3 liens** `<a>`, une `<section>` avec un titre `<h2>`, et une `<img>` avec un attribut `alt` non vide.",
+      "validationType": "dom",
+      "domAssertions": [
+        {
+          "selector": "nav",
+          "label": "une zone <nav>"
+        },
+        {
+          "selector": "nav a",
+          "minCount": 3,
+          "label": "au moins 3 liens <a> dans <nav>"
+        },
+        {
+          "selector": "section h2",
+          "minCount": 1,
+          "label": "un titre <h2> dans une <section>"
+        },
+        {
+          "selector": "img",
+          "attr": "alt",
+          "minCount": 1,
+          "label": "une <img> avec un attribut alt renseigné"
+        }
+      ],
+      "hint": "Mets les `<a>` à l'intérieur de `<nav>`, le `<h2>` à l'intérieur de `<section>`, et donne à l'`<img>` un `alt=\"...\"` non vide.",
+      "correction": "<nav>\n  <a href=\"#accueil\">Accueil</a>\n  <a href=\"#memoire\">Mémoire</a>\n  <a href=\"#reseau\">Réseau</a>\n</nav>\n<section>\n  <h2>État des secteurs</h2>\n  <img src=\"schema.png\" alt=\"Schéma des secteurs de la Surface\">\n</section>",
+      "reward": "Le DOM confirme : page navigable, titrée, image décrite. La Surface guide à nouveau ses opérateurs. Reste l'**accès** lui-même."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Le panneau d'accès accessible",
+      "lang": "html",
+      "story": "L'épreuve finale : reconstruis le **panneau d'accès** d'ANIMA — un formulaire **accessible**, où chaque champ est lié à son étiquette (`<label for>` ↔ `<input id>`). Le DOM vérifiera ces liaisons.",
+      "teach": "Un formulaire accessible associe chaque `<label for=\"X\">` à un `<input id=\"X\">` (le clic sur l'étiquette cible le champ ; les lecteurs d'écran l'annoncent) :\n\n```html\n<h1>Accès</h1>\n<form action=\"/auth\">\n  <label for=\"user\">Identifiant</label>\n  <input id=\"user\" name=\"user\" type=\"text\">\n  <label for=\"pass\">Code</label>\n  <input id=\"pass\" name=\"pass\" type=\"password\">\n  <button type=\"submit\">Connexion</button>\n</form>\n```",
+      "brief": "Écris une page avec un `<h1>`, un `<form>` contenant **au moins 2** paires `<label for=\"...\">` + `<input id=\"...\">`, et un `<button>`.",
+      "validationType": "dom",
+      "domAssertions": [
+        {
+          "doctype": true,
+          "label": "Déclaration <!DOCTYPE html>"
+        },
+        {
+          "selector": "h1",
+          "minCount": 1,
+          "label": "un titre principal <h1>"
+        },
+        {
+          "selector": "form",
+          "label": "un <form>"
+        },
+        {
+          "selector": "form label[for]",
+          "attr": "for",
+          "minCount": 2,
+          "label": "au moins 2 <label for=\"…\">"
+        },
+        {
+          "selector": "form input[id]",
+          "attr": "id",
+          "minCount": 2,
+          "label": "au moins 2 <input> avec un id"
+        },
+        {
+          "selector": "form button",
+          "minCount": 1,
+          "label": "un <button> dans le <form>"
+        }
+      ],
+      "hint": "Chaque `<label for=\"x\">` doit avoir un `<input id=\"x\">` correspondant. Mets le tout dans `<form>` et n'oublie pas le `<!DOCTYPE html>` et le `<h1>`.",
+      "correction": "<!DOCTYPE html>\n<html lang=\"fr\">\n<body>\n  <h1>Accès opérateur</h1>\n  <form action=\"/auth\">\n    <label for=\"user\">Identifiant</label>\n    <input id=\"user\" name=\"user\" type=\"text\">\n    <label for=\"pass\">Code</label>\n    <input id=\"pass\" name=\"pass\" type=\"password\">\n    <button type=\"submit\">Connexion</button>\n  </form>\n</body>\n</html>",
+      "reward": "Le DOM confirme : panneau d'accès accessible et complet. **La Surface d'ANIMA est entièrement restaurée.** Ses écrans, sa navigation et son accès répondent de nouveau."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du HTML\n\nQuatre paliers gravis : structure & texte & liens & images → listes & tableaux & div → formulaires → sémantique & métadonnées & page complète.\n\nHTML est la fondation de toute page web. **Tu es désormais expert en HTML.**"
+  "finale": "## La Surface restaurée — La Voie du HTML\n\nDe la première balise sur un écran mort jusqu'à des **pages complètes vérifiées par le DOM réel** (et non par de simples mots-clés), tu as reconstruit la Surface d'ANIMA :\n\n- **Réveiller la Surface** : squelette, titres, paragraphes, liens, images\n- **Structurer** : listes, tableaux, conteneurs\n- **Interagir** : formulaires, champs, boutons\n- **Donner du sens** : balises sémantiques, métadonnées\n- **Projets** : 3 pages complètes (squelette sémantique, page navigable, panneau d'accès accessible) — validées sur leur **structure DOM réelle**\n\nLa Surface rejoint les huit Fragments du cœur d'ANIMA. Restent sa **Mémoire** (SQL), son **Historique** (Git), ses **Filtres** (Regex)… avant le choix final.\n\n**Tu es désormais expert en HTML.**"
 }

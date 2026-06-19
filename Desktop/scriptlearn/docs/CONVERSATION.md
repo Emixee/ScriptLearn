@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.7
+## Version actuelle : 0.16.8
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.8 — Voie HTML : narration « Réveil » + capstones validés par le DOM réel (2026-06-20)
+
+Début de la phase « Voies statiques » : narration « Réveil » **+ validation par moteur réel** (au-delà des mots-clés).
+- **Nouveau moteur de validation DOM** : `src/renderer/src/lib/validators/dom.js` parse le HTML de l'élève avec `DOMParser` (natif au renderer) et évalue des **assertions structurelles** (sélecteur CSS + `count`/`minCount`/`text`/`attr`/`doctype`). L'imbrication, l'ordre et les attributs comptent enfin — fini la fragilité des mots-clés. Dispatch ajouté dans `useCodeRunner.js` (`validationType:'dom'`, prioritaire sur le statut static/exec, exécuté côté renderer sans IPC).
+- **Narration** : Voie HTML réécrite dans « Réveil » — HTML = la **Surface** d'ANIMA (ses écrans), lacérée par l'Ombre. Stories/rewards des 17 actes retissés ; synopsis/finale enchaînent avec les Fragments I–VIII.
+- **3 actes capstone DOM** (17 → 20) : `c1` squelette sémantique complet (doctype, html[lang], head>title, body>header/main/footer), `c2` page navigable (nav≥3 liens, section>h2, img[alt]), `c3` panneau d'accès accessible (form, label[for]↔input[id] ×2, button, h1). Validés sur leur **structure DOM réelle**.
+- **Vérifié** : test jsdom hors-build → les 3 corrections passent, une page incomplète échoue.
+- Reste : SQL (sql.js), Regex (RegExp), YAML (js-yaml), Git (git WSL), KQL/SPL (structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 

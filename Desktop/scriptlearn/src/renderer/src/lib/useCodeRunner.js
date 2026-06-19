@@ -13,6 +13,7 @@
 
 import { useCallback } from 'react'
 import { isStatic, buildRunData } from './langs'
+import { validateDom } from './validators/dom'
 
 export function useCodeRunner(termId, lang) {
   // Exécute le code dans la session affichée (bouton « Exécuter »).
@@ -40,6 +41,14 @@ export function useCodeRunner(termId, lang) {
   const validate = useCallback(async (chapter, code) => {
     const trimmed = code.trim()
     if (!trimmed) return { correct: false, output: '' } // anti-triche : éditeur vide → échec
+    // Validation par MOTEUR RÉEL selon le type déclaré par l'acte (capstones).
+    // Prioritaire sur le statut static/exec du langage : un acte HTML « dom » est
+    // validé en construisant le vrai DOM (DOMParser), pas par mots-clés. Ces
+    // moteurs tournent dans le renderer (offline, déterministes) — pas d'IPC.
+    if (chapter.validationType === 'dom') {
+      await new Promise(r => setTimeout(r, 150))
+      return validateDom(chapter, trimmed)
+    }
     if (isStatic(lang)) {
       await new Promise(r => setTimeout(r, 150))
       return validateStatic(chapter, trimmed)
