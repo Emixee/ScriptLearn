@@ -4,8 +4,8 @@
   "language": "php",
   "order": 11,
   "title": "La Voie du PHP",
-  "tagline": "Le langage serveur du web, du premier echo aux classes. Débutant → expert.",
-  "synopsis": "PHP fait tourner une grande partie du web. Instruction après instruction, tu apprends à manipuler données, fonctions et objets côté serveur.",
+  "tagline": "La Vitrine d'ANIMA — sa façade web, du premier echo jusqu'à tes propres scripts. Débutant → expert.",
+  "synopsis": "Trois fragments en main, tu accèdes à la **Vitrine** : la façade web par laquelle ANIMA parlait au monde, écrite en **PHP**. L'Ombre l'a **défigurée** — pages mortes, contenus corrompus. Restaure-la, balise après balise, puis écris les **scripts** qui te rendront le **Fragment IV**.",
   "objective": "Maîtriser PHP : echo, variables, tableaux, fonctions, classes.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "php",
-      "story": "En PHP, `echo` affiche du texte. Tout code va entre `<?php ?>`.",
+      "story": "La Vitrine s'affiche **blanche**, morte. Tout code PHP vit entre `<?php ?>` et `echo` y **imprime** du contenu. Rends une voix à la façade.",
       "teach": "```php\n<?php\necho \"Bonjour\";\n?>\n```",
       "brief": "Affiche le mot **SESAME**.",
       "validationType": "contains",
@@ -25,14 +25,14 @@
       "starterCode": "<?php\n// Affiche ici\n?>",
       "correction": "<?php\necho \"SESAME\";\n?>",
       "hint": "`echo \"SESAME\";`",
-      "reward": "PHP répond. Mémorisons des valeurs."
+      "reward": "Un mot s'inscrit sur la page : **SESAME**. La Vitrine respire à nouveau. Donne-lui de la matière à afficher."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les variables",
       "lang": "php",
-      "story": "Une variable commence par `$`. Dans une chaîne entre guillemets doubles, `$nom` est remplacé.",
+      "story": "Une page dynamique **retient** des informations. En PHP, une variable commence par `$` et s'insère dans une chaîne entre guillemets doubles.",
       "teach": "```php\n$ville = \"Lyon\";\necho \"Ville : $ville\";\n```",
       "brief": "Crée `$nom = \"PHP\"`, puis affiche `Bonjour PHP`.",
       "validationType": "contains",
@@ -40,14 +40,14 @@
       "starterCode": "<?php\n// $nom = ... puis echo ...\n?>",
       "correction": "<?php\n$nom = \"PHP\";\necho \"Bonjour $nom\";\n?>",
       "hint": "`$nom = \"PHP\"; echo \"Bonjour $nom\";`",
-      "reward": "Tes variables s'insèrent. Et les calculs ?"
+      "reward": "Le contenu mémorisé apparaît sur la page. La Vitrine devient vivante. Et un calcul à la volée ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "php",
-      "story": "PHP calcule directement.",
+      "story": "Un serveur **calcule** avant d'afficher. Demande à PHP un résultat.",
       "teach": "```php\necho 10 + 7;\n```",
       "brief": "Affiche le résultat de **12 + 30**.",
       "validationType": "contains",
@@ -55,14 +55,14 @@
       "starterCode": "<?php\n// echo ...\n?>",
       "correction": "<?php\necho 12 + 30;\n?>",
       "hint": "`echo 12 + 30;`",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42** s'affiche, calculé côté serveur. Les rouages tournent. Mais une Vitrine doit **s'adapter** au visiteur."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "php",
-      "story": "`if (condition) { ... }`.",
+      "story": "Selon le contexte, la page change : elle agit **si** une condition est vraie.",
       "teach": "```php\n$n = 5;\nif ($n > 0) { echo \"positif\"; }\n```",
       "brief": "Pour `$n = 7`, affiche `positif` si `$n` > 0.",
       "validationType": "contains",
@@ -70,14 +70,14 @@
       "starterCode": "<?php\n$n = 7;\n// if ...\n?>",
       "correction": "<?php\n$n = 7;\nif ($n > 0) { echo \"positif\"; }\n?>",
       "hint": "`if ($n > 0) { echo \"positif\"; }`",
-      "reward": "Ton script décide. Et répéter ?"
+      "reward": "La page réagit : **positif**. Elle décide quoi montrer. Reste à générer du contenu **en série**."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "php",
-      "story": "La boucle `for ($i = 1; $i <= N; $i++)`.",
+      "story": "Pour produire une liste d'éléments, PHP **répète** avec une boucle `for`.",
       "teach": "```php\nfor ($i = 1; $i <= 3; $i++) { echo $i; }\n```",
       "brief": "Affiche les nombres de 1 à 5 (collés : 12345).",
       "validationType": "contains",
@@ -85,14 +85,14 @@
       "starterCode": "<?php\n// for ...\n?>",
       "correction": "<?php\nfor ($i = 1; $i <= 5; $i++) { echo $i; }\n?>",
       "hint": "`for ($i = 1; $i <= 5; $i++) { echo $i; }`",
-      "reward": "**Palier Débutant terminé !** Place aux structures."
+      "reward": "La séquence se génère toute seule, **de 1 à 5**. La Vitrine reprend forme. Mais elle gère des **catalogues entiers** de données."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "php",
-      "story": "Un tableau : `[...]`. Indice à partir de 0.",
+      "story": "Les contenus de la Vitrine sont regroupés dans des **tableaux** `[...]`. On accède au premier par son indice (à partir de 0).",
       "teach": "```php\n$a = [\"x\", \"y\"];\necho $a[0];\n```",
       "brief": "Crée `$outils = [\"cle\", \"vis\"]` et affiche le **premier** élément.",
       "validationType": "contains",
@@ -100,14 +100,14 @@
       "starterCode": "<?php\n// $outils = ... ; echo ...\n?>",
       "correction": "<?php\n$outils = [\"cle\", \"vis\"];\necho $outils[0];\n?>",
       "hint": "`echo $outils[0];`",
-      "reward": "Le premier élément. Parcourons."
+      "reward": "Le premier élément du catalogue s'affiche. Une structure émerge. Parcours-la entièrement."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir (foreach)",
       "lang": "php",
-      "story": "`foreach ($arr as $v)` parcourt un tableau.",
+      "story": "Pour afficher tout un catalogue, `foreach ($arr as $v)` parcourt chaque élément.",
       "teach": "```php\nforeach ([\"a\", \"b\"] as $v) { echo $v; }\n```",
       "brief": "Affiche chaque élément de `[\"alpha\", \"beta\", \"gamma\"]` (collés).",
       "validationType": "contains",
@@ -115,14 +115,14 @@
       "starterCode": "<?php\n// foreach ...\n?>",
       "correction": "<?php\nforeach ([\"alpha\", \"beta\", \"gamma\"] as $v) { echo $v; }\n?>",
       "hint": "`foreach ([...] as $v) { echo $v; }`",
-      "reward": "Tu parcours. Rangeons du code réutilisable."
+      "reward": "Le catalogue défile au complet. Mais le vrai pouvoir, c'est de **factoriser** le code répété."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les fonctions",
       "lang": "php",
-      "story": "`function nom($p) { return ...; }`.",
+      "story": "Une **fonction** `function nom($p) { return ...; }` encapsule une logique réutilisable — un composant de la Vitrine.",
       "teach": "```php\nfunction double($n) { return $n * 2; }\necho double(21);\n```",
       "brief": "Écris `double($n)` qui renvoie `$n * 2`, puis affiche `double(21)`.",
       "validationType": "contains",
@@ -130,14 +130,14 @@
       "starterCode": "<?php\n// function double($n) { ... }\n// echo double(21);\n?>",
       "correction": "<?php\nfunction double($n) { return $n * 2; }\necho double(21);\n?>",
       "hint": "`function double($n) { return $n * 2; } echo double(21);`",
-      "reward": "Ta première fonction. Et des paires clé→valeur ?"
+      "reward": "Ton composant tourne — **42**. Tu construis des briques réutilisables. Reste à associer des étiquettes à des valeurs."
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Tableaux associatifs",
       "lang": "php",
-      "story": "Un tableau **associatif** lie des clés à des valeurs : `[\"cle\" => valeur]`.",
+      "story": "Un **tableau associatif** `[\"cle\" => valeur]` lie des clés à des données — le modèle d'une fiche produit, d'un profil.",
       "teach": "```php\n$ages = [\"Lin\" => 30];\necho $ages[\"Lin\"];\n```",
       "brief": "Crée `$stock = [\"vis\" => 12]` et affiche la valeur de `\"vis\"`.",
       "validationType": "contains",
@@ -145,14 +145,14 @@
       "starterCode": "<?php\n// $stock = ... ; echo ...\n?>",
       "correction": "<?php\n$stock = [\"vis\" => 12];\necho $stock[\"vis\"];\n?>",
       "hint": "`echo $stock[\"vis\"];`",
-      "reward": "Révision !"
+      "reward": "La fiche répond instantanément à sa clé. Tu maîtrises les données structurées. Combine tout."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — fonction + boucle + tableau",
       "lang": "php",
-      "story": "Tu **réutilises** fonction, foreach et tableau (palier).",
+      "story": "Tu **réutilises** fonction, foreach et tableau pour additionner un panier — la première vraie logique métier de la Vitrine.",
       "teach": "```php\nfunction total($arr) {\n  $s = 0;\n  foreach ($arr as $n) { $s += $n; }\n  return $s;\n}\necho total([1, 2, 3]);\n```",
       "brief": "Écris `total($arr)` qui additionne un tableau, puis affiche `total([10, 20, 12])`.",
       "validationType": "contains",
@@ -160,14 +160,14 @@
       "starterCode": "<?php\n// function total($arr) { ... } ; echo total([10, 20, 12]);\n?>",
       "correction": "<?php\nfunction total($arr) {\n  $s = 0;\n  foreach ($arr as $n) { $s += $n; }\n  return $s;\n}\necho total([10, 20, 12]);\n?>",
       "hint": "Accumule dans une variable au fil du foreach.",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "Le total tombe : **42**. Mais une partie du contenu est **corrompue** par l'Ombre. Monte en puissance pour la nettoyer."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Manipuler les chaînes",
       "lang": "php",
-      "story": "`strtoupper()` met en majuscules ; `strlen()` donne la longueur.",
+      "story": "Le contenu défiguré doit être **reformaté**. `strtoupper()` met en capitales, `strlen()` mesure — tu nettoies le texte.",
       "teach": "```php\necho strtoupper(\"salut\");\n```",
       "brief": "Affiche `\"php\"` en **majuscules** (PHP).",
       "validationType": "contains",
@@ -175,14 +175,14 @@
       "starterCode": "<?php\n// echo strtoupper(...)\n?>",
       "correction": "<?php\necho strtoupper(\"php\");\n?>",
       "hint": "`echo strtoupper(\"php\");`",
-      "reward": "Tu transformes le texte. Et choisir selon une condition ?"
+      "reward": "Le texte est remis en forme. La Vitrine redevient présentable. Affine tes décisions."
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "L'opérateur ternaire",
       "lang": "php",
-      "story": "`condition ? a : b` choisit entre deux valeurs.",
+      "story": "L'**opérateur ternaire** `condition ? a : b` choisit une valeur en une ligne — l'affichage conditionnel compact.",
       "teach": "```php\n$age = 20;\necho $age >= 18 ? \"majeur\" : \"mineur\";\n```",
       "brief": "Pour `$age = 20`, affiche `majeur` si ≥ 18, sinon `mineur` (ternaire).",
       "validationType": "contains",
@@ -190,14 +190,14 @@
       "starterCode": "<?php\n$age = 20;\n// echo ... ? ... : ...\n?>",
       "correction": "<?php\n$age = 20;\necho $age >= 18 ? \"majeur\" : \"mineur\";\n?>",
       "hint": "`echo $age >= 18 ? \"majeur\" : \"mineur\";`",
-      "reward": "Révision avancée !"
+      "reward": "Ton affichage s'adapte d'un trait. Révision avant le cœur de la Vitrine."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — fonction + condition + boucle",
       "lang": "php",
-      "story": "Tu **réutilises** fonction, foreach et `if` (paliers précédents).",
+      "story": "Tu **réutilises** fonction, foreach et condition pour classer le contenu sain du corrompu.",
       "teach": "```php\nfunction classer($notes) {\n  foreach ($notes as $n) {\n    echo $n >= 10 ? \"admis \" : \"recale \";\n  }\n}\nclasser([15, 8]);\n```",
       "brief": "Écris `classer($notes)` qui affiche `admis ` si ≥ 10, sinon `recale `, pour chaque note. Appelle `classer([12, 8])`.",
       "validationType": "contains",
@@ -205,14 +205,14 @@
       "starterCode": "<?php\n// function classer($notes) { ... } ; classer([12, 8]);\n?>",
       "correction": "<?php\nfunction classer($notes) {\n  foreach ($notes as $n) {\n    echo $n >= 10 ? \"admis \" : \"recale \";\n  }\n}\nclasser([12, 8]);\n?>",
       "hint": "Boucle foreach + ternaire dans la fonction.",
-      "reward": "**Palier Avancé terminé !** Dernier palier : l'objet."
+      "reward": "Le tri révèle l'ampleur des dégâts. Tu approches du cœur de la Vitrine — là où PHP modélise tout par des **objets**."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Une classe",
       "lang": "php",
-      "story": "Une **classe** modélise un objet : propriétés et méthodes. `$this->prop` accède à une propriété.",
+      "story": "Une **classe** modélise un objet : des propriétés et des méthodes (`$this->prop`). C'est ainsi que la Vitrine d'ANIMA était structurée.",
       "teach": "```php\nclass Robot {\n  public $nom;\n  function __construct($n) { $this->nom = $n; }\n  function saluer() { return \"Je suis \" . $this->nom; }\n}\n$r = new Robot(\"R-7\");\necho $r->saluer();\n```",
       "brief": "Crée une classe `Robot` (nom + méthode `saluer()` renvoyant `Je suis <nom>`), instancie `new Robot(\"R-7\")` et affiche `saluer()`.",
       "validationType": "contains",
@@ -220,14 +220,14 @@
       "starterCode": "<?php\n// class Robot { ... } ; $r = new Robot(\"R-7\"); echo $r->saluer();\n?>",
       "correction": "<?php\nclass Robot {\n  public $nom;\n  function __construct($n) { $this->nom = $n; }\n  function saluer() { return \"Je suis \" . $this->nom; }\n}\n$r = new Robot(\"R-7\");\necho $r->saluer();\n?>",
       "hint": "Reprends l'exemple de l'encart.",
-      "reward": "Ton premier objet vit ! Synthèse finale."
+      "reward": "Ton premier objet vit — une fiche autonome. La Vitrine reconnaît un bâtisseur. Épreuve finale : tout combiner."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — tout combiner",
       "lang": "php",
-      "story": "Synthèse : un tableau associatif (Intermédiaire) traité par une fonction avec `array_sum` et `count`.",
+      "story": "Synthèse : un **tableau associatif** traité par une **fonction** avec `array_sum` et `count`.",
       "teach": "```php\nfunction moyenne($d) { return array_sum($d) / count($d); }\necho moyenne([\"a\" => 10, \"b\" => 20]);\n```",
       "brief": "Écris `moyenne($d)` qui renvoie la moyenne des valeurs, puis affiche `moyenne([\"maths\" => 18, \"info\" => 12, \"anglais\" => 12])`.",
       "validationType": "contains",
@@ -235,8 +235,62 @@
       "starterCode": "<?php\n// function moyenne($d) { ... } ; echo moyenne([...]);\n?>",
       "correction": "<?php\nfunction moyenne($d) { return array_sum($d) / count($d); }\necho moyenne([\"maths\" => 18, \"info\" => 12, \"anglais\" => 12]);\n?>",
       "hint": "`array_sum($d) / count($d)`",
-      "reward": "Tu combines structures et objets. **Tu es expert en PHP.**"
+      "reward": "Tout converge… mais des extraits ne stabilisent pas un fragment. Pour récupérer le Fragment IV, il faut de **vrais scripts** PHP — des fichiers `.php` que tu écris et exécutes. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier script .php",
+      "lang": "php",
+      "project": true,
+      "scriptName": "etat.php",
+      "story": "Un script PHP est un **fichier** `.php` exécuté d'un coup. Écris ton premier outil de **rapport** sur l'état du Fragment IV.",
+      "teach": "Un script `.php` commence par `<?php` et enchaîne des instructions.\n\n```php\n<?php\n$nom = \"ANIMA\";\necho \"Systeme $nom : EN LIGNE\\n\";\n```\n\nExécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un script qui définit `$fragment = \"IV\"` puis affiche exactement `Fragment IV : STABLE`.",
+      "starterCode": "<?php\n// Écris ton script ici\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment IV : STABLE",
+      "hint": "`<?php`\n`$fragment = \"IV\";`\n`echo \"Fragment $fragment : STABLE\\n\";`",
+      "correction": "<?php\n$fragment = \"IV\";\necho \"Fragment $fragment : STABLE\\n\";",
+      "reward": "Ton premier `.php` tourne : **Fragment IV : STABLE**. Mais ses secteurs sont fissurés — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un script qui inspecte",
+      "lang": "php",
+      "project": true,
+      "scriptName": "scan.php",
+      "story": "Les **secteurs** du Fragment IV (un tableau d'états `OK`/`CORROMPU`) doivent être audités. Écris un script qui les **parcourt tous** et compte les dégâts.",
+      "teach": "Un vrai script combine tableau, boucle et condition :\n\n```php\n<?php\n$liste = [\"a\", \"b\", \"a\"];\n$count = 0;\nforeach ($liste as $x) {\n    if ($x == \"a\") { $count++; }\n}\necho \"Total : $count\\n\";\n```",
+      "brief": "Écris un script avec `$secteurs = [\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"]`, compte ceux égaux à `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "<?php\n// $secteurs = [...] ; compte les CORROMPU ; affiche le total\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `foreach ($secteurs as $s)`, `if ($s == \"CORROMPU\") { $count++; }`, puis `echo \"Secteurs corrompus : $count\\n\";`.",
+      "correction": "<?php\n$secteurs = [\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"];\n$count = 0;\nforeach ($secteurs as $s) {\n    if ($s == \"CORROMPU\") { $count++; }\n}\necho \"Secteurs corrompus : $count\\n\";",
+      "reward": "**2 secteurs corrompus.** Ton script audite seul. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Script complet (fonction + argument)",
+      "lang": "php",
+      "project": true,
+      "scriptName": "reconstituer.php",
+      "args": [
+        "IV"
+      ],
+      "story": "L'épreuve finale : un script qui reçoit l'**identifiant du fragment en argument** (`$argv`) et le **reconstitue** via une **fonction**. On le lancera avec l'argument `IV`.",
+      "teach": "En ligne de commande, un script PHP reçoit ses arguments via `$argv` : `$argv[1]` est le premier.\n\n```php\n<?php\nfunction saluer($x) {\n    echo \"Bonjour $x\\n\";\n}\nsaluer($argv[1]);\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris un script qui définit une fonction `reconstituer` affichant `Fragment <id> reconstitué`, et l'appelle avec `$argv[1]`. Lancé avec l'argument `IV` → `Fragment IV reconstitué`.",
+      "starterCode": "<?php\n// définis reconstituer($f) ; appelle-la avec $argv[1]\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment IV reconstitué",
+      "hint": "`function reconstituer($f) { echo \"Fragment $f reconstitué\\n\"; }`\n`reconstituer($argv[1]);`",
+      "correction": "<?php\nfunction reconstituer($f) {\n    echo \"Fragment $f reconstitué\\n\";\n}\nreconstituer($argv[1]);",
+      "reward": "**Fragment IV reconstitué.** La Vitrine d'ANIMA est restaurée — et ton script, un vrai outil à **exporter**. Quatre fragments récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du PHP\n\nQuatre paliers gravis : echo/variables/calculs/if/for → tableaux/foreach/fonctions/associatifs → chaînes/ternaire → classes/synthèse.\n\nPHP propulse une grande partie du web. **Tu es désormais expert en PHP.**\n\n> Nécessite PHP installé dans WSL (`sudo apt install php-cli`)."
+  "finale": "## Fragment IV récupéré — la Vitrine\n\nDu premier `echo` sur une page morte jusqu'à un **script `.php` complet** avec arguments et fonctions, tu as restauré la façade d'ANIMA :\n\n- **Réveiller la Vitrine** : echo, variables, calculs, if, for\n- **Catalogues & logique** : tableaux, foreach, fonctions, tableaux associatifs\n- **Affiner** : chaînes, ternaire\n- **Le cœur** : classes\n- **Projets** : 3 scripts complets (rapport, inspection, reconstitution avec argument)\n\nQuatre fragments d'ANIMA en main : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python), la Vitrine (PHP). Restent son **noyau** (C/C++), sa **mémoire** (SQL), son **historique** (Git)… et le choix final.\n\n**Tu es désormais expert en PHP.**"
 }

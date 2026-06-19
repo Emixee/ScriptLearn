@@ -1,9 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.2
+## Version actuelle : 0.16.3
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.3 — Voie PHP : narration « Réveil » + 3 projets de scripts (2026-06-20)
+
+Quatrième livraison du chantier (Voie par Voie) — début des langages compilés/serveur.
+- **Narration** : Voie PHP réécrite dans l'univers « Réveil » — PHP = la **Vitrine** d'ANIMA, sa façade web défigurée par l'Ombre (**Fragment IV**). Stories/rewards des 15 actes pédagogiques retissés ; synopsis/finale enchaînent avec Bash (I), PowerShell (II), Python (III).
+- **3 actes projet `.php`** (15 → 18) : `etat.php` (mini : variable + echo), `scan.php` (structuré : tableau + foreach + if), `reconstituer.php` (complet : fonction + `$argv[1]`, exécuté avec l'argument `IV`, export activé). Le mode projet exécute un **vrai fichier** `php sl_proj.php <args>`.
+- Reste : C/C++/C#/Java, puis narration des Voies statiques + final global Contenir/Libérer.
 
 ---
 
