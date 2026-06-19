@@ -1,6 +1,6 @@
 {
   "name": "scriptlearn",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Logiciel d'apprentissage du scripting Bash & PowerShell",
   "main": "out/main/index.js",
   "scripts": {
@@ -23,7 +23,8 @@
       "node_modules/node-pty/**/*"
     ],
     "asarUnpack": [
-      "node_modules/node-pty/**/*"
+      "node_modules/node-pty/**/*",
+      "**/v86/**"
     ],
     "win": {
       "target": [

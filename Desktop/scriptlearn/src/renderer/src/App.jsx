@@ -14,6 +14,7 @@ import Flashcards from './pages/Flashcards'
 import Sandbox from './pages/Sandbox'
 import Missions from './pages/Missions'
 import MissionPlay from './pages/MissionPlay'
+import MissionLab from './pages/MissionLab'
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
       {/* Mode jeu : l'écran de jeu est en plein écran (hors AppLayout), comme les
           exercices, pour une immersion sans barre latérale. */}
       <Route path="/mission/:campaignId" element={<MissionPlay />} />
+      {/* Mission « lab » : terminal Linux réel (WASM), plein écran immersif. */}
+      <Route path="/lab/:labId" element={<MissionLab />} />
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<Navigate to="/app/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />

@@ -72,9 +72,27 @@ export default function Terminal({ id, shell = 'powershell', className = '' }) {
       term.write(chunk)
     })
 
-    // Envoyer l'input utilisateur (y compris Tab, flèches, Ctrl+C) au PTY.
+    // Envoyer l'input utilisateur (flèches, Ctrl+C, caractères) au PTY.
     term.onData((data) => {
       window.electronAPI.terminal.write({ id, data })
+    })
+
+    // Forwarder EXPLICITE de la touche Tab vers le PTY.
+    // POURQUOI : à partir d'xterm 6, Tab n'est plus toujours envoyé au shell par
+    // défaut (il est laissé à la navigation clavier du navigateur) — d'où l'absence
+    // de complétion alors que tout le reste fonctionne. On intercepte donc Tab,
+    // on bloque le comportement par défaut du navigateur (preventDefault) et on
+    // envoie nous-mêmes le caractère de tabulation (\t) qui déclenche la complétion
+    // readline de bash. `return false` empêche xterm de retraiter la touche (pas de
+    // double envoi). Shift+Tab → séquence de complétion inverse.
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.type === 'keydown' && e.key === 'Tab') {
+        e.preventDefault()
+        const seq = e.shiftKey ? '\x1b[Z' : '\t'
+        window.electronAPI.terminal.write({ id, data: seq })
+        return false
+      }
+      return true
     })
 
     // Message de bienvenue

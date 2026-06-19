@@ -16,6 +16,7 @@ export default function Missions() {
   const navigate = useNavigate()
   const { profile } = useProfile()
   const campaigns = listCampaigns()
+  const labs = campaigns.filter(c => c.kind === 'lab')
   const voies = campaigns.filter(c => c.kind === 'voie')
   const scenarios = campaigns.filter(c => c.kind === 'scenario' || !c.kind)
   // Progression brute (clé = "<campagne>:<chapitre>") pour calculer l'avancement.
@@ -126,10 +127,41 @@ export default function Missions() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-1">Missions</h1>
         <p className="text-stone-400">
-          Chaque <span className="text-stone-200">Voie</span> est un parcours complet qui te mène de débutant
-          à <span className="text-stone-200">expert</span> dans un langage, en réutilisant sans cesse ce que tu apprends.
+          Joue dans un <span className="text-stone-200">vrai terminal Linux</span> (Labs), ou suis une <span className="text-stone-200">Voie</span> complète
+          qui te mène de débutant à expert dans un langage.
         </p>
       </div>
+
+      {/* ── Labs : terminal Linux réel (jeu) ── */}
+      {labs.length > 0 && (
+        <section className="mb-8">
+          <div className="flex items-baseline gap-3 mb-3">
+            <h3 className="text-stone-400 text-xs uppercase tracking-widest">Labs — terminal Linux réel</h3>
+            <span className="text-stone-600 text-xs">Un seul terminal, on tape les commandes dedans. Objectifs en direct.</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {labs.map(c => (
+              <button
+                key={c.id}
+                onClick={() => navigate(`/lab/${c.id}`)}
+                className="text-left bg-[#111110] border border-[#2e2b26] rounded p-5 hover:border-[#d97706] transition-colors"
+                style={{ borderLeftWidth: 3, borderLeftColor: c.accent ?? '#e879f9' }}
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h2 className="text-white font-semibold text-lg leading-tight">{c.title}</h2>
+                  <span className="text-[10px] px-2 py-0.5 rounded font-medium flex-shrink-0" style={{ backgroundColor: `${c.accent ?? '#e879f9'}20`, color: c.accent ?? '#e879f9' }}>🐧 Linux WASM</span>
+                </div>
+                <p className="text-stone-400 text-sm mb-3 leading-snug">{c.tagline}</p>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] text-stone-500">
+                  <span className="px-1.5 py-0.5 rounded bg-[#1c1c1a]">{(c.objectives?.length ?? 0)} objectifs</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#1c1c1a]">jeu</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#1c1c1a]">sans WSL</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Parcours complets (Voies) ── */}
       <section className="mb-8">

