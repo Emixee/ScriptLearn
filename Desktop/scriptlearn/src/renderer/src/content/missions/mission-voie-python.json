@@ -4,8 +4,8 @@
   "language": "python",
   "order": 2,
   "title": "La Voie du Python",
-  "tagline": "Répare un robot, puis va bien plus loin : listes, fonctions, classes. Un parcours débutant → expert.",
-  "synopsis": "Le robot R-7 est en panne. En le réparant, puis en perfectionnant son programme, tu apprends Python du premier print jusqu'aux classes.",
+  "tagline": "Le Laboratoire où ANIMA est née — du premier print jusqu'à tes propres scripts. Débutant → expert.",
+  "synopsis": "Deux fragments récupérés, tu pousses la porte du **Laboratoire** : la salle où **ANIMA** a été conçue, pièce par pièce. Tout y est éteint — sauf **R-7**, un petit robot assistant à demi-mort. En lui réapprenant le **Python**, tu rallumes le labo, tu en perces les secrets… et tu reconstitues le **Fragment III** avant que l'Ombre ne s'en empare.",
   "objective": "Maîtriser Python de A à Z : bases, structures de données, fonctions, classes.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Le premier souffle",
       "lang": "python",
-      "story": "Pour **afficher** en Python, on utilise `print`.",
+      "story": "Le Laboratoire est plongé dans le noir. Au sol, **R-7** clignote faiblement, sa voix éteinte. Pour le réveiller, rends-lui la parole : en Python, on **affiche** avec `print`.",
       "teach": "```python\nprint(\"Bonjour\")\n```\nAffiche : `Bonjour`.",
       "brief": "Fais dire **BIP** au robot.",
       "starterCode": "# Écris ton instruction\n",
@@ -25,14 +25,14 @@
       "expectedOutput": "BIP",
       "hint": "`print(\"BIP\")`",
       "correction": "print(\"BIP\")",
-      "reward": "BIP ! R-7 redémarre."
+      "reward": "Un **BIP** franc retentit — R-7 redémarre, une diode verte s'allume, et quelques lampes du labo avec lui. Il te faut maintenant lui rendre la mémoire."
     },
     {
       "id": "pd2",
       "tier": "debutant",
       "title": "La mémoire",
       "lang": "python",
-      "story": "Une **variable** garde une valeur ; le `+` assemble du texte.",
+      "story": "R-7 a tout oublié, jusqu'à son nom. Une **variable** garde une valeur en mémoire ; le `+` l'assemble à du texte.",
       "teach": "```python\nville = \"Lyon\"\nprint(\"Ville : \" + ville)\n```\nAffiche : `Ville : Lyon`.",
       "brief": "Crée `nom = \"R-7\"`, puis affiche `Bonjour R-7`.",
       "starterCode": "# Crée nom puis affiche le message\n",
@@ -40,14 +40,14 @@
       "expectedOutput": "Bonjour R-7",
       "hint": "`nom = \"R-7\"` puis `print(\"Bonjour \" + nom)`",
       "correction": "nom = \"R-7\"\nprint(\"Bonjour \" + nom)",
-      "reward": "R-7 reconnaît son nom."
+      "reward": "R-7 reconnaît son nom et redresse sa petite tête. Le labo s'éveille autour de toi. Vérifie ses circuits de calcul."
     },
     {
       "id": "pd3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "python",
-      "story": "Python **calcule** : affiche directement le résultat.",
+      "story": "Un assistant de labo doit **calculer** sans broncher. Demande à R-7 un résultat.",
       "teach": "```python\nprint(10 + 7)\n```\nAffiche : `17`.",
       "brief": "Affiche le résultat de **12 + 30**.",
       "starterCode": "# Affiche le calcul\n",
@@ -55,14 +55,14 @@
       "expectedOutput": "42",
       "hint": "`print(12 + 30)`",
       "correction": "print(12 + 30)",
-      "reward": "42 ! Mais la batterie est à zéro."
+      "reward": "Le processeur affiche **42**, net. R-7 carbure. Mais un voyant rouge clignote : il doit apprendre à **décider** selon son état."
     },
     {
       "id": "pd4",
       "tier": "debutant",
       "title": "La décision",
       "lang": "python",
-      "story": "`if` n'agit que si une condition est vraie. La ligne d'action est **indentée**.",
+      "story": "Batterie à zéro. R-7 ne survivra que s'il sait réagir : agir **si** une condition est vraie. La ligne d'action est **indentée**.",
       "teach": "```python\ntemperature = 38\nif temperature > 37:\n    print(\"Fievre\")\n```",
       "brief": "La variable `energie` vaut 0. **Si** `energie == 0`, affiche `RECHARGE`.",
       "starterCode": "energie = 0\n# Si energie vaut 0, affiche RECHARGE\n",
@@ -70,14 +70,14 @@
       "expectedOutput": "RECHARGE",
       "hint": "`if energie == 0:` puis `    print(\"RECHARGE\")`",
       "correction": "energie = 0\nif energie == 0:\n    print(\"RECHARGE\")",
-      "reward": "R-7 se recharge. Dernier test débutant : compter."
+      "reward": "R-7 capte le danger et se branche tout seul sur sa station. Le labo monte en puissance. Dernier réglage : compter."
     },
     {
       "id": "pd5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "python",
-      "story": "La boucle `for` répète. `range(1, 6)` produit 1 à 5.",
+      "story": "Pour égrener une séquence, R-7 doit **répéter** une action. La boucle `for` s'en charge ; `range(1, 6)` produit 1 à 5.",
       "teach": "```python\nfor i in range(1, 4):\n    print(i)\n```\nAffiche 1, 2, 3.",
       "brief": "Affiche les nombres **de 1 à 5**, un par ligne.",
       "starterCode": "# Boucle for de 1 à 5\n",
@@ -85,14 +85,14 @@
       "expectedOutput": "5",
       "hint": "`for i in range(1, 6):` puis `    print(i)`",
       "correction": "for i in range(1, 6):\n    print(i)",
-      "reward": "**Palier Débutant terminé !** Place aux structures de données."
+      "reward": "« 1, 2, 3, 4, **5** ! » R-7 est pleinement réveillé. Le Laboratoire est en ligne — reste à comprendre **comment** ANIMA y a été assemblée."
     },
     {
       "id": "pi1",
       "tier": "intermediaire",
       "title": "Les listes",
       "lang": "python",
-      "story": "Une **liste** stocke plusieurs valeurs : `[...]`. On accède par indice (commence à 0).",
+      "story": "ANIMA a été bâtie à partir de **structures**. La plus simple : la **liste** `[...]`, qui range plusieurs valeurs. On y accède par indice (à partir de 0).",
       "teach": "```python\nfruits = [\"pomme\", \"kiwi\"]\nprint(fruits[0])\n```\nAffiche : `pomme`.",
       "brief": "Crée `outils = [\"cle\", \"tournevis\", \"marteau\"]` et affiche le **premier** élément.",
       "starterCode": "# Crée la liste puis affiche outils[0]\n",
@@ -100,14 +100,14 @@
       "expectedOutput": "cle",
       "hint": "`outils = [\"cle\", \"tournevis\", \"marteau\"]` puis `print(outils[0])`",
       "correction": "outils = [\"cle\", \"tournevis\", \"marteau\"]\nprint(outils[0])",
-      "reward": "Le premier outil : la clé. On peut parcourir toute la liste."
+      "reward": "Le premier composant répond présent. Une chaîne d'assemblage se dessine. Parcours-la en entier."
     },
     {
       "id": "pi2",
       "tier": "intermediaire",
       "title": "Parcourir une liste",
       "lang": "python",
-      "story": "La boucle `for` (revue du palier Débutant) parcourt aussi une **liste**, élément par élément.",
+      "story": "Pour inventorier les composants, passe-les **un par un**. La boucle `for` (revue avec R-7) parcourt aussi une **liste**.",
       "teach": "```python\nfor f in [\"a\", \"b\", \"c\"]:\n    print(f)\n```\nAffiche a, b, c.",
       "brief": "Affiche chaque élément de la liste `[\"alpha\", \"beta\", \"gamma\"]`, un par ligne.",
       "starterCode": "# Boucle for sur la liste\n",
@@ -115,14 +115,14 @@
       "expectedOutput": "gamma",
       "hint": "`for x in [\"alpha\", \"beta\", \"gamma\"]:` puis `    print(x)`",
       "correction": "for x in [\"alpha\", \"beta\", \"gamma\"]:\n    print(x)",
-      "reward": "Tu parcours une collection entière. Et si on rangeait du code réutilisable ?"
+      "reward": "Chaque pièce défile. R-7 les note. Mais le vrai pouvoir, c'est de **ranger du code réutilisable**."
     },
     {
       "id": "pi3",
       "tier": "intermediaire",
       "title": "Les fonctions",
       "lang": "python",
-      "story": "Une **fonction** (`def`) regroupe du code réutilisable et renvoie un résultat avec `return`.\n\n⚠️ En mode interactif, laisse une **ligne vide** après le bloc de la fonction pour la « refermer » avant de l'appeler.",
+      "story": "Une **fonction** (`def`) encapsule une routine réutilisable et renvoie un résultat avec `return`. C'est ainsi qu'ANIMA était modulaire.\n\n⚠️ En interactif, laisse une **ligne vide** après le bloc avant d'appeler la fonction.",
       "teach": "```python\ndef double(n):\n    return n * 2\n\nprint(double(21))\n```\nAffiche : `42`. (Note la ligne vide avant l'appel.)",
       "brief": "Écris une fonction `double(n)` qui renvoie `n * 2`, puis affiche `double(21)`.",
       "starterCode": "# def double(n): ... (ligne vide) puis print(double(21))\n",
@@ -130,14 +130,14 @@
       "expectedOutput": "42",
       "hint": "N'oublie pas la ligne vide :\n`def double(n):`\n`    return n * 2`\n(ligne vide)\n`print(double(21))`",
       "correction": "def double(n):\n    return n * 2\n\nprint(double(21))",
-      "reward": "42 ! Ta première fonction. Rangeons maintenant des paires clé→valeur."
+      "reward": "Ta première routine tourne — **42**. Tu raisonnes comme les ingénieurs d'ANIMA. Reste à associer des clés à des valeurs."
     },
     {
       "id": "pi4",
       "tier": "intermediaire",
       "title": "Les dictionnaires",
       "lang": "python",
-      "story": "Un **dictionnaire** associe des clés à des valeurs : `{cle: valeur}`. On lit avec `d[cle]`.",
+      "story": "Un **dictionnaire** `{cle: valeur}` associe des étiquettes à des données — le registre interne du Laboratoire. On lit avec `d[cle]`.",
       "teach": "```python\nages = {\"Lin\": 30, \"Sam\": 25}\nprint(ages[\"Lin\"])\n```\nAffiche : `30`.",
       "brief": "Crée `stock = {\"cle\": 5, \"vis\": 12}` et affiche la valeur de `\"vis\"`.",
       "starterCode": "# Crée le dict puis affiche stock[\"vis\"]\n",
@@ -145,14 +145,14 @@
       "expectedOutput": "12",
       "hint": "`stock = {\"cle\": 5, \"vis\": 12}` puis `print(stock[\"vis\"])`",
       "correction": "stock = {\"cle\": 5, \"vis\": 12}\nprint(stock[\"vis\"])",
-      "reward": "Tu maîtrises listes et dictionnaires. Révision !"
+      "reward": "Le registre répond instantanément. Tu maîtrises listes et dictionnaires : les organes de toute intelligence. Assemble-les."
     },
     {
       "id": "pir",
       "tier": "intermediaire",
       "title": "Révision — fonction + boucle + liste",
       "lang": "python",
-      "story": "Tu **réutilises** tout le palier : une **fonction** (juste vue) qui **boucle** (Débutant) sur une **liste** (palier).",
+      "story": "Tu **réutilises** tout le palier : une **fonction** qui **boucle** sur une **liste** pour en faire la somme — la première vraie routine d'analyse du labo.",
       "teach": "```python\ndef total(nums):\n    s = 0\n    for n in nums:\n        s += n\n    return s\n\nprint(total([1, 2, 3]))\n```\nAffiche : `6`.",
       "brief": "Écris une fonction `total(nums)` qui additionne une liste de nombres, puis affiche `total([10, 20, 12])`.",
       "starterCode": "# def total(nums): ... boucle ... return ; (ligne vide) ; print(total([10, 20, 12]))\n",
@@ -160,14 +160,14 @@
       "expectedOutput": "42",
       "hint": "Accumule dans une variable au fil de la boucle, puis `return`. Ligne vide avant l'appel.",
       "correction": "def total(nums):\n    s = 0\n    for n in nums:\n        s += n\n    return s\n\nprint(total([10, 20, 12]))",
-      "reward": "**Palier Intermédiaire terminé !** Tu combines les briques. Montons en puissance."
+      "reward": "La routine recrache **42** d'un coup. Mais une partie des données du labo est **corrompue** : l'Ombre a infiltré le Laboratoire. Monte en puissance pour la débusquer."
     },
     {
       "id": "pa1",
       "tier": "avance",
       "title": "Les f-strings",
       "lang": "python",
-      "story": "Une **f-string** insère des variables dans un texte : `f\"... {x} ...\"`.",
+      "story": "Tes rapports doivent s'adapter à la donnée. Une **f-string** insère des variables dans un texte : `f\"... {x} ...\"`.",
       "teach": "```python\nnom = \"Ada\"\nprint(f\"Bonjour {nom}\")\n```\nAffiche : `Bonjour Ada`.",
       "brief": "Avec `modele = \"R-7\"`, affiche `Unite R-7 operationnelle` via une f-string.",
       "starterCode": "# modele = \"R-7\" puis print(f\"...\")\n",
@@ -175,14 +175,14 @@
       "expectedOutput": "Unite R-7 operationnelle",
       "hint": "`print(f\"Unite {modele} operationnelle\")`",
       "correction": "modele = \"R-7\"\nprint(f\"Unite {modele} operationnelle\")",
-      "reward": "Tes messages deviennent dynamiques."
+      "reward": "Tes messages deviennent dynamiques — R-7 affiche des diagnostics propres. Resserre encore ton code."
     },
     {
       "id": "pa2",
       "tier": "avance",
       "title": "Les compréhensions de liste",
       "lang": "python",
-      "story": "Une **compréhension** crée une liste en une ligne, en réutilisant l'idée de boucle.",
+      "story": "Une **compréhension de liste** crée une liste en une ligne — la densité d'écriture des concepteurs d'ANIMA.",
       "teach": "```python\nprint([n * 2 for n in [1, 2, 3]])\n```\nAffiche : `[2, 4, 6]`.",
       "brief": "Affiche la liste des carrés de `[1, 2, 3, 4]` (chaque nombre multiplié par lui-même).",
       "starterCode": "# print([... for n in [1, 2, 3, 4]])\n",
@@ -190,14 +190,14 @@
       "expectedOutput": "16",
       "hint": "`print([n * n for n in [1, 2, 3, 4]])`",
       "correction": "print([n * n for n in [1, 2, 3, 4]])",
-      "reward": "Du code dense et élégant. Mais que faire des erreurs ?"
+      "reward": "Du code dense et élégant. Mais le labo est instable : des erreurs surgissent. Apprends à les **encaisser**."
     },
     {
       "id": "pa3",
       "tier": "avance",
       "title": "Gérer les erreurs",
       "lang": "python",
-      "story": "`try/except` rattrape une erreur au lieu de planter le programme.",
+      "story": "Le Laboratoire crache des erreurs à chaque manipulation. `try/except` **rattrape** une erreur au lieu de tout faire planter.",
       "teach": "```python\ntry:\n    x = 10 / 0\nexcept:\n    print(\"Erreur evitee\")\n```\nAffiche : `Erreur evitee`.",
       "brief": "Dans un `try`, tente `10 / 0` ; dans le `except`, affiche `Division impossible`.",
       "starterCode": "# try: ... except: print(\"Division impossible\")\n",
@@ -205,14 +205,14 @@
       "expectedOutput": "Division impossible",
       "hint": "`try:`\n`    x = 10 / 0`\n`except:`\n`    print(\"Division impossible\")`",
       "correction": "try:\n    x = 10 / 0\nexcept:\n    print(\"Division impossible\")",
-      "reward": "Ton programme ne plante plus. Révision avancée !"
+      "reward": "Ton code ne s'effondre plus au premier incident. Tu deviens robuste. Une dernière révision avant le cœur du labo."
     },
     {
       "id": "par",
       "tier": "avance",
       "title": "Révision — fonction + boucle + condition",
       "lang": "python",
-      "story": "Tu **réutilises** une **fonction** (Intermédiaire), une **boucle** (Débutant) et une **condition** (Débutant).",
+      "story": "Tu **réutilises** une **fonction**, une **boucle** et une **condition** pour trier les composants sains des corrompus.",
       "teach": "```python\ndef classer(notes):\n    for n in notes:\n        if n >= 10:\n            print(\"admis\")\n        else:\n            print(\"recale\")\n\nclasser([15, 8])\n```\nAffiche `admis` puis `recale`.",
       "brief": "Écris `classer(notes)` qui affiche `admis` si la note ≥ 10, sinon `recale`, pour chaque note. Appelle `classer([12, 8])`.",
       "starterCode": "# def classer(notes): boucle + if/else ; (ligne vide) ; classer([12, 8])\n",
@@ -220,14 +220,14 @@
       "expectedOutput": "recale",
       "hint": "Boucle `for`, puis `if n >= 10:` / `else:`. Ligne vide avant l'appel.",
       "correction": "def classer(notes):\n    for n in notes:\n        if n >= 10:\n            print(\"admis\")\n        else:\n            print(\"recale\")\n\nclasser([12, 8])",
-      "reward": "**Palier Avancé terminé !** Plus qu'un palier : la programmation objet."
+      "reward": "Le tri révèle l'étendue de la corruption de l'Ombre. Tu touches au but : le **cœur** du Laboratoire, là où ANIMA prend forme — par des **objets**."
     },
     {
       "id": "pe1",
       "tier": "expert",
       "title": "Fonctions à plusieurs paramètres",
       "lang": "python",
-      "story": "Une fonction peut prendre **plusieurs paramètres**.",
+      "story": "Au cœur du labo, on fabrique des automates. D'abord, des **fonctions à plusieurs paramètres** : la brique de base.",
       "teach": "```python\ndef addition(a, b, c):\n    return a + b + c\n\nprint(addition(1, 2, 3))\n```\nAffiche : `6`.",
       "brief": "Écris `addition(a, b, c)` qui renvoie leur somme, puis affiche `addition(10, 20, 12)`.",
       "starterCode": "# def addition(a, b, c): ... ; (ligne vide) ; print(addition(10, 20, 12))\n",
@@ -235,14 +235,14 @@
       "expectedOutput": "42",
       "hint": "`def addition(a, b, c):` / `    return a + b + c` / (vide) / `print(addition(10, 20, 12))`",
       "correction": "def addition(a, b, c):\n    return a + b + c\n\nprint(addition(10, 20, 12))",
-      "reward": "Des fonctions plus puissantes. Le sommet : créer tes propres objets."
+      "reward": "Tes fonctions encaissent plusieurs paramètres et combinent les valeurs. Le cœur du labo s'illumine. Reste l'étape ultime : créer un **objet**."
     },
     {
       "id": "pe2",
       "tier": "expert",
       "title": "Une classe",
       "lang": "python",
-      "story": "Une **classe** est un modèle d'objet : des données (`self.x`) et des actions (méthodes). C'est le cœur de la programmation objet.\n\n⚠️ Laisse une **ligne vide** après le bloc de la classe avant de l'utiliser.",
+      "story": "Une **classe** est un modèle d'objet : des données (`self.x`) et des actions (méthodes). C'est exactement ainsi qu'ANIMA a été conçue.\n\n⚠️ Laisse une **ligne vide** après le bloc de la classe avant de l'utiliser.",
       "teach": "```python\nclass Robot:\n    def __init__(self, nom):\n        self.nom = nom\n    def saluer(self):\n        print(\"Je suis \" + self.nom)\n\nr = Robot(\"R-7\")\nr.saluer()\n```\nAffiche : `Je suis R-7`.",
       "brief": "Crée une classe `Robot` avec un nom et une méthode `saluer()` qui affiche `Je suis <nom>`. Instancie `Robot(\"R-7\")` et appelle `saluer()`.",
       "starterCode": "# class Robot: __init__ + saluer ; (ligne vide) ; r = Robot(\"R-7\") ; r.saluer()\n",
@@ -250,14 +250,14 @@
       "expectedOutput": "Je suis R-7",
       "hint": "Copie l'exemple en gardant la ligne vide avant `r = Robot(\"R-7\")`.",
       "correction": "class Robot:\n    def __init__(self, nom):\n        self.nom = nom\n    def saluer(self):\n        print(\"Je suis \" + self.nom)\n\nr = Robot(\"R-7\")\nr.saluer()",
-      "reward": "Ton premier objet vit ! Dernière épreuve : la synthèse."
+      "reward": "Ton premier objet **vit** — un écho miniature de ce qu'était ANIMA. Le Laboratoire reconnaît en toi un concepteur. Épreuve finale : tout combiner."
     },
     {
       "id": "pe3",
       "tier": "expert",
       "title": "Synthèse — tout combiner",
       "lang": "python",
-      "story": "Synthèse finale : un **dictionnaire** (Intermédiaire) traité par une **fonction** (Intermédiaire) avec `sum`/`len` (Avancé).",
+      "story": "Synthèse : un **dictionnaire** traité par une **fonction** avec `sum`/`len`. Tu maîtrises structures, fonctions et objets.",
       "teach": "```python\nnotes = {\"a\": 10, \"b\": 20}\ndef moyenne(d):\n    return sum(d.values()) / len(d)\n\nprint(moyenne(notes))\n```\nAffiche : `15.0`.",
       "brief": "Avec `notes = {\"maths\": 18, \"info\": 12, \"anglais\": 12}`, écris `moyenne(d)` qui renvoie la moyenne des valeurs, puis affiche `moyenne(notes)`.",
       "starterCode": "# notes = {...} ; def moyenne(d): return sum(d.values()) / len(d) ; (ligne vide) ; print(moyenne(notes))\n",
@@ -265,8 +265,62 @@
       "expectedOutput": "14.0",
       "hint": "`sum(d.values())` additionne les valeurs, `len(d)` les compte. Ligne vide avant l'appel.",
       "correction": "notes = {\"maths\": 18, \"info\": 12, \"anglais\": 12}\ndef moyenne(d):\n    return sum(d.values()) / len(d)\n\nprint(moyenne(notes))",
-      "reward": "Moyenne **14.0**. Tu combines structures, fonctions et objets. **Tu es expert en Python.**"
+      "reward": "Tout converge… mais des extraits isolés ne stabilisent pas un fragment. Pour récupérer le Fragment III, il faut de **vrais scripts** — des fichiers `.py` que tu écris et exécutes. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier script .py",
+      "lang": "python",
+      "project": true,
+      "scriptName": "etat.py",
+      "story": "Un script Python est un **fichier** `.py` : des instructions sauvegardées, lancées d'un coup. Écris ton premier outil de **rapport** sur l'état du Fragment III.",
+      "teach": "Un script `.py` enchaîne des instructions, comme dans la console mais conservées.\n\n```python\nnom = \"ANIMA\"\nprint(f\"Systeme {nom} : EN LIGNE\")\n```\n\nExécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un script qui définit `fragment = \"III\"` puis affiche exactement `Fragment III : STABLE`.",
+      "starterCode": "# Écris ton script Python ici\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment III : STABLE",
+      "hint": "`fragment = \"III\"` puis `print(f\"Fragment {fragment} : STABLE\")`",
+      "correction": "fragment = \"III\"\nprint(f\"Fragment {fragment} : STABLE\")",
+      "reward": "Ton premier `.py` tourne : **Fragment III : STABLE**. Tu construis des outils, plus seulement des extraits. Mais ses secteurs sont fissurés — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un script qui inspecte",
+      "lang": "python",
+      "project": true,
+      "scriptName": "scan.py",
+      "story": "Les **secteurs** du Fragment III (une liste d'états `OK`/`CORROMPU`) doivent être audités. Écris un script qui les **parcourt tous** et compte les dégâts — liste, boucle et condition réunies.",
+      "teach": "Un vrai script combine liste, boucle et condition :\n\n```python\nliste = [\"a\", \"b\", \"a\"]\ncount = 0\nfor x in liste:\n    if x == \"a\":\n        count += 1\nprint(f\"Total : {count}\")\n```",
+      "brief": "Écris un script avec `secteurs = [\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"]`, compte ceux égaux à `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "# secteurs = [...] ; compte les CORROMPU ; affiche le total\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `for s in secteurs`, `if s == \"CORROMPU\": count += 1`, puis `print(f\"Secteurs corrompus : {count}\")`.",
+      "correction": "secteurs = [\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"]\ncount = 0\nfor s in secteurs:\n    if s == \"CORROMPU\":\n        count += 1\nprint(f\"Secteurs corrompus : {count}\")",
+      "reward": "**2 secteurs corrompus.** Ton script audite seul. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Script complet (fonction + argument)",
+      "lang": "python",
+      "project": true,
+      "scriptName": "reconstituer.py",
+      "args": [
+        "III"
+      ],
+      "story": "L'épreuve finale du Laboratoire : un script professionnel. Il reçoit l'**identifiant du fragment en argument** (via `sys.argv`) et le **reconstitue** par une **fonction**. On le lancera avec l'argument `III`.",
+      "teach": "Un script reçoit ses arguments via `sys.argv` : `sys.argv[1]` est le premier. Une **fonction** regroupe la logique.\n\n```python\nimport sys\n\ndef saluer(x):\n    print(f\"Bonjour {x}\")\n\nsaluer(sys.argv[1])\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris un script qui importe `sys`, définit une fonction `reconstituer` affichant `Fragment <id> reconstitué`, et l'appelle avec `sys.argv[1]`. Lancé avec l'argument `III` → `Fragment III reconstitué`.",
+      "starterCode": "import sys\n# définis reconstituer(f) ; appelle-la avec sys.argv[1]\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment III reconstitué",
+      "hint": "`import sys`\n`def reconstituer(f):`\n`    print(f\"Fragment {f} reconstitué\")`\n`reconstituer(sys.argv[1])`",
+      "correction": "import sys\n\ndef reconstituer(f):\n    print(f\"Fragment {f} reconstitué\")\n\nreconstituer(sys.argv[1])",
+      "reward": "**Fragment III reconstitué.** Le Laboratoire d'ANIMA est rallumé, ses secrets entre tes mains — et ton script, un vrai outil à **exporter**. Trois fragments récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du Python\n\nDu premier `print` jusqu'à tes propres classes, tu as gravi les quatre paliers :\n\n- **Débutant** : print, variables, calculs, `if`, `for`\n- **Intermédiaire** : listes, dictionnaires, fonctions\n- **Avancé** : f-strings, compréhensions, `try/except`\n- **Expert** : fonctions multi-paramètres, classes, synthèse\n\nCe sont les fondations de tout développement Python (scripts, data, web, automatisation). **Tu es désormais expert en Python.**"
+  "finale": "## Fragment III récupéré — le Laboratoire\n\nDu premier `print` qui a réveillé R-7 jusqu'à un **script `.py` complet** avec arguments et fonctions, tu as ranimé le berceau d'ANIMA :\n\n- **Réveiller le Laboratoire** : print, variables, calculs, if, for\n- **Les structures de la pensée** : listes, dictionnaires, fonctions\n- **Affiner** : f-strings, compréhensions, `try/except`\n- **Les automates** : fonctions multi-paramètres, classes\n- **Projets** : 3 scripts complets (rapport, inspection, reconstitution avec argument)\n\nTu détiens **trois fragments** d'ANIMA : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python). Restent son **historique** (Git), sa **mémoire** (SQL)… et le choix final : **la contenir, ou la libérer.**\n\n**Tu es désormais expert en Python.**"
 }

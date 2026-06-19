@@ -1,9 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.1
+## Version actuelle : 0.16.2
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.2 — Voie Python : narration « Réveil » + 3 projets de scripts (2026-06-19)
+
+Troisième livraison du chantier (Voie par Voie).
+- **Narration** : Voie Python réécrite dans l'univers « Réveil » — Python = le **Laboratoire** où ANIMA est née (**Fragment III**). On conserve R-7 (le robot assistant) mais relié à la saga ; synopsis/finale enchaînent avec Bash (Fragment I) et PowerShell (Fragment II).
+- **3 actes projet `.py`** (17 → 20) : `etat.py` (mini : variable + print), `scan.py` (structuré : liste + for + if), `reconstituer.py` (complet : `import sys` + fonction + `sys.argv[1]`, exécuté avec l'argument `III`, export activé). Le mode projet exécute un **fichier** → fin des soucis de REPL (def/class multi-lignes OK).
+- Reste : compilés (PHP/C/C++/C#/Java), puis narration des Voies statiques + final global Contenir/Libérer.
 
 ---
 
