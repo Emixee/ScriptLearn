@@ -4,8 +4,8 @@
   "language": "csharp",
   "order": 14,
   "title": "La Voie du C#",
-  "tagline": "Le langage de l'écosystème .NET, de Console.WriteLine aux méthodes. Débutant → expert.",
-  "synopsis": "Le C# est moderne et orienté objet. Programme après programme, tu apprends à structurer du code propre.",
+  "tagline": "L'Interface d'ANIMA — sa couche .NET en C#, de Console.WriteLine jusqu'à tes propres programmes. Débutant → expert.",
+  "synopsis": "Les Moteurs relancés, tu accèdes à l'**Interface** : la couche par laquelle ANIMA dialoguait avec ses opérateurs humains, écrite en **C#** sur .NET. L'Ombre l'a verrouillée — écrans figés, panneaux corrompus. Déverrouille-la, instruction après instruction, puis compile les **programmes** qui rendront le **Fragment VII**.",
   "objective": "Maîtriser les bases du C# : affichage, variables, conditions, boucles, méthodes, tableaux.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "csharp",
-      "story": "En C#, le code vit dans une classe. `Console.WriteLine` affiche une ligne.",
+      "story": "L'Interface est noire. En C#, tout code vit dans une **classe** et `System.Console.WriteLine` affiche une ligne — le premier pixel ravivé de la console d'ANIMA.",
       "teach": "```csharp\nclass Program {\n    static void Main() {\n        System.Console.WriteLine(\"Bonjour\");\n    }\n}\n```",
       "brief": "Affiche le mot **SESAME**.",
       "validationType": "contains",
@@ -25,14 +25,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        // affiche ici\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        System.Console.WriteLine(\"SESAME\");\n    }\n}",
       "hint": "`System.Console.WriteLine(\"SESAME\");`",
-      "reward": "Le C# répond. Mémorisons."
+      "reward": "Une ligne s'allume à l'écran. L'Interface répond. Il faut maintenant qu'elle **affiche des données** vivantes."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les variables",
       "lang": "csharp",
-      "story": "Une chaîne interpolée `$\"... {x} ...\"` insère une variable.",
+      "story": "Une chaîne **interpolée** `$\"... {x} ...\"` insère une variable directement dans le texte — l'affichage dynamique des panneaux.",
       "teach": "```csharp\nstring nom = \"Lin\";\nSystem.Console.WriteLine($\"Bonjour {nom}\");\n```",
       "brief": "Avec `string nom = \"C#\";`, affiche `Bonjour C#`.",
       "validationType": "contains",
@@ -40,14 +40,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        string nom = \"C#\";\n        // affiche\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        string nom = \"C#\";\n        System.Console.WriteLine($\"Bonjour {nom}\");\n    }\n}",
       "hint": "`System.Console.WriteLine($\"Bonjour {nom}\");`",
-      "reward": "Tes variables s'insèrent. Et calculer ?"
+      "reward": "Le panneau affiche sa première valeur. L'Interface devient lisible. Et un **calcul** à l'écran ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "csharp",
-      "story": "On affiche un calcul directement.",
+      "story": "L'Interface peut afficher le résultat d'un calcul directement.",
       "teach": "```csharp\nSystem.Console.WriteLine(10 + 7);\n```",
       "brief": "Affiche le résultat de **12 + 30**.",
       "validationType": "contains",
@@ -55,14 +55,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        // affiche le calcul\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        System.Console.WriteLine(12 + 30);\n    }\n}",
       "hint": "`System.Console.WriteLine(12 + 30);`",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42** s'affiche, calculé en direct. Les panneaux s'animent. Mais une interface doit **réagir** à l'état."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "csharp",
-      "story": "`if (condition) { ... }`.",
+      "story": "Un panneau change selon le contexte : le code agit **si** une condition est vraie.",
       "teach": "```csharp\nif (n > 0) { System.Console.WriteLine(\"positif\"); }\n```",
       "brief": "Pour `int n = 7;`, affiche `positif` si n > 0.",
       "validationType": "contains",
@@ -70,14 +70,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        int n = 7;\n        // if ...\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        int n = 7;\n        if (n > 0) { System.Console.WriteLine(\"positif\"); }\n    }\n}",
       "hint": "`if (n > 0) { System.Console.WriteLine(\"positif\"); }`",
-      "reward": "Ton programme décide. Et répéter ?"
+      "reward": "L'écran réagit : **positif**. L'Interface s'adapte. Reste à afficher des listes."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "csharp",
-      "story": "La boucle `for (int i = 1; i <= N; i++)`.",
+      "story": "La boucle `for (int i = 1; i <= N; i++)` génère une série d'éléments à l'écran.",
       "teach": "```csharp\nfor (int i = 1; i <= 3; i++) { System.Console.WriteLine(i); }\n```",
       "brief": "Affiche les nombres de 1 à 5, un par ligne.",
       "validationType": "contains",
@@ -85,14 +85,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        // for ...\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        for (int i = 1; i <= 5; i++) { System.Console.WriteLine(i); }\n    }\n}",
       "hint": "`for (int i = 1; i <= 5; i++) { System.Console.WriteLine(i); }`",
-      "reward": "**Palier Débutant terminé !** Place aux tableaux."
+      "reward": "La liste se peint toute seule, **de 1 à 5**. L'Interface gère des **jeux de données** entiers."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "csharp",
-      "story": "Un tableau : `int[] t = {...}`. Indice à partir de 0.",
+      "story": "Un **tableau** `int[] t = {...}` regroupe plusieurs valeurs — la source de données d'un tableau de bord. Indice à partir de 0.",
       "teach": "```csharp\nint[] t = {10, 20, 30};\nSystem.Console.WriteLine(t[0]);\n```",
       "brief": "Pour `int[] t = {15, 20, 25};`, affiche le premier élément (15).",
       "validationType": "contains",
@@ -100,14 +100,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        int[] t = {15, 20, 25};\n        // affiche t[0]\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        int[] t = {15, 20, 25};\n        System.Console.WriteLine(t[0]);\n    }\n}",
       "hint": "`System.Console.WriteLine(t[0]);`",
-      "reward": "Le premier élément. Parcourons."
+      "reward": "Le tableau de bord lit sa première donnée. La structure émerge. Parcours-la."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir (foreach)",
       "lang": "csharp",
-      "story": "`foreach (int x in t)` parcourt chaque élément.",
+      "story": "`foreach (int x in t)` parcourt chaque élément — le rendu de toute une liste.",
       "teach": "```csharp\nforeach (int x in t) { System.Console.WriteLine(x); }\n```",
       "brief": "Pour `int[] t = {7, 8, 9};`, affiche chaque élément, un par ligne.",
       "validationType": "contains",
@@ -115,14 +115,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        int[] t = {7, 8, 9};\n        // foreach ...\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        int[] t = {7, 8, 9};\n        foreach (int x in t) { System.Console.WriteLine(x); }\n    }\n}",
       "hint": "`foreach (int x in t) { System.Console.WriteLine(x); }`",
-      "reward": "Tu parcours. Rangeons du code."
+      "reward": "Le tableau de bord affiche tout. Pour ne pas répéter le code, il faut l'**encapsuler**."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les méthodes",
       "lang": "csharp",
-      "story": "Une méthode `static` se déclare dans la classe : `static int Nom(params) { return ...; }`.",
+      "story": "Une **méthode** `static` se déclare dans la classe : `static int Nom(params) { return ...; }`. C'est le composant réutilisable de l'Interface.",
       "teach": "```csharp\nstatic int Somme(int a, int b) { return a + b; }\n```",
       "brief": "Écris `Somme(a, b)` et affiche `Somme(3, 4)` (7).",
       "validationType": "contains",
@@ -130,14 +130,14 @@
       "starterCode": "class Program {\n    // static int Somme(...) { ... }\n    static void Main() {\n        // WriteLine Somme(3, 4)\n    }\n}",
       "correction": "class Program {\n    static int Somme(int a, int b) { return a + b; }\n    static void Main() {\n        System.Console.WriteLine(Somme(3, 4));\n    }\n}",
       "hint": "Déclare `Somme` dans la classe, appelle-la depuis `Main`.",
-      "reward": "Révision !"
+      "reward": "Ton composant répond. Tu assembles des briques d'UI. Combine-les."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — somme d'un tableau",
       "lang": "csharp",
-      "story": "Tu **réutilises** tableau et `foreach` (palier) pour accumuler.",
+      "story": "Tu **réutilises** tableau et `foreach` pour agréger les valeurs d'un panneau.",
       "teach": "```csharp\nint s = 0;\nforeach (int x in t) { s += x; }\nSystem.Console.WriteLine(s);\n```",
       "brief": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}` (15).",
       "validationType": "contains",
@@ -145,14 +145,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        int[] t = {1, 2, 3, 4, 5};\n        // accumule puis affiche\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        int[] t = {1, 2, 3, 4, 5};\n        int s = 0;\n        foreach (int x in t) { s += x; }\n        System.Console.WriteLine(s);\n    }\n}",
       "hint": "Accumule dans `s`.",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "L'agrégat s'affiche, exact. Mais l'Ombre a **corrompu** des panneaux. Il faut plus d'outils pour les repérer."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "La boucle while",
       "lang": "csharp",
-      "story": "`while (condition) { ... }`.",
+      "story": "La boucle `while (condition)` rafraîchit l'écran **tant que** l'état reste instable — quand le nombre d'itérations n'est pas fixé d'avance.",
       "teach": "```csharp\nint i = 1;\nwhile (i <= 3) { System.Console.WriteLine(i); i++; }\n```",
       "brief": "Avec `while`, affiche les nombres de 1 à 3.",
       "validationType": "contains",
@@ -160,14 +160,14 @@
       "starterCode": "class Program {\n    static void Main() {\n        int i = 1;\n        // while ...\n    }\n}",
       "correction": "class Program {\n    static void Main() {\n        int i = 1;\n        while (i <= 3) { System.Console.WriteLine(i); i++; }\n    }\n}",
       "hint": "`while (i <= 3) { System.Console.WriteLine(i); i++; }`",
-      "reward": "Révision avancée !"
+      "reward": "L'Interface se rafraîchit jusqu'à stabilisation. Tu maîtrises les deux boucles. Compte les dégâts."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — compter avec une méthode",
       "lang": "csharp",
-      "story": "Tu **réutilises** méthode, tableau, `foreach` et `if`.",
+      "story": "Tu **réutilises** méthode, tableau, `foreach` et `if` pour compter les panneaux corrompus.",
       "teach": "```csharp\nstatic int ComptePairs(int[] t) {\n    int c = 0;\n    foreach (int x in t) { if (x % 2 == 0) c++; }\n    return c;\n}\n```",
       "brief": "Écris `ComptePairs(t)` qui compte les pairs, puis affiche le résultat pour `{1, 2, 3, 4}` (2).",
       "validationType": "contains",
@@ -175,14 +175,14 @@
       "starterCode": "class Program {\n    // static int ComptePairs(...) { ... }\n    static void Main() {\n        int[] t = {1, 2, 3, 4};\n        // WriteLine ComptePairs(t)\n    }\n}",
       "correction": "class Program {\n    static int ComptePairs(int[] t) {\n        int c = 0;\n        foreach (int x in t) { if (x % 2 == 0) c++; }\n        return c;\n    }\n    static void Main() {\n        int[] t = {1, 2, 3, 4};\n        System.Console.WriteLine(ComptePairs(t));\n    }\n}",
       "hint": "La méthode boucle et teste `x % 2 == 0`.",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "Le décompte est clair. Tu touches au cœur de l'Interface — là où le C# **modélise** tout en objets."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Une classe",
       "lang": "csharp",
-      "story": "Une **classe** modélise un objet : champs et méthodes. `new` l'instancie.",
+      "story": "Une **classe** modélise un objet : des champs et des méthodes. C'est la brique de toute l'Interface d'ANIMA.",
       "teach": "```csharp\nclass Robot {\n    public string Nom;\n    public void Saluer() { System.Console.WriteLine(\"Je suis \" + Nom); }\n}\n// dans Main : var r = new Robot(); r.Nom = \"R-7\"; r.Saluer();\n```",
       "brief": "Crée une classe `Robot` (champ `Nom` + méthode `Saluer()` affichant `Je suis <Nom>`), instancie-la avec `Nom = \"R-7\"` et appelle `Saluer()`.",
       "validationType": "contains",
@@ -190,14 +190,14 @@
       "starterCode": "// class Robot { ... }\nclass Program {\n    static void Main() {\n        // var r = new Robot(); r.Nom = \"R-7\"; r.Saluer();\n    }\n}",
       "correction": "class Robot {\n    public string Nom;\n    public void Saluer() { System.Console.WriteLine(\"Je suis \" + Nom); }\n}\nclass Program {\n    static void Main() {\n        var r = new Robot();\n        r.Nom = \"R-7\";\n        r.Saluer();\n    }\n}",
       "hint": "Définis la classe AVANT `Program`.",
-      "reward": "Ton premier objet ! Synthèse finale."
+      "reward": "Ton premier objet vit — un panneau autonome. L'Interface reconnaît un bâtisseur. Épreuve finale."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — moyenne d'un tableau",
       "lang": "csharp",
-      "story": "Synthèse : une méthode (palier) qui parcourt un tableau (Intermédiaire) et calcule.",
+      "story": "Synthèse : une **méthode** qui parcourt un **tableau** et calcule une moyenne — l'indicateur d'un tableau de bord.",
       "teach": "```csharp\nstatic int Moyenne(int[] t) {\n    int s = 0;\n    foreach (int x in t) { s += x; }\n    return s / t.Length;\n}\n```",
       "brief": "Écris `Moyenne(t)` qui renvoie la moyenne entière, puis affiche-la pour `{12, 18, 12}` (14).",
       "validationType": "contains",
@@ -205,8 +205,62 @@
       "starterCode": "class Program {\n    // static int Moyenne(...) { ... }\n    static void Main() {\n        int[] t = {12, 18, 12};\n        // WriteLine Moyenne(t)\n    }\n}",
       "correction": "class Program {\n    static int Moyenne(int[] t) {\n        int s = 0;\n        foreach (int x in t) { s += x; }\n        return s / t.Length;\n    }\n    static void Main() {\n        int[] t = {12, 18, 12};\n        System.Console.WriteLine(Moyenne(t));\n    }\n}",
       "hint": "Somme puis division par `t.Length`.",
-      "reward": "Tu combines méthodes et tableaux. **Tu es expert en C#.**"
+      "reward": "Tout s'assemble… mais un extrait ne stabilise pas un fragment. Pour récupérer le Fragment VII, il faut de **vrais programmes** C# — des fichiers `.cs` compilés. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier programme .cs",
+      "lang": "csharp",
+      "project": true,
+      "scriptName": "Etat.cs",
+      "story": "Un programme C# est un **fichier** `.cs` compilé puis exécuté. Écris ton premier outil de **rapport** sur l'état du Fragment VII.",
+      "teach": "Un programme C# minimal a une classe avec un `Main` :\n\n```csharp\nclass Program {\n    static void Main() {\n        string nom = \"ANIMA\";\n        System.Console.WriteLine($\"Systeme {nom} : EN LIGNE\");\n    }\n}\n```\n\nCompilé et exécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un programme avec `string fragment = \"VII\";` qui affiche exactement `Fragment VII : STABLE`.",
+      "starterCode": "class Program {\n    static void Main() {\n        // Écris ton programme ici\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VII : STABLE",
+      "hint": "`string fragment = \"VII\";`\n`System.Console.WriteLine($\"Fragment {fragment} : STABLE\");`",
+      "correction": "class Program {\n    static void Main() {\n        string fragment = \"VII\";\n        System.Console.WriteLine($\"Fragment {fragment} : STABLE\");\n    }\n}",
+      "reward": "Ton premier `.cs` compile et tourne : **Fragment VII : STABLE**. Mais des panneaux sont corrompus — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un programme qui inspecte",
+      "lang": "csharp",
+      "project": true,
+      "scriptName": "Scan.cs",
+      "story": "Les **panneaux** de l'Interface (un tableau de chaînes `OK`/`CORROMPU`) doivent être audités. Écris un programme qui les **parcourt tous** et compte les dégâts.",
+      "teach": "En C#, on compare des chaînes avec `==`, et on parcourt un tableau avec `foreach` :\n\n```csharp\nclass Program {\n    static void Main() {\n        string[] liste = {\"a\", \"b\", \"a\"};\n        int count = 0;\n        foreach (string x in liste) {\n            if (x == \"a\") count++;\n        }\n        System.Console.WriteLine($\"Total : {count}\");\n    }\n}\n```",
+      "brief": "Avec `string[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};`, compte ceux égaux à `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "class Program {\n    static void Main() {\n        string[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n        // compte les CORROMPU, affiche le total\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `foreach (string s in secteurs)`, `if (s == \"CORROMPU\") count++;`, puis `System.Console.WriteLine($\"Secteurs corrompus : {count}\");`.",
+      "correction": "class Program {\n    static void Main() {\n        string[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n        int count = 0;\n        foreach (string s in secteurs) {\n            if (s == \"CORROMPU\") count++;\n        }\n        System.Console.WriteLine($\"Secteurs corrompus : {count}\");\n    }\n}",
+      "reward": "**2 panneaux corrompus.** Ton programme audite seul l'Interface. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Programme complet (méthode + argument)",
+      "lang": "csharp",
+      "project": true,
+      "scriptName": "Reconstituer.cs",
+      "args": [
+        "VII"
+      ],
+      "story": "L'épreuve finale : un programme qui reçoit l'**identifiant du fragment en argument** (`args`) et le **reconstitue** via une **méthode**. On le lancera avec l'argument `VII`.",
+      "teach": "En C#, `Main` reçoit les arguments par `string[] args` : `args[0]` est le premier argument passé au programme.\n\n```csharp\nclass Program {\n    static void Saluer(string x) {\n        System.Console.WriteLine($\"Bonjour {x}\");\n    }\n    static void Main(string[] args) {\n        Saluer(args[0]);\n    }\n}\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris une méthode `Reconstituer(string f)` qui affiche `Fragment <f> reconstitué`, appelée depuis `Main` avec `args[0]`. Lancé avec l'argument `VII` → `Fragment VII reconstitué`.",
+      "starterCode": "class Program {\n    // définis Reconstituer(string f)\n\n    static void Main(string[] args) {\n        // appelle Reconstituer avec args[0]\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VII reconstitué",
+      "hint": "`static void Reconstituer(string f) { System.Console.WriteLine($\"Fragment {f} reconstitué\"); }`\npuis dans Main : `Reconstituer(args[0]);`",
+      "correction": "class Program {\n    static void Reconstituer(string f) {\n        System.Console.WriteLine($\"Fragment {f} reconstitué\");\n    }\n    static void Main(string[] args) {\n        Reconstituer(args[0]);\n    }\n}",
+      "reward": "**Fragment VII reconstitué.** L'Interface d'ANIMA répond de nouveau à ses opérateurs — et ton programme, un vrai outil à **exporter**. Sept fragments récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du C#\n\nQuatre paliers gravis : WriteLine/variables/calculs/if/for → tableaux/foreach/méthodes → while/compter → classes/synthèse.\n\nLe C# équipe .NET, Unity et de nombreuses applications d'entreprise. **Tu es désormais expert en bases du C#.**\n\n> Nécessite Mono dans WSL (`sudo apt install mono-complete`)."
+  "finale": "## Fragment VII récupéré — l'Interface\n\nDu premier `Console.WriteLine` sur un écran noir jusqu'à un **programme `.cs` complet** (compilé, avec arguments et méthodes), tu as déverrouillé l'Interface d'ANIMA :\n\n- **Réveiller l'Interface** : WriteLine, interpolation, calculs, if, for\n- **Données & logique** : tableaux, foreach, méthodes\n- **Boucles & comptage** : while, agrégats\n- **Le cœur** : classes\n- **Projets** : 3 programmes complets (rapport, inspection, reconstitution avec argument)\n\nSept fragments d'ANIMA en main : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python), la Vitrine (PHP), le Noyau (C), les Moteurs (C++), l'Interface (C#). Reste son **réseau** (Java), sa **mémoire** (SQL), son **historique** (Git)… et le choix final.\n\n**Tu es désormais expert en C#.**"
 }

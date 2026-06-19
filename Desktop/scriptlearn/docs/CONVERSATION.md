@@ -1,9 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.5
+## Version actuelle : 0.16.6
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.6 — Voie C# : narration « Réveil » + 3 projets de programmes (2026-06-20)
+
+Septième livraison du chantier (Voie par Voie).
+- **Narration** : Voie C# réécrite dans l'univers « Réveil » — C# = l'**Interface** .NET d'ANIMA (**Fragment VII**), couche opérateur verrouillée par l'Ombre. Stories/rewards des 13 actes pédagogiques retissés ; synopsis/finale enchaînent avec les fragments I–VI.
+- **3 actes projet `.cs`** (13 → 16) : `Etat.cs` (mini : variable + WriteLine interpolé), `Scan.cs` (structuré : tableau + foreach + `==`), `Reconstituer.cs` (complet : méthode + `args[0]`, compilé avec mcs/mono et exécuté avec l'argument `VII`, export activé). Vérifié via WSL : mcs+mono + args + sortie accentuée OK.
+- Reste : Java, puis narration des Voies statiques + final global Contenir/Libérer.
 
 ---
 
