@@ -1,9 +1,17 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.15.0
+## Version actuelle : 0.15.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.15.1 — Fil narratif continu pour la Voie du Bash (2026-06-19)
+
+- **Problème** : à partir du palier Intermédiaire, le champ `story` de la Voie du Bash décrivait la commande (redondant avec `teach`) au lieu de raconter une histoire ; les `reward` se réduisaient à « Palier X terminé ». L'aspect jeu disparaissait (constaté à l'acte 11/21).
+- **Correctif** : réécriture des **seuls champs narratifs** (`story`, `reward`, `synopsis`, `tagline`, `finale`) de `mission-voie-bash.json` en **un arc continu « Prisonnier de la Machine »** (Le Réveil → Les Entrailles du Serveur → Sur la piste de l'Ombre → Reprendre le contrôle), avec un protagoniste, une menace (« l'Ombre ») et un objectif (s'évader). Champs techniques (`teach`/`brief`/`setup`/`correction`/`expectedOutput`/`hint`/`tier`) **inchangés** → validation identique.
+- À faire ensuite : même traitement pour les autres Voies (Python, PowerShell, SQL…).
 
 ---
 

@@ -4,8 +4,8 @@
   "language": "bash",
   "order": 1,
   "title": "La Voie du Bash",
-  "tagline": "Du tout premier echo perdu dans un terminal jusqu'à l'écriture de tes propres scripts. Un seul parcours, débutant → expert.",
-  "synopsis": "Un grand parcours en quatre paliers. Tu pars de zéro et, commande après commande — en réutilisant sans cesse ce que tu as appris — tu deviens capable d'automatiser une machine entière.",
+  "tagline": "Prisonnier d'une vieille machine, tu dois en maîtriser le langage — du premier echo jusqu'à tes propres scripts — pour t'évader et reprendre le contrôle.",
+  "synopsis": "Tu reprends connaissance, **enfermé dans le système d'une machine inconnue**. La seule issue : parler sa langue, le Bash. Quatre paliers, une évasion — et une présence tapie dans les données qui ne veut pas te laisser sortir.",
   "objective": "Maîtriser Bash de A à Z : commandes de base, administration, analyse de données, scripting.",
   "career": "sysadmin",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Faire parler la machine",
       "lang": "bash",
-      "story": "Un curseur clignote. Pour communiquer, apprends à **afficher du texte** avec `echo`.",
+      "story": "Noir. Puis un **curseur** qui clignote, seul, au milieu de l'écran. Une voix synthétique grésille : *« Pour sortir, prouve que tu sais me parler. Dis quelque chose. »* C'est ta première épreuve.",
       "teach": "```bash\necho \"Bonjour\"\n```\nAffiche : `Bonjour`.",
       "brief": "Fais afficher le mot **SESAME**.",
       "starterCode": "# Écris ta commande ci-dessous\n",
@@ -25,14 +25,14 @@
       "expectedOutput": "SESAME",
       "hint": "`echo \"SESAME\"`",
       "correction": "echo \"SESAME\"",
-      "reward": "SESAME ! Une porte s'ouvre sur un couloir de fichiers."
+      "reward": "Le mot **SESAME** résonne dans la machine — *clac*, une serrure cède. Une porte s'entrouvre sur un couloir tapissé de **fichiers**. Tu n'es plus tout à fait prisonnier."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Voir ce qui t'entoure",
       "lang": "bash",
-      "story": "Un dossier `/tmp/sl_bash/d2` contient des objets. Liste-le avec `ls`.",
+      "story": "Le couloir est plongé dans le noir. Quelque part devant toi, un dossier — `/tmp/sl_bash/d2` — renferme des objets. Impossible d'avancer sans **voir** ce qu'il contient.",
       "teach": "```bash\nls /etc\n```\nListe les fichiers d'un dossier.",
       "brief": "Liste le contenu de `/tmp/sl_bash/d2`.",
       "setup": "mkdir -p /tmp/sl_bash/d2 && : > /tmp/sl_bash/d2/porte.txt && : > /tmp/sl_bash/d2/mur.txt",
@@ -41,14 +41,14 @@
       "expectedOutput": "porte.txt",
       "hint": "`ls /tmp/sl_bash/d2`",
       "correction": "ls /tmp/sl_bash/d2",
-      "reward": "Le fichier **porte.txt** attire ton attention. Ouvre-le."
+      "reward": "Deux formes émergent de l'ombre : `mur.txt` et **`porte.txt`**. Ce nom-là sonne comme une promesse. Reste à l'ouvrir."
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Lire un message",
       "lang": "bash",
-      "story": "Affiche le contenu d'un fichier avec `cat`.",
+      "story": "Tu poses la main sur **`porte.txt`** (`/tmp/sl_bash/d3/indice.txt`). À l'intérieur, un message gravé par un ancien prisonnier, peut-être. Lis-le.",
       "teach": "```bash\ncat /etc/hostname\n```\nAffiche le contenu du fichier.",
       "brief": "Affiche le contenu de `/tmp/sl_bash/d3/indice.txt`.",
       "setup": "mkdir -p /tmp/sl_bash/d3 && echo \"Le code de la porte est 4271\" > /tmp/sl_bash/d3/indice.txt",
@@ -57,14 +57,14 @@
       "expectedOutput": "4271",
       "hint": "`cat /tmp/sl_bash/d3/indice.txt`",
       "correction": "cat /tmp/sl_bash/d3/indice.txt",
-      "reward": "Le code : **4271**. Mais un long registre défile — il faut filtrer."
+      "reward": "Le message s'illumine : *« Le code est **4271** »*. Tu le mémorises. Mais devant toi, un **registre interminable de portes** défile à toute vitesse — impossible de tout lire. Il va falloir trier."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Filtrer l'information",
       "lang": "bash",
-      "story": "La commande `grep` ne garde que les lignes contenant un mot.",
+      "story": "Une grille te barre la route. À côté, le registre des portes de `/tmp/sl_bash/d4/portes.txt` : des dizaines, marquées `VERROUILLEE` ou `OUVERTE`. Tu cherches la seule qui cède. **Filtre.**",
       "teach": "```bash\ngrep \"erreur\" journal.txt\n```\nGarde les lignes contenant `erreur`.",
       "brief": "Affiche les lignes contenant `OUVERTE` dans `/tmp/sl_bash/d4/portes.txt`.",
       "setup": "mkdir -p /tmp/sl_bash/d4 && printf \"porte-nord VERROUILLEE\\nporte-sud OUVERTE\\nporte-est VERROUILLEE\\n\" > /tmp/sl_bash/d4/portes.txt",
@@ -73,14 +73,14 @@
       "expectedOutput": "porte-sud",
       "hint": "`grep \"OUVERTE\" /tmp/sl_bash/d4/portes.txt`",
       "correction": "grep \"OUVERTE\" /tmp/sl_bash/d4/portes.txt",
-      "reward": "porte-sud est OUVERTE. Dernier défi du palier : compter."
+      "reward": "Une ligne ressort du flot : **porte-sud OUVERTE**. Ton chemin. Mais la voix ricane : *« Combien de portes te restent-elles condamnées ? Compte, si tu l'oses. »*"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Enchaîner les outils",
       "lang": "bash",
-      "story": "Le symbole `|` (pipe) branche la sortie d'une commande dans une autre. `wc -l` compte les lignes.",
+      "story": "Dernière épreuve de la cellule. Le registre `/tmp/sl_bash/d5/portes.txt` est trop long pour l'œil. Pour répondre à la machine, tu dois **brancher** tes outils l'un dans l'autre.",
       "teach": "```bash\ngrep \"erreur\" journal.txt | wc -l\n```\nCompte les lignes contenant `erreur`. (Tu réutilises `grep`.)",
       "brief": "Compte les portes `VERROUILLEE` de `/tmp/sl_bash/d5/portes.txt` (grep | wc -l).",
       "setup": "mkdir -p /tmp/sl_bash/d5 && printf \"porte-nord VERROUILLEE\\nporte-sud OUVERTE\\nporte-est VERROUILLEE\\nporte-ouest VERROUILLEE\\n\" > /tmp/sl_bash/d5/portes.txt",
@@ -89,14 +89,14 @@
       "expectedOutput": "3",
       "hint": "`grep \"VERROUILLEE\" /tmp/sl_bash/d5/portes.txt | wc -l`",
       "correction": "grep \"VERROUILLEE\" /tmp/sl_bash/d5/portes.txt | wc -l",
-      "reward": "**Palier Débutant terminé !** Tu sais afficher, explorer, lire, filtrer et compter. Cap sur l'administration."
+      "reward": "**3 portes verrouillées** — tu lances le chiffre, et la porte-sud s'ouvre en grand. Tu franchis le seuil… et bascules dans les **entrailles d'un vieux serveur**, vaste et silencieux. La cellule n'était que l'entrée."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Où suis-je ?",
       "lang": "bash",
-      "story": "`cd` change de dossier, `pwd` affiche le dossier courant.",
+      "story": "Des couloirs de baies, des ventilateurs morts. Tu es perdu dans un **serveur abandonné**. Avant tout : savoir **où** tu te trouves, et rejoindre la salle de contrôle `/tmp/sl_bash/srv`.",
       "teach": "```bash\ncd /var/log\npwd\n```\nAffiche `/var/log`.",
       "brief": "Place-toi dans `/tmp/sl_bash/srv` puis affiche le chemin courant.",
       "setup": "mkdir -p /tmp/sl_bash/srv/logs /tmp/sl_bash/srv/config /tmp/sl_bash/srv/backup",
@@ -105,14 +105,14 @@
       "expectedOutput": "/tmp/sl_bash/srv",
       "hint": "`cd /tmp/sl_bash/srv && pwd`",
       "correction": "cd /tmp/sl_bash/srv && pwd",
-      "reward": "Te voilà au bon endroit. Trois dossiers t'entourent."
+      "reward": "Te voilà dans la salle de contrôle : **/tmp/sl_bash/srv**. Trois portes — `logs`, `config`, `backup` — t'entourent. Cette machine a une histoire. Et peut-être un occupant."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Un aperçu rapide",
       "lang": "bash",
-      "story": "`head` montre le début d'un fichier, `tail` la fin.",
+      "story": "Le journal système `/tmp/sl_bash/srv/logs/system.log` défile, immense. Inutile de tout lire : jette un **coup d'œil** au tout début pour comprendre comment ce serveur a vécu.",
       "teach": "```bash\nhead -n 3 gros.log\n```\nAffiche les 3 premières lignes.",
       "brief": "Affiche la **première** ligne de `/tmp/sl_bash/srv/logs/system.log`.",
       "setup": "mkdir -p /tmp/sl_bash/srv/logs && printf \"demarrage du service\\nchargement config\\nconnexion base\\narret du service\\n\" > /tmp/sl_bash/srv/logs/system.log",
@@ -121,14 +121,14 @@
       "expectedOutput": "demarrage",
       "hint": "`head -n 1 /tmp/sl_bash/srv/logs/system.log`",
       "correction": "head -n 1 /tmp/sl_bash/srv/logs/system.log",
-      "reward": "Le service démarrait bien. Ses logs ont des doublons."
+      "reward": "Première ligne : *« demarrage du service »*. Le serveur tournait normalement… avant. Mais ses journaux sont **encombrés de doublons** suspects, comme si quelqu'un les avait pollués."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Trier et dédoublonner",
       "lang": "bash",
-      "story": "`sort` trie, `uniq` retire les doublons consécutifs (d'où `sort | uniq`).",
+      "story": "Un fichier d'adresses, `/tmp/sl_bash/srv/logs/ips.txt`, répète les mêmes IP encore et encore. Pour y voir clair, **range-les et élimine les répétitions**. Qui s'est connecté ici ?",
       "teach": "```bash\nsort fichier | uniq | wc -l\n```\nCompte les valeurs **différentes**. (Tu réutilises `|` et `wc`.)",
       "brief": "Compte le nombre d'IP **différentes** dans `/tmp/sl_bash/srv/logs/ips.txt`.",
       "setup": "mkdir -p /tmp/sl_bash/srv/logs && printf \"10.0.0.5\\n10.0.0.9\\n10.0.0.5\\n10.0.0.5\\n10.0.0.9\\n\" > /tmp/sl_bash/srv/logs/ips.txt",
@@ -137,14 +137,14 @@
       "expectedOutput": "2",
       "hint": "`sort /tmp/sl_bash/srv/logs/ips.txt | uniq | wc -l`",
       "correction": "sort /tmp/sl_bash/srv/logs/ips.txt | uniq | wc -l",
-      "reward": "Deux machines seulement. Isolons les erreurs dans un fichier."
+      "reward": "**Deux machines distinctes**, pas une de plus. Le trafic ne vient pas de partout : quelqu'un de **précis** rôde. Mets de côté les erreurs avant qu'elles ne disparaissent."
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Écrire dans un fichier",
       "lang": "bash",
-      "story": "Le symbole `>` redirige la sortie vers un fichier au lieu de l'écran.",
+      "story": "Les erreurs du serveur clignotent dans `/tmp/sl_bash/srv/logs/app.log`. Avant qu'elles ne défilent hors de portée, **capture-les dans un fichier à part** pour les garder comme preuves.",
       "teach": "```bash\ngrep \"ERROR\" app.log > erreurs.txt\ncat erreurs.txt\n```\n(Tu réutilises `grep` et `cat`.)",
       "brief": "Extrais les lignes `ERROR` de `/tmp/sl_bash/srv/logs/app.log` vers `erreurs.txt`, puis affiche ce fichier.",
       "setup": "mkdir -p /tmp/sl_bash/srv/logs && printf \"INFO ok\\nERROR disque plein\\nINFO ok\\nERROR service tombe\\n\" > /tmp/sl_bash/srv/logs/app.log",
@@ -153,14 +153,14 @@
       "expectedOutput": "service tombe",
       "hint": "`grep ERROR /tmp/sl_bash/srv/logs/app.log > /tmp/sl_bash/srv/logs/erreurs.txt && cat /tmp/sl_bash/srv/logs/erreurs.txt`",
       "correction": "grep ERROR /tmp/sl_bash/srv/logs/app.log > /tmp/sl_bash/srv/logs/erreurs.txt && cat /tmp/sl_bash/srv/logs/erreurs.txt",
-      "reward": "Deux erreurs critiques archivées. Sauvegarde la config avant d'y toucher."
+      "reward": "Deux erreurs critiques **archivées** : *disque plein*, *service tombé*. Des sabotages ? Avant de toucher à quoi que ce soit, protège la configuration de la machine."
     },
     {
       "id": "i5",
       "tier": "intermediaire",
       "title": "Copier en sécurité",
       "lang": "bash",
-      "story": "Règle d'or : **sauvegarder avant de modifier**. `cp` copie, `mv` déplace/renomme, `rm` supprime.",
+      "story": "Tu vas devoir modifier la config du serveur. Règle d'or de quiconque a survécu ici : **sauvegarder avant de toucher**. Copie `app.conf` à l'abri dans `backup/`.",
       "teach": "```bash\ncp app.conf backup/\nls backup/\n```\n(Tu réutilises `ls` pour vérifier.)",
       "brief": "Copie `/tmp/sl_bash/srv/config/app.conf` dans `/tmp/sl_bash/srv/backup/`, puis liste `backup/`.",
       "setup": "mkdir -p /tmp/sl_bash/srv/config /tmp/sl_bash/srv/backup && echo \"port=8080\" > /tmp/sl_bash/srv/config/app.conf",
@@ -169,14 +169,14 @@
       "expectedOutput": "app.conf",
       "hint": "`cp /tmp/sl_bash/srv/config/app.conf /tmp/sl_bash/srv/backup/ && ls /tmp/sl_bash/srv/backup`",
       "correction": "cp /tmp/sl_bash/srv/config/app.conf /tmp/sl_bash/srv/backup/ && ls /tmp/sl_bash/srv/backup",
-      "reward": "Sauvegarde faite. Avant le palier suivant : une révision !"
+      "reward": "Sauvegarde en lieu sûr. En refermant le tiroir, ton regard accroche une trace de pas numérique dans la poussière des fichiers… **tu n'es pas seul dans ce serveur.** Reprends ton souffle avant la suite."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — combiner les acquis",
       "lang": "bash",
-      "story": "Tu vas **réutiliser** des commandes vues plus tôt : `grep` (palier Débutant) avec `sort` et `uniq` (juste avant).",
+      "story": "Pour pister l'intrus, tu combines ce que tu sais déjà. Le fichier `/tmp/sl_bash/srv/req.log` garde la mémoire des requêtes — **filtre les siennes, sans doublon.**",
       "teach": "Révision : `grep MOT f | sort | uniq` garde les lignes contenant MOT, sans doublons.",
       "brief": "Affiche les lignes contenant `GET` de `/tmp/sl_bash/srv/req.log`, sans doublons.",
       "setup": "mkdir -p /tmp/sl_bash/srv && printf \"GET /a\\nPOST /b\\nGET /a\\nGET /c\\nPOST /b\\n\" > /tmp/sl_bash/srv/req.log",
@@ -185,14 +185,14 @@
       "expectedOutput": "GET /c",
       "hint": "`grep \"GET\" /tmp/sl_bash/srv/req.log | sort | uniq`",
       "correction": "grep \"GET\" /tmp/sl_bash/srv/req.log | sort | uniq",
-      "reward": "**Palier Intermédiaire terminé !** Tu administres un serveur. Place à l'analyse de données."
+      "reward": "Le motif se dessine : des requêtes répétées, méthodiques. Ce n'est pas un accident, c'est **quelqu'un**. Tu quittes les entrailles du serveur et entres dans la **salle des données** — son terrain de chasse. On l'appellera **l'Ombre.**"
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Retrouver un fichier",
       "lang": "bash",
-      "story": "`find` cherche **récursivement** par nom. Le `*` remplace n'importe quels caractères.",
+      "story": "L'Ombre a laissé des fichiers éparpillés sur plusieurs niveaux, sous `/tmp/sl_bash/trace`. Inutile de fouiller à la main : **chasse récursivement** ce qui ressemble à une clé.",
       "teach": "```bash\nfind /home -name \"*.log\"\n```\nCherche dans toute l'arborescence.",
       "brief": "Trouve, sous `/tmp/sl_bash/trace`, le fichier dont le nom finit par `.key`.",
       "setup": "mkdir -p /tmp/sl_bash/trace/a/b && : > /tmp/sl_bash/trace/a/notes.txt && : > /tmp/sl_bash/trace/a/b/secret.key",
@@ -201,14 +201,14 @@
       "expectedOutput": "secret.key",
       "hint": "`find /tmp/sl_bash/trace -name \"*.key\"`",
       "correction": "find /tmp/sl_bash/trace -name \"*.key\"",
-      "reward": "Une clé cachée trois niveaux plus bas. À côté, un fichier CSV."
+      "reward": "Caché trois niveaux plus bas : **`secret.key`**. Une clé volée, abandonnée dans la précipitation. À côté, un journal d'audit au format CSV — un faux pas de l'Ombre."
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Découper en colonnes",
       "lang": "bash",
-      "story": "`cut` extrait une colonne précise, avec un séparateur.",
+      "story": "Le fichier d'audit `/tmp/sl_bash/trace/audit.csv` aligne ses champs séparés par des virgules. Pour démasquer **qui** a agi, **découpe la colonne** des utilisateurs.",
       "teach": "```bash\ncut -d',' -f1 fichier.csv\n```\nGarde le 1er champ (séparateur virgule).",
       "brief": "Affiche la **2e colonne** (`user`) de `/tmp/sl_bash/trace/audit.csv`.",
       "setup": "mkdir -p /tmp/sl_bash/trace && printf \"date,user,action\\n2026-01,root,login\\n2026-01,alice,delete\\n\" > /tmp/sl_bash/trace/audit.csv",
@@ -217,14 +217,14 @@
       "expectedOutput": "alice",
       "hint": "`cut -d',' -f2 /tmp/sl_bash/trace/audit.csv`",
       "correction": "cut -d',' -f2 /tmp/sl_bash/trace/audit.csv",
-      "reward": "Le compte `alice` a fait un delete. Examinons les accès web."
+      "reward": "Un nom revient : **`alice`**, qui a lancé un `delete`. Compte détourné, ou complice ? L'Ombre se rapproche. Examine maintenant ses accès web."
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Extraire un champ avec awk",
       "lang": "bash",
-      "story": "`awk` extrait un champ par sa **position** (champs séparés par des espaces).",
+      "story": "Les accès web `/tmp/sl_bash/trace/access.log` défilent, champ après champ. **Extrais la colonne des chemins demandés** : tu sauras ce que l'Ombre cherchait vraiment.",
       "teach": "```bash\nawk '{print $1}' access.log\n```\nAffiche le 1er champ de chaque ligne.",
       "brief": "Affiche la **2e colonne** (le chemin) de chaque ligne de `/tmp/sl_bash/trace/access.log`.",
       "setup": "mkdir -p /tmp/sl_bash/trace && printf \"GET /index 200\\nPOST /login 403\\nGET /admin 403\\n\" > /tmp/sl_bash/trace/access.log",
@@ -233,14 +233,14 @@
       "expectedOutput": "/admin",
       "hint": "`awk '{print $2}' /tmp/sl_bash/trace/access.log`",
       "correction": "awk '{print $2}' /tmp/sl_bash/trace/access.log",
-      "reward": "L'attaquant a tenté `/admin`. Marquons le fichier d'état."
+      "reward": "Le chemin **`/admin`** apparaît noir sur blanc. L'Ombre visait le cœur du système — les commandes d'administration. Marque le fichier d'état : la situation a changé."
     },
     {
       "id": "a4",
       "tier": "avance",
       "title": "Remplacer du texte",
       "lang": "bash",
-      "story": "`sed` remplace du texte à la volée, sans ouvrir d'éditeur.",
+      "story": "Le panneau d'état `/tmp/sl_bash/trace/etat.txt` affiche encore « ACTIF », comme si de rien n'était. **Réécris-le à la volée** pour acter la vérité : le système est **COMPROMIS**.",
       "teach": "```bash\nsed 's/test/PROD/' fichier\n```\nRemplace `test` par `PROD`.",
       "brief": "Affiche `/tmp/sl_bash/trace/etat.txt` en remplaçant `ACTIF` par `COMPROMIS`.",
       "setup": "mkdir -p /tmp/sl_bash/trace && printf \"statut: ACTIF\\nmode: surveillance\\n\" > /tmp/sl_bash/trace/etat.txt",
@@ -249,14 +249,14 @@
       "expectedOutput": "COMPROMIS",
       "hint": "`sed 's/ACTIF/COMPROMIS/' /tmp/sl_bash/trace/etat.txt`",
       "correction": "sed 's/ACTIF/COMPROMIS/' /tmp/sl_bash/trace/etat.txt",
-      "reward": "Statut basculé. Révision avant le sommet !"
+      "reward": "Statut basculé : **COMPROMIS**. La machine reconnaît enfin la brèche. Une dernière analyse avant l'assaut final."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — un vrai pipeline",
       "lang": "bash",
-      "story": "Tu combines `cut` (vu juste avant) avec `sort` et `uniq -c` (palier Intermédiaire) pour **compter par valeur**.",
+      "story": "Pour mesurer l'ampleur de l'attaque, tu montes un vrai **pipeline** sur `/tmp/sl_bash/trace/acc.csv` : isole la colonne des codes, regroupe, **compte par valeur**.",
       "teach": "Révision : `cut -d',' -f1 f | sort | uniq -c` compte combien de fois chaque valeur de la 1re colonne apparaît.",
       "brief": "À partir de `/tmp/sl_bash/trace/acc.csv`, compte combien de fois chaque code (1re colonne) apparaît.",
       "setup": "mkdir -p /tmp/sl_bash/trace && printf \"200,GET,/a\\n403,GET,/b\\n200,POST,/c\\n403,GET,/d\\n\" > /tmp/sl_bash/trace/acc.csv",
@@ -265,14 +265,14 @@
       "expectedOutput": "2",
       "hint": "`cut -d',' -f1 /tmp/sl_bash/trace/acc.csv | sort | uniq -c`",
       "correction": "cut -d',' -f1 /tmp/sl_bash/trace/acc.csv | sort | uniq -c",
-      "reward": "**Palier Avancé terminé !** Tu fouilles n'importe quel jeu de données. Dernier palier : automatiser."
+      "reward": "Le verdict tombe : une rafale de tentatives, codifiée. Tu remontes le fil jusqu'à une **porte dérobée** que l'Ombre a verrouillée derrière elle pour te garder enfermé. Pour l'ouvrir, lire des commandes ne suffira plus — il faut **en écrire**."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Variables et calculs",
       "lang": "bash",
-      "story": "Un script **mémorise** des valeurs dans des variables et **calcule** avec `$(( ))`.",
+      "story": "Devant la porte dérobée, un mécanisme à code. Plus de fichiers à lire : tu dois **fabriquer** la réponse. Apprends à la machine à **mémoriser et calculer** pour toi.",
       "teach": "```bash\nx=5\necho \"Double: $(( x * 2 ))\"\n```\nAffiche `Double: 10`. (Tu réutilises `echo`.)",
       "brief": "Crée `serveurs=4`, puis affiche exactement `Total: 8`.",
       "starterCode": "# À toi : serveurs=4 puis echo \"Total: ...\" avec un calcul\n",
@@ -280,14 +280,14 @@
       "expectedOutput": "Total: 8",
       "hint": "`serveurs=4; echo \"Total: $(( serveurs * 2 ))\"`",
       "correction": "serveurs=4; echo \"Total: $(( serveurs * 2 ))\"",
-      "reward": "Tes variables calculent seules. Automatisons la répétition."
+      "reward": "La machine retient tes valeurs et **calcule seule**. Le premier rouage du mécanisme tourne. Mais il en faut beaucoup, et vite — automatise la **répétition**."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "La boucle for",
       "lang": "bash",
-      "story": "La boucle `for` répète des commandes.",
+      "story": "Le mécanisme exige une séquence : 1, 2, 3, 4, 5. Hors de question de la taper à la main cinq fois. **Fais-la dérouler toute seule.**",
       "teach": "```bash\nfor i in 1 2 3; do\n  echo \"$i\"\ndone\n```\nAffiche 1, 2, 3.",
       "brief": "Affiche les nombres **de 1 à 5**, un par ligne, avec une boucle `for`.",
       "starterCode": "# À toi : une boucle for qui affiche 1 à 5\n",
@@ -295,14 +295,14 @@
       "expectedOutput": "5",
       "hint": "`for i in 1 2 3 4 5; do echo \"$i\"; done`",
       "correction": "for i in 1 2 3 4 5; do echo \"$i\"; done",
-      "reward": "La boucle déroule sans effort. Place aux décisions."
+      "reward": "La séquence s'égrène sans effort, comme un automate. La porte frémit. Mais elle ne s'ouvrira que si ton programme sait **prendre des décisions.**"
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Décider avec if",
       "lang": "bash",
-      "story": "`if [ condition ]; then … fi`. `[ -f fichier ]` est vrai si le fichier existe.",
+      "story": "Le verrou ne cède qu'à une condition : prouver qu'une pièce maîtresse (`/tmp/sl_bash/present.txt`) est bien en place. Apprends à ton script à **vérifier, puis agir.**",
       "teach": "```bash\nif [ -f /etc/hosts ]; then\n  echo \"PRESENT\"\nfi\n```\nAutres tests : `-gt` (>), `-lt` (<), `-eq` (==).",
       "brief": "Si `/tmp/sl_bash/present.txt` existe, affiche `TROUVE`.",
       "setup": "mkdir -p /tmp/sl_bash && echo \"data\" > /tmp/sl_bash/present.txt",
@@ -311,14 +311,14 @@
       "expectedOutput": "TROUVE",
       "hint": "`if [ -f /tmp/sl_bash/present.txt ]; then echo \"TROUVE\"; fi`",
       "correction": "if [ -f /tmp/sl_bash/present.txt ]; then echo \"TROUVE\"; fi",
-      "reward": "Ton automate sait décider. Et répéter tant qu'il faut ?"
+      "reward": "Ton automate confirme : **TROUVE**. Il sait désormais juger avant d'agir. Encore un palier : tenir une cadence **tant que** le mécanisme l'exige."
     },
     {
       "id": "e4",
       "tier": "expert",
       "title": "La boucle while",
       "lang": "bash",
-      "story": "`while` répète **tant qu'une condition est vraie**. On incrémente avec un calcul (revu de l'acte « Variables »).",
+      "story": "Le dernier rouage tourne par à-coups : il faut le relancer **tant qu'**il n'a pas atteint son point d'arrêt. Monte un compteur qui s'incrémente jusqu'au déclic.",
       "teach": "```bash\ni=1\nwhile [ $i -le 3 ]; do\n  echo \"$i\"\n  i=$(( i + 1 ))\ndone\n```\nAffiche 1, 2, 3.",
       "brief": "Avec `while`, affiche les nombres **de 1 à 3**.",
       "starterCode": "# À toi : i=1 puis while [ $i -le 3 ] ... (incrémente i !)\n",
@@ -326,14 +326,14 @@
       "expectedOutput": "3",
       "hint": "`i=1; while [ $i -le 3 ]; do echo \"$i\"; i=$(( i + 1 )); done`",
       "correction": "i=1; while [ $i -le 3 ]; do echo \"$i\"; i=$(( i + 1 )); done",
-      "reward": "Le compteur s'arrête pile. Dernier palier : la synthèse."
+      "reward": "Le compteur grimpe et **s'arrête pile**. Tous les rouages sont alignés. Il ne reste qu'à **tout assembler** en une seule arme contre l'Ombre."
     },
     {
       "id": "e5",
       "tier": "expert",
       "title": "Synthèse — la fonction",
       "lang": "bash",
-      "story": "Une **fonction** regroupe des commandes réutilisables. Tu y mets ce que tu maîtrises : `grep` (Débutant) + `wc` (Débutant), encapsulés.",
+      "story": "L'instant décisif. Pour briser le verrou de l'Ombre et compter ses dégâts d'un seul geste, **forge une fonction** : un outil à toi, qui réutilise tout ce que tu maîtrises (`grep`, `wc`) sur `/tmp/sl_bash/run.log`.",
       "teach": "```bash\nsaluer() { echo \"Bonjour $1\"; }\nsaluer Monde\n```\nAffiche `Bonjour Monde`. `$1` = 1er argument.",
       "brief": "Définis une fonction `compter_erreurs` qui affiche le nombre de lignes `ERROR` de `/tmp/sl_bash/run.log`, puis appelle-la.",
       "setup": "mkdir -p /tmp/sl_bash && printf \"OK demarrage\\nERROR timeout\\nOK requete\\nERROR refus\\n\" > /tmp/sl_bash/run.log",
@@ -342,8 +342,8 @@
       "expectedOutput": "2",
       "hint": "`compter_erreurs() { grep ERROR /tmp/sl_bash/run.log | wc -l; }; compter_erreurs`",
       "correction": "compter_erreurs() { grep ERROR /tmp/sl_bash/run.log | wc -l; }; compter_erreurs",
-      "reward": "Ta fonction renvoie **2** d'un seul appel. Tu ne tapes plus des commandes : tu écris des programmes."
+      "reward": "Ta fonction renvoie **2** d'un seul appel — le verrou explose, la porte s'ouvre sur la lumière. L'Ombre s'efface dans les circuits. Tu ne tapes plus des commandes : **tu écris des programmes.** La machine est à toi."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du Bash\n\nDu premier `echo` jusqu'à tes propres fonctions, tu as gravi les quatre paliers :\n\n- **Débutant** : echo, ls, cat, grep, pipe `|`/`wc`\n- **Intermédiaire** : cd/pwd, head/tail, sort/uniq, redirection `>`, cp/mv\n- **Avancé** : find, cut, awk, sed, pipelines\n- **Expert** : variables, for, if, while, fonctions\n\nC'est la boîte à outils complète de l'administrateur système et de l'analyste. **Tu es désormais expert en Bash.**"
+  "finale": "## Évadé — et maître de la machine\n\nDu premier `echo` lancé dans le noir jusqu'à la fonction qui a fait sauter le verrou de l'Ombre, tu as gravi les quatre paliers d'une seule traite :\n\n- **Le Réveil** : echo, ls, cat, grep, pipe `|`/`wc`\n- **Les Entrailles du Serveur** : cd/pwd, head/tail, sort/uniq, redirection `>`, cp/mv\n- **Sur la piste de l'Ombre** : find, cut, awk, sed, pipelines\n- **Reprendre le contrôle** : variables, for, if, while, fonctions\n\nC'est la boîte à outils complète de l'administrateur et de l'analyste. **Tu es désormais expert en Bash — et plus aucune machine ne te retiendra prisonnier.**"
 }
