@@ -4,8 +4,8 @@
   "language": "powershell",
   "order": 3,
   "title": "La Voie de PowerShell",
-  "tagline": "Le shell d'administration Windows, du premier Write-Output jusqu'aux fonctions. Débutant → expert.",
-  "synopsis": "PowerShell pilote Windows. Tu pars de zéro et, objet après objet, pipeline après pipeline, tu apprends à automatiser le système — en réutilisant sans cesse tes acquis.",
+  "tagline": "Reprends le Poste de Commandement d'ANIMA — du premier Write-Output jusqu'à tes propres scripts d'automatisation. Débutant → expert.",
+  "synopsis": "Fragment I récupéré, tu pénètres dans le **Poste de Commandement** : la console d'orchestration Windows (PowerShell) qui pilotait jadis tous les systèmes d'**ANIMA**. L'Ombre y a semé le désordre. Reprends la main, commande après commande, puis écris les **scripts d'automatisation** qui te rendront le **Fragment II**.",
   "objective": "Maîtriser PowerShell : affichage, variables, pipeline, objets, fonctions.",
   "career": "sysadmin",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "powershell",
-      "story": "`Write-Output` affiche une valeur à l'écran.",
+      "story": "La console d'orchestration s'allume, **muette**. Tant qu'elle ne te répond pas, tu n'as aucun contrôle. Force-la à parler.",
       "teach": "```powershell\nWrite-Output \"Bonjour\"\n```\nAffiche : `Bonjour`.",
       "brief": "Affiche le mot **SESAME**.",
       "starterCode": "# Écris ta commande\n",
@@ -25,14 +25,14 @@
       "expectedOutput": "SESAME",
       "hint": "`Write-Output \"SESAME\"`",
       "correction": "Write-Output \"SESAME\"",
-      "reward": "PowerShell te répond. On peut mémoriser des valeurs."
+      "reward": "La console renvoie ta voix : **SESAME**. Le Poste de Commandement te reconnaît. Tu tiens le manche — reste à apprendre à t'en servir."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les variables",
       "lang": "powershell",
-      "story": "Une variable commence par `$`. Dans une chaîne entre guillemets doubles, `$nom` est remplacé par sa valeur.",
+      "story": "Pour piloter, il faut **retenir** des informations. La console offre des **variables**, des cases mémoire que tu nommes toi-même.",
       "teach": "```powershell\n$ville = \"Lyon\"\nWrite-Output \"Ville : $ville\"\n```\nAffiche : `Ville : Lyon`.",
       "brief": "Crée `$nom = \"PS\"`, puis affiche `Bonjour PS`.",
       "starterCode": "# $nom = \"PS\" puis Write-Output \"...\"\n",
@@ -40,14 +40,14 @@
       "expectedOutput": "Bonjour PS",
       "hint": "`$nom = \"PS\"; Write-Output \"Bonjour $nom\"`",
       "correction": "$nom = \"PS\"; Write-Output \"Bonjour $nom\"",
-      "reward": "Tes variables s'insèrent dans le texte. Et les calculs ?"
+      "reward": "Le nom est en mémoire et s'affiche à la demande. La console commence à t'obéir. Et si tu lui faisais faire un calcul ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "powershell",
-      "story": "PowerShell calcule. Mets l'opération entre parenthèses pour l'afficher.",
+      "story": "Une console digne de ce nom **calcule**. Demande-lui un résultat directement.",
       "teach": "```powershell\nWrite-Output (10 + 7)\n```\nAffiche : `17`.",
       "brief": "Affiche le résultat de **12 + 30**.",
       "starterCode": "# Write-Output (...)\n",
@@ -55,14 +55,14 @@
       "expectedOutput": "42",
       "hint": "`Write-Output (12 + 30)`",
       "correction": "Write-Output (12 + 30)",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42.** Les circuits de calcul répondent au doigt et à l'œil. Mais piloter, c'est surtout **décider**."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "powershell",
-      "story": "`if (condition) { ... }`. Les comparaisons utilisent `-gt` (>), `-lt` (<), `-eq` (==).",
+      "story": "Le Poste doit réagir selon la situation : agir **si** une condition est remplie. Apprends-lui à juger.",
       "teach": "```powershell\n$n = 5\nif ($n -gt 0) { Write-Output \"positif\" }\n```",
       "brief": "Pour `$n = 7`, affiche `positif` si `$n` est supérieur à 0.",
       "starterCode": "# $n = 7 ; if (...) { Write-Output \"positif\" }\n",
@@ -70,14 +70,14 @@
       "expectedOutput": "positif",
       "hint": "`$n = 7; if ($n -gt 0) { Write-Output \"positif\" }`",
       "correction": "$n = 7; if ($n -gt 0) { Write-Output \"positif\" }",
-      "reward": "Ton script décide. Et répéter une action ?"
+      "reward": "La console tranche : **positif**. Elle sait décider seule. Reste à lui faire répéter un ordre en boucle."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec foreach",
       "lang": "powershell",
-      "story": "La boucle `foreach`. `1..5` produit les nombres de 1 à 5.",
+      "story": "Donner le même ordre cinq fois à la main ? Hors de question. La boucle `foreach` **répète** pour toi.",
       "teach": "```powershell\nforeach ($i in 1..3) { Write-Output $i }\n```\nAffiche 1, 2, 3.",
       "brief": "Affiche les nombres **de 1 à 5**, un par ligne.",
       "starterCode": "# foreach ($i in 1..5) { ... }\n",
@@ -85,14 +85,14 @@
       "expectedOutput": "5",
       "hint": "`foreach ($i in 1..5) { Write-Output $i }`",
       "correction": "foreach ($i in 1..5) { Write-Output $i }",
-      "reward": "**Palier Débutant terminé !** Place aux collections."
+      "reward": "La séquence se déroule sans accroc, **de 1 à 5**. Tu pilotes la console. Mais elle gère des **centaines de ressources** — il va falloir les inventorier."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "powershell",
-      "story": "Un **tableau** stocke plusieurs valeurs, séparées par des virgules. On accède par indice (commence à 0).",
+      "story": "Le Poste référence des ressources par paquets. Pour les manipuler, range-les dans un **tableau** et accède à la première.",
       "teach": "```powershell\n$a = \"x\",\"y\",\"z\"\nWrite-Output $a[0]\n```\nAffiche : `x`.",
       "brief": "Crée `$outils = \"cle\",\"tournevis\",\"marteau\"` et affiche le **premier** élément.",
       "starterCode": "# $outils = ... ; Write-Output $outils[0]\n",
@@ -100,14 +100,14 @@
       "expectedOutput": "cle",
       "hint": "`$outils = \"cle\",\"tournevis\",\"marteau\"; Write-Output $outils[0]`",
       "correction": "$outils = \"cle\",\"tournevis\",\"marteau\"; Write-Output $outils[0]",
-      "reward": "Le premier outil. On peut parcourir tout le tableau."
+      "reward": "La première ressource répond présente. Un inventaire commence à prendre forme. Parcourons-le en entier."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir un tableau",
       "lang": "powershell",
-      "story": "`foreach` (revu du palier Débutant) parcourt aussi un **tableau**.",
+      "story": "Inventorier, c'est passer **chaque** élément en revue. La boucle `foreach` (revue du Poste) parcourt aussi un tableau.",
       "teach": "```powershell\nforeach ($x in \"a\",\"b\") { Write-Output $x }\n```",
       "brief": "Affiche chaque élément de `\"alpha\",\"beta\",\"gamma\"`, un par ligne.",
       "starterCode": "# foreach ($x in ...) { ... }\n",
@@ -115,14 +115,14 @@
       "expectedOutput": "gamma",
       "hint": "`foreach ($x in \"alpha\",\"beta\",\"gamma\") { Write-Output $x }`",
       "correction": "foreach ($x in \"alpha\",\"beta\",\"gamma\") { Write-Output $x }",
-      "reward": "Tu parcours une collection. Et si on filtrait dans un pipeline ?"
+      "reward": "Chaque ressource défile sous tes yeux. Mais certaines sont suspectes — il faut **filtrer**."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Filtrer avec Where-Object",
       "lang": "powershell",
-      "story": "Le `|` (pipe) passe les objets à la commande suivante. `Where-Object` ne garde que ceux qui remplissent une condition (`$_` = l'élément courant).",
+      "story": "Le `|` (pipe) fait circuler les objets d'une commande à l'autre. `Where-Object` ne **garde** que ceux qui remplissent une condition (`$_` = l'élément courant).",
       "teach": "```powershell\n1..6 | Where-Object { $_ -gt 3 }\n```\nGarde 4, 5, 6.",
       "brief": "À partir de `1..6`, garde les nombres **supérieurs à 4** (résultat : 5 et 6).",
       "starterCode": "# 1..6 | Where-Object { ... }\n",
@@ -130,14 +130,14 @@
       "expectedOutput": "6",
       "hint": "`1..6 | Where-Object { $_ -gt 4 }`",
       "correction": "1..6 | Where-Object { $_ -gt 4 }",
-      "reward": "Le pipeline filtre les objets. On peut aussi les compter."
+      "reward": "Le filtre isole les ressources visées. L'Ombre se cache parmi elles. Encore faut-il les **compter**."
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Compter avec Measure-Object",
       "lang": "powershell",
-      "story": "`Measure-Object` mesure une collection ; sa propriété `.Count` donne le nombre d'éléments.",
+      "story": "`Measure-Object` **mesure** une collection. Sa propriété `.Count` te donne le nombre exact d'éléments suspects.",
       "teach": "```powershell\nWrite-Output (1,2,3 | Measure-Object).Count\n```\nAffiche : `3`.",
       "brief": "Affiche le **nombre** d'éléments de `1,2,2,3` (résultat : 4).",
       "starterCode": "# Write-Output (... | Measure-Object).Count\n",
@@ -145,14 +145,14 @@
       "expectedOutput": "4",
       "hint": "`Write-Output (1,2,2,3 | Measure-Object).Count`",
       "correction": "Write-Output (1,2,2,3 | Measure-Object).Count",
-      "reward": "Tu sais filtrer et compter. Combinons-les !"
+      "reward": "Le compte tombe, net. Tu sais filtrer et dénombrer. Combine-les pour cerner l'intrus."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — filtrer puis compter",
       "lang": "powershell",
-      "story": "Tu **réutilises** `Where-Object` et `Measure-Object` (juste vus) dans un même pipeline.",
+      "story": "Tu enchaînes `Where-Object` et `Measure-Object` (vus à l'instant) dans un même pipeline pour **compter ce qui dépasse un seuil**.",
       "teach": "`1..5 | Where-Object { $_ -gt 2 } | Measure-Object` puis `.Count` compte les éléments filtrés.",
       "brief": "Compte combien de nombres de `1..5` sont **supérieurs à 2** (résultat : 3).",
       "starterCode": "# Write-Output (1..5 | Where-Object { ... } | Measure-Object).Count\n",
@@ -160,14 +160,14 @@
       "expectedOutput": "3",
       "hint": "`Write-Output (1..5 | Where-Object { $_ -gt 2 } | Measure-Object).Count`",
       "correction": "Write-Output (1..5 | Where-Object { $_ -gt 2 } | Measure-Object).Count",
-      "reward": "**Palier Intermédiaire terminé !** Place aux outils avancés."
+      "reward": "Le résultat ne laisse plus de doute : des ressources ont été **détournées**. L'Ombre a laissé sa marque jusque dans le Poste de Commandement. Traque-la dans les objets eux-mêmes."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Trier avec Sort-Object",
       "lang": "powershell",
-      "story": "`Sort-Object` trie les objets ; `-Descending` inverse l'ordre.",
+      "story": "Pour hiérarchiser les menaces, **trie** les objets. `Sort-Object` ordonne, `-Descending` inverse, `Select-Object -First 1` garde le sommet.",
       "teach": "```powershell\n3,1,2 | Sort-Object\n```\nDonne 1, 2, 3. `Select-Object -First 1` garde le premier.",
       "brief": "Du tableau `5,9,2`, affiche le plus grand (trie en descendant et garde le premier → 9).",
       "starterCode": "# ... | Sort-Object -Descending | Select-Object -First 1\n",
@@ -175,14 +175,14 @@
       "expectedOutput": "9",
       "hint": "`5,9,2 | Sort-Object -Descending | Select-Object -First 1`",
       "correction": "5,9,2 | Sort-Object -Descending | Select-Object -First 1",
-      "reward": "Tu ordonnes les données. Et les paires clé→valeur ?"
+      "reward": "La plus grosse anomalie remonte en tête. Tu ordonnes le chaos. Et si tu structurais tes propres données ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Les tables de hachage",
       "lang": "powershell",
-      "story": "Une **hashtable** associe des clés à des valeurs : `@{ cle = valeur }`. On lit avec `$h[\"cle\"]`.",
+      "story": "Une **table de hachage** `@{ clé = valeur }` associe des noms à des valeurs — parfaite pour un registre de surveillance.",
       "teach": "```powershell\n$h = @{ Lin = 30 }\nWrite-Output $h[\"Lin\"]\n```\nAffiche : `30`.",
       "brief": "Crée `$stock = @{ cle = 5; vis = 12 }` et affiche la valeur de `vis`.",
       "starterCode": "# $stock = @{ ... } ; Write-Output $stock[\"vis\"]\n",
@@ -190,14 +190,14 @@
       "expectedOutput": "12",
       "hint": "`$stock = @{ cle = 5; vis = 12 }; Write-Output $stock[\"vis\"]`",
       "correction": "$stock = @{ cle = 5; vis = 12 }; Write-Output $stock[\"vis\"]",
-      "reward": "Des données structurées. Les objets ont aussi des méthodes."
+      "reward": "Ton registre répond instantanément. Données maîtrisées. Mais chaque objet cache aussi des **méthodes** — des actions prêtes à l'emploi."
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Les méthodes",
       "lang": "powershell",
-      "story": "Chaque objet a des **méthodes** (actions). Sur une chaîne, `.ToUpper()` met en majuscules.",
+      "story": "Tout objet PowerShell porte ses **méthodes**. Sur une chaîne, `.ToUpper()` met en capitales — un levier parmi des centaines.",
       "teach": "```powershell\nWrite-Output (\"salut\".ToUpper())\n```\nAffiche : `SALUT`.",
       "brief": "Affiche `\"powershell\"` en **majuscules** (résultat : POWERSHELL).",
       "starterCode": "# Write-Output (\"powershell\".ToUpper())\n",
@@ -205,14 +205,14 @@
       "expectedOutput": "POWERSHELL",
       "hint": "`Write-Output (\"powershell\".ToUpper())`",
       "correction": "Write-Output (\"powershell\".ToUpper())",
-      "reward": "Tu exploites les objets. Révision avancée !"
+      "reward": "Tu exploites les objets en profondeur. L'arsenal est presque complet. Une dernière révision avant le sommet."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — filtrer, trier, garder",
       "lang": "powershell",
-      "story": "Tu **réutilises** `Where-Object` (Intermédiaire), `Sort-Object` et `Select-Object` (palier) dans un seul pipeline.",
+      "story": "Tu montes un vrai pipeline : **filtrer**, **trier**, **garder** — pour extraire la cible la plus dangereuse parmi `1..10`.",
       "teach": "Pipeline complet : filtrer les pairs, trier en descendant, garder le premier.",
       "brief": "Parmi `1..10`, trouve le plus grand nombre **pair** (filtre les pairs avec `$_ % 2 -eq 0`, trie descendant, garde le premier → 10).",
       "starterCode": "# 1..10 | Where-Object { ... } | Sort-Object -Descending | Select-Object -First 1\n",
@@ -220,14 +220,14 @@
       "expectedOutput": "10",
       "hint": "`1..10 | Where-Object { $_ % 2 -eq 0 } | Sort-Object -Descending | Select-Object -First 1`",
       "correction": "1..10 | Where-Object { $_ % 2 -eq 0 } | Sort-Object -Descending | Select-Object -First 1",
-      "reward": "**Palier Avancé terminé !** Dernier palier : les fonctions."
+      "reward": "La cible isolée : le **verrou** que l'Ombre a posé sur le Fragment II. Pour le briser, lire des commandes ne suffira plus — il faut **forger des outils**."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Une fonction",
       "lang": "powershell",
-      "story": "Une **fonction** regroupe du code réutilisable. Elle renvoie sa dernière expression.",
+      "story": "Devant le verrou, un mécanisme. Tu dois **fabriquer** la réponse : enferme une logique réutilisable dans une **fonction**.",
       "teach": "```powershell\nfunction Double($n) { $n * 2 }\nWrite-Output (Double 21)\n```\nAffiche : `42`.",
       "brief": "Écris une fonction `Double` qui renvoie `$n * 2`, puis affiche `Double 21`.",
       "starterCode": "# function Double($n) { ... } ; Write-Output (Double 21)\n",
@@ -235,14 +235,14 @@
       "expectedOutput": "42",
       "hint": "`function Double($n) { $n * 2 }; Write-Output (Double 21)`",
       "correction": "function Double($n) { $n * 2 }; Write-Output (Double 21)",
-      "reward": "Ta première fonction. Donne-lui plusieurs paramètres."
+      "reward": "Ta première fonction tourne et renvoie **42**. Un rouage du mécanisme cède. Donne-lui plus de prise : plusieurs paramètres."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Plusieurs paramètres",
       "lang": "powershell",
-      "story": "Une fonction peut prendre **plusieurs paramètres**.",
+      "story": "Une fonction puissante prend **plusieurs paramètres**. Apprends-lui à combiner des valeurs.",
       "teach": "```powershell\nfunction Add($a, $b, $c) { $a + $b + $c }\nWrite-Output (Add 1 2 3)\n```\nAffiche : `6`.",
       "brief": "Écris `Add($a, $b, $c)` qui renvoie leur somme, puis affiche `Add 10 20 12`.",
       "starterCode": "# function Add($a,$b,$c) { ... } ; Write-Output (Add 10 20 12)\n",
@@ -250,14 +250,14 @@
       "expectedOutput": "42",
       "hint": "`function Add($a, $b, $c) { $a + $b + $c }; Write-Output (Add 10 20 12)`",
       "correction": "function Add($a, $b, $c) { $a + $b + $c }; Write-Output (Add 10 20 12)",
-      "reward": "Des fonctions puissantes. Épreuve finale : la synthèse."
+      "reward": "La fonction encaisse trois paramètres et recrache la somme. Le mécanisme s'aligne. Épreuve finale : tout assembler."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — tout combiner",
       "lang": "powershell",
-      "story": "Synthèse : une **fonction** (palier) qui **filtre** (`Where-Object`) et **compte** (`Measure-Object`) — tout ce que tu maîtrises.",
+      "story": "L'instant décisif : une **fonction** qui **filtre** et **compte** d'un seul appel — tout ce que tu maîtrises, condensé.",
       "teach": "```powershell\nfunction CountBig($arr) { ($arr | Where-Object { $_ -gt 10 } | Measure-Object).Count }\nWrite-Output (CountBig (5,12,18,3))\n```\nAffiche : `2`.",
       "brief": "Écris `CountBig($arr)` qui compte les éléments **supérieurs à 10**, puis affiche `CountBig (5,12,18,3)` (résultat : 2).",
       "starterCode": "# function CountBig($arr) { (... | Where-Object {...} | Measure-Object).Count } ; Write-Output (CountBig (5,12,18,3))\n",
@@ -265,8 +265,62 @@
       "expectedOutput": "2",
       "hint": "`function CountBig($arr) { ($arr | Where-Object { $_ -gt 10 } | Measure-Object).Count }; Write-Output (CountBig (5,12,18,3))`",
       "correction": "function CountBig($arr) { ($arr | Where-Object { $_ -gt 10 } | Measure-Object).Count }; Write-Output (CountBig (5,12,18,3))",
-      "reward": "Ta fonction encapsule un pipeline complet. **Tu es expert en PowerShell.**"
+      "reward": "Ta fonction encapsule un pipeline complet… mais une commande isolée ne suffit pas à stabiliser un fragment. Il te faut de **vrais scripts** — des fichiers `.ps1` que tu écris et exécutes. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier script .ps1",
+      "lang": "powershell",
+      "project": true,
+      "scriptName": "etat.ps1",
+      "story": "Un script PowerShell est un **fichier** `.ps1` : une suite de commandes sauvegardées, lancées d'un coup. Écris ton premier outil de **rapport** sur l'état du Fragment II.",
+      "teach": "Un script `.ps1` enchaîne des commandes, comme dans la console mais conservées.\n\n```powershell\n$nom = \"ANIMA\"\nWrite-Output \"Systeme $nom : EN LIGNE\"\n```\n\nExécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un script qui définit `$fragment = \"II\"` puis affiche exactement `Fragment II : STABLE`.",
+      "starterCode": "# Écris ton script PowerShell ici\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment II : STABLE",
+      "hint": "`$fragment = \"II\"` puis `Write-Output \"Fragment $fragment : STABLE\"`",
+      "correction": "$fragment = \"II\"\nWrite-Output \"Fragment $fragment : STABLE\"",
+      "reward": "Ton premier `.ps1` tourne : **Fragment II : STABLE**. Tu construis des outils réutilisables. Mais ses secteurs sont fissurés — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un script qui inspecte",
+      "lang": "powershell",
+      "project": true,
+      "scriptName": "scan.ps1",
+      "story": "Les **secteurs** du Fragment II (un tableau d'états `OK`/`CORROMPU`) doivent être audités. Écris un script qui les **parcourt tous** et compte les dégâts — tableau, boucle et condition réunis.",
+      "teach": "Un vrai script combine tableau, boucle et condition :\n\n```powershell\n$liste = \"a\",\"b\",\"a\"\n$count = 0\nforeach ($x in $liste) {\n  if ($x -eq \"a\") { $count++ }\n}\nWrite-Output \"Total : $count\"\n```",
+      "brief": "Écris un script avec `$secteurs = \"OK\",\"CORROMPU\",\"CORROMPU\",\"OK\"`, compte ceux égaux à `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "# $secteurs = ... ; compte les CORROMPU ; affiche le total\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `foreach ($s in $secteurs)`, `if ($s -eq \"CORROMPU\") { $count++ }`, puis `Write-Output \"Secteurs corrompus : $count\"`.",
+      "correction": "$secteurs = \"OK\",\"CORROMPU\",\"CORROMPU\",\"OK\"\n$count = 0\nforeach ($s in $secteurs) {\n  if ($s -eq \"CORROMPU\") { $count++ }\n}\nWrite-Output \"Secteurs corrompus : $count\"",
+      "reward": "**2 secteurs corrompus.** Ton script audite seul. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Script complet (fonction + argument)",
+      "lang": "powershell",
+      "project": true,
+      "scriptName": "reconstituer.ps1",
+      "args": [
+        "II"
+      ],
+      "story": "L'épreuve finale : un script professionnel. Il reçoit l'**identifiant du fragment en paramètre** et le **reconstitue** via une **fonction**. On le lancera avec l'argument `II`.",
+      "teach": "Un script reçoit des paramètres avec `param(...)`. Une **fonction** regroupe la logique.\n\n```powershell\nparam($cible)\nfunction Saluer($x) {\n  Write-Output \"Bonjour $x\"\n}\nSaluer $cible\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris un script qui commence par `param($id)`, définit une fonction `Reconstituer` affichant `Fragment <id> reconstitué`, et l'appelle avec `$id`. Lancé avec l'argument `II` → `Fragment II reconstitué`.",
+      "starterCode": "# param($id) en première ligne ; une fonction Reconstituer ; appelle-la avec $id\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment II reconstitué",
+      "hint": "`param($id)` (1re ligne)\n`function Reconstituer($f) { Write-Output \"Fragment $f reconstitué\" }`\n`Reconstituer $id`",
+      "correction": "param($id)\nfunction Reconstituer($f) {\n  Write-Output \"Fragment $f reconstitué\"\n}\nReconstituer $id",
+      "reward": "**Fragment II reconstitué.** Le Poste de Commandement est à toi — et ton script, un vrai outil que tu peux **exporter** et réutiliser. Deux fragments d'ANIMA récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie de PowerShell\n\nQuatre paliers gravis :\n\n- **Débutant** : Write-Output, variables, calculs, if, foreach\n- **Intermédiaire** : tableaux, Where-Object, Measure-Object, pipeline\n- **Avancé** : Sort-Object, hashtables, méthodes\n- **Expert** : fonctions, paramètres, synthèse\n\nC'est le socle de l'automatisation Windows. **Tu es désormais expert en PowerShell.**"
+  "finale": "## Fragment II récupéré — le Poste de Commandement\n\nDu premier `Write-Output` jusqu'à un **script `.ps1` complet** avec paramètres et fonctions, tu as repris l'orchestration d'ANIMA :\n\n- **Le Poste de Commandement** : Write-Output, variables, calculs, if, foreach\n- **Inventaire & Filtres** : tableaux, Where-Object, Measure-Object, pipeline\n- **Manipuler les objets** : Sort-Object, tables de hachage, méthodes\n- **Automatiser la défense** : fonctions, paramètres\n- **Projets** : 3 scripts complets (rapport, inspection, reconstitution avec argument)\n\nTu détiens désormais **deux fragments** d'ANIMA : la Machine (Bash) et le Poste de Commandement (PowerShell). Restent sa **mémoire** (SQL), son **laboratoire** (Python), son **historique** (Git)… et le choix final : **la contenir, ou la libérer.**\n\n**Tu es désormais expert en PowerShell.**"
 }

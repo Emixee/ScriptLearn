@@ -1,9 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.0
+## Version actuelle : 0.16.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.1 — Voie PowerShell : narration « Réveil » + 3 projets de scripts (2026-06-19)
+
+Deuxième livraison du chantier (Voie par Voie), même format que Bash v0.16.0.
+- **Narration** : Voie PowerShell réécrite dans l'univers « Réveil » — PowerShell = le **Poste de Commandement** d'ANIMA (**Fragment II**). story/reward narratifs, synopsis/tagline/finale reliés à la saga (suite directe du Fragment I/Bash).
+- **3 actes projet `.ps1`** (17 → 20 actes) : `etat.ps1` (mini : variables + Write-Output), `scan.ps1` (structuré : tableau + foreach + if), `reconstituer.ps1` (complet : `param($id)` + fonction, exécuté avec l'argument `II`, export activé). Données en mémoire (pas de setup WSL pour PowerShell, qui s'exécute en natif).
+- S'appuie sur l'infra v0.16.0 (runValidation mode script + export). Reste : Python, compilés, narration des Voies statiques.
 
 ---
 
