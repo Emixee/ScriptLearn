@@ -1,9 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.3
+## Version actuelle : 0.16.4
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.4 — Voie C : narration « Réveil » + 3 projets de programmes (2026-06-20)
+
+Cinquième livraison du chantier (Voie par Voie).
+- **Narration** : Voie C réécrite dans l'univers « Réveil » — C = le **Noyau** bas-niveau d'ANIMA (**Fragment V**), cœur système corrompu par l'Ombre. Stories/rewards des 13 actes pédagogiques retissés ; synopsis/finale enchaînent avec Bash (I), PowerShell (II), Python (III), PHP (IV).
+- **3 actes projet `.c`** (13 → 16) : `etat.c` (mini : variable + printf), `scan.c` (structuré : tableau + for + `strcmp`), `reconstituer.c` (complet : fonction + `argv[1]`, compilé avec gcc et exécuté avec l'argument `V`, export activé). Vérifié : la sortie accentuée (`reconstitué`) passe correctement via gcc/WSL.
+- Reste : C++/C#/Java, puis narration des Voies statiques + final global Contenir/Libérer.
 
 ---
 

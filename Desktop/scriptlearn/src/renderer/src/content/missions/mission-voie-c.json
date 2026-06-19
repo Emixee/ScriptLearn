@@ -4,8 +4,8 @@
   "language": "c",
   "order": 12,
   "title": "La Voie du C",
-  "tagline": "Le langage système fondateur, de printf aux fonctions. Débutant → expert.",
-  "synopsis": "Le C est la base de presque tout. Programme après programme, tu apprends les fondations de la programmation compilée.",
+  "tagline": "Le Noyau d'ANIMA — son cœur système en C, de printf jusqu'à tes propres programmes. Débutant → expert.",
+  "synopsis": "Quatre fragments réunis, tu descends dans le **Noyau** : le cœur bas-niveau d'ANIMA, écrit en **C**, là où chaque octet compte. L'Ombre y a injecté du bruit — types corrompus, secteurs instables. Reprends le contrôle, instruction après instruction, puis compile les **programmes** qui rendront le **Fragment V**.",
   "objective": "Maîtriser les bases du C : printf, variables, conditions, boucles, fonctions, tableaux.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "c",
-      "story": "En C, `printf` affiche du texte. `\\n` = saut de ligne. Tout démarre dans `main`.",
+      "story": "Le Noyau est muet. En C, `printf` écrit sur la sortie — c'est par là qu'un programme parle. `\\n` saute une ligne. Donne une première voix au cœur d'ANIMA.",
       "teach": "```c\n#include <stdio.h>\nint main(void) {\n    printf(\"Bonjour\\n\");\n    return 0;\n}\n```",
       "brief": "Affiche le mot **SESAME**.",
       "validationType": "contains",
@@ -25,14 +25,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    // Affiche ici\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    printf(\"SESAME\\n\");\n    return 0;\n}",
       "hint": "`printf(\"SESAME\\n\");`",
-      "reward": "Le C te répond. Mémorisons un nombre."
+      "reward": "Le Noyau émet enfin : un signal traverse le silicium. Il faut maintenant qu'il **retienne** des valeurs."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les variables",
       "lang": "c",
-      "story": "Une variable a un type. `%d` insère un entier dans le texte.",
+      "story": "Au plus bas niveau, chaque donnée a un **type** et occupe une place précise en mémoire. `%d` insère un entier dans le texte.",
       "teach": "```c\nint age = 30;\nprintf(\"age = %d\\n\", age);\n```",
       "brief": "Déclare `int x = 10;` puis affiche `x = 10`.",
       "validationType": "contains",
@@ -40,14 +40,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int x = 10;\n    // affiche x\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int x = 10;\n    printf(\"x = %d\\n\", x);\n    return 0;\n}",
       "hint": "`printf(\"x = %d\\n\", x);`",
-      "reward": "Tu affiches des valeurs. Et calculer ?"
+      "reward": "La mémoire retient sa première valeur, typée. Le Noyau commence à penser. Et s'il **calculait** ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "c",
-      "story": "On peut afficher le résultat d'un calcul avec `%d`.",
+      "story": "Le Noyau doit calculer avant d'afficher — l'arithmétique brute du processeur.",
       "teach": "```c\nprintf(\"%d\\n\", 10 + 7);\n```",
       "brief": "Affiche le résultat de **12 + 30**.",
       "validationType": "contains",
@@ -55,14 +55,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    // affiche le calcul\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    printf(\"%d\\n\", 12 + 30);\n    return 0;\n}",
       "hint": "`printf(\"%d\\n\", 12 + 30);`",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42** : le cœur d'ANIMA effectue son premier calcul. Mais un noyau doit **décider**."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "c",
-      "story": "`if (condition) { ... }`.",
+      "story": "Une instruction conditionnelle oriente l'exécution : le code agit **si** la condition est vraie.",
       "teach": "```c\nif (n > 0) { printf(\"positif\\n\"); }\n```",
       "brief": "Pour `int n = 7;`, affiche `positif` si n > 0.",
       "validationType": "contains",
@@ -70,14 +70,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int n = 7;\n    // if ...\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int n = 7;\n    if (n > 0) { printf(\"positif\\n\"); }\n    return 0;\n}",
       "hint": "`if (n > 0) { printf(\"positif\\n\"); }`",
-      "reward": "Ton programme décide. Et répéter ?"
+      "reward": "Le Noyau bifurque : **positif**. Il prend des décisions. Reste à lui faire répéter une tâche."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "c",
-      "story": "La boucle `for (int i = 1; i <= N; i++)`.",
+      "story": "Pour traiter des séries de données, la boucle `for (int i = 1; i <= N; i++)` répète un nombre maîtrisé de fois.",
       "teach": "```c\nfor (int i = 1; i <= 3; i++) { printf(\"%d\\n\", i); }\n```",
       "brief": "Affiche les nombres de 1 à 5, un par ligne.",
       "validationType": "contains",
@@ -85,14 +85,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    // for ...\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    for (int i = 1; i <= 5; i++) { printf(\"%d\\n\", i); }\n    return 0;\n}",
       "hint": "`for (int i = 1; i <= 5; i++) { printf(\"%d\\n\", i); }`",
-      "reward": "**Palier Débutant terminé !** Place aux structures."
+      "reward": "Le cycle s'exécute, **de 1 à 5**, sans dévier. Le Noyau gère des **blocs de mémoire** entiers."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "c",
-      "story": "Un tableau stocke plusieurs valeurs. Indice à partir de 0.",
+      "story": "Un **tableau** réserve un bloc contigu en mémoire pour plusieurs valeurs. Indice à partir de 0 — l'adressage natif du C.",
       "teach": "```c\nint t[3] = {10, 20, 30};\nprintf(\"%d\\n\", t[0]);\n```",
       "brief": "Pour `int t[3] = {15, 20, 25};`, affiche le premier élément (15).",
       "validationType": "contains",
@@ -100,14 +100,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int t[3] = {15, 20, 25};\n    // affiche t[0]\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int t[3] = {15, 20, 25};\n    printf(\"%d\\n\", t[0]);\n    return 0;\n}",
       "hint": "`printf(\"%d\\n\", t[0]);`",
-      "reward": "Le premier élément. Parcourons."
+      "reward": "Le premier bloc mémoire répond. La structure du Noyau se dessine. Parcours-le."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir un tableau",
       "lang": "c",
-      "story": "On parcourt un tableau avec une boucle `for` (revue du palier Débutant).",
+      "story": "On lit un tableau entier avec une boucle `for` qui balaie chaque indice — la lecture séquentielle de la mémoire.",
       "teach": "```c\nint t[3] = {1, 2, 3};\nfor (int i = 0; i < 3; i++) { printf(\"%d\\n\", t[i]); }\n```",
       "brief": "Pour `int t[3] = {7, 8, 9};`, affiche chaque élément, un par ligne.",
       "validationType": "contains",
@@ -115,14 +115,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int t[3] = {7, 8, 9};\n    // for ... printf t[i]\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int t[3] = {7, 8, 9};\n    for (int i = 0; i < 3; i++) { printf(\"%d\\n\", t[i]); }\n    return 0;\n}",
       "hint": "`for (int i = 0; i < 3; i++) { printf(\"%d\\n\", t[i]); }`",
-      "reward": "Tu parcours. Rangeons du code réutilisable."
+      "reward": "Tout le bloc défile, octet après octet. Pour ne pas tout réécrire, il faut **encapsuler** la logique."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les fonctions",
       "lang": "c",
-      "story": "Une fonction se définit avant `main` : `int nom(params) { return ...; }`.",
+      "story": "Une **fonction** se déclare avant `main` : `int nom(params) { return ...; }`. C'est l'unité réutilisable du Noyau.",
       "teach": "```c\nint somme(int a, int b) { return a + b; }\n// dans main : printf(\"%d\\n\", somme(3, 4));\n```",
       "brief": "Écris `somme(a, b)` et affiche `somme(3, 4)` (7).",
       "validationType": "contains",
@@ -130,14 +130,14 @@
       "starterCode": "#include <stdio.h>\n// définis somme ici\nint main(void) {\n    // printf somme(3, 4)\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint somme(int a, int b) { return a + b; }\nint main(void) {\n    printf(\"%d\\n\", somme(3, 4));\n    return 0;\n}",
       "hint": "Définis `somme` AVANT `main`, puis appelle-la.",
-      "reward": "Ta première fonction. Révision !"
+      "reward": "Ta routine s'exécute proprement. Tu construis des composants du cœur. Combine-les."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — somme d'un tableau",
       "lang": "c",
-      "story": "Tu **réutilises** un tableau et une boucle `for` (paliers) pour accumuler.",
+      "story": "Tu **réutilises** tableau et boucle `for` pour additionner les valeurs d'un bloc — la première vraie opération du Noyau.",
       "teach": "```c\nint t[3] = {1, 2, 3};\nint s = 0;\nfor (int i = 0; i < 3; i++) { s += t[i]; }\nprintf(\"%d\\n\", s);\n```",
       "brief": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}` (15).",
       "validationType": "contains",
@@ -145,14 +145,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int t[5] = {1, 2, 3, 4, 5};\n    // accumule puis affiche\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int t[5] = {1, 2, 3, 4, 5};\n    int s = 0;\n    for (int i = 0; i < 5; i++) { s += t[i]; }\n    printf(\"%d\\n\", s);\n    return 0;\n}",
       "hint": "Accumule dans `s` au fil de la boucle.",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "La somme tombe, exacte. Mais l'Ombre a **corrompu** des secteurs. Il faut plus d'outils pour les traquer."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "La boucle while",
       "lang": "c",
-      "story": "`while (condition) { ... }` répète tant que la condition est vraie.",
+      "story": "La boucle `while (condition)` répète **tant que** l'état reste instable — utile quand le nombre d'itérations n'est pas connu d'avance.",
       "teach": "```c\nint i = 1;\nwhile (i <= 3) { printf(\"%d\\n\", i); i++; }\n```",
       "brief": "Avec `while`, affiche les nombres de 1 à 3.",
       "validationType": "contains",
@@ -160,14 +160,14 @@
       "starterCode": "#include <stdio.h>\nint main(void) {\n    int i = 1;\n    // while ...\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint main(void) {\n    int i = 1;\n    while (i <= 3) { printf(\"%d\\n\", i); i++; }\n    return 0;\n}",
       "hint": "`while (i <= 3) { printf(\"%d\\n\", i); i++; }`",
-      "reward": "Un autre type de boucle. Révision avancée !"
+      "reward": "Le Noyau itère jusqu'à stabilisation. Tu maîtrises les deux boucles. Combine tout pour compter les dégâts."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — compter avec une fonction",
       "lang": "c",
-      "story": "Tu **réutilises** fonction, tableau, boucle et `if` pour compter.",
+      "story": "Tu **réutilises** fonction, tableau, boucle et `if` pour compter les secteurs corrompus du Noyau.",
       "teach": "```c\nint compte_pairs(int t[], int n) {\n    int c = 0;\n    for (int i = 0; i < n; i++) { if (t[i] % 2 == 0) c++; }\n    return c;\n}\n```",
       "brief": "Écris `compte_pairs(t, n)` qui compte les nombres pairs, puis affiche le résultat pour `{1, 2, 3, 4}` (2).",
       "validationType": "contains",
@@ -175,14 +175,14 @@
       "starterCode": "#include <stdio.h>\n// définis compte_pairs ici\nint main(void) {\n    int t[4] = {1, 2, 3, 4};\n    // printf compte_pairs(t, 4)\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint compte_pairs(int t[], int n) {\n    int c = 0;\n    for (int i = 0; i < n; i++) { if (t[i] % 2 == 0) c++; }\n    return c;\n}\nint main(void) {\n    int t[4] = {1, 2, 3, 4};\n    printf(\"%d\\n\", compte_pairs(t, 4));\n    return 0;\n}",
       "hint": "La fonction boucle et teste `t[i] % 2 == 0`.",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "Le décompte est sans appel : l'Ombre est partout. Tu touches au cœur — là où le C **passe des paramètres** comme un vrai système."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Plusieurs paramètres",
       "lang": "c",
-      "story": "Une fonction peut prendre plusieurs paramètres.",
+      "story": "Une fonction peut prendre **plusieurs paramètres** — c'est ainsi que les routines du Noyau échangent des données.",
       "teach": "```c\nint addition(int a, int b, int c) { return a + b + c; }\n```",
       "brief": "Écris `addition(a, b, c)` et affiche `addition(10, 20, 12)` (42).",
       "validationType": "contains",
@@ -190,14 +190,14 @@
       "starterCode": "#include <stdio.h>\n// définis addition ici\nint main(void) {\n    // printf addition(10, 20, 12)\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint addition(int a, int b, int c) { return a + b + c; }\nint main(void) {\n    printf(\"%d\\n\", addition(10, 20, 12));\n    return 0;\n}",
       "hint": "`int addition(int a, int b, int c) { return a + b + c; }`",
-      "reward": "Des fonctions puissantes. Synthèse finale !"
+      "reward": "Tes routines communiquent. L'architecture du cœur se complète. Épreuve finale."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — moyenne d'un tableau",
       "lang": "c",
-      "story": "Synthèse : une fonction (palier) qui parcourt un tableau (Intermédiaire) et calcule.",
+      "story": "Synthèse : une **fonction** qui parcourt un **tableau** et calcule une moyenne — l'agrégat d'un capteur du Noyau.",
       "teach": "```c\nint moyenne(int t[], int n) {\n    int s = 0;\n    for (int i = 0; i < n; i++) { s += t[i]; }\n    return s / n;\n}\n```",
       "brief": "Écris `moyenne(t, n)` qui renvoie la moyenne entière, puis affiche-la pour `{12, 18, 12}` (14).",
       "validationType": "contains",
@@ -205,8 +205,62 @@
       "starterCode": "#include <stdio.h>\n// définis moyenne ici\nint main(void) {\n    int t[3] = {12, 18, 12};\n    // printf moyenne(t, 3)\n    return 0;\n}",
       "correction": "#include <stdio.h>\nint moyenne(int t[], int n) {\n    int s = 0;\n    for (int i = 0; i < n; i++) { s += t[i]; }\n    return s / n;\n}\nint main(void) {\n    int t[3] = {12, 18, 12};\n    printf(\"%d\\n\", moyenne(t, 3));\n    return 0;\n}",
       "hint": "Somme puis division par `n`.",
-      "reward": "Tu combines fonctions et tableaux. **Tu es expert en C.**"
+      "reward": "Tout s'assemble… mais un extrait ne stabilise pas un fragment. Pour récupérer le Fragment V, il faut de **vrais programmes** C — des fichiers `.c` compilés. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier programme .c",
+      "lang": "c",
+      "project": true,
+      "scriptName": "etat.c",
+      "story": "Un programme C est un **fichier** `.c` compilé puis exécuté. Écris ton premier outil de **rapport** sur l'état du Fragment V.",
+      "teach": "Un programme C minimal :\n\n```c\n#include <stdio.h>\nint main() {\n    char nom[] = \"ANIMA\";\n    printf(\"Systeme %s : EN LIGNE\\n\", nom);\n    return 0;\n}\n```\n\nCompilé et exécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un programme avec une chaîne `fragment` valant `\"V\"`, qui affiche exactement `Fragment V : STABLE`.",
+      "starterCode": "#include <stdio.h>\n\nint main() {\n    // Écris ton programme ici\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment V : STABLE",
+      "hint": "`char fragment[] = \"V\";`\n`printf(\"Fragment %s : STABLE\\n\", fragment);`",
+      "correction": "#include <stdio.h>\n\nint main() {\n    char fragment[] = \"V\";\n    printf(\"Fragment %s : STABLE\\n\", fragment);\n    return 0;\n}",
+      "reward": "Ton premier `.c` compile et tourne : **Fragment V : STABLE**. Mais ses secteurs sont fissurés — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un programme qui inspecte",
+      "lang": "c",
+      "project": true,
+      "scriptName": "scan.c",
+      "story": "Les **secteurs** du Noyau (un tableau de chaînes `OK`/`CORROMPU`) doivent être audités. Écris un programme qui les **parcourt tous** et compte les dégâts.",
+      "teach": "Pour comparer des chaînes en C, on utilise `strcmp` (de `<string.h>`), qui renvoie `0` si elles sont égales :\n\n```c\n#include <stdio.h>\n#include <string.h>\nint main() {\n    char *liste[] = {\"a\", \"b\", \"a\"};\n    int count = 0;\n    for (int i = 0; i < 3; i++) {\n        if (strcmp(liste[i], \"a\") == 0) count++;\n    }\n    printf(\"Total : %d\\n\", count);\n    return 0;\n}\n```",
+      "brief": "Avec `char *secteurs[] = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};`, compte ceux égaux à `CORROMPU` (via `strcmp`), et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char *secteurs[] = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n    // compte les CORROMPU, affiche le total\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `for (int i = 0; i < 4; i++)`, `if (strcmp(secteurs[i], \"CORROMPU\") == 0) count++;`, puis `printf(\"Secteurs corrompus : %d\\n\", count);`.",
+      "correction": "#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char *secteurs[] = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n    int count = 0;\n    for (int i = 0; i < 4; i++) {\n        if (strcmp(secteurs[i], \"CORROMPU\") == 0) count++;\n    }\n    printf(\"Secteurs corrompus : %d\\n\", count);\n    return 0;\n}",
+      "reward": "**2 secteurs corrompus.** Ton programme audite seul le Noyau. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Programme complet (fonction + argument)",
+      "lang": "c",
+      "project": true,
+      "scriptName": "reconstituer.c",
+      "args": [
+        "V"
+      ],
+      "story": "L'épreuve finale : un programme qui reçoit l'**identifiant du fragment en argument** (`argv`) et le **reconstitue** via une **fonction**. On le lancera avec l'argument `V`.",
+      "teach": "En C, `main` reçoit les arguments par `int argc, char *argv[]` : `argv[1]` est le premier argument passé au programme.\n\n```c\n#include <stdio.h>\nvoid saluer(char *x) {\n    printf(\"Bonjour %s\\n\", x);\n}\nint main(int argc, char *argv[]) {\n    saluer(argv[1]);\n    return 0;\n}\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris une fonction `reconstituer(char *f)` qui affiche `Fragment <f> reconstitué`, appelée depuis `main` avec `argv[1]`. Lancé avec l'argument `V` → `Fragment V reconstitué`.",
+      "starterCode": "#include <stdio.h>\n\n// définis reconstituer(char *f)\n\nint main(int argc, char *argv[]) {\n    // appelle reconstituer avec argv[1]\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment V reconstitué",
+      "hint": "`void reconstituer(char *f) { printf(\"Fragment %s reconstitué\\n\", f); }`\npuis dans main : `reconstituer(argv[1]);`",
+      "correction": "#include <stdio.h>\n\nvoid reconstituer(char *f) {\n    printf(\"Fragment %s reconstitué\\n\", f);\n}\n\nint main(int argc, char *argv[]) {\n    reconstituer(argv[1]);\n    return 0;\n}",
+      "reward": "**Fragment V reconstitué.** Le Noyau d'ANIMA répond de nouveau à ses ordres — et ton programme, un vrai outil à **exporter**. Cinq fragments récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du C\n\nQuatre paliers gravis : printf/variables/calculs/if/for → tableaux/parcours/fonctions → while/compter → multi-paramètres/synthèse.\n\nLe C est la fondation des systèmes et de l'embarqué. **Tu es désormais expert en bases du C.**\n\n> Nécessite gcc dans WSL (`sudo apt install gcc`)."
+  "finale": "## Fragment V récupéré — le Noyau\n\nDu premier `printf` dans un cœur muet jusqu'à un **programme `.c` complet** (compilé, avec arguments et fonctions), tu as repris le Noyau d'ANIMA :\n\n- **Réveiller le Noyau** : printf, variables typées, calculs, if, for\n- **Mémoire & logique** : tableaux, parcours, fonctions\n- **Boucles & comptage** : while, agrégats\n- **Le cœur** : paramètres multiples, moyenne\n- **Projets** : 3 programmes complets (rapport, inspection, reconstitution avec argument)\n\nCinq fragments d'ANIMA en main : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python), la Vitrine (PHP), le Noyau (C). Restent ses **moteurs** (C++), sa **mémoire** (SQL), son **historique** (Git)… et le choix final.\n\n**Tu es désormais expert en C.**"
 }
