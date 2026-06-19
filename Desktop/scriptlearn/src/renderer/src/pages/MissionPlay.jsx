@@ -92,6 +92,13 @@ export default function MissionPlay() {
     )
   }
 
+  // Exporte le script écrit par l'apprenant dans un vrai fichier (artefact portfolio).
+  const exportScript = () => {
+    if (!code.trim()) return
+    const name = chapter.scriptName || `${campaign.id}-${chapter.id}.sh`
+    window.electronAPI.app.saveScript({ filename: name, content: code })
+  }
+
   const handleRun = async () => {
     if (staticLang) return
     setStatus(STATUS.idle)
@@ -223,12 +230,24 @@ export default function MissionPlay() {
         {/* Panneau droit — CODE + sortie */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Barre d'actions */}
-          <div className="flex items-center gap-3 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
             <span className="text-xs px-2 py-0.5 rounded font-medium"
               style={{ backgroundColor: `${LANG_COLORS[lang] ?? accent}20`, color: LANG_COLORS[lang] ?? accent }}>
               {LANG_LABELS[lang] ?? lang}
             </span>
+            {/* Acte « projet » : on écrit un vrai script (multi-lignes) exécuté comme un fichier. */}
+            {chapter.project && (
+              <span className="text-xs px-2 py-0.5 rounded font-medium bg-[#1c1c1a]" style={{ color: accent }}>📜 Projet — script complet</span>
+            )}
             <div className="ml-auto flex items-center gap-2">
+              {/* Export du script (artefact réutilisable) — uniquement pour les actes projet. */}
+              {chapter.project && (
+                <button onClick={exportScript}
+                  className="px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors"
+                  title="Enregistrer ce script dans un fichier">
+                  ↓ Exporter
+                </button>
+              )}
               {!staticLang && (
                 <button onClick={handleRun}
                   className="px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors">

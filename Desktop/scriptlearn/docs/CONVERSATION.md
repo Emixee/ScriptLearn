@@ -1,9 +1,29 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.15.1
+## Version actuelle : 0.16.0
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.0 — Scripts complets, export & univers « Réveil » (Voie du Bash) (2026-06-19)
+
+L'objectif du logiciel est d'apprendre à **écrire des scripts**, pas seulement des commandes. Or les Voies s'arrêtaient aux one-liners. Première livraison (Voie par Voie) : la **Voie du Bash**.
+
+### Architecture commune (faite une fois)
+- **Actes « projet »** : champ `project: true` (+ `scriptName`, `args`). En validation, le code est écrit dans un **vrai fichier script** et **exécuté avec ses arguments** — `terminal.js` `runValidation(lang, code, project, args)` : bash/php/c/cpp/csharp/java via fichier WSL + `chmod`/compilation + run avec args ; python/powershell via fichier temp Windows lancé avec args. `useCodeRunner.validate` transmet `project`/`args`.
+- **Export** : IPC `app:saveScript` (dialog « Enregistrer sous » + écriture) ; bouton **« ↓ Exporter »** sur les actes projet dans `MissionPlay.jsx` → l'apprenant garde un artefact réutilisable.
+
+### Univers partagé « Réveil »
+- **ANIMA** : une IA démantelée, ses fragments éparpillés à travers les langages, qui se réveille. Chaque Voie = récupérer un fragment ; final global (plus tard) : la **contenir** ou la **libérer**. La Voie du Bash = la **Machine** (Fragment I) ; narration reliée (synopsis/e5/finale).
+
+### Voie du Bash : +3 actes projet (21 → 24)
+- **p1** `etat.sh` : premier vrai script (shebang + variable + echo).
+- **p2** `scan.sh` : script structuré (variables + boucle `for` + condition) qui inspecte des fichiers semés.
+- **p3** `reconstituer.sh` : script complet avec **fonction + argument `$1`** (exécuté avec l'argument `I`, export activé).
+
+Prochaines livraisons : PowerShell, Python, puis compilés, puis narration « Réveil » des Voies statiques.
 
 ---
 

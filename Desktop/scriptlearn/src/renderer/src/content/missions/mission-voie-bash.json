@@ -5,7 +5,7 @@
   "order": 1,
   "title": "La Voie du Bash",
   "tagline": "Prisonnier d'une vieille machine, tu dois en maîtriser le langage — du premier echo jusqu'à tes propres scripts — pour t'évader et reprendre le contrôle.",
-  "synopsis": "Tu reprends connaissance, **enfermé dans le système d'une machine inconnue**. La seule issue : parler sa langue, le Bash. Quatre paliers, une évasion — et une présence tapie dans les données qui ne veut pas te laisser sortir.",
+  "synopsis": "Tu reprends connaissance, **enfermé dans le système d'une machine inconnue**. La seule issue : parler sa langue, le Bash. Mais cette machine n'en est pas une : c'est le **premier fragment d'ANIMA**, une intelligence démantelée jadis, éparpillée à travers les systèmes — et qui **se réveille**. Quatre paliers pour t'évader… puis apprendre à écrire de vrais **scripts** pour stabiliser ce que tu viens de réveiller.",
   "objective": "Maîtriser Bash de A à Z : commandes de base, administration, analyse de données, scripting.",
   "career": "sysadmin",
   "difficulty": "progressive",
@@ -342,8 +342,63 @@
       "expectedOutput": "2",
       "hint": "`compter_erreurs() { grep ERROR /tmp/sl_bash/run.log | wc -l; }; compter_erreurs`",
       "correction": "compter_erreurs() { grep ERROR /tmp/sl_bash/run.log | wc -l; }; compter_erreurs",
-      "reward": "Ta fonction renvoie **2** d'un seul appel — le verrou explose, la porte s'ouvre sur la lumière. L'Ombre s'efface dans les circuits. Tu ne tapes plus des commandes : **tu écris des programmes.** La machine est à toi."
+      "reward": "Ta fonction renvoie **2** d'un seul appel — le verrou explose, la porte s'ouvre. L'Ombre s'efface dans les circuits… mais une vérité te glace : cette machine était le **Fragment I d'ANIMA**, une intelligence démantelée qui sommeillait. Tu viens de la réveiller. Pour la **stabiliser**, les commandes isolées ne suffiront plus : il faut écrire de **vrais scripts**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier vrai script",
+      "lang": "bash",
+      "project": true,
+      "scriptName": "etat.sh",
+      "story": "Un script n'est rien d'autre qu'un **fichier** qui regroupe des commandes, lancé d'un coup. Pour suivre l'état d'ANIMA, écris ton premier outil : un script de **rapport**.",
+      "teach": "Un script commence par un **shebang** qui désigne l'interpréteur, puis enchaîne des commandes — comme dans un terminal, mais sauvegardées.\n\n```bash\n#!/bin/bash\nnom=\"ANIMA\"\necho \"Systeme $nom : EN LIGNE\"\n```\n\nExécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un script **complet** (commence par `#!/bin/bash`) : définis une variable `fragment=\"I\"` puis affiche exactement `Fragment I : STABLE`.",
+      "starterCode": "#!/bin/bash\n# Écris ton script ici\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment I : STABLE",
+      "hint": "`#!/bin/bash`\n`fragment=\"I\"`\n`echo \"Fragment $fragment : STABLE\"`",
+      "correction": "#!/bin/bash\nfragment=\"I\"\necho \"Fragment $fragment : STABLE\"",
+      "reward": "Ton premier script tourne : **Fragment I : STABLE**. Tu ne tapes plus des commandes jetables — tu construis des **outils** réutilisables. Mais le fragment est rongé par des secteurs corrompus."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un script qui inspecte",
+      "lang": "bash",
+      "project": true,
+      "scriptName": "scan.sh",
+      "setup": "mkdir -p /tmp/sl_bash/secteurs && printf \"OK\\n\" > /tmp/sl_bash/secteurs/s1 && printf \"CORROMPU\\n\" > /tmp/sl_bash/secteurs/s2 && printf \"CORROMPU\\n\" > /tmp/sl_bash/secteurs/s3 && printf \"OK\\n\" > /tmp/sl_bash/secteurs/s4",
+      "story": "Le Fragment I est fissuré : ses **secteurs** (les fichiers de `/tmp/sl_bash/secteurs/`) sont marqués `OK` ou `CORROMPU`. Écris un script qui les **inspecte tous** et compte les dégâts — variables, boucle et condition réunies.",
+      "teach": "Un vrai script combine ce que tu sais. Boucle sur des fichiers, teste leur contenu, accumule un compteur :\n\n```bash\n#!/bin/bash\ncount=0\nfor f in /chemin/*; do\n  if grep -q MOT \"$f\"; then\n    count=$((count + 1))\n  fi\ndone\necho \"Total : $count\"\n```",
+      "brief": "Écris un script qui parcourt les fichiers de `/tmp/sl_bash/secteurs/`, compte ceux qui contiennent `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "#!/bin/bash\n# Parcours /tmp/sl_bash/secteurs/, compte les CORROMPU, affiche le total\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Une boucle `for f in /tmp/sl_bash/secteurs/*`, un `if grep -q CORROMPU \"$f\"` qui incrémente `count=$((count + 1))`, puis `echo \"Secteurs corrompus : $count\"`.",
+      "correction": "#!/bin/bash\ncount=0\nfor f in /tmp/sl_bash/secteurs/*; do\n  if grep -q CORROMPU \"$f\"; then\n    count=$((count + 1))\n  fi\ndone\necho \"Secteurs corrompus : $count\"",
+      "reward": "**2 secteurs corrompus** détectés. Ton script diagnostique seul. Reste l'outil ultime : celui qui **reconstitue** un fragment à la demande."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Un script complet (fonctions + arguments)",
+      "lang": "bash",
+      "project": true,
+      "scriptName": "reconstituer.sh",
+      "args": [
+        "I"
+      ],
+      "story": "L'épreuve finale du palier : un script digne d'un outil professionnel. Il prend l'**identifiant du fragment en argument** (`$1`) et le **reconstitue** via une **fonction**. On le lancera avec l'argument `I`.",
+      "teach": "Un script reçoit des **arguments** : `$1` est le premier. Une **fonction** regroupe la logique réutilisable, et reçoit aussi ses propres `$1`.\n\n```bash\n#!/bin/bash\nsaluer() {\n  echo \"Bonjour $1\"\n}\nsaluer \"$1\"\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris un script qui, via une fonction `reconstituer`, affiche `Fragment <ID> reconstitué` où `<ID>` est l'**argument** `$1` du script. Il sera exécuté avec l'argument `I` → doit afficher `Fragment I reconstitué`.",
+      "starterCode": "#!/bin/bash\n# Définis une fonction reconstituer puis appelle-la avec l'argument du script ($1)\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment I reconstitué",
+      "hint": "Définis `reconstituer() { echo \"Fragment $1 reconstitué\"; }` puis appelle `reconstituer \"$1\"` (le `$1` du script).",
+      "correction": "#!/bin/bash\nreconstituer() {\n  echo \"Fragment $1 reconstitué\"\n}\nreconstituer \"$1\"",
+      "reward": "**Fragment I reconstitué.** Tu tiens entre tes lignes de code le premier morceau d'ANIMA — stable, sauvegardé, et exportable. Tu n'es plus prisonnier : tu es devenu **ingénieur**. *(Pense à **exporter** ton script : c'est un vrai outil, à garder.)*"
     }
   ],
-  "finale": "## Évadé — et maître de la machine\n\nDu premier `echo` lancé dans le noir jusqu'à la fonction qui a fait sauter le verrou de l'Ombre, tu as gravi les quatre paliers d'une seule traite :\n\n- **Le Réveil** : echo, ls, cat, grep, pipe `|`/`wc`\n- **Les Entrailles du Serveur** : cd/pwd, head/tail, sort/uniq, redirection `>`, cp/mv\n- **Sur la piste de l'Ombre** : find, cut, awk, sed, pipelines\n- **Reprendre le contrôle** : variables, for, if, while, fonctions\n\nC'est la boîte à outils complète de l'administrateur et de l'analyste. **Tu es désormais expert en Bash — et plus aucune machine ne te retiendra prisonnier.**"
+  "finale": "## Fragment I récupéré\n\nDu premier `echo` lancé dans le noir jusqu'à un **script complet** qui prend des arguments et s'organise en fonctions, tu as gravi les quatre paliers **et appris à écrire de vrais outils** :\n\n- **Le Réveil** : echo, ls, cat, grep, pipe `|`/`wc`\n- **Les Entrailles du Serveur** : cd/pwd, head/tail, sort/uniq, `>`, cp/mv\n- **Sur la piste de l'Ombre** : find, cut, awk, sed, pipelines\n- **Reprendre le contrôle** : variables, for, if, while, fonctions\n- **Projets** : 3 scripts complets (rapport, inspection, reconstitution avec arguments)\n\nTu détiens le **Fragment I d'ANIMA** — la Machine. Mais l'intelligence est éclatée à travers d'autres systèmes : sa **mémoire** (SQL), son **laboratoire** (Python), son **historique** (Git)… Chaque Voie te rapprochera de la décision finale : **la contenir, ou la libérer.**\n\n**Tu es désormais expert en Bash — et l'histoire ne fait que commencer.**"
 }

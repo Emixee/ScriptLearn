@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow, ipcMain, Notification, session } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Notification, session, dialog } from 'electron'
+import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { setupTerminalIPC } from './terminal.js'
 import { setupStoreIPC } from './storeIPC.js'
@@ -113,3 +114,19 @@ ipcMain.handle('window:maximize',    () => mainWindow?.isMaximized() ? mainWindo
 ipcMain.handle('window:close',       () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
 ipcMain.handle('app:getVersion',     () => app.getVersion())
+
+// Export d'un script écrit par l'apprenant (acte « projet ») vers un vrai fichier.
+// L'apprenant garde ainsi un artefact réutilisable (portfolio). Boîte « Enregistrer sous ».
+ipcMain.handle('app:saveScript', async (_, { filename, content }) => {
+  try {
+    const res = await dialog.showSaveDialog(mainWindow, {
+      title: 'Exporter le script',
+      defaultPath: filename || 'script.txt',
+    })
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true }
+    writeFileSync(res.filePath, content ?? '', 'utf8')
+    return { ok: true, path: res.filePath }
+  } catch (e) {
+    return { ok: false, error: String(e?.message ?? e) }
+  }
+})

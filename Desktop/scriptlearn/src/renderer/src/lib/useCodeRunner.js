@@ -45,7 +45,11 @@ export function useCodeRunner(termId, lang) {
       return validateStatic(chapter, trimmed)
     }
     // Exécution cachée déterministe (les fichiers de données ont été créés par runSetup).
-    const { output } = await window.electronAPI.terminal.runValidation({ lang, code: trimmed })
+    // Actes « projet » : project/args → le code est écrit dans un vrai fichier script
+    // et exécuté avec ses arguments (apprentissage de l'écriture de scripts complets).
+    const { output } = await window.electronAPI.terminal.runValidation({
+      lang, code: trimmed, project: chapter.project, args: chapter.args,
+    })
     const clean = output ?? ''
     const correct = chapter.validationType === 'output_nonempty'
       ? trimmed.length > 0

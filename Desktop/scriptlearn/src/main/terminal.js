@@ -1,6 +1,8 @@
 import { ipcMain } from 'electron'
 import { execSync, execFileSync } from 'child_process'
-import { existsSync } from 'fs'
+import { existsSync, writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 import { EventEmitter } from 'events'
 // node-pty fournit un VRAI pseudo-terminal (PTY). Sans lui (ancien `spawn` à tubes),
 // le shell ne voit pas de TTY et readline désactive la complétion Tab, l'historique
@@ -91,22 +93,43 @@ function createSession(id, shell, cols = 80, rows = 24) {
 // comparaison (ex. `echo SESAME` contient déjà « SESAME »). On exécute donc le code
 // dans un processus jetable, non affiché : sortie propre et déterministe.
 
-// Exécute un programme en lui passant le code par stdin, et renvoie stdout+stderr
-// quel que soit le code de sortie (les erreurs de compilation sont ainsi visibles).
+// Exécute un programme et renvoie stdout+stderr quel que soit le code de sortie
+// (les erreurs de compilation/exécution sont ainsi visibles). `input` optionnel :
+// si fourni, c'est le code passé par stdin ; sinon le programme lit ses propres
+// fichiers/arguments (mode « projet »).
 function runCapture(fileName, args, input) {
   try {
-    return execFileSync(fileName, args, {
-      input, timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024
-    }) ?? ''
+    const opts = { timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 }
+    if (input !== undefined) opts.input = input
+    return execFileSync(fileName, args, opts) ?? ''
   } catch (e) {
     return String((e.stdout ?? '') + (e.stderr ?? '')) || String(e.message ?? e)
   }
 }
 
+// Échappe des arguments pour une ligne de commande bash (single-quotes).
+function shArgs(args) {
+  if (!args || !args.length) return ''
+  return ' ' + args.map(a => `'${String(a).replace(/'/g, `'\\''`)}'`).join(' ')
+}
+
 // Construit le script bash one-shot pour les langages de la famille bash (WSL).
-// Mêmes recettes que buildRunData côté renderer (heredoc PHP, compilation C/C++/C#/Java).
-function buildBashScript(lang, code) {
+// Mode `project` : on écrit un VRAI fichier (le shebang compte) qu'on rend
+// exécutable et qu'on lance AVEC ses arguments (`$1`/argv) — apprentissage de
+// l'écriture de scripts complets, pas juste de one-liners.
+function buildBashScript(lang, code, project, args) {
   const heredoc = (path, c) => `cat > ${path} <<'SLEOF'\n${c}\nSLEOF\n`
+  const a = shArgs(args)
+  if (project) {
+    switch (lang) {
+      case 'php':    return heredoc('/tmp/sl_proj.php', code) + `php /tmp/sl_proj.php${a}`
+      case 'c':      return heredoc('/tmp/sl.c', code) + `gcc /tmp/sl.c -o /tmp/sl_bin 2>&1 && /tmp/sl_bin${a}`
+      case 'cpp':    return heredoc('/tmp/sl.cpp', code) + `g++ /tmp/sl.cpp -o /tmp/sl_bin 2>&1 && /tmp/sl_bin${a}`
+      case 'java':   return heredoc('/tmp/Main.java', code) + `cd /tmp && javac Main.java 2>&1 && java Main${a}`
+      case 'csharp': return heredoc('/tmp/Main.cs', code) + `cd /tmp && mcs Main.cs 2>&1 && mono Main.exe${a}`
+      default:       return heredoc('/tmp/sl_proj.sh', code) + `chmod +x /tmp/sl_proj.sh\n/tmp/sl_proj.sh${a}` // bash
+    }
+  }
   switch (lang) {
     case 'php':    return `php << 'PHPEOF'\n${code}\nPHPEOF`
     case 'c':      return heredoc('/tmp/sl.c', code) + 'gcc /tmp/sl.c -o /tmp/sl_bin 2>&1 && /tmp/sl_bin'
@@ -117,11 +140,27 @@ function buildBashScript(lang, code) {
   }
 }
 
-function runValidation(lang, code) {
-  if (lang === 'python')     return runCapture('python', [], code)
-  if (lang === 'powershell') return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
+function runValidation(lang, code, project, args) {
+  // Python / PowerShell natifs en mode projet : on écrit un vrai fichier puis on
+  // l'exécute avec ses arguments (impossible via stdin, qui ne fournit pas argv).
+  if (lang === 'python') {
+    if (project) {
+      const f = join(tmpdir(), 'sl_proj.py')
+      writeFileSync(f, code, 'utf8')
+      return runCapture('python', [f, ...(args ?? [])])
+    }
+    return runCapture('python', [], code)
+  }
+  if (lang === 'powershell') {
+    if (project) {
+      const f = join(tmpdir(), 'sl_proj.ps1')
+      writeFileSync(f, code, 'utf8')
+      return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', f, ...(args ?? [])])
+    }
+    return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
+  }
   // bash, php, c, cpp, csharp, java → via une invocation bash WSL jetable
-  return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code))
+  return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code, project, args))
 }
 
 export function setupTerminalIPC(mainWindow) {
@@ -143,9 +182,10 @@ export function setupTerminalIPC(mainWindow) {
   })
 
   // Validation : exécute le code en coulisses et renvoie la sortie à comparer.
-  ipcMain.handle('terminal:runValidation', (_, { lang, code }) => {
+  // `project` (+ `args`) → mode « fichier script exécuté avec arguments ».
+  ipcMain.handle('terminal:runValidation', (_, { lang, code, project, args }) => {
     try {
-      return { output: runValidation(lang, code) }
+      return { output: runValidation(lang, code, project, args) }
     } catch (e) {
       return { output: String(e?.message ?? e) }
     }

@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
+    // Enregistre un script écrit par l'apprenant dans un vrai fichier (export portfolio).
+    saveScript: (opts) => ipcRenderer.invoke('app:saveScript', opts),
   },
   window: {
     minimize:    () => ipcRenderer.invoke('window:minimize'),
