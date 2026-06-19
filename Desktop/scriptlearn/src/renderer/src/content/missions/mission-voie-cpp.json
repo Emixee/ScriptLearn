@@ -4,8 +4,8 @@
   "language": "cpp",
   "order": 13,
   "title": "La Voie du C++",
-  "tagline": "Le C avec objets et confort moderne, de cout aux vecteurs. Débutant → expert.",
-  "synopsis": "Le C++ ajoute objets, std::string et std::vector au C. Programme après programme, tu gagnes en puissance et en confort.",
+  "tagline": "Les Moteurs d'ANIMA — sa puissance de calcul en C++, de cout jusqu'à tes propres programmes. Débutant → expert.",
+  "synopsis": "Le Noyau repris, tu mets le cap sur les **Moteurs** : la fonderie de calcul d'ANIMA, écrite en **C++**, là où vitesse et objets se rencontrent. L'Ombre a déréglé leur régime — vecteurs faussés, secteurs en surchauffe. Relance-les, instruction après instruction, puis compile les **programmes** qui rendront le **Fragment VI**.",
   "objective": "Maîtriser les bases du C++ : cout, variables, boucles, fonctions, vecteurs.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "cpp",
-      "story": "En C++, `std::cout << ... << std::endl;` affiche du texte.",
+      "story": "Les Moteurs sont à l'arrêt. En C++, `std::cout << ... << std::endl;` envoie un flux vers la sortie — le premier souffle des turbines.",
       "teach": "```cpp\n#include <iostream>\nint main() {\n    std::cout << \"Bonjour\" << std::endl;\n    return 0;\n}\n```",
       "brief": "Affiche le mot **SESAME**.",
       "validationType": "contains",
@@ -25,14 +25,14 @@
       "starterCode": "#include <iostream>\nint main() {\n    // affiche ici\n    return 0;\n}",
       "correction": "#include <iostream>\nint main() {\n    std::cout << \"SESAME\" << std::endl;\n    return 0;\n}",
       "hint": "`std::cout << \"SESAME\" << std::endl;`",
-      "reward": "Le C++ répond. Mémorisons."
+      "reward": "Une turbine s'allume : le flux passe. Il faut maintenant que les Moteurs **mémorisent** leurs réglages."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Variables et chaînes",
       "lang": "cpp",
-      "story": "`std::string` stocke du texte. On enchaîne avec `<<`.",
+      "story": "Un `std::string` stocke du texte ; on enchaîne les valeurs avec `<<` dans un même flux.",
       "teach": "```cpp\nstd::string nom = \"Ada\";\nstd::cout << \"Bonjour \" << nom << std::endl;\n```",
       "brief": "Avec `std::string nom = \"C++\";`, affiche `Bonjour C++`.",
       "validationType": "contains",
@@ -40,14 +40,14 @@
       "starterCode": "#include <iostream>\n#include <string>\nint main() {\n    std::string nom = \"C++\";\n    // affiche\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <string>\nint main() {\n    std::string nom = \"C++\";\n    std::cout << \"Bonjour \" << nom << std::endl;\n    return 0;\n}",
       "hint": "`std::cout << \"Bonjour \" << nom << std::endl;`",
-      "reward": "Tes chaînes s'assemblent. Et calculer ?"
+      "reward": "Le réglage est gravé et affiché. Les Moteurs reprennent un état. Et s'ils **calculaient** à pleine charge ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "cpp",
-      "story": "On peut afficher un calcul directement dans `cout`.",
+      "story": "Les Moteurs sont faits pour calculer — on insère un calcul directement dans `cout`.",
       "teach": "```cpp\nstd::cout << (10 + 7) << std::endl;\n```",
       "brief": "Affiche le résultat de **12 + 30**.",
       "validationType": "contains",
@@ -55,14 +55,14 @@
       "starterCode": "#include <iostream>\nint main() {\n    // affiche le calcul\n    return 0;\n}",
       "correction": "#include <iostream>\nint main() {\n    std::cout << (12 + 30) << std::endl;\n    return 0;\n}",
       "hint": "`std::cout << (12 + 30) << std::endl;`",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42** : la fonderie crache son premier résultat. Mais un moteur doit **réguler** son régime."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "cpp",
-      "story": "`if (condition) { ... }`.",
+      "story": "Une condition régule l'exécution : le code agit **si** un seuil est franchi.",
       "teach": "```cpp\nif (n > 0) { std::cout << \"positif\" << std::endl; }\n```",
       "brief": "Pour `int n = 7;`, affiche `positif` si n > 0.",
       "validationType": "contains",
@@ -70,14 +70,14 @@
       "starterCode": "#include <iostream>\nint main() {\n    int n = 7;\n    // if ...\n    return 0;\n}",
       "correction": "#include <iostream>\nint main() {\n    int n = 7;\n    if (n > 0) { std::cout << \"positif\" << std::endl; }\n    return 0;\n}",
       "hint": "`if (n > 0) { std::cout << \"positif\" << std::endl; }`",
-      "reward": "Ton programme décide. Et répéter ?"
+      "reward": "Le régime s'ajuste : **positif**. Les Moteurs décident. Reste à enchaîner les cycles."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "cpp",
-      "story": "La boucle `for (int i = 1; i <= N; i++)`.",
+      "story": "La boucle `for (int i = 1; i <= N; i++)` cadence un nombre maîtrisé de cycles moteur.",
       "teach": "```cpp\nfor (int i = 1; i <= 3; i++) { std::cout << i << std::endl; }\n```",
       "brief": "Affiche les nombres de 1 à 5, un par ligne.",
       "validationType": "contains",
@@ -85,14 +85,14 @@
       "starterCode": "#include <iostream>\nint main() {\n    // for ...\n    return 0;\n}",
       "correction": "#include <iostream>\nint main() {\n    for (int i = 1; i <= 5; i++) { std::cout << i << std::endl; }\n    return 0;\n}",
       "hint": "`for (int i = 1; i <= 5; i++) { std::cout << i << std::endl; }`",
-      "reward": "**Palier Débutant terminé !** Place aux vecteurs."
+      "reward": "Les cycles s'enchaînent, **de 1 à 5**, sans à-coup. Les Moteurs brassent des **flux de données** entiers."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les vecteurs",
       "lang": "cpp",
-      "story": "Un `std::vector` est un tableau dynamique. Indice à partir de 0.",
+      "story": "Un `std::vector` est un **tableau dynamique** qui grandit selon la charge — le réservoir de données des Moteurs. Indice à partir de 0.",
       "teach": "```cpp\nstd::vector<int> v = {10, 20, 30};\nstd::cout << v[0] << std::endl;\n```",
       "brief": "Pour `std::vector<int> v = {15, 20, 25};`, affiche le premier élément (15).",
       "validationType": "contains",
@@ -100,14 +100,14 @@
       "starterCode": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {15, 20, 25};\n    // affiche v[0]\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {15, 20, 25};\n    std::cout << v[0] << std::endl;\n    return 0;\n}",
       "hint": "`std::cout << v[0] << std::endl;`",
-      "reward": "Le premier élément. Parcourons."
+      "reward": "Le réservoir répond. La capacité des Moteurs grandit. Parcours-le."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir un vecteur",
       "lang": "cpp",
-      "story": "La boucle `for (int x : v)` parcourt chaque élément (« range-based »).",
+      "story": "La boucle « range-based » `for (auto x : v)` lit chaque élément d'un vecteur sans gérer d'indice — le flux continu.",
       "teach": "```cpp\nfor (int x : v) { std::cout << x << std::endl; }\n```",
       "brief": "Pour `std::vector<int> v = {7, 8, 9};`, affiche chaque élément, un par ligne.",
       "validationType": "contains",
@@ -115,14 +115,14 @@
       "starterCode": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {7, 8, 9};\n    // for (int x : v) ...\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {7, 8, 9};\n    for (int x : v) { std::cout << x << std::endl; }\n    return 0;\n}",
       "hint": "`for (int x : v) { std::cout << x << std::endl; }`",
-      "reward": "Tu parcours. Rangeons du code."
+      "reward": "Tout le réservoir défile d'un trait. Pour ne pas dupliquer la logique, il faut l'**encapsuler**."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les fonctions",
       "lang": "cpp",
-      "story": "Une fonction se définit avant `main` : `int nom(params) { return ...; }`.",
+      "story": "Une **fonction** se déclare avant `main` : `int nom(params) { return ...; }`. C'est le module réutilisable des Moteurs.",
       "teach": "```cpp\nint produit(int a, int b) { return a * b; }\n```",
       "brief": "Écris `produit(a, b)` et affiche `produit(6, 7)` (42).",
       "validationType": "contains",
@@ -130,14 +130,14 @@
       "starterCode": "#include <iostream>\n// définis produit ici\nint main() {\n    // cout produit(6, 7)\n    return 0;\n}",
       "correction": "#include <iostream>\nint produit(int a, int b) { return a * b; }\nint main() {\n    std::cout << produit(6, 7) << std::endl;\n    return 0;\n}",
       "hint": "Définis `produit` AVANT `main`.",
-      "reward": "Révision !"
+      "reward": "Ton module tourne en régime stable. Tu assembles des pièces. Combine-les."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — somme d'un vecteur",
       "lang": "cpp",
-      "story": "Tu **réutilises** vecteur et boucle range-based (palier) pour accumuler.",
+      "story": "Tu **réutilises** vecteur et boucle range-based pour sommer la charge d'un réservoir.",
       "teach": "```cpp\nint s = 0;\nfor (int x : v) { s += x; }\nstd::cout << s << std::endl;\n```",
       "brief": "Calcule et affiche la somme de `{2, 4, 6, 8}` (20).",
       "validationType": "contains",
@@ -145,14 +145,14 @@
       "starterCode": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {2, 4, 6, 8};\n    // accumule puis affiche\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> v = {2, 4, 6, 8};\n    int s = 0;\n    for (int x : v) { s += x; }\n    std::cout << s << std::endl;\n    return 0;\n}",
       "hint": "Accumule dans `s` au fil de la boucle.",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "La somme est nette. Mais l'Ombre a mis des secteurs **en surchauffe**. Il faut plus d'outils pour les traquer."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "La boucle while",
       "lang": "cpp",
-      "story": "`while (condition) { ... }`.",
+      "story": "La boucle `while (condition)` tourne **tant que** le régime reste instable — quand le nombre de cycles n'est pas connu d'avance.",
       "teach": "```cpp\nint i = 1;\nwhile (i <= 3) { std::cout << i << std::endl; i++; }\n```",
       "brief": "Avec `while`, affiche les nombres de 1 à 3.",
       "validationType": "contains",
@@ -160,14 +160,14 @@
       "starterCode": "#include <iostream>\nint main() {\n    int i = 1;\n    // while ...\n    return 0;\n}",
       "correction": "#include <iostream>\nint main() {\n    int i = 1;\n    while (i <= 3) { std::cout << i << std::endl; i++; }\n    return 0;\n}",
       "hint": "`while (i <= 3) { std::cout << i << std::endl; i++; }`",
-      "reward": "Révision avancée !"
+      "reward": "Les Moteurs itèrent jusqu'au point d'équilibre. Tu maîtrises les deux boucles. Compte les dégâts."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — compter avec une fonction",
       "lang": "cpp",
-      "story": "Tu **réutilises** fonction, vecteur, boucle et `if`.",
+      "story": "Tu **réutilises** fonction, vecteur, boucle et `if` pour compter les secteurs en surchauffe.",
       "teach": "```cpp\nint comptePairs(std::vector<int> v) {\n    int c = 0;\n    for (int x : v) { if (x % 2 == 0) c++; }\n    return c;\n}\n```",
       "brief": "Écris `comptePairs(v)` qui compte les pairs, puis affiche le résultat pour `{1, 2, 3, 4}` (2).",
       "validationType": "contains",
@@ -175,14 +175,14 @@
       "starterCode": "#include <iostream>\n#include <vector>\n// définis comptePairs ici\nint main() {\n    std::vector<int> v = {1, 2, 3, 4};\n    // cout comptePairs(v)\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <vector>\nint comptePairs(std::vector<int> v) {\n    int c = 0;\n    for (int x : v) { if (x % 2 == 0) c++; }\n    return c;\n}\nint main() {\n    std::vector<int> v = {1, 2, 3, 4};\n    std::cout << comptePairs(v) << std::endl;\n    return 0;\n}",
       "hint": "La fonction boucle et teste `x % 2 == 0`.",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "Le décompte révèle l'ampleur de la surchauffe. Tu approches du cœur des Moteurs — là où le C++ **structure** ses données en objets."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Une struct",
       "lang": "cpp",
-      "story": "Une `struct` regroupe des données. On accède aux champs avec `.`.",
+      "story": "Une `struct` regroupe des données liées (champs accédés par `.`) — la fiche technique d'un Moteur.",
       "teach": "```cpp\nstruct Point { int x; };\nPoint p;\np.x = 42;\nstd::cout << p.x << std::endl;\n```",
       "brief": "Crée une `struct Point { int x; };`, mets `p.x = 42` et affiche-le.",
       "validationType": "contains",
@@ -190,14 +190,14 @@
       "starterCode": "#include <iostream>\n// struct Point ...\nint main() {\n    // Point p; p.x = 42; cout p.x\n    return 0;\n}",
       "correction": "#include <iostream>\nstruct Point { int x; };\nint main() {\n    Point p;\n    p.x = 42;\n    std::cout << p.x << std::endl;\n    return 0;\n}",
       "hint": "Définis la struct, crée `p`, mets `p.x`.",
-      "reward": "Tes propres types ! Synthèse finale."
+      "reward": "Ta structure modélise un Moteur entier. L'architecture se complète. Épreuve finale."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — moyenne d'un vecteur",
       "lang": "cpp",
-      "story": "Synthèse : une fonction (palier) qui parcourt un vecteur (Intermédiaire) et calcule.",
+      "story": "Synthèse : une **fonction** qui parcourt un **vecteur** et calcule une moyenne — la télémétrie d'un Moteur.",
       "teach": "```cpp\nint moyenne(std::vector<int> v) {\n    int s = 0;\n    for (int x : v) { s += x; }\n    return s / v.size();\n}\n```",
       "brief": "Écris `moyenne(v)` qui renvoie la moyenne entière, puis affiche-la pour `{12, 18, 12}` (14).",
       "validationType": "contains",
@@ -205,8 +205,62 @@
       "starterCode": "#include <iostream>\n#include <vector>\n// définis moyenne ici\nint main() {\n    std::vector<int> v = {12, 18, 12};\n    // cout moyenne(v)\n    return 0;\n}",
       "correction": "#include <iostream>\n#include <vector>\nint moyenne(std::vector<int> v) {\n    int s = 0;\n    for (int x : v) { s += x; }\n    return s / v.size();\n}\nint main() {\n    std::vector<int> v = {12, 18, 12};\n    std::cout << moyenne(v) << std::endl;\n    return 0;\n}",
       "hint": "Somme puis division par `v.size()`.",
-      "reward": "Tu combines fonctions et vecteurs. **Tu es expert en C++.**"
+      "reward": "Tout s'assemble… mais un extrait ne stabilise pas un fragment. Pour récupérer le Fragment VI, il faut de **vrais programmes** C++ — des fichiers `.cpp` compilés. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier programme .cpp",
+      "lang": "cpp",
+      "project": true,
+      "scriptName": "etat.cpp",
+      "story": "Un programme C++ est un **fichier** `.cpp` compilé puis exécuté. Écris ton premier outil de **rapport** sur l'état du Fragment VI.",
+      "teach": "Un programme C++ minimal :\n\n```cpp\n#include <iostream>\n#include <string>\nint main() {\n    std::string nom = \"ANIMA\";\n    std::cout << \"Systeme \" << nom << \" : EN LIGNE\" << std::endl;\n    return 0;\n}\n```\n\nCompilé et exécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un programme avec un `std::string fragment = \"VI\";` qui affiche exactement `Fragment VI : STABLE`.",
+      "starterCode": "#include <iostream>\n#include <string>\n\nint main() {\n    // Écris ton programme ici\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VI : STABLE",
+      "hint": "`std::string fragment = \"VI\";`\n`std::cout << \"Fragment \" << fragment << \" : STABLE\" << std::endl;`",
+      "correction": "#include <iostream>\n#include <string>\n\nint main() {\n    std::string fragment = \"VI\";\n    std::cout << \"Fragment \" << fragment << \" : STABLE\" << std::endl;\n    return 0;\n}",
+      "reward": "Ton premier `.cpp` compile et tourne : **Fragment VI : STABLE**. Mais des secteurs sont en surchauffe — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un programme qui inspecte",
+      "lang": "cpp",
+      "project": true,
+      "scriptName": "scan.cpp",
+      "story": "Les **secteurs** des Moteurs (un vecteur de chaînes `OK`/`CORROMPU`) doivent être audités. Écris un programme qui les **parcourt tous** et compte les dégâts.",
+      "teach": "En C++, on compare des `std::string` directement avec `==`, et on parcourt un vecteur avec une boucle range-based :\n\n```cpp\n#include <iostream>\n#include <vector>\n#include <string>\nint main() {\n    std::vector<std::string> liste = {\"a\", \"b\", \"a\"};\n    int count = 0;\n    for (std::string x : liste) {\n        if (x == \"a\") count++;\n    }\n    std::cout << \"Total : \" << count << std::endl;\n    return 0;\n}\n```",
+      "brief": "Avec `std::vector<std::string> secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};`, compte ceux égaux à `CORROMPU`, et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "#include <iostream>\n#include <vector>\n#include <string>\n\nint main() {\n    std::vector<std::string> secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n    // compte les CORROMPU, affiche le total\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `for (std::string s : secteurs)`, `if (s == \"CORROMPU\") count++;`, puis `std::cout << \"Secteurs corrompus : \" << count << std::endl;`.",
+      "correction": "#include <iostream>\n#include <vector>\n#include <string>\n\nint main() {\n    std::vector<std::string> secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n    int count = 0;\n    for (std::string s : secteurs) {\n        if (s == \"CORROMPU\") count++;\n    }\n    std::cout << \"Secteurs corrompus : \" << count << std::endl;\n    return 0;\n}",
+      "reward": "**2 secteurs en surchauffe.** Ton programme audite seul les Moteurs. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Programme complet (fonction + argument)",
+      "lang": "cpp",
+      "project": true,
+      "scriptName": "reconstituer.cpp",
+      "args": [
+        "VI"
+      ],
+      "story": "L'épreuve finale : un programme qui reçoit l'**identifiant du fragment en argument** (`argv`) et le **reconstitue** via une **fonction**. On le lancera avec l'argument `VI`.",
+      "teach": "En C++, `main` reçoit les arguments par `int argc, char *argv[]` : `argv[1]` est le premier argument passé au programme.\n\n```cpp\n#include <iostream>\n#include <string>\nvoid saluer(std::string x) {\n    std::cout << \"Bonjour \" << x << std::endl;\n}\nint main(int argc, char *argv[]) {\n    saluer(argv[1]);\n    return 0;\n}\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris une fonction `reconstituer(std::string f)` qui affiche `Fragment <f> reconstitué`, appelée depuis `main` avec `argv[1]`. Lancé avec l'argument `VI` → `Fragment VI reconstitué`.",
+      "starterCode": "#include <iostream>\n#include <string>\n\n// définis reconstituer(std::string f)\n\nint main(int argc, char *argv[]) {\n    // appelle reconstituer avec argv[1]\n    return 0;\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VI reconstitué",
+      "hint": "`void reconstituer(std::string f) { std::cout << \"Fragment \" << f << \" reconstitué\" << std::endl; }`\npuis dans main : `reconstituer(argv[1]);`",
+      "correction": "#include <iostream>\n#include <string>\n\nvoid reconstituer(std::string f) {\n    std::cout << \"Fragment \" << f << \" reconstitué\" << std::endl;\n}\n\nint main(int argc, char *argv[]) {\n    reconstituer(argv[1]);\n    return 0;\n}",
+      "reward": "**Fragment VI reconstitué.** Les Moteurs d'ANIMA rugissent à nouveau sous tes ordres — et ton programme, un vrai outil à **exporter**. Six fragments récupérés."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du C++\n\nQuatre paliers gravis : cout/string/calculs/if/for → vecteurs/parcours/fonctions → while/compter → structs/synthèse.\n\nLe C++ équipe jeux, moteurs et logiciels haute performance. **Tu es désormais expert en bases du C++.**\n\n> Nécessite g++ dans WSL (`sudo apt install g++`)."
+  "finale": "## Fragment VI récupéré — les Moteurs\n\nDu premier `cout` sur des turbines éteintes jusqu'à un **programme `.cpp` complet** (compilé, avec arguments et fonctions), tu as relancé les Moteurs d'ANIMA :\n\n- **Réveiller les Moteurs** : cout, string, calculs, if, for\n- **Flux & logique** : vecteurs, range-based, fonctions\n- **Boucles & comptage** : while, agrégats\n- **Le cœur** : struct, télémétrie\n- **Projets** : 3 programmes complets (rapport, inspection, reconstitution avec argument)\n\nSix fragments d'ANIMA en main : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python), la Vitrine (PHP), le Noyau (C), les Moteurs (C++). Restent son **interface** (C#), son **réseau** (Java), sa **mémoire** (SQL)… et le choix final.\n\n**Tu es désormais expert en C++.**"
 }
