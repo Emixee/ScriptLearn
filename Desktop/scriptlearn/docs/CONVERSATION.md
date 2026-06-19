@@ -1,9 +1,19 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.6
+## Version actuelle : 0.16.7
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.7 — Voie Java : narration « Réveil » + 3 projets de programmes (2026-06-20)
+
+Huitième livraison du chantier (Voie par Voie) — **fin des langages exécutés** : les 8 fragments sont réunis.
+- **Narration** : Voie Java réécrite dans l'univers « Réveil » — Java = le **Réseau** (maillage d'entreprise) d'ANIMA (**Fragment VIII**), parsemé de nœuds fantômes par l'Ombre. Stories/rewards des 13 actes pédagogiques retissés ; synopsis/finale enchaînent avec les fragments I–VII et annoncent le **choix final Contenir/Libérer**.
+- **3 actes projet `.java`** (13 → 16) : `Etat.java` (mini : variable + println), `Scan.java` (structuré : tableau + for-each + `.equals`), `Reconstituer.java` (complet : méthode + `args[0]`, compilé avec javac et exécuté avec l'argument `VIII`, export activé). Vérifié via WSL : javac+java + args + sortie accentuée OK.
+- **Bilan** : tous les langages exécutés (Bash, PowerShell, Python, PHP, C, C++, C#, Java) ont désormais narration « Réveil » + 3 projets de scripts/programmes exportables.
+- Reste : narration des Voies statiques (SQL, Git, Regex, KQL, SPL, YAML, HTML) + final global Contenir/Libérer.
 
 ---
 

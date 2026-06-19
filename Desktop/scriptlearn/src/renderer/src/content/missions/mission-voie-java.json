@@ -4,8 +4,8 @@
   "language": "java",
   "order": 15,
   "title": "La Voie de Java",
-  "tagline": "Incontournable en entreprise, de System.out.println aux classes. Débutant → expert.",
-  "synopsis": "Java est partout : entreprises, Android, serveurs. Programme après programme, tu apprends un langage à typage fort et orienté objet.",
+  "tagline": "Le Réseau d'ANIMA — son maillage d'entreprise en Java, de System.out.println jusqu'à tes propres programmes. Débutant → expert.",
+  "synopsis": "L'Interface déverrouillée, tu remontes jusqu'au **Réseau** : le maillage par lequel ANIMA s'étendait sur des milliers de machines, écrit en **Java**. L'Ombre y a semé des nœuds fantômes — routes coupées, secteurs corrompus. Reconnecte-le, instruction après instruction, puis compile les **programmes** qui rendront le **dernier fragment, le VIII**.",
   "objective": "Maîtriser les bases de Java : affichage, variables, conditions, boucles, méthodes, tableaux.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Afficher du texte",
       "lang": "java",
-      "story": "En Java, le code vit dans la classe `Main`. `System.out.println` affiche une ligne.",
+      "story": "Le Réseau est silencieux. En Java, tout code vit dans une **classe** (`Main`) et `System.out.println` émet une ligne — le premier paquet relâché sur le maillage d'ANIMA.",
       "teach": "```java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Bonjour\");\n    }\n}\n```",
       "brief": "Affiche le mot **SESAME**.",
       "validationType": "contains",
@@ -25,14 +25,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        // affiche ici\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"SESAME\");\n    }\n}",
       "hint": "`System.out.println(\"SESAME\");`",
-      "reward": "Java répond. Mémorisons."
+      "reward": "Un premier paquet circule. Un nœud répond. Il faut maintenant que le Réseau **transporte des données**."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les variables",
       "lang": "java",
-      "story": "Le `+` assemble texte et valeur.",
+      "story": "L'opérateur `+` assemble texte et valeur — la construction d'un message à router.",
       "teach": "```java\nString nom = \"Ada\";\nSystem.out.println(\"Bonjour \" + nom);\n```",
       "brief": "Avec `String nom = \"Java\";`, affiche `Bonjour Java`.",
       "validationType": "contains",
@@ -40,14 +40,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        String nom = \"Java\";\n        // affiche\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        String nom = \"Java\";\n        System.out.println(\"Bonjour \" + nom);\n    }\n}",
       "hint": "`System.out.println(\"Bonjour \" + nom);`",
-      "reward": "Tes variables s'assemblent. Et calculer ?"
+      "reward": "Le message part avec sa charge utile. Le Réseau achemine. Et un **calcul** en transit ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les calculs",
       "lang": "java",
-      "story": "On affiche un calcul directement.",
+      "story": "Un nœud peut calculer avant de transmettre — on affiche le résultat directement.",
       "teach": "```java\nSystem.out.println(10 + 7);\n```",
       "brief": "Affiche le résultat de **12 + 30**.",
       "validationType": "contains",
@@ -55,14 +55,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        // affiche le calcul\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(12 + 30);\n    }\n}",
       "hint": "`System.out.println(12 + 30);`",
-      "reward": "42 ! Place aux décisions."
+      "reward": "**42** : un nœud calcule et relaie. Le maillage s'anime. Mais un réseau doit **router** selon des règles."
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Décider avec if",
       "lang": "java",
-      "story": "`if (condition) { ... }`.",
+      "story": "Un paquet suit une route ou une autre : le code agit **si** une condition est vraie.",
       "teach": "```java\nif (n > 0) { System.out.println(\"positif\"); }\n```",
       "brief": "Pour `int n = 7;`, affiche `positif` si n > 0.",
       "validationType": "contains",
@@ -70,14 +70,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        int n = 7;\n        // if ...\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        int n = 7;\n        if (n > 0) { System.out.println(\"positif\"); }\n    }\n}",
       "hint": "`if (n > 0) { System.out.println(\"positif\"); }`",
-      "reward": "Ton programme décide. Et répéter ?"
+      "reward": "Le routage décide : **positif**. Le Réseau s'oriente. Reste à traiter des flux entiers."
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Répéter avec for",
       "lang": "java",
-      "story": "La boucle `for (int i = 1; i <= N; i++)`.",
+      "story": "La boucle `for (int i = 1; i <= N; i++)` émet une série de paquets cadencés.",
       "teach": "```java\nfor (int i = 1; i <= 3; i++) { System.out.println(i); }\n```",
       "brief": "Affiche les nombres de 1 à 5, un par ligne.",
       "validationType": "contains",
@@ -85,14 +85,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        // for ...\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 5; i++) { System.out.println(i); }\n    }\n}",
       "hint": "`for (int i = 1; i <= 5; i++) { System.out.println(i); }`",
-      "reward": "**Palier Débutant terminé !** Place aux tableaux."
+      "reward": "Les paquets partent en rafale, **de 1 à 5**. Le Réseau gère des **lots de données** entiers."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les tableaux",
       "lang": "java",
-      "story": "Un tableau : `int[] t = {...}`. Indice à partir de 0.",
+      "story": "Un **tableau** `int[] t = {...}` regroupe plusieurs valeurs — une table de routage. Indice à partir de 0.",
       "teach": "```java\nint[] t = {10, 20, 30};\nSystem.out.println(t[0]);\n```",
       "brief": "Pour `int[] t = {15, 20, 25};`, affiche le premier élément (15).",
       "validationType": "contains",
@@ -100,14 +100,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {15, 20, 25};\n        // affiche t[0]\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {15, 20, 25};\n        System.out.println(t[0]);\n    }\n}",
       "hint": "`System.out.println(t[0]);`",
-      "reward": "Le premier élément. Parcourons."
+      "reward": "La table de routage répond. La topologie se dessine. Parcours-la."
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Parcourir (for-each)",
       "lang": "java",
-      "story": "`for (int x : t)` parcourt chaque élément.",
+      "story": "`for (int x : t)` (« for-each ») parcourt chaque élément — le balayage de tous les nœuds.",
       "teach": "```java\nfor (int x : t) { System.out.println(x); }\n```",
       "brief": "Pour `int[] t = {7, 8, 9};`, affiche chaque élément, un par ligne.",
       "validationType": "contains",
@@ -115,14 +115,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {7, 8, 9};\n        // for (int x : t) ...\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {7, 8, 9};\n        for (int x : t) { System.out.println(x); }\n    }\n}",
       "hint": "`for (int x : t) { System.out.println(x); }`",
-      "reward": "Tu parcours. Rangeons du code."
+      "reward": "Tous les nœuds répondent à l'appel. Pour ne pas répéter le code, il faut l'**encapsuler**."
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les méthodes",
       "lang": "java",
-      "story": "Une méthode `static` se déclare dans la classe : `static int nom(params) { return ...; }`.",
+      "story": "Une **méthode** `static` se déclare dans la classe : `static int nom(params) { return ...; }`. C'est le service réutilisable du Réseau.",
       "teach": "```java\nstatic int somme(int a, int b) { return a + b; }\n```",
       "brief": "Écris `somme(a, b)` et affiche `somme(3, 4)` (7).",
       "validationType": "contains",
@@ -130,14 +130,14 @@
       "starterCode": "public class Main {\n    // static int somme(...) { ... }\n    public static void main(String[] args) {\n        // println somme(3, 4)\n    }\n}",
       "correction": "public class Main {\n    static int somme(int a, int b) { return a + b; }\n    public static void main(String[] args) {\n        System.out.println(somme(3, 4));\n    }\n}",
       "hint": "Déclare `somme` dans la classe `Main`.",
-      "reward": "Révision !"
+      "reward": "Ton service répond sur le maillage. Tu assembles des composants. Combine-les."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — somme d'un tableau",
       "lang": "java",
-      "story": "Tu **réutilises** tableau et `for-each` (palier) pour accumuler.",
+      "story": "Tu **réutilises** tableau et `for-each` pour agréger le trafic des nœuds.",
       "teach": "```java\nint s = 0;\nfor (int x : t) { s += x; }\nSystem.out.println(s);\n```",
       "brief": "Calcule et affiche la somme de `{1, 2, 3, 4, 5}` (15).",
       "validationType": "contains",
@@ -145,14 +145,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {1, 2, 3, 4, 5};\n        // accumule puis affiche\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        int[] t = {1, 2, 3, 4, 5};\n        int s = 0;\n        for (int x : t) { s += x; }\n        System.out.println(s);\n    }\n}",
       "hint": "Accumule dans `s`.",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "L'agrégat de trafic est exact. Mais l'Ombre a **corrompu** des secteurs du maillage. Il faut plus d'outils pour les traquer."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "La boucle while",
       "lang": "java",
-      "story": "`while (condition) { ... }`.",
+      "story": "La boucle `while (condition)` interroge le Réseau **tant que** l'état reste instable — quand le nombre d'itérations n'est pas connu d'avance.",
       "teach": "```java\nint i = 1;\nwhile (i <= 3) { System.out.println(i); i++; }\n```",
       "brief": "Avec `while`, affiche les nombres de 1 à 3.",
       "validationType": "contains",
@@ -160,14 +160,14 @@
       "starterCode": "public class Main {\n    public static void main(String[] args) {\n        int i = 1;\n        // while ...\n    }\n}",
       "correction": "public class Main {\n    public static void main(String[] args) {\n        int i = 1;\n        while (i <= 3) { System.out.println(i); i++; }\n    }\n}",
       "hint": "`while (i <= 3) { System.out.println(i); i++; }`",
-      "reward": "Révision avancée !"
+      "reward": "Le Réseau se sonde jusqu'à convergence. Tu maîtrises les deux boucles. Compte les dégâts."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — compter avec une méthode",
       "lang": "java",
-      "story": "Tu **réutilises** méthode, tableau, `for-each` et `if`.",
+      "story": "Tu **réutilises** méthode, tableau, `for-each` et `if` pour compter les secteurs corrompus du maillage.",
       "teach": "```java\nstatic int comptePairs(int[] t) {\n    int c = 0;\n    for (int x : t) { if (x % 2 == 0) c++; }\n    return c;\n}\n```",
       "brief": "Écris `comptePairs(t)` qui compte les pairs, puis affiche le résultat pour `{1, 2, 3, 4}` (2).",
       "validationType": "contains",
@@ -175,14 +175,14 @@
       "starterCode": "public class Main {\n    // static int comptePairs(...) { ... }\n    public static void main(String[] args) {\n        int[] t = {1, 2, 3, 4};\n        // println comptePairs(t)\n    }\n}",
       "correction": "public class Main {\n    static int comptePairs(int[] t) {\n        int c = 0;\n        for (int x : t) { if (x % 2 == 0) c++; }\n        return c;\n    }\n    public static void main(String[] args) {\n        int[] t = {1, 2, 3, 4};\n        System.out.println(comptePairs(t));\n    }\n}",
       "hint": "La méthode boucle et teste `x % 2 == 0`.",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "Le décompte est sans appel. Tu approches du cœur du Réseau — là où Java **modélise** chaque nœud en objet."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Une classe",
       "lang": "java",
-      "story": "Une **classe** (autre que Main) modélise un objet. `new` l'instancie.",
+      "story": "Une **classe** (autre que `Main`) modélise un objet : champs et méthodes. C'est ainsi qu'ANIMA représentait chaque nœud du Réseau.",
       "teach": "```java\nclass Robot {\n    String nom;\n    void saluer() { System.out.println(\"Je suis \" + nom); }\n}\n// dans main : Robot r = new Robot(); r.nom = \"R-7\"; r.saluer();\n```",
       "brief": "Crée une classe `Robot` (champ `nom` + méthode `saluer()` affichant `Je suis <nom>`), instancie-la avec `nom = \"R-7\"` et appelle `saluer()`.",
       "validationType": "contains",
@@ -190,14 +190,14 @@
       "starterCode": "// class Robot { ... }\npublic class Main {\n    public static void main(String[] args) {\n        // Robot r = new Robot(); r.nom = \"R-7\"; r.saluer();\n    }\n}",
       "correction": "class Robot {\n    String nom;\n    void saluer() { System.out.println(\"Je suis \" + nom); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Robot r = new Robot();\n        r.nom = \"R-7\";\n        r.saluer();\n    }\n}",
       "hint": "Définis `class Robot` à côté de `Main` (même fichier).",
-      "reward": "Ton premier objet ! Synthèse finale."
+      "reward": "Ton objet vit — un nœud autonome. Le Réseau reconnaît un architecte. Épreuve finale."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — moyenne d'un tableau",
       "lang": "java",
-      "story": "Synthèse : une méthode (palier) qui parcourt un tableau (Intermédiaire) et calcule.",
+      "story": "Synthèse : une **méthode** qui parcourt un **tableau** et calcule une moyenne — la métrique d'un nœud.",
       "teach": "```java\nstatic int moyenne(int[] t) {\n    int s = 0;\n    for (int x : t) { s += x; }\n    return s / t.length;\n}\n```",
       "brief": "Écris `moyenne(t)` qui renvoie la moyenne entière, puis affiche-la pour `{12, 18, 12}` (14).",
       "validationType": "contains",
@@ -205,8 +205,62 @@
       "starterCode": "public class Main {\n    // static int moyenne(...) { ... }\n    public static void main(String[] args) {\n        int[] t = {12, 18, 12};\n        // println moyenne(t)\n    }\n}",
       "correction": "public class Main {\n    static int moyenne(int[] t) {\n        int s = 0;\n        for (int x : t) { s += x; }\n        return s / t.length;\n    }\n    public static void main(String[] args) {\n        int[] t = {12, 18, 12};\n        System.out.println(moyenne(t));\n    }\n}",
       "hint": "Somme puis division par `t.length`.",
-      "reward": "Tu combines méthodes et tableaux. **Tu es expert en Java.**"
+      "reward": "Tout s'assemble… mais un extrait ne stabilise pas un fragment. Pour récupérer le Fragment VIII, il faut de **vrais programmes** Java — des fichiers `.java` compilés. Place aux **projets**."
+    },
+    {
+      "id": "p1",
+      "tier": "expert",
+      "title": "Projet — Ton premier programme .java",
+      "lang": "java",
+      "project": true,
+      "scriptName": "Etat.java",
+      "story": "Un programme Java est un **fichier** `.java` compilé puis exécuté. Écris ton premier outil de **rapport** sur l'état du Fragment VIII.",
+      "teach": "Un programme Java minimal a une classe `Main` avec un `main` :\n\n```java\npublic class Main {\n    public static void main(String[] args) {\n        String nom = \"ANIMA\";\n        System.out.println(\"Systeme \" + nom + \" : EN LIGNE\");\n    }\n}\n```\n\nCompilé et exécuté, il affiche : `Systeme ANIMA : EN LIGNE`.",
+      "brief": "Écris un programme avec `String fragment = \"VIII\";` qui affiche exactement `Fragment VIII : STABLE`.",
+      "starterCode": "public class Main {\n    public static void main(String[] args) {\n        // Écris ton programme ici\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VIII : STABLE",
+      "hint": "`String fragment = \"VIII\";`\n`System.out.println(\"Fragment \" + fragment + \" : STABLE\");`",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        String fragment = \"VIII\";\n        System.out.println(\"Fragment \" + fragment + \" : STABLE\");\n    }\n}",
+      "reward": "Ton premier `.java` compile et tourne : **Fragment VIII : STABLE**. Mais des secteurs du maillage sont corrompus — inspecte-les."
+    },
+    {
+      "id": "p2",
+      "tier": "expert",
+      "title": "Projet — Un programme qui inspecte",
+      "lang": "java",
+      "project": true,
+      "scriptName": "Scan.java",
+      "story": "Les **secteurs** du Réseau (un tableau de chaînes `OK`/`CORROMPU`) doivent être audités. Écris un programme qui les **parcourt tous** et compte les dégâts.",
+      "teach": "En Java, on compare des chaînes avec `.equals(...)`, et on parcourt un tableau avec une boucle for-each :\n\n```java\npublic class Main {\n    public static void main(String[] args) {\n        String[] liste = {\"a\", \"b\", \"a\"};\n        int count = 0;\n        for (String x : liste) {\n            if (x.equals(\"a\")) count++;\n        }\n        System.out.println(\"Total : \" + count);\n    }\n}\n```",
+      "brief": "Avec `String[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};`, compte ceux égaux à `CORROMPU` (via `.equals`), et affiche exactement `Secteurs corrompus : N`.",
+      "starterCode": "public class Main {\n    public static void main(String[] args) {\n        String[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n        // compte les CORROMPU, affiche le total\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Secteurs corrompus : 2",
+      "hint": "Boucle `for (String s : secteurs)`, `if (s.equals(\"CORROMPU\")) count++;`, puis `System.out.println(\"Secteurs corrompus : \" + count);`.",
+      "correction": "public class Main {\n    public static void main(String[] args) {\n        String[] secteurs = {\"OK\", \"CORROMPU\", \"CORROMPU\", \"OK\"};\n        int count = 0;\n        for (String s : secteurs) {\n            if (s.equals(\"CORROMPU\")) count++;\n        }\n        System.out.println(\"Secteurs corrompus : \" + count);\n    }\n}",
+      "reward": "**2 secteurs corrompus.** Ton programme audite seul le Réseau. Reste l'outil ultime : reconstituer un fragment **à la demande**."
+    },
+    {
+      "id": "p3",
+      "tier": "expert",
+      "title": "Projet — Programme complet (méthode + argument)",
+      "lang": "java",
+      "project": true,
+      "scriptName": "Reconstituer.java",
+      "args": [
+        "VIII"
+      ],
+      "story": "L'épreuve finale du dernier langage : un programme qui reçoit l'**identifiant du fragment en argument** (`args`) et le **reconstitue** via une **méthode**. On le lancera avec l'argument `VIII`.",
+      "teach": "En Java, `main` reçoit les arguments par `String[] args` : `args[0]` est le premier argument passé au programme.\n\n```java\npublic class Main {\n    static void saluer(String x) {\n        System.out.println(\"Bonjour \" + x);\n    }\n    public static void main(String[] args) {\n        saluer(args[0]);\n    }\n}\n```\n\nLancé avec l'argument `Monde`, il affiche : `Bonjour Monde`.",
+      "brief": "Écris une méthode `reconstituer(String f)` qui affiche `Fragment <f> reconstitué`, appelée depuis `main` avec `args[0]`. Lancé avec l'argument `VIII` → `Fragment VIII reconstitué`.",
+      "starterCode": "public class Main {\n    // définis reconstituer(String f)\n\n    public static void main(String[] args) {\n        // appelle reconstituer avec args[0]\n    }\n}\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment VIII reconstitué",
+      "hint": "`static void reconstituer(String f) { System.out.println(\"Fragment \" + f + \" reconstitué\"); }`\npuis dans main : `reconstituer(args[0]);`",
+      "correction": "public class Main {\n    static void reconstituer(String f) {\n        System.out.println(\"Fragment \" + f + \" reconstitué\");\n    }\n    public static void main(String[] args) {\n        reconstituer(args[0]);\n    }\n}",
+      "reward": "**Fragment VIII reconstitué.** Le Réseau d'ANIMA se reconnecte sous tes ordres — et ton programme, un vrai outil à **exporter**. Les **huit fragments** des langages exécutés sont réunis."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie de Java\n\nQuatre paliers gravis : println/variables/calculs/if/for → tableaux/for-each/méthodes → while/compter → classes/synthèse.\n\nJava est un pilier du développement d'entreprise et d'Android. **Tu es désormais expert en bases de Java.**\n\n> Nécessite le JDK dans WSL (`sudo apt install default-jdk`)."
+  "finale": "## Fragment VIII récupéré — le Réseau\n\nDu premier `System.out.println` sur un maillage muet jusqu'à un **programme `.java` complet** (compilé, avec arguments et méthodes), tu as reconnecté le Réseau d'ANIMA :\n\n- **Réveiller le Réseau** : println, concaténation, calculs, if, for\n- **Données & logique** : tableaux, for-each, méthodes\n- **Boucles & comptage** : while, agrégats\n- **Le cœur** : classes, objets\n- **Projets** : 3 programmes complets (rapport, inspection, reconstitution avec argument)\n\n**Les huit fragments des langages exécutés sont réunis** : la Machine (Bash), le Poste de Commandement (PowerShell), le Laboratoire (Python), la Vitrine (PHP), le Noyau (C), les Moteurs (C++), l'Interface (C#), le Réseau (Java). ANIMA reprend forme. Restent sa **mémoire** (SQL), son **historique** (Git) et les langages d'appui… avant le **choix final : Contenir ou Libérer**.\n\n**Tu es désormais expert en Java.**"
 }
