@@ -7,3 +7,8 @@ dist/
 # Installer build artifacts
 installer/assets/
 installer/output/
+
+# Toolchains natives embarquées (installateur « Tout-en-un ») — volumineuses,
+# copiées/téléchargées localement au moment du build, JAMAIS committées
+# (le dépôt racine = le home de l'utilisateur).
+resources/

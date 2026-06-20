@@ -1,6 +1,6 @@
 {
   "name": "scriptlearn",
-  "version": "0.16.16",
+  "version": "0.17.0",
   "description": "Logiciel d'apprentissage du scripting Bash & PowerShell",
   "main": "out/main/index.js",
   "scripts": {
@@ -26,6 +26,12 @@
       "node_modules/node-pty/**/*",
       "**/v86/**",
       "**/sqljs/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/go",
+        "to": "go"
+      }
     ],
     "win": {
       "target": [

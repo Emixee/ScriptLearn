@@ -18,6 +18,7 @@ import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { html as htmlMode } from '@codemirror/legacy-modes/mode/xml'
 import { javascript as jsMode } from '@codemirror/legacy-modes/mode/javascript'
 import { c as cMode, cpp as cppMode, java as javaMode, csharp as csharpMode } from '@codemirror/legacy-modes/mode/clike'
+import { go as goMode } from '@codemirror/legacy-modes/mode/go'
 
 // Marqueur de fin d'exécution injecté dans le terminal pour savoir quand la
 // sortie d'une commande est complète (voir validate dans useCodeRunner/Exercise).
@@ -44,6 +45,10 @@ export const LANG_META = {
   // des types), donc TS partage le même interpréteur et le même mode terminal.
   js:         { label: 'JavaScript', color: '#f7df1e', static: false, exec: 'direct',         termShell: 'node' },
   ts:         { label: 'TypeScript', color: '#3178c6', static: false, exec: 'direct',         termShell: 'node' },
+  // Go : compilateur EMBARQUÉ dans l'app (resources/go), exécuté nativement —
+  // aucune install utilisateur. Pas de REPL : la validation passe par « Valider »
+  // (exécution réelle en coulisses). termShell powershell = simple session par défaut.
+  go:         { label: 'Go',         color: '#00add8', static: false, exec: 'direct',         termShell: 'powershell' },
   powershell: { label: 'PowerShell', color: '#d97706', static: false, exec: 'direct',         termShell: 'powershell' },
   php:        { label: 'PHP',        color: '#8892bf', static: false, exec: 'heredoc-php',     termShell: 'bash' },
   c:          { label: 'C',          color: '#a8b9cc', static: false, exec: 'compile-c',       termShell: 'bash' },
@@ -79,6 +84,7 @@ export function getLangExtension(lang) {
   if (lang === 'html')   return StreamLanguage.define(htmlMode)
   if (lang === 'js')     return StreamLanguage.define(jsMode)
   if (lang === 'ts')     return StreamLanguage.define(jsMode)
+  if (lang === 'go')     return StreamLanguage.define(goMode)
   if (lang === 'php')    return StreamLanguage.define(jsMode)
   if (lang === 'c')      return StreamLanguage.define(cMode)
   if (lang === 'cpp')    return StreamLanguage.define(cppMode)

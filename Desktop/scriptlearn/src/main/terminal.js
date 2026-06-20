@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, app } from 'electron'
 import { execSync, execFileSync } from 'child_process'
 import { existsSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
@@ -101,13 +101,42 @@ function createSession(id, shell, cols = 80, rows = 24) {
 // (les erreurs de compilation/exécution sont ainsi visibles). `input` optionnel :
 // si fourni, c'est le code passé par stdin ; sinon le programme lit ses propres
 // fichiers/arguments (mode « projet »).
-function runCapture(fileName, args, input) {
+function runCapture(fileName, args, input, extraOpts) {
   try {
-    const opts = { timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 }
+    // extraOpts permet de surcharger l'environnement (toolchains embarquées) et
+    // le timeout (la 1re compilation Go bâtit le cache, plus longue).
+    const opts = { timeout: 30000, windowsHide: true, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024, ...extraOpts }
     if (input !== undefined) opts.input = input
     return execFileSync(fileName, args, opts) ?? ''
   } catch (e) {
     return String((e.stdout ?? '') + (e.stderr ?? '')) || String(e.message ?? e)
+  }
+}
+
+// ── Toolchains NATIVES EMBARQUÉES (installateur « Tout-en-un ») ──────────────
+// POURQUOI : pour qu'aucun langage n'exige d'installation externe (ni WSL, ni
+// SDK utilisateur), on EMBARQUE les compilateurs/runtimes dans l'app via
+// electron-builder `extraResources` (copiés hors-asar dans resources/). En prod
+// ils vivent sous process.resourcesPath ; en dev, sous <projet>/resources.
+function resourcesRoot() {
+  return app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources')
+}
+// Racine du SDK Go embarqué (resources/go).
+function goRoot() {
+  return join(resourcesRoot(), 'go')
+}
+// Environnement d'exécution Go : GOROOT pointe le SDK embarqué ; GOCACHE/GOPATH
+// dans les données utilisateur (écriture interdite dans resources en prod) ;
+// GOTOOLCHAIN=local + GOPROXY=off → aucune tentative réseau (100% hors-ligne).
+function goEnv() {
+  return {
+    ...process.env,
+    GOROOT: goRoot(),
+    GOCACHE: join(app.getPath('userData'), 'gocache'),
+    GOPATH: join(app.getPath('userData'), 'gopath'),
+    GOTOOLCHAIN: 'local',
+    GOPROXY: 'off',
+    GOFLAGS: '',
   }
 }
 
@@ -209,6 +238,14 @@ function runValidation(lang, code, project, args) {
       return runCapture('node', [f, ...(args ?? [])])
     }
     return runCapture('node', [], code)
+  }
+  // Go : compilateur EMBARQUÉ (resources/go), exécuté nativement sur Windows
+  // (ni WSL ni installation). On écrit un .go et on lance `go run` avec l'env
+  // dédié. Timeout élargi car la 1re compilation bâtit le cache (~15 s).
+  if (lang === 'go') {
+    const f = join(tmpdir(), 'sl_proj.go')
+    writeFileSync(f, code, 'utf8')
+    return runCapture(join(goRoot(), 'bin', 'go.exe'), ['run', f, ...(args ?? [])], undefined, { env: goEnv(), timeout: 90000 })
   }
   // bash, php, c, cpp, csharp, java → via une invocation bash WSL jetable
   return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code, project, args))

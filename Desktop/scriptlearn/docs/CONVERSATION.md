@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.16
+## Version actuelle : 0.17.0
 
 ### État du projet
-Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Cap « Tout-en-un » amorcé** : objectif = embarquer les toolchains pour qu'aucun langage n'exige d'installation externe (ni WSL, ni SDK utilisateur).
+
+---
+
+## v0.17.0 — NOUVELLE Voie Go + infrastructure « toolchain embarquée » (2026-06-20)
+
+Troisième nouveau langage, et **première brique de l'installateur « Tout-en-un »** demandé : exécution réelle via une **toolchain native EMBARQUÉE** (zéro dépendance externe).
+- **Infrastructure d'embarquement** : SDK Go Windows placé dans `resources/go` (gitignoré, copié au build) et déclaré en **`extraResources`** d'electron-builder (hors-asar). `src/main/terminal.js` résout la racine (`process.resourcesPath` en prod, `<projet>/resources` en dev), exécute `go.exe run` avec un env dédié (`GOROOT` embarqué, `GOCACHE`/`GOPATH` en données utilisateur, `GOTOOLCHAIN=local`, `GOPROXY=off` → 100% hors-ligne). `runCapture` accepte désormais des options (env/timeout). Vérifié : SDK présent dans `dist/win-unpacked/resources/go/bin/go.exe` ; installateur **158 Mo** (+~78 Mo).
+- **Narration** : Go = les **Essaims** d'ANIMA (**Fragment XI**), ses agents concurrents du cloud.
+- **Voie complète, 18 actes** : 15 actes pédagogiques (Println, variables, Printf, if, for, slices, range, fonctions, structs, maps, retours multiples, méthodes) + **3 projets `.go`** (`etat.go`, `scan.go`, `reconstituer.go` avec `os.Args[1]`, argument `XI`).
+- **Vérifié** (go.exe embarqué, 18/18) : toutes les corrections **compilent et s'exécutent** (compilation Go stricte : imports/variables inutilisés interdits).
+- Reste : Rust (à embarquer ou structurel), migration des langages WSL (C/C++/Java/C#/PHP/Bash) vers toolchains embarquées, puis final Contenir/Libérer.
 
 ---
 
