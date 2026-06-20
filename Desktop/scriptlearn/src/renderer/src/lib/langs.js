@@ -39,6 +39,10 @@ export function stripAnsi(str) {
 export const LANG_META = {
   bash:       { label: 'Bash',       color: '#22d3ee', static: false, exec: 'direct',         termShell: 'bash' },
   python:     { label: 'Python',     color: '#f59e0b', static: false, exec: 'direct',         termShell: 'python' },
+  // JavaScript / TypeScript : exécutés par Node NATIF (Windows), comme Python —
+  // pas via WSL. Node 24 exécute aussi le TypeScript directement (dépouillement
+  // des types), donc TS partage le même interpréteur et le même mode terminal.
+  js:         { label: 'JavaScript', color: '#f7df1e', static: false, exec: 'direct',         termShell: 'node' },
   powershell: { label: 'PowerShell', color: '#d97706', static: false, exec: 'direct',         termShell: 'powershell' },
   php:        { label: 'PHP',        color: '#8892bf', static: false, exec: 'heredoc-php',     termShell: 'bash' },
   c:          { label: 'C',          color: '#a8b9cc', static: false, exec: 'compile-c',       termShell: 'bash' },
@@ -72,6 +76,7 @@ export function getLangExtension(lang) {
   if (lang === 'python') return python()
   if (lang === 'bash' || lang === 'powershell') return StreamLanguage.define(shell)
   if (lang === 'html')   return StreamLanguage.define(htmlMode)
+  if (lang === 'js')     return StreamLanguage.define(jsMode)
   if (lang === 'php')    return StreamLanguage.define(jsMode)
   if (lang === 'c')      return StreamLanguage.define(cMode)
   if (lang === 'cpp')    return StreamLanguage.define(cppMode)

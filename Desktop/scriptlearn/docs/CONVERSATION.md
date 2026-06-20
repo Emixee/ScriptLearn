@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.14
+## Version actuelle : 0.16.15
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.15 — NOUVELLE Voie JavaScript : univers « Réveil » + 3 projets Node (2026-06-20)
+
+Début de la phase « nouveaux langages » : **première Voie entièrement créée** (langage absent jusqu'ici).
+- **Intégration JavaScript** : entrée `js` dans `LANG_META` (`langs.js`, exec direct, `termShell:'node'`, mode CodeMirror JS) ; `createSession` ouvre un **REPL Node natif** (`node -i`) ; `runValidation` exécute via **Node natif** (stdin pour les exercices, fichier `.js` + `process.argv` pour les projets). Node 24 déjà présent ; aucune dépendance ajoutée. La Voie est auto-enregistrée (glob des missions).
+- **Narration** : JS = les **Réflexes** d'ANIMA (**Fragment IX**), le code injecté dans navigateurs/runtimes — premier des **fragments modernes** par lesquels elle s'était étendue.
+- **Voie complète, 18 actes** créés de zéro : 15 actes pédagogiques (console.log, variables, gabarits, if, for, tableaux, for...of, fonctions, objets, filter, fléchées, ternaire, classes, reduce) + **3 projets `.js`** (`etat.js`, `scan.js`, `reconstituer.js` avec `process.argv[2]`, argument `IX`, export activé).
+- **Vérifié** (Node réel, 18/18) : toutes les corrections produisent la sortie attendue.
+- Reste : TypeScript (Node natif, type-stripping), Go et Rust (toolchains à installer), puis final Contenir/Libérer.
 
 ---
 

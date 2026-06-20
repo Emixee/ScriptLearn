@@ -67,6 +67,10 @@ function createSession(id, shell, cols = 80, rows = 24) {
   } else if (shell === 'python') {
     file = 'python'
     args = ['-i', '-u']
+  } else if (shell === 'node') {
+    // REPL Node interactif (JavaScript/TypeScript), comme le REPL Python.
+    file = 'node'
+    args = ['-i']
   } else {
     // wsl.exe lance le shell de la distro par défaut
     file = 'wsl.exe'
@@ -192,6 +196,17 @@ function runValidation(lang, code, project, args) {
       return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', f, ...(args ?? [])])
     }
     return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
+  }
+  // JavaScript : Node natif. En mode projet, on écrit un .js et on l'exécute avec
+  // ses arguments (process.argv) ; sinon le code est exécuté depuis stdin
+  // (`node` sans argument lit et exécute le script reçu sur stdin).
+  if (lang === 'js') {
+    if (project) {
+      const f = join(tmpdir(), 'sl_proj.js')
+      writeFileSync(f, code, 'utf8')
+      return runCapture('node', [f, ...(args ?? [])])
+    }
+    return runCapture('node', [], code)
   }
   // bash, php, c, cpp, csharp, java → via une invocation bash WSL jetable
   return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code, project, args))
