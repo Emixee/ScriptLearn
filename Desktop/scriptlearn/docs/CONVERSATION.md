@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.15
+## Version actuelle : 0.16.16
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.16 — NOUVELLE Voie TypeScript : univers « Réveil » + 3 projets Node (2026-06-20)
+
+Deuxième nouveau langage : **Voie entièrement créée**, exécutée par Node (dépouillement de types).
+- **Intégration TypeScript** : entrée `ts` dans `LANG_META` (exec direct, `termShell:'node'`, mode CodeMirror JS) ; `runValidation` mutualisé avec JS (`lang === 'js' || 'ts'`) — fichier `.ts` + `process.argv` pour les projets, stdin pour les exercices. Node 24 **dépouille les types à la volée** (vérifié : interfaces et classes typées « erasables » OK). Aucune dépendance ajoutée.
+- **Narration** : TS = les **Réflexes disciplinés** d'ANIMA (**Fragment X**) — le même code que les Réflexes (JS), mais **sous contrat de types**.
+- **Voie complète, 18 actes** : 15 actes pédagogiques centrés sur les **types** (variables typées, `number[]`, fonctions typées, interfaces, types union, classes typées, reduce) + **3 projets `.ts`** (`etat.ts`, `scan.ts`, `reconstituer.ts` avec `process.argv[2]`, argument `X`).
+- **Vérifié** (Node réel, 18/18) : toutes les corrections produisent la sortie attendue.
+- Reste : Go et Rust (toolchains WSL à installer), puis final Contenir/Libérer.
 
 ---
 

@@ -197,12 +197,14 @@ function runValidation(lang, code, project, args) {
     }
     return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
   }
-  // JavaScript : Node natif. En mode projet, on écrit un .js et on l'exécute avec
-  // ses arguments (process.argv) ; sinon le code est exécuté depuis stdin
-  // (`node` sans argument lit et exécute le script reçu sur stdin).
-  if (lang === 'js') {
+  // JavaScript / TypeScript : Node natif. Node 24 exécute le TypeScript en
+  // dépouillant les types (à la volée, y compris depuis stdin). En mode projet,
+  // on écrit un fichier avec la bonne extension (.js / .ts) et on l'exécute avec
+  // ses arguments (process.argv) ; sinon le code passe par stdin.
+  if (lang === 'js' || lang === 'ts') {
     if (project) {
-      const f = join(tmpdir(), 'sl_proj.js')
+      const ext = lang === 'ts' ? 'ts' : 'js'
+      const f = join(tmpdir(), `sl_proj.${ext}`)
       writeFileSync(f, code, 'utf8')
       return runCapture('node', [f, ...(args ?? [])])
     }
