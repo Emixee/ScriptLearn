@@ -4,8 +4,8 @@
   "language": "sql",
   "order": 4,
   "title": "La Voie du SQL",
-  "tagline": "Interroger une base de données, de SELECT jusqu'aux jointures. Débutant → expert.",
-  "synopsis": "Une base d'entreprise t'attend : tables `employes`, `commandes`, `produits`. Requête après requête, tu apprends à en extraire exactement ce que tu veux.",
+  "tagline": "La Mémoire d'ANIMA — sa banque de connaissances en SQL, de SELECT jusqu'aux jointures. Débutant → expert.",
+  "synopsis": "La **Mémoire** d'ANIMA — l'immense base où elle stockait tout ce qu'elle savait (tables `employes`, `commandes`, `produits`) — a été verrouillée par l'Ombre. Requête après requête, tu apprends à l'interroger, puis tu écris de **vraies requêtes exécutées** sur la base pour en extraire exactement ce qu'il faut.",
   "objective": "Maîtriser SQL : SELECT, filtres, tri, agrégations, regroupements, jointures.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Tout afficher",
       "lang": "sql",
-      "story": "On lit des données avec `SELECT colonnes FROM table`. Pour tout voir : `*`.",
+      "story": "La Mémoire est scellée. On lit des données avec `SELECT colonnes FROM table` ; `*` prend tout. Ouvre une première table.",
       "teach": "```sql\nSELECT * FROM clients;\n```",
       "brief": "Affiche tout le contenu de la table `employes`.",
       "validationType": "keywords",
@@ -29,14 +29,14 @@
       "requiredTable": "employes",
       "hint": "`SELECT * FROM employes;`",
       "correction": "SELECT * FROM employes;",
-      "reward": "La table entière s'affiche. Trop de colonnes ? Choisis-les."
+      "reward": "La table entière s'affiche. La Mémoire répond. Trop de colonnes ? Choisis-les."
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Choisir des colonnes",
       "lang": "sql",
-      "story": "On peut ne demander que certaines colonnes en les listant.",
+      "story": "On extrait des **colonnes** précises en les nommant après `SELECT`.",
       "teach": "```sql\nSELECT nom, ville FROM clients;\n```",
       "brief": "Affiche seulement les colonnes `nom` et `prenom` de la table `employes`.",
       "validationType": "keywords",
@@ -50,14 +50,14 @@
       "requiredTable": "employes",
       "hint": "`SELECT nom, prenom FROM employes;`",
       "correction": "SELECT nom, prenom FROM employes;",
-      "reward": "Plus net. Et si on supprimait les doublons ?"
+      "reward": "Tu cibles l'information utile. Et sans doublons ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Valeurs uniques",
       "lang": "sql",
-      "story": "`DISTINCT` retire les doublons d'une colonne.",
+      "story": "`SELECT DISTINCT colonne` élimine les doublons — les valeurs uniques d'un champ.",
       "teach": "```sql\nSELECT DISTINCT pays FROM clients;\n```",
       "brief": "Affiche la liste des `ville` **distinctes** de la table `employes`.",
       "validationType": "keywords",
@@ -71,14 +71,14 @@
       "requiredTable": "employes",
       "hint": "`SELECT DISTINCT ville FROM employes;`",
       "correction": "SELECT DISTINCT ville FROM employes;",
-      "reward": "Chaque ville une seule fois. Filtrons maintenant."
+      "reward": "Les valeurs uniques émergent. Et filtrer les lignes ?"
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Filtrer avec WHERE",
       "lang": "sql",
-      "story": "`WHERE` ne garde que les lignes remplissant une condition.",
+      "story": "La clause `WHERE` ne garde que les lignes vérifiant une condition.",
       "teach": "```sql\nSELECT * FROM clients WHERE age > 30;\n```",
       "brief": "Sélectionne les employés dont le `salaire` est supérieur à 3000.",
       "validationType": "keywords",
@@ -92,14 +92,14 @@
       "requiredTable": "employes",
       "hint": "`SELECT * FROM employes WHERE salaire > 3000;`",
       "correction": "SELECT * FROM employes WHERE salaire > 3000;",
-      "reward": "Tu cibles les bonnes lignes. Et pour les ranger ?"
+      "reward": "La Mémoire se laisse filtrer. Et trier le résultat ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Trier avec ORDER BY",
       "lang": "sql",
-      "story": "`ORDER BY colonne` trie le résultat (`DESC` pour décroissant).",
+      "story": "`ORDER BY colonne` trie ; `DESC` inverse l'ordre.",
       "teach": "```sql\nSELECT * FROM clients ORDER BY age DESC;\n```",
       "brief": "Affiche les employés triés par `salaire` décroissant (`ORDER BY ... DESC`).",
       "validationType": "keywords",
@@ -113,14 +113,14 @@
       "requiredTable": "employes",
       "hint": "`SELECT * FROM employes ORDER BY salaire DESC;`",
       "correction": "SELECT * FROM employes ORDER BY salaire DESC;",
-      "reward": "**Palier Débutant terminé !** Affinons les filtres."
+      "reward": "**Palier Débutant terminé !** Tu lis et tries la Mémoire. Place aux filtres fins."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Comparaisons",
       "lang": "sql",
-      "story": "Les opérateurs `>`, `<`, `>=`, `<=`, `=`, `<>` (différent) affinent un `WHERE` (revu du palier Débutant).",
+      "story": "Les opérateurs de comparaison (`<`, `<=`, `>=`) affinent le `WHERE`.",
       "teach": "```sql\nSELECT * FROM clients WHERE age >= 18;\n```",
       "brief": "Sélectionne les employés dont le `salaire` est **inférieur ou égal** à 2000.",
       "validationType": "keywords",
@@ -134,14 +134,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE salaire <= 2000;`",
       "correction": "SELECT * FROM employes WHERE salaire <= 2000;",
-      "reward": "Précis. On peut combiner plusieurs conditions."
+      "reward": "Le filtre se précise. Et combiner plusieurs conditions ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Combiner avec AND",
       "lang": "sql",
-      "story": "`AND` exige que **deux** conditions soient vraies (`OR` = au moins une).",
+      "story": "`AND` exige plusieurs conditions vraies à la fois.",
       "teach": "```sql\nSELECT * FROM clients WHERE age > 18 AND ville = \"Lyon\";\n```",
       "brief": "Sélectionne les employés du `departement` \"IT\" **ET** dont le `salaire` > 3000.",
       "validationType": "keywords",
@@ -156,14 +156,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE departement = 'IT' AND salaire > 3000;`",
       "correction": "SELECT * FROM employes WHERE departement = 'IT' AND salaire > 3000;",
-      "reward": "Deux critères d'un coup. Et une liste de valeurs ?"
+      "reward": "Tu croises les critères. Et une liste de valeurs ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Une liste avec IN",
       "lang": "sql",
-      "story": "`IN (...)` teste si une valeur figure dans une liste.",
+      "story": "`IN (...)` teste l'appartenance à un ensemble de valeurs.",
       "teach": "```sql\nSELECT * FROM clients WHERE ville IN (\"Lyon\", \"Paris\");\n```",
       "brief": "Sélectionne les employés dont le `departement` est dans la liste `IN ('IT', 'RH')`.",
       "validationType": "keywords",
@@ -177,14 +177,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE departement IN ('IT', 'RH');`",
       "correction": "SELECT * FROM employes WHERE departement IN ('IT', 'RH');",
-      "reward": "Pratique. Et une recherche par motif ?"
+      "reward": "Plusieurs catégories d'un coup. Et une recherche par motif ?"
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Rechercher avec LIKE",
       "lang": "sql",
-      "story": "`LIKE` cherche un motif ; `%` remplace n'importe quels caractères.",
+      "story": "`LIKE` recherche un motif ; `%` remplace n'importe quelle suite de caractères.",
       "teach": "```sql\nSELECT * FROM clients WHERE nom LIKE \"A%\";\n```",
       "brief": "Sélectionne les employés dont le `nom` commence par `D` (`LIKE 'D%'`).",
       "validationType": "keywords",
@@ -198,14 +198,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE nom LIKE 'D%';`",
       "correction": "SELECT * FROM employes WHERE nom LIKE 'D%';",
-      "reward": "Recherche souple. Révision !"
+      "reward": "Tu fouilles la Mémoire par motif. Révision."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — filtrer, combiner, trier",
       "lang": "sql",
-      "story": "Tu **réutilises** `WHERE` + `AND` (palier) et `ORDER BY` (Débutant) dans une seule requête.",
+      "story": "Tu **réutilises** `WHERE`, `AND` et `ORDER BY` pour une extraction ciblée et triée.",
       "teach": "Combine une condition `WHERE ... AND ...` avec un `ORDER BY`.",
       "brief": "Sélectionne les employés du `departement` \"IT\" **ET** `salaire` > 2000, triés par `salaire` décroissant.",
       "validationType": "keywords",
@@ -219,14 +219,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE departement = 'IT' AND salaire > 2000 ORDER BY salaire DESC;`",
       "correction": "SELECT * FROM employes WHERE departement = 'IT' AND salaire > 2000 ORDER BY salaire DESC;",
-      "reward": "**Palier Intermédiaire terminé !** Place aux statistiques."
+      "reward": "**Palier Intermédiaire terminé !** Place aux synthèses chiffrées."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Compter avec COUNT",
       "lang": "sql",
-      "story": "Les **fonctions d'agrégation** résument des lignes. `COUNT(*)` compte les lignes.",
+      "story": "`COUNT(*)` compte les lignes — la première fonction d'agrégation.",
       "teach": "```sql\nSELECT COUNT(*) FROM clients;\n```",
       "brief": "Compte le nombre total d'employés (`COUNT(*)`).",
       "validationType": "keywords",
@@ -238,14 +238,14 @@
       ],
       "hint": "`SELECT COUNT(*) FROM employes;`",
       "correction": "SELECT COUNT(*) FROM employes;",
-      "reward": "Un seul chiffre résume la table. Et la moyenne ?"
+      "reward": "La Mémoire se quantifie. Et une moyenne ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Moyenne avec AVG",
       "lang": "sql",
-      "story": "`AVG(colonne)` calcule la moyenne ; `SUM`, `MIN`, `MAX` existent aussi.",
+      "story": "`AVG(colonne)` calcule une moyenne (et `SUM`, `MIN`, `MAX` existent aussi).",
       "teach": "```sql\nSELECT AVG(age) FROM clients;\n```",
       "brief": "Calcule le **salaire moyen** des employés (`AVG(salaire)`).",
       "validationType": "keywords",
@@ -258,14 +258,14 @@
       ],
       "hint": "`SELECT AVG(salaire) FROM employes;`",
       "correction": "SELECT AVG(salaire) FROM employes;",
-      "reward": "Une statistique globale. Et par groupe ?"
+      "reward": "Des indicateurs apparaissent. Et par catégorie ?"
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Regrouper avec GROUP BY",
       "lang": "sql",
-      "story": "`GROUP BY` calcule une agrégation **par groupe**.",
+      "story": "`GROUP BY` regroupe les lignes par valeur, pour agréger **par catégorie**.",
       "teach": "```sql\nSELECT pays, COUNT(*) FROM clients GROUP BY pays;\n```",
       "brief": "Compte le nombre d'employés **par** `departement` (`COUNT(*)` + `GROUP BY departement`).",
       "validationType": "keywords",
@@ -279,14 +279,14 @@
       ],
       "hint": "`SELECT departement, COUNT(*) FROM employes GROUP BY departement;`",
       "correction": "SELECT departement, COUNT(*) FROM employes GROUP BY departement;",
-      "reward": "Une ligne par groupe. On peut filtrer les groupes."
+      "reward": "Tu obtiens des statistiques par groupe. Et filtrer ces groupes ?"
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — GROUP BY + HAVING",
       "lang": "sql",
-      "story": "`HAVING` filtre les **groupes** (alors que `WHERE` filtre les lignes). Tu réutilises `COUNT` et `GROUP BY`.",
+      "story": "`HAVING` filtre les **groupes** (là où `WHERE` filtre les lignes).",
       "teach": "```sql\nSELECT pays, COUNT(*) FROM clients GROUP BY pays HAVING COUNT(*) > 5;\n```",
       "brief": "Affiche les `departement` ayant **plus de 3 employés** (`GROUP BY` + `HAVING COUNT(*) > 3`).",
       "validationType": "keywords",
@@ -307,7 +307,7 @@
       "tier": "expert",
       "title": "Joindre deux tables",
       "lang": "sql",
-      "story": "Une **jointure** relie deux tables par une colonne commune. `JOIN ... ON`.",
+      "story": "Une **jointure** `JOIN ... ON` relie deux tables par une clé commune — c'est ainsi qu'ANIMA reliait ses souvenirs.",
       "teach": "```sql\nSELECT * FROM commandes\nJOIN clients ON commandes.client_id = clients.id;\n```",
       "brief": "Relie `commandes` et `employes` : `JOIN employes ON commandes.employe_id = employes.id`.",
       "validationType": "keywords",
@@ -321,14 +321,14 @@
       ],
       "hint": "`SELECT * FROM commandes JOIN employes ON commandes.employe_id = employes.id;`",
       "correction": "SELECT * FROM commandes JOIN employes ON commandes.employe_id = employes.id;",
-      "reward": "Les données de deux tables réunies. Et une requête dans une requête ?"
+      "reward": "Les tables se répondent enfin. Et imbriquer une requête ?"
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Sous-requête",
       "lang": "sql",
-      "story": "Une **sous-requête** est une requête imbriquée entre parenthèses.",
+      "story": "Une **sous-requête** `(SELECT ...)` sert de valeur à une autre requête.",
       "teach": "```sql\nSELECT * FROM clients\nWHERE age > (SELECT AVG(age) FROM clients);\n```",
       "brief": "Sélectionne les employés dont le `salaire` est supérieur à la **moyenne** : `WHERE salaire > (SELECT AVG(salaire) FROM employes)`.",
       "validationType": "keywords",
@@ -343,14 +343,14 @@
       ],
       "hint": "`SELECT * FROM employes WHERE salaire > (SELECT AVG(salaire) FROM employes);`",
       "correction": "SELECT * FROM employes WHERE salaire > (SELECT AVG(salaire) FROM employes);",
-      "reward": "Tu compares à une valeur calculée. Synthèse finale !"
+      "reward": "Tu interroges la Mémoire à deux niveaux. Synthèse finale."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — jointure + regroupement",
       "lang": "sql",
-      "story": "Synthèse : une **jointure** (palier) combinée à `GROUP BY` + `COUNT` (Avancé).",
+      "story": "Synthèse : une **jointure** suivie d'un `GROUP BY` pour agréger par catégorie reliée.",
       "teach": "```sql\nSELECT clients.ville, COUNT(*)\nFROM commandes\nJOIN clients ON commandes.client_id = clients.id\nGROUP BY clients.ville;\n```",
       "brief": "Compte le nombre de `commandes` **par** `departement`, en joignant `commandes` et `employes`, puis en regroupant (`JOIN ... ON ... GROUP BY`).",
       "validationType": "keywords",
@@ -366,8 +366,50 @@
       ],
       "hint": "`SELECT employes.departement, COUNT(*) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;`",
       "correction": "SELECT employes.departement, COUNT(*) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;",
-      "reward": "Tu combines jointure et agrégation. **Tu es expert en SQL.**"
+      "reward": "Tu sais tout interroger… mais des requêtes d'exercice ne déverrouillent pas la Mémoire. Il faut de **vraies requêtes, exécutées sur la base**, qui renvoient exactement les bonnes lignes. Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Extraire les agents clés",
+      "lang": "sql",
+      "story": "Première vraie extraction de la Mémoire : ta requête est **exécutée sur la base** et son résultat comparé, ligne à ligne, à ce qui est attendu. Sors les agents IT les mieux payés.",
+      "teach": "Combine `WHERE` (filtre), `AND` (plusieurs conditions) et `ORDER BY ... DESC` (tri décroissant), en ne sélectionnant que les colonnes demandées :\n\n```sql\nSELECT nom, salaire FROM employes\nWHERE departement = 'IT' AND salaire > 2500\nORDER BY salaire DESC;\n```",
+      "brief": "Renvoie **deux colonnes : `nom` puis `salaire`**, pour les agents du département `IT` au salaire **strictement supérieur à 2500**, **triés par salaire décroissant**.",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "hint": "`SELECT nom, salaire FROM employes WHERE departement = 'IT' AND salaire > 2500 ORDER BY salaire DESC;`",
+      "correction": "SELECT nom, salaire FROM employes WHERE departement = 'IT' AND salaire > 2500 ORDER BY salaire DESC;",
+      "reward": "La base confirme : 4 agents IT extraits, dans le bon ordre. Un secteur de la Mémoire se déverrouille. Passe aux **statistiques par département**."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Statistiques par département",
+      "lang": "sql",
+      "story": "La Mémoire doit livrer des **chiffres agrégés**. Compte les effectifs par département, mais ne garde que les départements vraiment peuplés.",
+      "teach": "`GROUP BY` regroupe par valeur, `COUNT(*)` compte chaque groupe, et `HAVING` filtre les groupes obtenus :\n\n```sql\nSELECT departement, COUNT(*) FROM employes\nGROUP BY departement\nHAVING COUNT(*) > 2;\n```",
+      "brief": "Renvoie **deux colonnes : le `departement` et son effectif `COUNT(*)`**, en ne gardant que les départements comptant **plus de 2 agents** (`HAVING`). L'ordre des lignes est libre.",
+      "validationType": "sql",
+      "sqlOrdered": false,
+      "hint": "`SELECT departement, COUNT(*) FROM employes GROUP BY departement HAVING COUNT(*) > 2;`",
+      "correction": "SELECT departement, COUNT(*) FROM employes GROUP BY departement HAVING COUNT(*) > 2;",
+      "reward": "La base confirme : seuls les départements peuplés ressortent. La Mémoire se structure. Reste à **relier** les souvenirs entre tables."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Relier la Mémoire (jointure agrégée)",
+      "lang": "sql",
+      "story": "L'épreuve finale : relie deux tables et agrège. Calcule, **par département**, le montant total des commandes passées par ses agents.",
+      "teach": "Une jointure relie `commandes` à `employes` par `employe_id`, puis on agrège avec `SUM(...)` et `GROUP BY` :\n\n```sql\nSELECT employes.departement, SUM(commandes.montant)\nFROM commandes\nJOIN employes ON commandes.employe_id = employes.id\nGROUP BY employes.departement;\n```",
+      "brief": "Renvoie **deux colonnes : `departement` et la somme `SUM(montant)`**. Joins `commandes` et `employes` sur `commandes.employe_id = employes.id`, puis regroupe par `departement`. L'ordre des lignes est libre.",
+      "validationType": "sql",
+      "sqlOrdered": false,
+      "hint": "`SELECT employes.departement, SUM(commandes.montant) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;`",
+      "correction": "SELECT employes.departement, SUM(commandes.montant) FROM commandes JOIN employes ON commandes.employe_id = employes.id GROUP BY employes.departement;",
+      "reward": "La base confirme : montants totalisés par département, tables reliées. **La Mémoire d'ANIMA est déverrouillée** — elle se souvient de nouveau."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du SQL\n\nQuatre paliers gravis :\n\n- **Débutant** : SELECT, colonnes, DISTINCT, WHERE, ORDER BY\n- **Intermédiaire** : comparaisons, AND, IN, LIKE\n- **Avancé** : COUNT, AVG, GROUP BY, HAVING\n- **Expert** : JOIN, sous-requêtes, synthèse\n\nInterroger une base de données est une compétence clé (dev, data, BI). **Tu es désormais expert en SQL.**"
+  "finale": "## La Mémoire déverrouillée — La Voie du SQL\n\nDu premier `SELECT` sur une base scellée jusqu'à de **vraies requêtes exécutées** (résultats comparés ligne à ligne, et non de simples mots-clés), tu as rouvert la Mémoire d'ANIMA :\n\n- **Lire & trier** : SELECT, DISTINCT, WHERE, ORDER BY\n- **Filtrer finement** : comparateurs, AND, IN, LIKE\n- **Agréger** : COUNT, AVG, GROUP BY, HAVING\n- **Relier** : JOIN, sous-requêtes\n- **Projets** : 3 requêtes réelles (extraction triée, statistiques par groupe, jointure agrégée) — **exécutées sur la base**\n\nLa Mémoire rejoint la Surface et les huit Fragments du cœur. Restent son **Historique** (Git), ses **Filtres** (Regex), son **Schéma directeur** (YAML)… avant le choix final.\n\n**Tu es désormais expert en SQL.**"
 }

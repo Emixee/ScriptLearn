@@ -1,9 +1,21 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.8
+## Version actuelle : 0.16.9
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.9 — Voie SQL : narration « Réveil » + capstones exécutés via SQLite WASM (2026-06-20)
+
+Deuxième Voie statique de la phase : narration « Réveil » + **validation par exécution réelle** (sql.js).
+- **Nouveau moteur SQL** : `src/renderer/src/lib/validators/sql.js` exécute la requête de l'élève dans **SQLite compilé en WebAssembly** (`sql.js`, 100% hors-ligne) sur une base seedée (`employes`, `commandes`), puis **compare le jeu de lignes** à celui de la requête de référence. Comparaison ensembliste par défaut, ordonnée si la consigne l'exige (`sqlOrdered`). Fini les mots-clés : une requête aux bons mots mais au mauvais résultat échoue. Dispatch ajouté dans `useCodeRunner.js` (`validationType:'sql'`, async).
+- **Bundling WASM** : `sql.js` ajouté en dépendance ; `sql-wasm.wasm` (660 Ko) placé dans `src/renderer/public/sqljs/` et dépaqué via `asarUnpack: ["**/sqljs/**"]` (même schéma que les assets v86 ; locateFile = `/sqljs/` en dev, `./sqljs/` en prod). Vérifié : wasm copié dans `out/renderer/sqljs/` et dépaqué dans `app.asar.unpacked`.
+- **Narration** : Voie SQL réécrite dans « Réveil » — SQL = la **Mémoire** d'ANIMA, verrouillée par l'Ombre. Stories/rewards des 17 actes retissés.
+- **3 actes capstone SQL** (17 → 20) : `c1` extraction filtrée+triée (WHERE+AND+ORDER BY DESC), `c2` agrégat par groupe (GROUP BY+COUNT+HAVING), `c3` jointure agrégée (JOIN+SUM+GROUP BY). **Exécutés réellement**.
+- **Vérifié** (sql.js en Node, 10 cas) : corrections valides, syntaxes alternatives (alias de tables, ordre des lignes) acceptées, requêtes fausses (sans tri/HAVING, mauvais seuil, SUM→COUNT, SQL invalide) rejetées.
+- Reste : Regex (RegExp), YAML (js-yaml), Git (git WSL), KQL/SPL (structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 
