@@ -4,8 +4,8 @@
   "language": "git",
   "order": 6,
   "title": "La Voie de Git",
-  "tagline": "Le contrôle de version : du premier commit jusqu'au travail collaboratif. Débutant → expert.",
-  "synopsis": "Git enregistre l'historique de ton code et permet de travailler à plusieurs. Commande après commande, tu apprends à gérer un projet comme un pro.",
+  "tagline": "L'Historique d'ANIMA — la chronique de son code en Git, du premier commit à la fusion. Débutant → expert.",
+  "synopsis": "L'**Historique** d'ANIMA — la chronique versionnée de tout son code, par laquelle elle gardait trace de chacune de ses évolutions — a été brouillée par l'Ombre : commits perdus, branches orphelines. Commande après commande, tu réapprends Git, puis tu reconstruis de **vrais bouts d'historique**, exécutés dans un dépôt réel et inspectés.",
   "objective": "Maîtriser Git : commits, branches, fusion, dépôts distants, collaboration.",
   "career": "developer",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Initialiser un dépôt",
       "lang": "git",
-      "story": "Tout commence par créer un dépôt Git dans ton projet.",
+      "story": "Tout commence par un dépôt. `git init` crée l'Historique dans le dossier courant.",
       "teach": "```\ngit init\n```\nCrée un dépôt Git dans le dossier courant.",
       "brief": "Initialise un dépôt Git.",
       "validationType": "keywords",
@@ -27,14 +27,14 @@
       ],
       "hint": "`git init`",
       "correction": "git init",
-      "reward": "Le dépôt est créé. Que se passe-t-il dedans ?"
+      "reward": "L'Historique renaît, vierge. Et connaître son état ?"
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Voir l'état",
       "lang": "git",
-      "story": "`git status` montre les fichiers modifiés, ajoutés ou non suivis.",
+      "story": "`git status` montre l'état : fichiers modifiés, indexés, non suivis.",
       "teach": "```\ngit status\n```",
       "brief": "Affiche l'état actuel du dépôt.",
       "validationType": "keywords",
@@ -44,14 +44,14 @@
       ],
       "hint": "`git status`",
       "correction": "git status",
-      "reward": "Tu vois ce qui a changé. Préparons un fichier."
+      "reward": "Tu lis l'état du dépôt. Et préparer un fichier ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Indexer un fichier",
       "lang": "git",
-      "story": "`git add` ajoute un fichier à la « zone d'index » (prêt à être enregistré).",
+      "story": "`git add <fichier>` **indexe** un fichier : il rejoint la prochaine photo (commit).",
       "teach": "```\ngit add fichier.txt\n```\n`git add .` ajoute tout.",
       "brief": "Ajoute le fichier `app.js` à l'index.",
       "validationType": "keywords",
@@ -62,14 +62,14 @@
       ],
       "hint": "`git add app.js`",
       "correction": "git add app.js",
-      "reward": "Le fichier est prêt. Enregistrons-le."
+      "reward": "Le fichier est prêt à être gravé. Et l'enregistrer ?"
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Enregistrer (commit)",
       "lang": "git",
-      "story": "`git commit -m \"message\"` enregistre les fichiers indexés avec une description.",
+      "story": "`git commit -m \"message\"` **grave** une étape dans l'Historique, avec son message.",
       "teach": "```\ngit commit -m \"Ajout login\"\n```",
       "brief": "Crée un commit avec le message `Premier commit`.",
       "validationType": "keywords",
@@ -81,14 +81,14 @@
       ],
       "hint": "`git commit -m \"Premier commit\"`",
       "correction": "git commit -m \"Premier commit\"",
-      "reward": "Ton premier commit ! Et l'historique ?"
+      "reward": "Un premier point d'Historique est gravé. Et le relire ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Voir l'historique",
       "lang": "git",
-      "story": "`git log` affiche la liste des commits.",
+      "story": "`git log` déroule l'Historique des commits.",
       "teach": "```\ngit log --oneline\n```\n`--oneline` = format compact.",
       "brief": "Affiche l'historique des commits.",
       "validationType": "keywords",
@@ -98,14 +98,14 @@
       ],
       "hint": "`git log`",
       "correction": "git log",
-      "reward": "**Palier Débutant terminé !** Place aux branches."
+      "reward": "**Palier Débutant terminé !** L'Historique se relit. Place aux branches."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Créer une branche",
       "lang": "git",
-      "story": "Une **branche** est une ligne de travail parallèle. `git branch` les liste ou en crée.",
+      "story": "`git branch <nom>` crée une **branche** — une ligne d'Historique parallèle.",
       "teach": "```\ngit branch nouvelle-fonction\n```",
       "brief": "Crée une branche nommée `feature`.",
       "validationType": "keywords",
@@ -116,14 +116,14 @@
       ],
       "hint": "`git branch feature`",
       "correction": "git branch feature",
-      "reward": "Une branche existe. Allons-y."
+      "reward": "Une réalité alternative s'ouvre. Et y basculer ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Changer de branche",
       "lang": "git",
-      "story": "`git switch` se déplace sur une branche ; `-c` la crée et s'y place.",
+      "story": "`git switch -c <nom>` crée une branche **et** s'y place aussitôt.",
       "teach": "```\ngit switch -c nouvelle\n```",
       "brief": "Crée et bascule sur une nouvelle branche `dev` (`switch -c`).",
       "validationType": "keywords",
@@ -134,14 +134,14 @@
       ],
       "hint": "`git switch -c dev`",
       "correction": "git switch -c dev",
-      "reward": "Tu travailles à part. Fusionnons ensuite."
+      "reward": "Tu travailles sur une ligne isolée. Et réunir les lignes ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Fusionner (merge)",
       "lang": "git",
-      "story": "`git merge` intègre une branche dans la branche courante.",
+      "story": "`git merge <branche>` **fusionne** une branche dans la branche courante.",
       "teach": "```\ngit merge dev\n```",
       "brief": "Fusionne la branche `dev` dans la branche courante.",
       "validationType": "keywords",
@@ -152,14 +152,14 @@
       ],
       "hint": "`git merge dev`",
       "correction": "git merge dev",
-      "reward": "Les travaux sont réunis. Et voir les différences ?"
+      "reward": "Les lignes d'Historique convergent. Et voir ce qui a changé ?"
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Voir les différences",
       "lang": "git",
-      "story": "`git diff` montre ce qui a changé, ligne par ligne.",
+      "story": "`git diff` montre les **différences** non encore indexées.",
       "teach": "```\ngit diff\n```",
       "brief": "Affiche les différences non indexées.",
       "validationType": "keywords",
@@ -169,14 +169,14 @@
       ],
       "hint": "`git diff`",
       "correction": "git diff",
-      "reward": "Révision !"
+      "reward": "Tu inspectes les changements. Révision."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — indexer puis commiter",
       "lang": "git",
-      "story": "Tu **réutilises** `git add` et `git commit -m` (palier Débutant) en une séquence.",
+      "story": "Tu **réutilises** `git add` puis `git commit` pour graver un correctif.",
       "teach": "```\ngit add .\ngit commit -m \"maj\"\n```",
       "brief": "Indexe tout (`git add .`) puis crée un commit avec le message `Correctif`.",
       "validationType": "keywords",
@@ -189,14 +189,14 @@
       ],
       "hint": "`git add . && git commit -m \"Correctif\"`",
       "correction": "git add . && git commit -m \"Correctif\"",
-      "reward": "**Palier Intermédiaire terminé !** Place au travail distant."
+      "reward": "**Palier Intermédiaire terminé !** Place au travail à distance."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Lier un dépôt distant",
       "lang": "git",
-      "story": "Un **dépôt distant** (GitHub…) héberge ton code. `git remote add origin <url>` le relie.",
+      "story": "`git remote add origin <url>` relie l'Historique local à un dépôt distant.",
       "teach": "```\ngit remote add origin https://github.com/u/projet.git\n```",
       "brief": "Ajoute un dépôt distant nommé `origin` (`git remote add origin`).",
       "validationType": "keywords",
@@ -208,14 +208,14 @@
       ],
       "hint": "`git remote add origin <url>`",
       "correction": "git remote add origin https://github.com/user/projet.git",
-      "reward": "Le distant est relié. Envoyons le code."
+      "reward": "L'Historique a désormais un miroir distant. Et l'y envoyer ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Envoyer (push)",
       "lang": "git",
-      "story": "`git push` envoie tes commits vers le dépôt distant.",
+      "story": "`git push origin <branche>` **envoie** tes commits vers le distant.",
       "teach": "```\ngit push origin main\n```",
       "brief": "Envoie la branche `main` vers `origin` (`git push origin main`).",
       "validationType": "keywords",
@@ -227,14 +227,14 @@
       ],
       "hint": "`git push origin main`",
       "correction": "git push origin main",
-      "reward": "Ton code est en ligne. Et récupérer les changements ?"
+      "reward": "Ton Historique se propage. Et récupérer celui des autres ?"
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Récupérer (pull)",
       "lang": "git",
-      "story": "`git pull` récupère et intègre les changements du dépôt distant.",
+      "story": "`git pull origin <branche>` **récupère** et intègre les commits distants.",
       "teach": "```\ngit pull origin main\n```",
       "brief": "Récupère les changements de `main` depuis `origin` (`git pull origin main`).",
       "validationType": "keywords",
@@ -246,14 +246,14 @@
       ],
       "hint": "`git pull origin main`",
       "correction": "git pull origin main",
-      "reward": "Tu restes à jour. Révision avancée !"
+      "reward": "Les Historiques se synchronisent. Révision avancée."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — cloner un dépôt",
       "lang": "git",
-      "story": "`git clone <url>` copie un dépôt distant complet en local — le point de départ de tout projet d'équipe.",
+      "story": "`git clone <url>` **copie** un dépôt distant complet en local.",
       "teach": "```\ngit clone https://github.com/u/projet.git\n```",
       "brief": "Clone le dépôt distant `https://github.com/equipe/app.git`.",
       "validationType": "keywords",
@@ -263,14 +263,14 @@
       ],
       "hint": "`git clone <url>`",
       "correction": "git clone https://github.com/equipe/app.git",
-      "reward": "**Palier Avancé terminé !** Dernier palier : les outils de pro."
+      "reward": "**Palier Avancé terminé !** Dernier palier : les manœuvres fines."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Mettre de côté (stash)",
       "lang": "git",
-      "story": "`git stash` range temporairement tes modifications non commitées pour revenir à un état propre.",
+      "story": "`git stash` **met de côté** des changements non commités, pour y revenir plus tard.",
       "teach": "```\ngit stash\n```\n`git stash pop` les restaure.",
       "brief": "Mets de côté tes modifications en cours (`git stash`).",
       "validationType": "keywords",
@@ -280,14 +280,14 @@
       ],
       "hint": "`git stash`",
       "correction": "git stash",
-      "reward": "Espace de travail propre. Et annuler un commit ?"
+      "reward": "Tu ranges un travail en cours sans le perdre. Et annuler proprement ?"
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Annuler (revert)",
       "lang": "git",
-      "story": "`git revert <commit>` crée un nouveau commit qui **annule** les changements d'un commit donné, sans réécrire l'historique.",
+      "story": "`git revert <commit>` crée un commit qui **annule** un commit précédent — sans réécrire l'Historique.",
       "teach": "```\ngit revert abc123\n```",
       "brief": "Annule le commit `abc123` avec `git revert`.",
       "validationType": "keywords",
@@ -298,14 +298,14 @@
       ],
       "hint": "`git revert abc123`",
       "correction": "git revert abc123",
-      "reward": "Tu corriges proprement. Synthèse finale !"
+      "reward": "Tu corriges le passé sans le falsifier. Synthèse finale."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — le cycle complet",
       "lang": "git",
-      "story": "Synthèse : tu enchaînes `add`, `commit` (Débutant) et `push` (Avancé) — le cycle quotidien du développeur.",
+      "story": "Synthèse : le cycle complet — indexer, commiter, brancher, fusionner.",
       "teach": "```\ngit add .\ngit commit -m \"feat\"\ngit push origin main\n```",
       "brief": "Écris la séquence complète : indexer tout, commiter avec le message `Nouvelle feature`, puis pousser sur `origin main`.",
       "validationType": "keywords",
@@ -320,8 +320,103 @@
       ],
       "hint": "`git add . && git commit -m \"Nouvelle feature\" && git push origin main`",
       "correction": "git add . && git commit -m \"Nouvelle feature\" && git push origin main",
-      "reward": "Tu maîtrises le cycle de versionnage complet. **Tu es expert en Git.**"
+      "reward": "Tu connais les commandes… mais les réciter ne reconstruit pas l'Historique. Il faut **exécuter de vrais enchaînements** dans un dépôt réel, et que l'état obtenu soit exact. Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Graver le premier point d'Historique",
+      "lang": "git",
+      "story": "Première reconstruction réelle : tes commandes sont **exécutées dans un vrai dépôt**, puis son état est inspecté. Initialise l'Historique, crée un fichier et grave-le.",
+      "teach": "Le cycle de base, dans l'ordre :\n\n```bash\ngit init\necho \"contenu\" > journal.txt\ngit add journal.txt\ngit commit -m \"Reveil\"\n```\n\n`git init` crée le dépôt, `git add` indexe le fichier, `git commit -m` grave l'étape.",
+      "brief": "Initialise un dépôt, crée un fichier `journal.txt` (avec un contenu), indexe-le, puis fais **un commit** avec le message exact `Reveil`.",
+      "validationType": "git",
+      "gitChecks": [
+        {
+          "run": "git rev-list --count HEAD",
+          "equals": "1",
+          "label": "exactement 1 commit"
+        },
+        {
+          "run": "git log -1 --pretty=%s",
+          "equals": "Reveil",
+          "label": "message du commit = \"Reveil\""
+        },
+        {
+          "run": "git ls-files",
+          "equals": "journal.txt",
+          "label": "journal.txt est suivi"
+        }
+      ],
+      "hint": "Dans l'ordre : `git init`, créer le fichier (`echo ... > journal.txt`), `git add journal.txt`, `git commit -m \"Reveil\"`.",
+      "correction": "git init\necho \"contenu\" > journal.txt\ngit add journal.txt\ngit commit -m \"Reveil\"",
+      "reward": "Le dépôt confirme : 1 commit, fichier suivi, bon message. Le premier point d'Historique est gravé. Passe aux **branches**."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Une ligne d'Historique parallèle",
+      "lang": "git",
+      "story": "L'Historique se ramifie. Pars d'un commit initial, ouvre une branche `restauration`, et grave-y un nouveau fichier. L'état du dépôt sera inspecté à la fin.",
+      "teach": "Crée un premier commit, puis une branche où tu continues :\n\n```bash\ngit init\necho base > base.txt\ngit add base.txt\ngit commit -m \"Initial\"\ngit switch -c restauration\necho frag > fragment.txt\ngit add fragment.txt\ngit commit -m \"Fragment\"\n```",
+      "brief": "Fais un commit initial (`base.txt`, message `Initial`), puis crée et bascule sur la branche `restauration`, ajoute `fragment.txt` et commite-le (message `Fragment`). À la fin tu dois être **sur restauration**, avec **2 commits** et les **deux fichiers**.",
+      "validationType": "git",
+      "gitChecks": [
+        {
+          "run": "git rev-parse --abbrev-ref HEAD",
+          "equals": "restauration",
+          "label": "branche courante = restauration"
+        },
+        {
+          "run": "git rev-list --count HEAD",
+          "equals": "2",
+          "label": "2 commits dans l'historique"
+        },
+        {
+          "run": "git branch --format='%(refname:short)' | sort | tr '\\n' ' '",
+          "equals": "main restauration",
+          "label": "branches : main et restauration"
+        },
+        {
+          "run": "git ls-files | sort | tr '\\n' ' '",
+          "equals": "base.txt fragment.txt",
+          "label": "fichiers suivis : base.txt, fragment.txt"
+        }
+      ],
+      "hint": "Après le commit initial, `git switch -c restauration` crée ET bascule. Puis crée, `add` et `commit` le second fichier.",
+      "correction": "git init\necho base > base.txt\ngit add base.txt\ngit commit -m \"Initial\"\ngit switch -c restauration\necho frag > fragment.txt\ngit add fragment.txt\ngit commit -m \"Fragment\"",
+      "reward": "Le dépôt confirme : sur `restauration`, 2 commits, deux fichiers. La ligne parallèle existe. Reste à **réunir** les lignes."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Réunir l'Historique (merge)",
+      "lang": "git",
+      "story": "L'épreuve finale : fais diverger puis **converger** l'Historique. Commit initial sur `main`, une branche `correctif` avec son commit, retour sur `main` et **fusion**. À la fin, `main` porte les deux fichiers.",
+      "teach": "Branche, commite, reviens, fusionne :\n\n```bash\ngit init\necho a > a.txt\ngit add a.txt\ngit commit -m \"Init\"\ngit switch -c correctif\necho b > b.txt\ngit add b.txt\ngit commit -m \"Ajout b\"\ngit switch main\ngit merge correctif\n```",
+      "brief": "Crée un commit initial sur `main` (`a.txt`), une branche `correctif` avec un commit (`b.txt`), reviens sur `main` et **fusionne** `correctif`. À la fin : branche courante **main**, **2 commits**, fichiers **a.txt et b.txt**.",
+      "validationType": "git",
+      "gitChecks": [
+        {
+          "run": "git rev-parse --abbrev-ref HEAD",
+          "equals": "main",
+          "label": "branche courante = main"
+        },
+        {
+          "run": "git rev-list --count HEAD",
+          "equals": "2",
+          "label": "2 commits accessibles depuis main"
+        },
+        {
+          "run": "git ls-files | sort | tr '\\n' ' '",
+          "equals": "a.txt b.txt",
+          "label": "fichiers suivis : a.txt, b.txt"
+        }
+      ],
+      "hint": "Après le commit sur `correctif`, `git switch main` puis `git merge correctif` ramène le travail dans main.",
+      "correction": "git init\necho a > a.txt\ngit add a.txt\ngit commit -m \"Init\"\ngit switch -c correctif\necho b > b.txt\ngit add b.txt\ngit commit -m \"Ajout b\"\ngit switch main\ngit merge correctif",
+      "reward": "Le dépôt confirme : sur `main`, historique fusionné, les deux fichiers réunis. **L'Historique d'ANIMA est reconstitué** — elle se souvient de toute son évolution."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie de Git\n\nQuatre paliers gravis :\n\n- **Débutant** : init, status, add, commit, log\n- **Intermédiaire** : branch, switch, merge, diff\n- **Avancé** : remote, push, pull, clone\n- **Expert** : stash, revert, cycle complet\n\nGit est indispensable dans toute équipe de développement. **Tu es désormais expert en Git.**"
+  "finale": "## L'Historique reconstitué — La Voie de Git\n\nDe `git init` jusqu'à de **vrais enchaînements exécutés dans un dépôt réel** (état du dépôt inspecté après coup — commits, branches, fichiers suivis — et non de simples mots-clés), tu as recousu l'Historique d'ANIMA :\n\n- **Le cycle** : init, status, add, commit, log\n- **Branches** : branch, switch, merge, diff\n- **À distance** : remote, push, pull, clone\n- **Manœuvres** : stash, revert\n- **Projets** : 3 historiques réels (premier commit, branche parallèle, fusion) — **exécutés dans un dépôt jetable**\n\nL'Historique rejoint le Schéma directeur, les Filtres, la Mémoire, la Surface et les huit Fragments. Restent la **Vigie** (KQL) et les **Sondes** (SPL)… avant le choix final.\n\n**Tu es désormais expert en Git.**"
 }

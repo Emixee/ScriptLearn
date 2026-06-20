@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     kill: (opts) => ipcRenderer.invoke('terminal:kill', opts),
     // Validation en coulisses : exécute le code (one-shot, sans écho) et renvoie { output }.
     runValidation: (opts) => ipcRenderer.invoke('terminal:runValidation', opts),
+    // Validation Git : exécute les commandes dans un dépôt jetable WSL → { outputs }.
+    runGit:          (opts) => ipcRenderer.invoke('terminal:runGit', opts),
     bashAvailable:   () => ipcRenderer.invoke('terminal:bashAvailable'),
     pythonAvailable: () => ipcRenderer.invoke('terminal:pythonAvailable'),
     phpAvailable:    () => ipcRenderer.invoke('terminal:phpAvailable'),

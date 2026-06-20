@@ -140,6 +140,40 @@ function buildBashScript(lang, code, project, args) {
   }
 }
 
+// ── Validation Git : exécution RÉELLE dans un dépôt jetable (WSL) ───────────
+// POURQUOI : valider Git par mots-clés est vide de sens. Ici on exécute les
+// commandes de l'élève dans un VRAI dépôt git temporaire, puis on lance des
+// commandes d'inspection (« checks ») dont la sortie prouve l'état obtenu
+// (nombre de commits, branche courante, fichiers suivis…).
+const GIT_SENTINEL = '__SLGITCHK__'
+
+function buildGitScript(commands, checks) {
+  // Config git ISOLÉE dans un fichier temporaire (GIT_CONFIG_GLOBAL) : identité
+  // fournie (sinon `git commit` échoue) et branche par défaut `main`, le tout
+  // SANS toucher au ~/.gitconfig de l'utilisateur. GIT_CONFIG_SYSTEM=/dev/null
+  // neutralise aussi la config système.
+  const setup =
+    'GC=$(mktemp)\n' +
+    "printf '[user]\\n  name = ScriptLearn\\n  email = sl@local\\n[init]\\n  defaultBranch = main\\n' > \"$GC\"\n" +
+    'export GIT_CONFIG_GLOBAL="$GC" GIT_CONFIG_SYSTEM=/dev/null\n' +
+    'W=$(mktemp -d)\ncd "$W" || exit 1\n'
+  // Les commandes de l'élève : sortie ignorée (on ne juge que l'ÉTAT final).
+  const student = `{\n${commands}\n} > /dev/null 2>&1\n`
+  // Chaque check est précédé d'un sentinel pour découper proprement la sortie.
+  const checkCmds = (checks ?? [])
+    .map((ch) => `printf '\\n${GIT_SENTINEL}\\n'\n${ch} 2>&1`)
+    .join('\n')
+  const cleanup = '\ncd /; rm -rf "$W" "$GC"\n'
+  return setup + student + checkCmds + cleanup
+}
+
+function runGit(commands, checks) {
+  const out = runCapture('wsl.exe', ['-e', 'bash'], buildGitScript(commands, checks))
+  // parts[0] = préambule (avant le 1er check) ; parts[i+1] = sortie du check i.
+  const parts = out.split(GIT_SENTINEL)
+  return (checks ?? []).map((_, i) => (parts[i + 1] ?? '').trim())
+}
+
 function runValidation(lang, code, project, args) {
   // Python / PowerShell natifs en mode projet : on écrit un vrai fichier puis on
   // l'exécute avec ses arguments (impossible via stdin, qui ne fournit pas argv).
@@ -188,6 +222,16 @@ export function setupTerminalIPC(mainWindow) {
       return { output: runValidation(lang, code, project, args) }
     } catch (e) {
       return { output: String(e?.message ?? e) }
+    }
+  })
+
+  // Validation Git : exécute les commandes de l'élève dans un dépôt jetable WSL
+  // puis renvoie la sortie de chaque commande d'inspection (à comparer côté renderer).
+  ipcMain.handle('terminal:runGit', (_, { commands, checks }) => {
+    try {
+      return { outputs: runGit(commands ?? '', checks ?? []) }
+    } catch (e) {
+      return { outputs: [], error: String(e?.message ?? e) }
     }
   })
 

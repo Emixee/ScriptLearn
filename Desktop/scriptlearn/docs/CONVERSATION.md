@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.11
+## Version actuelle : 0.16.12
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.12 — Voie Git : narration « Réveil » + capstones exécutés dans un dépôt WSL réel (2026-06-20)
+
+Cinquième Voie statique de la phase : narration « Réveil » + **exécution réelle de git** (dépôt jetable WSL).
+- **Nouveau moteur Git** : IPC `terminal:runGit` (main, `src/main/terminal.js`) crée un **dépôt git temporaire isolé** (`GIT_CONFIG_GLOBAL` pointant un config jetable : identité + `defaultBranch=main`, sans toucher au `~/.gitconfig` de l'utilisateur), y exécute les commandes de l'élève, puis lance des **commandes d'inspection** dont la sortie prouve l'état (nb de commits, branche courante, fichiers suivis). Validateur `src/renderer/src/lib/validators/git.js` (`gitChecks` : `{ run, equals|contains }`) ; preload `terminal.runGit` ; dispatch `validationType:'git'` dans `useCodeRunner.js`.
+- **Narration** : Voie Git réécrite dans « Réveil » — Git = l'**Historique** d'ANIMA (chronique versionnée de son code), brouillé par l'Ombre. Stories/rewards des 17 actes retissés.
+- **3 actes capstone git** (17 → 20) : `c1` premier dépôt + commit (état : 1 commit, message, fichier suivi), `c2` branche parallèle (`switch -c`, 2 commits, branches main+restauration), `c3` fusion (`merge`, retour sur main, 2 fichiers). **Exécutés dans un vrai dépôt**.
+- **Vérifié** (WSL réel, 7 cas) : corrections valides, séquences fausses (sans commit, mauvais message, sans bascule de branche, sans merge) rejetées. git 2.43 présent dans WSL.
+- Reste : KQL/SPL (structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 
