@@ -18,6 +18,7 @@ import { validateSql } from './validators/sql'
 import { validateRegex } from './validators/regex'
 import { validateYaml } from './validators/yaml'
 import { validateGit } from './validators/git'
+import { validateStructured } from './validators/structured'
 
 export function useCodeRunner(termId, lang) {
   // Exécute le code dans la session affichée (bouton « Exécuter »).
@@ -68,6 +69,11 @@ export function useCodeRunner(termId, lang) {
     if (chapter.validationType === 'git') {
       // Exécution réelle dans un dépôt jetable WSL (via le process principal).
       return await validateGit(chapter, trimmed)
+    }
+    if (chapter.validationType === 'structured') {
+      // Langages de requête sans moteur offline (KQL, SPL) : structure du pipeline.
+      await new Promise(r => setTimeout(r, 150))
+      return validateStructured(chapter, trimmed)
     }
     if (isStatic(lang)) {
       await new Promise(r => setTimeout(r, 150))

@@ -1,6 +1,6 @@
 {
   "name": "scriptlearn",
-  "version": "0.16.12",
+  "version": "0.16.13",
   "description": "Logiciel d'apprentissage du scripting Bash & PowerShell",
   "main": "out/main/index.js",
   "scripts": {

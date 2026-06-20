@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.12
+## Version actuelle : 0.16.13
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.13 — Voie KQL : narration « Réveil » + capstones à pipeline structuré (2026-06-20)
+
+Sixième Voie statique de la phase : narration « Réveil » + **validation structurelle de pipeline**.
+- **Nouveau moteur structurel** : `src/renderer/src/lib/validators/structured.js` (partagé KQL+SPL). KQL/SPL n'ayant **aucun moteur exécutable hors-ligne**, on découpe la requête sur `|` et on exige que chaque étape attendue apparaisse, avec tous ses tokens, **dans le bon ordre** (sous-séquence ordonnée des segments). Bien plus fiable qu'un sac de mots-clés : `summarize | where` ne passe pas pour `where | summarize`. Dispatch ajouté (`validationType:'structured'`).
+- **Narration** : Voie KQL réécrite dans « Réveil » — KQL = la **Vigie** d'ANIMA (interrogation de sa télémétrie), aveuglée par l'Ombre. Stories/rewards des 17 actes retissés.
+- **3 actes capstone structurés** (17 → 20) : `c1` échecs de connexion filtrés/projetés/triés, `c2` top des comptes attaqués (summarize+top), `c3` cartographie temporelle (ago + bin()). **Pipeline vérifié étape par étape**.
+- **Vérifié** (Node, 8 cas) : corrections valides, pipelines désordonnés (sort avant where), incomplets (sans top/ago/sort) ou mauvaise table rejetés.
+- Reste : SPL (même moteur structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 
