@@ -4,8 +4,8 @@
   "language": "yaml",
   "order": 9,
   "title": "La Voie du YAML",
-  "tagline": "Le format de configuration de DevOps, de la paire clé-valeur aux ancres. Débutant → expert.",
-  "synopsis": "YAML configure Docker, Kubernetes, CI/CD… Ligne après ligne, tu apprends à écrire des fichiers de configuration clairs et corrects.",
+  "tagline": "Le Schéma directeur d'ANIMA — sa configuration de déploiement en YAML, de la clé-valeur aux ancres. Débutant → expert.",
+  "synopsis": "Le **Schéma directeur** d'ANIMA — les fichiers de configuration qui décrivaient comment elle se déployait sur ses machines — a été corrompu par l'Ombre : indentations brisées, services fantômes. Ligne après ligne, tu réapprends YAML, puis tu rédiges de **vrais manifestes** dont la structure réelle est vérifiée après analyse.",
   "objective": "Maîtriser YAML : clés-valeurs, types, listes, imbrication, ancres.",
   "career": "devops",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Clé et valeur",
       "lang": "yaml",
-      "story": "YAML associe une **clé** à une **valeur** : `cle: valeur`.",
+      "story": "Le Schéma est illisible. La brique de base de YAML associe une **clé** à une **valeur** : `cle: valeur`.",
       "teach": "```yaml\nname: nginx\n```",
       "brief": "Écris une paire `name` valant `nginx`.",
       "validationType": "keywords",
@@ -27,14 +27,14 @@
       ],
       "hint": "`name: nginx`",
       "correction": "name: nginx",
-      "reward": "La brique de base. Et un nombre ?"
+      "reward": "Le premier réglage tient. Et un nombre ?"
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Les nombres",
       "lang": "yaml",
-      "story": "Les nombres s'écrivent sans guillemets.",
+      "story": "Un **nombre** s'écrit sans guillemets : `port: 8080`.",
       "teach": "```yaml\nport: 8080\n```",
       "brief": "Écris une paire `port` valant `8080`.",
       "validationType": "keywords",
@@ -44,14 +44,14 @@
       ],
       "hint": "`port: 8080`",
       "correction": "port: 8080",
-      "reward": "Un entier. Et un booléen ?"
+      "reward": "Les valeurs numériques sont reconnues. Et un booléen ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les booléens",
       "lang": "yaml",
-      "story": "Les booléens valent `true` ou `false`.",
+      "story": "Un **booléen** vaut `true` ou `false`.",
       "teach": "```yaml\nenabled: true\n```",
       "brief": "Écris une paire `enabled` valant `true`.",
       "validationType": "keywords",
@@ -61,14 +61,14 @@
       ],
       "hint": "`enabled: true`",
       "correction": "enabled: true",
-      "reward": "Vrai/faux. Et une valeur vide ?"
+      "reward": "Le Schéma accepte les interrupteurs. Et une valeur absente ?"
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "La valeur nulle",
       "lang": "yaml",
-      "story": "`null` (ou `~`) représente une valeur vide.",
+      "story": "La valeur **nulle** s'écrit `null` (ou `~`) — un réglage volontairement vide.",
       "teach": "```yaml\ncache: null\n```",
       "brief": "Écris une paire `cache` valant `null`.",
       "validationType": "keywords",
@@ -78,14 +78,14 @@
       ],
       "hint": "`cache: null`",
       "correction": "cache: null",
-      "reward": "Une absence explicite. Et un commentaire ?"
+      "reward": "Tu déclares le vide explicitement. Et documenter ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Les commentaires",
       "lang": "yaml",
-      "story": "Un commentaire commence par `#` et est ignoré.",
+      "story": "Un **commentaire** commence par `#` : il documente sans rien configurer.",
       "teach": "```yaml\n# Configuration du serveur\nport: 80\n```",
       "brief": "Écris un commentaire `# config` suivi d'une paire `port: 80`.",
       "validationType": "keywords",
@@ -96,14 +96,14 @@
       ],
       "hint": "`# config`\n`port: 80`",
       "correction": "# config\nport: 80",
-      "reward": "**Palier Débutant terminé !** Place aux structures."
+      "reward": "**Palier Débutant terminé !** Le Schéma redevient lisible. Place aux structures."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les listes",
       "lang": "yaml",
-      "story": "Une **liste** : chaque élément sur une ligne, préfixé par `- `.",
+      "story": "Une **liste** : des tirets `-` alignés, un élément par ligne.",
       "teach": "```yaml\nservices:\n  - nginx\n  - redis\n```",
       "brief": "Écris une clé `services` avec deux éléments : `nginx` et `redis`.",
       "validationType": "keywords",
@@ -114,14 +114,14 @@
       ],
       "hint": "`services:`\n`  - nginx`\n`  - redis`",
       "correction": "services:\n  - nginx\n  - redis",
-      "reward": "Une collection. Et imbriquer ?"
+      "reward": "Le Schéma énumère. Et imbriquer des blocs ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "L'imbrication",
       "lang": "yaml",
-      "story": "On imbrique avec l'**indentation** (espaces). Une clé peut contenir d'autres clés.",
+      "story": "L'**imbrication** se fait par l'**indentation** (espaces) : une clé peut contenir un sous-bloc.",
       "teach": "```yaml\nserver:\n  host: localhost\n  port: 80\n```",
       "brief": "Écris une clé `server` contenant `host: localhost` et `port: 8080`.",
       "validationType": "keywords",
@@ -133,14 +133,14 @@
       ],
       "hint": "`server:`\n`  host: localhost`\n`  port: 8080`",
       "correction": "server:\n  host: localhost\n  port: 8080",
-      "reward": "Une hiérarchie. Et une liste en ligne ?"
+      "reward": "La hiérarchie du Schéma réapparaît. Et une liste compacte ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Liste en ligne",
       "lang": "yaml",
-      "story": "Une liste peut aussi s'écrire en **ligne** : `[a, b, c]`.",
+      "story": "Une **liste en ligne** s'écrit entre crochets : `[80, 443]`.",
       "teach": "```yaml\nports: [80, 443]\n```",
       "brief": "Écris une clé `ports` valant la liste en ligne `[80, 443]`.",
       "validationType": "keywords",
@@ -152,14 +152,14 @@
       ],
       "hint": "`ports: [80, 443]`",
       "correction": "ports: [80, 443]",
-      "reward": "Compact. Révision !"
+      "reward": "Le Schéma se condense quand il faut. Révision."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — une liste imbriquée",
       "lang": "yaml",
-      "story": "Tu **réutilises** l'imbrication et les listes (palier).",
+      "story": "Tu **réutilises** indentation et liste pour décrire un bloc contenant une liste.",
       "teach": "```yaml\nserver:\n  noms:\n    - web1\n    - web2\n```",
       "brief": "Écris une clé `server` contenant une clé `noms` avec deux éléments : `web1` et `web2`.",
       "validationType": "keywords",
@@ -171,14 +171,14 @@
       ],
       "hint": "`server:`\n`  noms:`\n`    - web1`\n`    - web2`",
       "correction": "server:\n  noms:\n    - web1\n    - web2",
-      "reward": "**Palier Intermédiaire terminé !** Outils avancés."
+      "reward": "**Palier Intermédiaire terminé !** Place à la factorisation."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Les ancres (&)",
       "lang": "yaml",
-      "story": "Une **ancre** `&nom` marque un bloc réutilisable.",
+      "story": "Une **ancre** `&nom` marque un bloc réutilisable — pour ne pas répéter une config.",
       "teach": "```yaml\ndefaults: &def\n  timeout: 30\n```",
       "brief": "Crée une clé `defaults` avec une ancre `&def` contenant `timeout: 30`.",
       "validationType": "keywords",
@@ -189,14 +189,14 @@
       ],
       "hint": "`defaults: &def`\n`  timeout: 30`",
       "correction": "defaults: &def\n  timeout: 30",
-      "reward": "Un bloc nommé. Et le réutiliser ?"
+      "reward": "Tu mémorises un bloc. Et le réutiliser ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Les alias (*)",
       "lang": "yaml",
-      "story": "Un **alias** `*nom` réutilise une ancre.",
+      "story": "Un **alias** `*nom` réinjecte le bloc ancré ailleurs : la même config, partagée.",
       "teach": "```yaml\nprod:\n  <<: *def\n```",
       "brief": "Dans une clé `prod`, fusionne l'ancre avec `<<: *def`.",
       "validationType": "keywords",
@@ -207,14 +207,14 @@
       ],
       "hint": "`prod:`\n`  <<: *def`",
       "correction": "prod:\n  <<: *def",
-      "reward": "Pas de duplication. Et plusieurs documents ?"
+      "reward": "Le Schéma se factorise. Et plusieurs configs dans un fichier ?"
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Plusieurs documents (---)",
       "lang": "yaml",
-      "story": "Le séparateur `---` permet plusieurs documents dans un même fichier (courant en Kubernetes).",
+      "story": "`---` sépare **plusieurs documents** dans un même fichier YAML.",
       "teach": "```yaml\nname: a\n---\nname: b\n```",
       "brief": "Écris deux documents séparés par `---` : `name: a` puis `name: b`.",
       "validationType": "keywords",
@@ -224,14 +224,14 @@
       ],
       "hint": "`name: a`\n`---`\n`name: b`",
       "correction": "name: a\n---\nname: b",
-      "reward": "Révision avancée !"
+      "reward": "Tu empiles des manifestes. Révision avancée."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — ancre et alias",
       "lang": "yaml",
-      "story": "Tu **réutilises** ancre `&` et alias `*` (palier) dans une config réaliste.",
+      "story": "Tu **réutilises** ancre `&` et alias `*` pour partager un bloc de réglages.",
       "teach": "```yaml\nbase: &base\n  retries: 3\nservice:\n  <<: *base\n```",
       "brief": "Crée une ancre `&base` (avec `retries: 3`) et réutilise-la dans `service` via `<<: *base`.",
       "validationType": "keywords",
@@ -243,14 +243,14 @@
       ],
       "hint": "`base: &base`\n`  retries: 3`\n`service:`\n`  <<: *base`",
       "correction": "base: &base\n  retries: 3\nservice:\n  <<: *base",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "**Palier Avancé terminé !** Dernier palier : les valeurs longues."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Texte multi-ligne (|)",
       "lang": "yaml",
-      "story": "Le `|` conserve un **bloc de texte multi-ligne** tel quel (sauts de ligne préservés).",
+      "story": "Un **texte multi-ligne** se note avec `|` : chaque ligne suivante (indentée) est conservée — utile pour un script.",
       "teach": "```yaml\nscript: |\n  echo bonjour\n  echo fin\n```",
       "brief": "Écris une clé `script` avec un bloc `|` contenant deux lignes.",
       "validationType": "keywords",
@@ -261,14 +261,14 @@
       ],
       "hint": "`script: |`\n`  echo bonjour`\n`  echo fin`",
       "correction": "script: |\n  echo bonjour\n  echo fin",
-      "reward": "Du texte préservé. Synthèse finale !"
+      "reward": "Le Schéma porte des blocs entiers. Synthèse finale."
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Synthèse — un manifeste complet",
       "lang": "yaml",
-      "story": "Synthèse : tu combines imbrication, liste et clé-valeur — comme un vrai fichier `docker-compose`.",
+      "story": "Synthèse : un manifeste de services avec image, ports et imbrication.",
       "teach": "```yaml\nservices:\n  web:\n    image: nginx\n    ports:\n      - 80\n```",
       "brief": "Écris une clé `services` contenant une clé `web` avec `image: nginx` et une liste `ports` contenant `80`.",
       "validationType": "keywords",
@@ -282,8 +282,111 @@
       ],
       "hint": "`services:`\n`  web:`\n`    image: nginx`\n`    ports:`\n`      - 80`",
       "correction": "services:\n  web:\n    image: nginx\n    ports:\n      - 80",
-      "reward": "Tu écris des configurations complètes. **Tu es expert en YAML.**"
+      "reward": "Tu écris des manifestes… mais un extrait ne restaure pas le Schéma directeur. Il faut de **vrais manifestes, analysés** : la structure obtenue après parsing doit être exacte (clés, types, alias résolus). Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Le manifeste d'un service",
+      "lang": "yaml",
+      "story": "Premier vrai fragment du Schéma directeur : ton YAML est **analysé** et l'objet obtenu vérifié (clés, valeurs, types). Décris le service principal d'ANIMA.",
+      "teach": "Imbrique par indentation et liste les ports avec des tirets :\n\n```yaml\nversion: \"3\"\nservices:\n  anima:\n    image: anima-core\n    restart: always\n    ports:\n      - 8080\n```",
+      "brief": "Écris un manifeste avec une clé `version`, et `services.anima` contenant `image: anima-core`, `restart: always`, et une liste `ports` incluant `8080`.",
+      "validationType": "yaml",
+      "yamlAssertions": [
+        {
+          "path": "version",
+          "exists": true,
+          "label": "version"
+        },
+        {
+          "path": "services.anima.image",
+          "equals": "anima-core"
+        },
+        {
+          "path": "services.anima.restart",
+          "equals": "always"
+        },
+        {
+          "path": "services.anima.ports",
+          "contains": 8080,
+          "label": "services.anima.ports"
+        }
+      ],
+      "hint": "Indente `anima` sous `services`, puis `image`/`restart`/`ports` sous `anima`. Le port va dans une liste : `- 8080`.",
+      "correction": "version: \"3\"\nservices:\n  anima:\n    image: anima-core\n    restart: always\n    ports:\n      - 8080",
+      "reward": "L'analyse confirme : le service principal est bien décrit. Un pan du Schéma se rétablit. Passe à **plusieurs services**."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Un déploiement multi-services",
+      "lang": "yaml",
+      "story": "Le Schéma directeur orchestre **plusieurs services**. Décris-en deux, avec réplicas et ports, et laisse l'analyse vérifier la structure complète.",
+      "teach": "Plusieurs clés sous `services`, chacune avec ses réglages ; une liste peut compter plusieurs éléments :\n\n```yaml\nservices:\n  web:\n    image: nginx\n    replicas: 3\n    ports:\n      - 80\n      - 443\n  db:\n    image: postgres\n    replicas: 1\n```",
+      "brief": "Écris un `services` contenant **deux services** `web` et `db`. `web` : `image: nginx`, `replicas: 3`, et une liste `ports` de **deux** éléments dont `443`. `db` : `image: postgres`.",
+      "validationType": "yaml",
+      "yamlAssertions": [
+        {
+          "path": "services",
+          "hasKeys": [
+            "web",
+            "db"
+          ],
+          "label": "services"
+        },
+        {
+          "path": "services.web.replicas",
+          "equals": 3
+        },
+        {
+          "path": "services.web.ports",
+          "length": 2,
+          "label": "services.web.ports"
+        },
+        {
+          "path": "services.web.ports",
+          "contains": 443,
+          "label": "services.web.ports"
+        },
+        {
+          "path": "services.db.image",
+          "equals": "postgres"
+        }
+      ],
+      "hint": "Mets `web` et `db` au même niveau d'indentation sous `services`. `replicas: 3` est un nombre (sans guillemets). `ports` a deux tirets.",
+      "correction": "services:\n  web:\n    image: nginx\n    replicas: 3\n    ports:\n      - 80\n      - 443\n  db:\n    image: postgres\n    replicas: 1",
+      "reward": "L'analyse confirme : deux services orchestrés, structure exacte. Le Schéma s'étoffe. Reste à **factoriser** les réglages partagés."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Factoriser avec ancres et alias",
+      "lang": "yaml",
+      "story": "L'épreuve finale : évite la répétition. Définis un bloc de réglages par défaut avec une **ancre**, puis réutilise-le via des **alias** dans deux services. L'analyse vérifiera que les alias sont bien résolus.",
+      "teach": "Une ancre `&nom` marque un bloc ; un alias `*nom` le réinjecte (même contenu partagé) :\n\n```yaml\ndefaults: &defaults\n  retries: 3\n  timeout: 30\nservice_a:\n  config: *defaults\nservice_b:\n  config: *defaults\n```\n\nAprès analyse, `service_a.config` et `service_b.config` contiennent les mêmes réglages.",
+      "brief": "Définis `defaults` avec une ancre `&defaults` contenant `retries: 3` et `timeout: 30`. Puis `service_a.config` et `service_b.config` doivent réutiliser ce bloc via l'alias `*defaults`.",
+      "validationType": "yaml",
+      "yamlAssertions": [
+        {
+          "path": "defaults.retries",
+          "equals": 3
+        },
+        {
+          "path": "service_a.config.retries",
+          "equals": 3,
+          "label": "service_a.config.retries (alias résolu)"
+        },
+        {
+          "path": "service_b.config.timeout",
+          "equals": 30,
+          "label": "service_b.config.timeout (alias résolu)"
+        }
+      ],
+      "hint": "Place `&defaults` juste après `defaults:` et utilise `*defaults` comme valeur de `config` dans chaque service.",
+      "correction": "defaults: &defaults\n  retries: 3\n  timeout: 30\nservice_a:\n  config: *defaults\nservice_b:\n  config: *defaults",
+      "reward": "L'analyse confirme : alias résolus, réglages partagés sans répétition. **Le Schéma directeur d'ANIMA est restauré** — elle sait de nouveau comment se déployer."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du YAML\n\nQuatre paliers gravis : clés-valeurs & types → listes & imbrication → ancres & alias & multi-doc → multi-ligne & manifeste complet.\n\nYAML configure Docker, Kubernetes et les pipelines CI/CD. **Tu es désormais expert en YAML.**"
+  "finale": "## Le Schéma directeur restauré — La Voie du YAML\n\nDe la simple clé-valeur jusqu'à de **vrais manifestes analysés** (structure de l'objet vérifiée après parsing — clés, types, alias résolus — et non de simples mots-clés), tu as réparé le Schéma directeur d'ANIMA :\n\n- **Valeurs** : clés, nombres, booléens, null, commentaires\n- **Structures** : listes, imbrication, listes en ligne\n- **Factoriser** : ancres `&`, alias `*`, multi-documents `---`\n- **Blocs** : texte multi-ligne `|`\n- **Projets** : 3 manifestes réels (service, déploiement multi-services, factorisation par ancres) — **analysés**\n\nLe Schéma rejoint les Filtres, la Mémoire, la Surface et les huit Fragments. Reste l'**Historique** (Git), la **Vigie** (KQL) et les **Sondes** (SPL)… avant le choix final.\n\n**Tu es désormais expert en YAML.**"
 }

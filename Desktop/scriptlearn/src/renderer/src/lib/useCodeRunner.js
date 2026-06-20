@@ -16,6 +16,7 @@ import { isStatic, buildRunData } from './langs'
 import { validateDom } from './validators/dom'
 import { validateSql } from './validators/sql'
 import { validateRegex } from './validators/regex'
+import { validateYaml } from './validators/yaml'
 
 export function useCodeRunner(termId, lang) {
   // Exécute le code dans la session affichée (bouton « Exécuter »).
@@ -58,6 +59,10 @@ export function useCodeRunner(termId, lang) {
     if (chapter.validationType === 'regex') {
       await new Promise(r => setTimeout(r, 150))
       return validateRegex(chapter, trimmed)
+    }
+    if (chapter.validationType === 'yaml') {
+      await new Promise(r => setTimeout(r, 150))
+      return validateYaml(chapter, trimmed)
     }
     if (isStatic(lang)) {
       await new Promise(r => setTimeout(r, 150))

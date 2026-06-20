@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.10
+## Version actuelle : 0.16.11
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.11 — Voie YAML : narration « Réveil » + capstones parsés via js-yaml (2026-06-20)
+
+Quatrième Voie statique de la phase : narration « Réveil » + **validation par parsing réel** (js-yaml).
+- **Nouveau moteur YAML** : `src/renderer/src/lib/validators/yaml.js` parse le YAML de l'élève avec `js-yaml` (pur JS, hors-ligne) et évalue des **assertions sur l'objet produit** (`path` pointé + `equals`/`exists`/`length`/`contains`/`hasKeys`/`type`). Un YAML mal indenté ou mal typé échoue ; les alias doivent être correctement résolus. Dispatch ajouté dans `useCodeRunner.js` (`validationType:'yaml'`).
+- **Narration** : Voie YAML réécrite dans « Réveil » — YAML = le **Schéma directeur** d'ANIMA (config de déploiement), corrompu par l'Ombre. Stories/rewards des 15 actes retissés.
+- **3 actes capstone yaml** (15 → 18) : `c1` manifeste d'un service (imbrication + liste de ports), `c2` déploiement multi-services (réplicas, types numériques, listes), `c3` factorisation par ancres `&`/alias `*` (alias résolus vérifiés). **Analysés réellement**.
+- **Vérifié** (Node, 8 cas) : corrections valides, configs fausses (mauvaise valeur, service manquant, type string au lieu de number, alias non résolu, YAML invalide) rejetées.
+- Reste : Git (git WSL), KQL/SPL (structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 
