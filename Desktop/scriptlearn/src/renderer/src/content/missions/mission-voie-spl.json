@@ -4,8 +4,8 @@
   "language": "spl",
   "order": 8,
   "title": "La Voie du SPL",
-  "tagline": "Le langage de recherche de Splunk, de la recherche au timechart. Débutant → expert.",
-  "synopsis": "SPL interroge les données indexées dans Splunk. Recherche après recherche, tu apprends à transformer des millions d'événements en réponses.",
+  "tagline": "Les Sondes d'ANIMA — la recherche dans ses journaux indexés en SPL, du filtre à la visualisation. Débutant → expert.",
+  "synopsis": "Les **Sondes** d'ANIMA — par lesquelles elle fouillait des millions d'événements indexés pour en tirer des réponses — ont été saturées de bruit par l'Ombre. Recherche après recherche, tu réapprends SPL, puis tu composes de **vraies recherches**, dont la structure du pipeline est vérifiée étape par étape.",
   "objective": "Maîtriser SPL : recherche, champs, stats, eval, visualisations.",
   "career": "soc",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Chercher dans un index",
       "lang": "spl",
-      "story": "Une recherche SPL commence par un **index** et des termes.",
+      "story": "Les Sondes fouillent un index. `index=nom` cible la source à explorer.",
       "teach": "```spl\nindex=security\n```",
       "brief": "Lance une recherche sur l'index `security` (`index=security`).",
       "validationType": "keywords",
@@ -27,14 +27,14 @@
       ],
       "hint": "`index=security`",
       "correction": "index=security",
-      "reward": "Tu interroges les données. Affinons."
+      "reward": "Une première Sonde plonge dans les données. Et préciser un critère ?"
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Ajouter un critère",
       "lang": "spl",
-      "story": "On ajoute des paires `champ=valeur` pour filtrer.",
+      "story": "On affine en accolant des critères : `index=web status=404`.",
       "teach": "```spl\nindex=web status=404\n```",
       "brief": "Cherche dans l'index `web` les événements avec `status=404`.",
       "validationType": "keywords",
@@ -45,14 +45,14 @@
       ],
       "hint": "`index=web status=404`",
       "correction": "index=web status=404",
-      "reward": "Filtré. Choisissons les colonnes."
+      "reward": "La recherche se resserre. Et ne garder que certaines colonnes ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Choisir des colonnes (table)",
       "lang": "spl",
-      "story": "Le `|` enchaîne des commandes. `table` ne garde que certaines colonnes.",
+      "story": "`| table champ1, champ2` n'affiche que les colonnes choisies.",
       "teach": "```spl\nindex=web | table host, status\n```",
       "brief": "Sur `index=web`, n'affiche que les colonnes `host` et `status` (`| table host, status`).",
       "validationType": "keywords",
@@ -64,14 +64,14 @@
       ],
       "hint": "`index=web | table host, status`",
       "correction": "index=web | table host, status",
-      "reward": "Plus net. Limitons le nombre."
+      "reward": "Le bruit visuel tombe. Et limiter le volume ?"
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Limiter (head)",
       "lang": "spl",
-      "story": "`head N` ne garde que les N premiers résultats.",
+      "story": "`| head N` ne garde que les N premiers événements.",
       "teach": "```spl\nindex=web | head 10\n```",
       "brief": "Sur `index=web`, garde les 10 premiers résultats (`| head 10`).",
       "validationType": "keywords",
@@ -81,14 +81,14 @@
       ],
       "hint": "`index=web | head 10`",
       "correction": "index=web | head 10",
-      "reward": "Un échantillon. Et filtrer numériquement ?"
+      "reward": "Un échantillon maîtrisé. Et filtrer après coup ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Filtrer avec where",
       "lang": "spl",
-      "story": "`where` filtre avec une condition (souvent numérique).",
+      "story": "`| where condition` filtre sur une valeur calculée ou comparée.",
       "teach": "```spl\nindex=web | where bytes > 1000\n```",
       "brief": "Sur `index=web`, garde les événements où `bytes > 1000` (`| where bytes > 1000`).",
       "validationType": "keywords",
@@ -99,14 +99,14 @@
       ],
       "hint": "`index=web | where bytes > 1000`",
       "correction": "index=web | where bytes > 1000",
-      "reward": "**Palier Débutant terminé !** Place aux statistiques."
+      "reward": "**Palier Débutant terminé !** Les Sondes lisent l'index. Place aux statistiques."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Compter (stats count)",
       "lang": "spl",
-      "story": "`stats` calcule des statistiques. `stats count` compte les événements.",
+      "story": "`| stats count` compte les événements — la base de toute statistique.",
       "teach": "```spl\nindex=web | stats count\n```",
       "brief": "Compte les événements de `index=web` (`| stats count`).",
       "validationType": "keywords",
@@ -117,14 +117,14 @@
       ],
       "hint": "`index=web | stats count`",
       "correction": "index=web | stats count",
-      "reward": "Un total. Et par groupe ?"
+      "reward": "Les Sondes quantifient. Et regrouper ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Regrouper (stats by)",
       "lang": "spl",
-      "story": "`stats count by champ` compte par valeur.",
+      "story": "`| stats count by champ` regroupe et compte par valeur.",
       "teach": "```spl\nindex=web | stats count by host\n```",
       "brief": "Compte les événements **par** `host` (`| stats count by host`).",
       "validationType": "keywords",
@@ -137,14 +137,14 @@
       ],
       "hint": "`index=web | stats count by host`",
       "correction": "index=web | stats count by host",
-      "reward": "Une ligne par hôte. Et calculer un champ ?"
+      "reward": "Les motifs émergent du volume. Et calculer un champ ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Calculer (eval)",
       "lang": "spl",
-      "story": "`eval` crée un champ calculé.",
+      "story": "`| eval nouveau = expr` crée un champ calculé.",
       "teach": "```spl\nindex=web | eval ko = bytes / 1024\n```",
       "brief": "Sur `index=web`, crée un champ avec `eval` (ex. `eval ko = bytes / 1024`).",
       "validationType": "keywords",
@@ -154,14 +154,14 @@
       ],
       "hint": "`index=web | eval ko = bytes / 1024`",
       "correction": "index=web | eval ko = bytes / 1024",
-      "reward": "Données enrichies. Et trier ?"
+      "reward": "Les Sondes dérivent de nouvelles mesures. Et trier ?"
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Trier (sort)",
       "lang": "spl",
-      "story": "`sort -champ` trie en décroissant (`+champ` croissant).",
+      "story": "`| sort -champ` trie (le `-` = décroissant).",
       "teach": "```spl\nindex=web | stats count by host | sort -count\n```",
       "brief": "Trie par `count` décroissant (`| sort -count`).",
       "validationType": "keywords",
@@ -171,14 +171,14 @@
       ],
       "hint": "`| sort -count`",
       "correction": "index=web | stats count by host | sort -count",
-      "reward": "Révision !"
+      "reward": "Les résultats s'ordonnent. Révision."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — regrouper puis trier",
       "lang": "spl",
-      "story": "Tu **réutilises** `stats count by` et `sort` (palier) en une recherche.",
+      "story": "Tu **réutilises** `stats count by` puis `sort` pour classer des catégories.",
       "teach": "```spl\nindex=web | stats count by status | sort -count\n```",
       "brief": "Sur `index=web`, compte **par** `status`, puis trie par `count` décroissant.",
       "validationType": "keywords",
@@ -191,14 +191,14 @@
       ],
       "hint": "`index=web | stats count by status | sort -count`",
       "correction": "index=web | stats count by status | sort -count",
-      "reward": "**Palier Intermédiaire terminé !** Outils avancés."
+      "reward": "**Palier Intermédiaire terminé !** Place aux recherches avancées."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "Le top",
       "lang": "spl",
-      "story": "`top champ` donne les valeurs les plus fréquentes (avec compte et pourcentage).",
+      "story": "`| top champ` donne directement les valeurs les plus fréquentes.",
       "teach": "```spl\nindex=web | top url\n```",
       "brief": "Sur `index=web`, affiche les `url` les plus fréquentes (`| top url`).",
       "validationType": "keywords",
@@ -209,14 +209,14 @@
       ],
       "hint": "`index=web | top url`",
       "correction": "index=web | top url",
-      "reward": "Le palmarès direct. Et dédoublonner ?"
+      "reward": "Les Sondes pointent les dominantes. Et dédoublonner ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "Dédoublonner (dedup)",
       "lang": "spl",
-      "story": "`dedup champ` ne garde qu'un événement par valeur.",
+      "story": "`| dedup champ` ne garde qu'un événement par valeur.",
       "teach": "```spl\nindex=web | dedup host\n```",
       "brief": "Sur `index=web`, garde un seul événement par `host` (`| dedup host`).",
       "validationType": "keywords",
@@ -227,14 +227,14 @@
       ],
       "hint": "`index=web | dedup host`",
       "correction": "index=web | dedup host",
-      "reward": "Données uniques. Et renommer ?"
+      "reward": "Le bruit redondant disparaît. Et renommer un champ ?"
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Renommer (rename)",
       "lang": "spl",
-      "story": "`rename a as b` renomme un champ pour la lisibilité.",
+      "story": "`| rename champ as alias` clarifie les résultats.",
       "teach": "```spl\nindex=web | rename host as serveur\n```",
       "brief": "Sur `index=web`, renomme `host` en `serveur` (`| rename host as serveur`).",
       "validationType": "keywords",
@@ -245,14 +245,14 @@
       ],
       "hint": "`index=web | rename host as serveur`",
       "correction": "index=web | rename host as serveur",
-      "reward": "Révision avancée !"
+      "reward": "Les Sondes parlent clair. Révision avancée."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — calculer puis agréger",
       "lang": "spl",
-      "story": "Tu **réutilises** `eval` et `stats` (paliers précédents).",
+      "story": "Tu **réutilises** `eval` puis `stats` pour agréger une mesure calculée.",
       "teach": "```spl\nindex=web | eval ko = bytes / 1024 | stats avg(ko) by host\n```",
       "brief": "Sur `index=web`, crée `ko = bytes / 1024` avec `eval`, puis fais une `stats` par `host`.",
       "validationType": "keywords",
@@ -264,14 +264,14 @@
       ],
       "hint": "`| eval ko = bytes / 1024 | stats avg(ko) by host`",
       "correction": "index=web | eval ko = bytes / 1024 | stats avg(ko) by host",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "**Palier Avancé terminé !** Dernier palier : enrichir et visualiser."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Visualiser dans le temps (timechart)",
       "lang": "spl",
-      "story": "`timechart span=1h count` produit une série temporelle, prête à grapher.",
+      "story": "`| timechart span=1h count` trace l'évolution **dans le temps**.",
       "teach": "```spl\nindex=web | timechart span=1h count\n```",
       "brief": "Sur `index=web`, compte les événements **par tranche d'1 heure** (`| timechart span=1h count`).",
       "validationType": "keywords",
@@ -282,14 +282,14 @@
       ],
       "hint": "`index=web | timechart span=1h count`",
       "correction": "index=web | timechart span=1h count",
-      "reward": "Une courbe. Et enrichir via une table externe ?"
+      "reward": "Les Sondes dessinent la courbe du temps. Et croiser des référentiels ?"
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Enrichir (lookup)",
       "lang": "spl",
-      "story": "`lookup` enrichit les résultats avec une table externe (ex. liste d'utilisateurs).",
+      "story": "`| lookup table champ` **enrichit** les événements avec des données externes.",
       "teach": "```spl\nindex=web | lookup users user OUTPUT departement\n```",
       "brief": "Sur `index=web`, enrichis avec `lookup` (ex. `| lookup users user`).",
       "validationType": "keywords",
@@ -299,14 +299,14 @@
       ],
       "hint": "`index=web | lookup users user`",
       "correction": "index=web | lookup users user",
-      "reward": "Données enrichies. Synthèse finale !"
+      "reward": "Les Sondes recoupent les sources. Synthèse finale."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — une recherche complète",
       "lang": "spl",
-      "story": "Synthèse : tu enchaînes recherche, `where` (Débutant), `stats by` (Intermédiaire) et `sort` (Intermédiaire).",
+      "story": "Synthèse : une recherche complète — cibler, agréger par source, classer.",
       "teach": "```spl\nindex=security status=404\n| stats count by src_ip\n| sort -count\n```",
       "brief": "Sur `index=security`, garde `status=404`, compte **par** `src_ip`, puis trie par `count` décroissant.",
       "validationType": "keywords",
@@ -319,8 +319,119 @@
       ],
       "hint": "`index=security status=404 | stats count by src_ip | sort -count`",
       "correction": "index=security status=404\n| stats count by src_ip\n| sort -count",
-      "reward": "Tu transformes des millions d'événements en réponses. **Tu es expert en SPL.**"
+      "reward": "Tu sais composer une recherche… mais la réciter ne réamorce pas les Sondes. Il faut de **vraies recherches**, au pipeline structuré et ordonné. Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Compter les erreurs par serveur",
+      "lang": "spl",
+      "story": "Première vraie recherche : ton pipeline est analysé **étape par étape**. Cible les erreurs 404 du web et compte-les par serveur.",
+      "teach": "Critères de recherche, puis agrégation :\n\n```spl\nindex=web status=404\n| stats count by host\n```\n\nLes critères (`index=...`, `status=...`) tiennent avant le premier `|` ; `stats count by` agrège.",
+      "brief": "Recherche `index=web` avec `status=404`, puis `| stats count by host`.",
+      "validationType": "structured",
+      "pipeline": [
+        {
+          "all": [
+            "index=web",
+            "404"
+          ],
+          "label": "recherche index=web status=404"
+        },
+        {
+          "all": [
+            "stats",
+            "count",
+            "by"
+          ],
+          "label": "stats count by host"
+        }
+      ],
+      "hint": "Mets `index=web status=404` avant le premier `|`, puis `| stats count by host`.",
+      "correction": "index=web status=404\n| stats count by host",
+      "reward": "Pipeline validé : erreurs comptées par serveur. Une Sonde se réamorce. Passe au **calcul** puis au classement."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Le poids moyen par serveur",
+      "lang": "spl",
+      "story": "Les Sondes calculent. Convertis les octets en kilo-octets, fais-en la moyenne par serveur, et classe du plus lourd au plus léger.",
+      "teach": "Calcule un champ, agrège-le, puis trie :\n\n```spl\nindex=web\n| eval ko = bytes / 1024\n| stats avg(ko) by host\n| sort -avg(ko)\n```",
+      "brief": "Depuis `index=web` : `| eval ko = bytes / 1024`, puis `| stats avg(ko) by host`, puis `| sort` décroissant.",
+      "validationType": "structured",
+      "pipeline": [
+        {
+          "all": [
+            "index=web"
+          ],
+          "label": "recherche index=web"
+        },
+        {
+          "all": [
+            "eval"
+          ],
+          "label": "champ calculé (eval ko = bytes / 1024)"
+        },
+        {
+          "all": [
+            "stats",
+            "by"
+          ],
+          "label": "agrégation (stats avg(ko) by host)"
+        },
+        {
+          "all": [
+            "sort"
+          ],
+          "label": "tri du résultat"
+        }
+      ],
+      "hint": "L'ordre compte : `eval` crée le champ AVANT que `stats` ne l'agrège ; `sort` vient en dernier.",
+      "correction": "index=web\n| eval ko = bytes / 1024\n| stats avg(ko) by host\n| sort -avg(ko)",
+      "reward": "Pipeline validé : poids moyen calculé, agrégé, classé. Les Sondes mesurent. Reste l'**investigation** ciblée."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Traquer les sources suspectes",
+      "lang": "spl",
+      "story": "L'épreuve finale : une investigation de sécurité. Sur l'index `security`, compte les erreurs 404 par adresse source, classe-les, et ne garde que les pires.",
+      "teach": "Cible, agrège, classe, limite :\n\n```spl\nindex=security status=404\n| stats count by src_ip\n| sort -count\n| head 5\n```",
+      "brief": "Recherche `index=security` (avec `status=404`), puis `| stats count by src_ip`, puis `| sort` décroissant, puis `| head 5`.",
+      "validationType": "structured",
+      "pipeline": [
+        {
+          "all": [
+            "index=security"
+          ],
+          "label": "recherche index=security"
+        },
+        {
+          "all": [
+            "stats",
+            "count",
+            "by"
+          ],
+          "label": "stats count by src_ip"
+        },
+        {
+          "all": [
+            "sort"
+          ],
+          "label": "tri décroissant"
+        },
+        {
+          "all": [
+            "head"
+          ],
+          "label": "limitation aux pires (head N)"
+        }
+      ],
+      "hint": "Quatre maillons dans l'ordre : la recherche, `stats count by src_ip`, `sort -count`, `head 5`.",
+      "correction": "index=security status=404\n| stats count by src_ip\n| sort -count\n| head 5",
+      "reward": "Pipeline validé : les adresses sources les plus agressives sont isolées. **Les Sondes d'ANIMA sont réamorcées** — elle fouille de nouveau ses propres journaux."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du SPL\n\nQuatre paliers gravis : recherche & table → stats/eval/sort → top/dedup/rename → timechart/lookup/synthèse.\n\nSPL est le langage de Splunk, l'un des SIEM les plus répandus. **Tu es désormais expert en SPL.**"
+  "finale": "## Les Sondes réamorcées — La Voie du SPL\n\nDe `index=` jusqu'à de **vraies recherches** (pipeline vérifié étape par étape, dans l'ordre — et non un sac de mots-clés), tu as percé le bruit qui saturait les Sondes d'ANIMA :\n\n- **Chercher** : index, critères, table, head, where\n- **Statistiques** : stats count, by, eval, sort\n- **Affiner** : top, dedup, rename\n- **Avancé** : timechart, lookup\n- **Projets** : 3 recherches (erreurs par serveur, poids moyen classé, sources suspectes) — **structure validée**\n\nLes Sondes rejoignent la Vigie, l'Historique, le Schéma directeur, les Filtres, la Mémoire, la Surface et les huit Fragments. **Toutes les facultés d'ANIMA sont restaurées** — avant les langages modernes et le choix final.\n\n**Tu es désormais expert en SPL.**"
 }

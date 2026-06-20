@@ -1,9 +1,21 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.13
+## Version actuelle : 0.16.14
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.14 — Voie SPL : narration « Réveil » + capstones à pipeline structuré (2026-06-20)
+
+Septième et **dernière Voie statique** de la phase : narration « Réveil » + validation structurelle (même moteur que KQL).
+- **Moteur structurel réutilisé** : `validators/structured.js` (`validationType:'structured'`) — découpe sur `|` + sous-séquence ordonnée.
+- **Narration** : Voie SPL réécrite dans « Réveil » — SPL = les **Sondes** d'ANIMA (recherche dans ses journaux Splunk), saturées de bruit par l'Ombre. Stories/rewards des 17 actes retissés.
+- **3 actes capstone structurés** (17 → 20) : `c1` erreurs par serveur (search+stats), `c2` poids moyen calculé/classé (eval→stats→sort), `c3` investigation sources suspectes (stats→sort→head). **Pipeline vérifié étape par étape**.
+- **Vérifié** (Node, 7 cas) : corrections valides, pipelines désordonnés (eval après stats), incomplets (sans stats/head) ou mauvais index rejetés.
+- **Bilan phase « Voies statiques » terminée** : HTML (DOM), SQL (sql.js), Regex (RegExp), YAML (js-yaml), Git (git WSL), KQL+SPL (structurel) ont tous narration « Réveil » + capstones à validation réelle/structurelle.
+- Reste : nouveaux langages JS/TS/Go/Rust (Voies complètes + projets), puis final Contenir/Libérer.
 
 ---
 
