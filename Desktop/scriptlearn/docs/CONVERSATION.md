@@ -1,9 +1,20 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.16.9
+## Version actuelle : 0.16.10
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils.
+
+---
+
+## v0.16.10 — Voie Regex : narration « Réveil » + capstones validés par RegExp réel (2026-06-20)
+
+Troisième Voie statique de la phase : narration « Réveil » + **validation par RegExp natif** (aucune dépendance).
+- **Nouveau moteur Regex** : `src/renderer/src/lib/validators/regex.js` construit la vraie `RegExp` de l'élève et la confronte à un jeu de cas — chaînes à **reconnaître** (`mustMatch`), à **rejeter** (`mustReject`) et **groupes de capture** attendus (`captures` via `exec`). Un motif aux bons morceaux mais qui ne capte rien échoue. Dispatch ajouté dans `useCodeRunner.js` (`validationType:'regex'`).
+- **Narration** : Voie Regex réécrite dans « Réveil » — Regex = les **Filtres** d'ANIMA (tri des motifs dans le flux), noyés sous le bruit par l'Ombre. Stories/rewards des 18 actes retissés.
+- **3 actes capstone regex** (18 → 20) : `c1` identifiants de secteur (`[A-Z]\d{2,4}`), `c2` horodatages capturés (`(\d{2})/(\d{2})/(\d{4})`), `c3` adresses d'agents démêlées (`([a-z]+)@([a-z]+\.[a-z]+)`). **Testés sur des échantillons**.
+- **Vérifié** (Node, 7 cas) : corrections valides, motifs faux (quantificateur trop large, captures manquantes, syntaxe invalide) rejetés. Backslashes correctement stockés dans le JSON.
+- Reste : YAML (js-yaml), Git (git WSL), KQL/SPL (structurel), puis nouveaux langages JS/TS/Go/Rust, puis final Contenir/Libérer.
 
 ---
 

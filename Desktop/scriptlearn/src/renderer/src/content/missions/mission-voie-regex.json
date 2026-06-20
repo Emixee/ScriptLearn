@@ -4,8 +4,8 @@
   "language": "regex",
   "order": 5,
   "title": "La Voie du Regex",
-  "tagline": "Les expressions régulières : décrire des motifs de texte, du littéral à l'email. Débutant → expert.",
-  "synopsis": "Une regex est un mini-langage pour décrire des motifs dans du texte. Brique après brique, tu apprends à capturer exactement ce que tu cherches.",
+  "tagline": "Les Filtres d'ANIMA — son tri des motifs dans le flux, du texte littéral aux captures. Débutant → expert.",
+  "synopsis": "Les **Filtres** d'ANIMA — par lesquels elle reconnaissait des motifs dans les torrents de données — ont été noyés par l'Ombre sous un flux de bruit. Une regex est un mini-langage pour décrire un motif ; brique après brique, tu réapprends à filtrer, puis tu écris de **vrais filtres testés** sur des échantillons du flux.",
   "objective": "Maîtriser les expressions régulières : classes, quantificateurs, ancres, groupes.",
   "career": "soc",
   "difficulty": "progressive",
@@ -17,7 +17,7 @@
       "tier": "debutant",
       "title": "Le littéral",
       "lang": "regex",
-      "story": "Le motif le plus simple : du texte qui se cherche **lui-même**.",
+      "story": "Le Filtre le plus simple cherche un texte **littéral** : un mot qui se reconnaît lui-même dans le flux.",
       "teach": "Le motif `chien` correspond au mot « chien » dans un texte.",
       "brief": "Écris un motif qui correspond au mot `chat`.",
       "validationType": "keywords",
@@ -26,14 +26,14 @@
       ],
       "hint": "Le mot lui-même : `chat`",
       "correction": "chat",
-      "reward": "Un littéral, tout simplement. Et pour « n'importe quel caractère » ?"
+      "reward": "Un premier motif accroche le flux. Et un caractère quelconque ?"
     },
     {
       "id": "d2",
       "tier": "debutant",
       "title": "Le point",
       "lang": "regex",
-      "story": "Le point `.` correspond à **n'importe quel** caractère (un seul).",
+      "story": "Le point `.` correspond à **n'importe quel** caractère — un joker.",
       "teach": "Le motif `c.t` correspond à `cat`, `cot`, `cit`…",
       "brief": "Écris un motif `c`, n'importe quel caractère, `t` (utilise le point).",
       "validationType": "keywords",
@@ -42,14 +42,14 @@
       ],
       "hint": "Trois caractères : `c.t`",
       "correction": "c.t",
-      "reward": "Un joker. Pour cibler un chiffre précisément ?"
+      "reward": "Le joker élargit la prise. Et cibler un chiffre ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Un chiffre",
       "lang": "regex",
-      "story": "`\\d` correspond à **un chiffre** (0 à 9).",
+      "story": "`\\d` correspond à un **chiffre** (0-9).",
       "teach": "Le motif `\\d` correspond à `7`, `3`…",
       "brief": "Écris le motif qui correspond à **un chiffre**.",
       "validationType": "keywords",
@@ -58,14 +58,14 @@
       ],
       "hint": "`\\d`",
       "correction": "\\d",
-      "reward": "Un chiffre capturé. Et une lettre ou un chiffre ?"
+      "reward": "Les chiffres ressortent du bruit. Et un caractère de mot ?"
     },
     {
       "id": "d4",
       "tier": "debutant",
       "title": "Un caractère de mot",
       "lang": "regex",
-      "story": "`\\w` correspond à un **caractère de mot** : lettre, chiffre ou `_`.",
+      "story": "`\\w` correspond à un **caractère de mot** (lettre, chiffre, underscore).",
       "teach": "Le motif `\\w` correspond à `a`, `3`, `_`…",
       "brief": "Écris le motif qui correspond à **un caractère de mot**.",
       "validationType": "keywords",
@@ -74,14 +74,14 @@
       ],
       "hint": "`\\w`",
       "correction": "\\w",
-      "reward": "Pratique. Mais « un ou plusieurs » ?"
+      "reward": "Le Filtre distingue les mots. Et plusieurs caractères d'affilée ?"
     },
     {
       "id": "d5",
       "tier": "debutant",
       "title": "Un ou plusieurs (+)",
       "lang": "regex",
-      "story": "Le `+` signifie « **un ou plusieurs** » du motif précédent.",
+      "story": "`+` signifie « **un ou plus** » du motif précédent.",
       "teach": "Le motif `\\d+` correspond à `42`, `2026`…",
       "brief": "Écris le motif qui correspond à **un ou plusieurs chiffres** (\\d et +).",
       "validationType": "keywords",
@@ -91,14 +91,14 @@
       ],
       "hint": "`\\d+`",
       "correction": "\\d+",
-      "reward": "**Palier Débutant terminé !** Affinons."
+      "reward": "**Palier Débutant terminé !** Le Filtre capte des suites. Place aux ensembles."
     },
     {
       "id": "i1",
       "tier": "intermediaire",
       "title": "Les classes de caractères",
       "lang": "regex",
-      "story": "Une **classe** `[...]` correspond à un caractère parmi un ensemble. `[a-z]` = une lettre minuscule.",
+      "story": "Une **classe** `[a-z]` correspond à un caractère de l'intervalle ; avec `+`, à toute une suite.",
       "teach": "Le motif `[a-z]+` correspond à un mot minuscule.",
       "brief": "Écris un motif qui correspond à **une ou plusieurs lettres minuscules** (réutilise le `+`).",
       "validationType": "keywords",
@@ -108,14 +108,14 @@
       ],
       "hint": "`[a-z]+`",
       "correction": "[a-z]+",
-      "reward": "Tu choisis l'ensemble. Et un nombre précis de répétitions ?"
+      "reward": "Tu cibles des plages précises. Et un nombre d'occurrences exact ?"
     },
     {
       "id": "i2",
       "tier": "intermediaire",
       "title": "Quantificateur {n,m}",
       "lang": "regex",
-      "story": "`{n,m}` répète le motif précédent de **n à m** fois.",
+      "story": "`{2,4}` impose **entre 2 et 4** répétitions du motif précédent.",
       "teach": "Le motif `\\d{2,4}` correspond à 2 à 4 chiffres.",
       "brief": "Écris un motif qui correspond à **2 à 4 chiffres** (\\d et {2,4}).",
       "validationType": "keywords",
@@ -125,14 +125,14 @@
       ],
       "hint": "`\\d{2,4}`",
       "correction": "\\d{2,4}",
-      "reward": "Précis. Et pour ancrer début et fin ?"
+      "reward": "Le Filtre compte. Et ancrer début et fin ?"
     },
     {
       "id": "i3",
       "tier": "intermediaire",
       "title": "Les ancres ^ et $",
       "lang": "regex",
-      "story": "`^` marque le **début** de la ligne, `$` la **fin**.",
+      "story": "`^` ancre le **début**, `$` la **fin** : `^fin$` n'accepte que le mot exact « fin ».",
       "teach": "Le motif `^abc$` correspond à une ligne contenant exactement `abc`.",
       "brief": "Écris un motif qui correspond à une ligne valant exactement `fin` (ancres ^ et $).",
       "validationType": "keywords",
@@ -143,14 +143,14 @@
       ],
       "hint": "`^fin$`",
       "correction": "^fin$",
-      "reward": "Tu bornes le motif. Et les espaces ?"
+      "reward": "Tu imposes une correspondance totale. Et les espaces ?"
     },
     {
       "id": "i4",
       "tier": "intermediaire",
       "title": "Les espaces (\\s)",
       "lang": "regex",
-      "story": "`\\s` correspond à un **espace blanc** (espace, tabulation…).",
+      "story": "`\\s` correspond à un caractère d'**espacement** (espace, tabulation, saut de ligne).",
       "teach": "Le motif `\\d\\s\\d` correspond à `1 2`.",
       "brief": "Écris le motif qui correspond à **un espace blanc**.",
       "validationType": "keywords",
@@ -159,14 +159,14 @@
       ],
       "hint": "`\\s`",
       "correction": "\\s",
-      "reward": "Révision !"
+      "reward": "Le Filtre repère les séparateurs. Révision."
     },
     {
       "id": "ir",
       "tier": "intermediaire",
       "title": "Révision — mot puis chiffres",
       "lang": "regex",
-      "story": "Tu **réutilises** la classe `[a-z]`, le `+` et `\\d` (vus avant) dans un seul motif.",
+      "story": "Tu **réutilises** classe `[a-z]+` et `\\d` pour capter un motif composite (lettres puis chiffres).",
       "teach": "Le motif `[a-z]+\\d+` correspond à `abc123`.",
       "brief": "Écris un motif : **une ou plusieurs lettres** suivies d'**un ou plusieurs chiffres** (ex : `user42`).",
       "validationType": "keywords",
@@ -177,14 +177,14 @@
       ],
       "hint": "`[a-z]+\\d+`",
       "correction": "[a-z]+\\d+",
-      "reward": "**Palier Intermédiaire terminé !** Montons en puissance."
+      "reward": "**Palier Intermédiaire terminé !** Place aux choix et options."
     },
     {
       "id": "a1",
       "tier": "avance",
       "title": "L'alternative (|)",
       "lang": "regex",
-      "story": "Le `|` signifie « **ou** » : un motif **ou** un autre.",
+      "story": "L'alternative `|` accepte **l'un ou l'autre** motif : `oui|non`.",
       "teach": "Le motif `chat|chien` correspond à `chat` ou `chien`.",
       "brief": "Écris un motif qui correspond à `oui` **ou** `non`.",
       "validationType": "keywords",
@@ -195,14 +195,14 @@
       ],
       "hint": "`oui|non`",
       "correction": "oui|non",
-      "reward": "Deux possibilités. Et un caractère optionnel ?"
+      "reward": "Le Filtre tolère des variantes. Et un caractère optionnel ?"
     },
     {
       "id": "a2",
       "tier": "avance",
       "title": "L'optionnel (?)",
       "lang": "regex",
-      "story": "Le `?` signifie « **zéro ou un** » : le motif précédent est optionnel.",
+      "story": "`?` rend le motif précédent **optionnel** : `colou?r` accepte « color » et « colour ».",
       "teach": "Le motif `colou?r` correspond à `color` et `colour`.",
       "brief": "Écris un motif `colou?r` (le `u` est optionnel).",
       "validationType": "keywords",
@@ -213,14 +213,14 @@
       ],
       "hint": "`colou?r`",
       "correction": "colou?r",
-      "reward": "Souplesse. Et un point **littéral** ?"
+      "reward": "Le Filtre s'adapte aux orthographes. Et un caractère spécial littéral ?"
     },
     {
       "id": "a3",
       "tier": "avance",
       "title": "Échapper un caractère (\\.)",
       "lang": "regex",
-      "story": "Pour chercher un caractère spécial **littéralement**, on l'échappe avec `\\`. `\\.` = un vrai point.",
+      "story": "Pour matcher un caractère spécial **littéralement**, on l'échappe : `\\.` = un vrai point.",
       "teach": "Le motif `\\.` correspond au caractère point.",
       "brief": "Écris le motif qui correspond à un **point littéral**.",
       "validationType": "keywords",
@@ -229,14 +229,14 @@
       ],
       "hint": "`\\.`",
       "correction": "\\.",
-      "reward": "Révision avancée !"
+      "reward": "Le Filtre prend les points au pied de la lettre. Révision avancée."
     },
     {
       "id": "ar",
       "tier": "avance",
       "title": "Révision — une adresse IP",
       "lang": "regex",
-      "story": "Tu **réutilises** `\\d`, le quantificateur `{1,3}` et le point échappé `\\.` (vus avant).",
+      "story": "Tu **réutilises** `\\d{1,3}` et `\\.` pour capter le début d'une adresse IP.",
       "teach": "Le motif `\\d{1,3}\\.\\d{1,3}` correspond à un début d'IP.",
       "brief": "Écris un motif pour **deux nombres de 1 à 3 chiffres séparés par un point** (ex : `192.168`).",
       "validationType": "keywords",
@@ -247,14 +247,14 @@
       ],
       "hint": "`\\d{1,3}\\.\\d{1,3}`",
       "correction": "\\d{1,3}\\.\\d{1,3}",
-      "reward": "**Palier Avancé terminé !** Dernier palier."
+      "reward": "**Palier Avancé terminé !** Dernier palier : capturer."
     },
     {
       "id": "e1",
       "tier": "expert",
       "title": "Les groupes (...)",
       "lang": "regex",
-      "story": "Les **parenthèses** `(...)` créent un **groupe** : on capture ou on regroupe une partie du motif.",
+      "story": "Les **parenthèses** `( )` créent un **groupe de capture** : `(\\d+)` isole la valeur trouvée.",
       "teach": "Le motif `(\\d+)` capture un nombre.",
       "brief": "Écris un motif qui **capture** un ou plusieurs chiffres dans un groupe (parenthèses + `\\d+`).",
       "validationType": "keywords",
@@ -266,14 +266,14 @@
       ],
       "hint": "`(\\d+)`",
       "correction": "(\\d+)",
-      "reward": "Tu captures des sous-parties. Et exclure un ensemble ?"
+      "reward": "Le Filtre extrait, ne fait plus que reconnaître. Et exclure une classe ?"
     },
     {
       "id": "e2",
       "tier": "expert",
       "title": "Classe négative [^...]",
       "lang": "regex",
-      "story": "`[^...]` correspond à tout caractère **sauf** ceux listés. `[^0-9]` = tout sauf un chiffre.",
+      "story": "`[^...]` est une classe **négative** : `[^0-9]+` = tout sauf des chiffres.",
       "teach": "Le motif `[^0-9]+` correspond à du texte sans chiffres.",
       "brief": "Écris un motif qui correspond à **un ou plusieurs caractères qui ne sont PAS des chiffres** (`[^0-9]` et `+`).",
       "validationType": "keywords",
@@ -283,14 +283,14 @@
       ],
       "hint": "`[^0-9]+`",
       "correction": "[^0-9]+",
-      "reward": "Tu inverses un ensemble. Synthèse finale !"
+      "reward": "Le Filtre sait dire « tout sauf ». Synthèse finale."
     },
     {
       "id": "e3",
       "tier": "expert",
       "title": "Synthèse — une adresse email",
       "lang": "regex",
-      "story": "Synthèse : tu combines classe `[a-z]`, quantificateur `+`, le `@` littéral et le point échappé `\\.`.",
+      "story": "Synthèse : combine classes, `+` et `\\.` pour reconnaître une adresse e-mail simple.",
       "teach": "Le motif `[a-z]+@[a-z]+\\.[a-z]+` correspond à `nom@site.fr`.",
       "brief": "Écris un motif pour une adresse email simple : **lettres** `@` **lettres** `.` **lettres**.",
       "validationType": "keywords",
@@ -302,8 +302,104 @@
       ],
       "hint": "`[a-z]+@[a-z]+\\.[a-z]+`",
       "correction": "[a-z]+@[a-z]+\\.[a-z]+",
-      "reward": "Tu décris des motifs complexes. **Tu es expert en Regex.**"
+      "reward": "Tu décris des motifs complexes… mais un motif d'exercice ne restaure pas les Filtres. Il faut de **vrais filtres, testés sur des échantillons** : ce qu'ils doivent capter, ce qu'ils doivent rejeter, ce qu'ils doivent extraire. Place aux **projets**."
+    },
+    {
+      "id": "c1",
+      "tier": "expert",
+      "title": "Projet — Isoler les identifiants de secteur",
+      "lang": "regex",
+      "story": "Premier vrai Filtre : ton motif est **confronté à des échantillons du flux** — il doit accrocher les identifiants de secteur et ignorer le bruit. Un secteur s'écrit : une lettre majuscule suivie de 2 à 4 chiffres.",
+      "teach": "Combine une classe et un quantificateur borné :\n\n```\n[A-Z]\\d{2,4}\n```\n\n`[A-Z]` = une majuscule, `\\d{2,4}` = de 2 à 4 chiffres. Le motif accroche le secteur partout où il apparaît dans le texte.",
+      "brief": "Écris un motif qui **reconnaît** un identifiant de secteur (une majuscule `A-Z` suivie de **2 à 4 chiffres**) et **rejette** le reste.",
+      "validationType": "regex",
+      "regexTests": {
+        "flags": "",
+        "mustMatch": [
+          "A12",
+          "K904",
+          "Secteur B7777 actif",
+          "ZZ34"
+        ],
+        "mustReject": [
+          "abc",
+          "A1",
+          "12345",
+          "z99"
+        ]
+      },
+      "hint": "Une classe `[A-Z]` puis un quantificateur borné `\\d{2,4}` : `[A-Z]\\d{2,4}`.",
+      "correction": "[A-Z]\\d{2,4}",
+      "reward": "Les échantillons confirment : le Filtre isole les secteurs, ignore le bruit. Un canal se rétablit. Reste à **extraire** des valeurs, pas seulement les reconnaître."
+    },
+    {
+      "id": "c2",
+      "tier": "expert",
+      "title": "Projet — Capturer les horodatages",
+      "lang": "regex",
+      "story": "Un Filtre utile **extrait**. Les horodatages du flux sont au format `JJ/MM/AAAA` : capture séparément le jour, le mois et l'année grâce à des groupes.",
+      "teach": "Des **parenthèses** créent des groupes de capture ; `\\d{2}` et `\\d{4}` fixent le nombre de chiffres ; le `/` est littéral :\n\n```\n(\\d{2})/(\\d{2})/(\\d{4})\n```\n\nLe groupe 1 = jour, le 2 = mois, le 3 = année.",
+      "brief": "Écris un motif qui reconnaît une date `JJ/MM/AAAA` et **capture** dans 3 groupes le jour (2 chiffres), le mois (2 chiffres) et l'année (4 chiffres).",
+      "validationType": "regex",
+      "regexTests": {
+        "flags": "",
+        "mustMatch": [
+          "12/06/2026",
+          "Date: 01/01/2000 fin"
+        ],
+        "mustReject": [
+          "2026/06/12",
+          "1/6/2026"
+        ],
+        "captures": [
+          {
+            "input": "12/06/2026",
+            "groups": [
+              "12",
+              "06",
+              "2026"
+            ]
+          }
+        ]
+      },
+      "hint": "Entoure chaque bloc de chiffres de parenthèses : `(\\d{2})/(\\d{2})/(\\d{4})`.",
+      "correction": "(\\d{2})/(\\d{2})/(\\d{4})",
+      "reward": "Les échantillons confirment : jour, mois, année extraits proprement. Le Filtre découpe le flux. Reste l'**identification** des agents."
+    },
+    {
+      "id": "c3",
+      "tier": "expert",
+      "title": "Projet — Démêler les adresses d'agents",
+      "lang": "regex",
+      "story": "L'épreuve finale : les agents d'ANIMA se signaient par une adresse `nom@domaine`. Reconnais ces adresses dans le flux et **capture séparément** l'identifiant et le domaine.",
+      "teach": "Deux groupes autour du `@` ; `\\.` est un point littéral :\n\n```\n([a-z]+)@([a-z]+\\.[a-z]+)\n```\n\nGroupe 1 = identifiant (avant `@`), groupe 2 = domaine (après `@`, avec un point).",
+      "brief": "Écris un motif qui reconnaît une adresse `nom@domaine.tld` (en minuscules) et **capture** l'identifiant (groupe 1) et le domaine complet (groupe 2). Il doit rejeter `agent@`, `@anima.net` et les versions en majuscules.",
+      "validationType": "regex",
+      "regexTests": {
+        "flags": "",
+        "mustMatch": [
+          "agent@anima.net",
+          "contact root@core.sys svp"
+        ],
+        "mustReject": [
+          "agent@",
+          "@anima.net",
+          "AGENT@ANIMA.NET"
+        ],
+        "captures": [
+          {
+            "input": "agent@anima.net",
+            "groups": [
+              "agent",
+              "anima.net"
+            ]
+          }
+        ]
+      },
+      "hint": "Un groupe avant le `@`, un groupe après contenant un `\\.` : `([a-z]+)@([a-z]+\\.[a-z]+)`.",
+      "correction": "([a-z]+)@([a-z]+\\.[a-z]+)",
+      "reward": "Les échantillons confirment : identifiants et domaines démêlés. **Les Filtres d'ANIMA sont restaurés** — elle distingue de nouveau le signal du bruit."
     }
   ],
-  "finale": "## Niveau Expert atteint — La Voie du Regex\n\nQuatre paliers gravis :\n\n- **Débutant** : littéraux, `.`, `\\d`, `\\w`, `+`\n- **Intermédiaire** : `[a-z]`, `{n,m}`, ancres `^ $`, `\\s`\n- **Avancé** : alternative `|`, optionnel `?`, échappement `\\.`\n- **Expert** : groupes `(...)`, classes négatives `[^...]`, motifs composés\n\nLes regex sont partout (validation, parsing, analyse de logs, SIEM). **Tu es désormais expert en Regex.**"
+  "finale": "## Les Filtres restaurés — La Voie du Regex\n\nDu motif littéral jusqu'à de **vrais filtres testés sur des échantillons** (ce qu'ils captent, rejettent et extraient — et non de simples mots-clés), tu as déblayé les Filtres d'ANIMA :\n\n- **Reconnaître** : littéral, `.`, `\\d`, `\\w`, `+`\n- **Préciser** : classes, `{n,m}`, ancres `^ $`, `\\s`\n- **Choisir** : `|`, `?`, échappement `\\.`\n- **Extraire** : groupes `( )`, classe négative `[^...]`\n- **Projets** : 3 filtres réels (identifiants de secteur, horodatages capturés, adresses d'agents démêlées) — **testés sur des échantillons**\n\nLes Filtres rejoignent la Mémoire, la Surface et les huit Fragments du cœur. Restent le **Schéma directeur** (YAML), l'**Historique** (Git)… avant le choix final.\n\n**Tu es désormais expert en Regex.**"
 }
