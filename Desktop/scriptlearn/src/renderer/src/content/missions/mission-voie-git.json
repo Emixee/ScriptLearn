@@ -4,7 +4,7 @@
   "language": "git",
   "order": 6,
   "title": "La Voie de Git",
-  "tagline": "L'Historique d'ANIMA — la chronique de son code en Git, du premier commit à la fusion. Débutant → expert.",
+  "tagline": "L'Historique d'ANIMA — la chronique de chacune de ses versions — a été brouillé par l'Ombre. Recouds-le en Git, du premier commit jusqu'à la fusion.",
   "synopsis": "L'**Historique** d'ANIMA — la chronique versionnée de tout son code, par laquelle elle gardait trace de chacune de ses évolutions — a été brouillée par l'Ombre : commits perdus, branches orphelines. Commande après commande, tu réapprends Git, puis tu reconstruis de **vrais bouts d'historique**, exécutés dans un dépôt réel et inspectés.",
   "objective": "Maîtriser Git : commits, branches, fusion, dépôts distants, collaboration.",
   "career": "developer",
@@ -19,7 +19,7 @@
       "lang": "git",
       "story": "Tout commence par un dépôt. `git init` crée l'Historique dans le dossier courant.",
       "teach": "```\ngit init\n```\nCrée un dépôt Git dans le dossier courant.",
-      "brief": "Initialise un dépôt Git.",
+      "brief": "Rouvre l'Historique : **initialise** un dépôt Git (`git init`).",
       "validationType": "keywords",
       "requiredKeywords": [
         "git",
@@ -36,7 +36,7 @@
       "lang": "git",
       "story": "`git status` montre l'état : fichiers modifiés, indexés, non suivis.",
       "teach": "```\ngit status\n```",
-      "brief": "Affiche l'état actuel du dépôt.",
+      "brief": "Sonde l'état de l'Historique : affiche l'**état** du dépôt (`git status`).",
       "validationType": "keywords",
       "requiredKeywords": [
         "git",
@@ -53,7 +53,7 @@
       "lang": "git",
       "story": "`git add <fichier>` **indexe** un fichier : il rejoint la prochaine photo (commit).",
       "teach": "```\ngit add fichier.txt\n```\n`git add .` ajoute tout.",
-      "brief": "Ajoute le fichier `app.js` à l'index.",
+      "brief": "**Indexe** le fichier `app.js` pour la prochaine gravure (`git add app.js`).",
       "validationType": "keywords",
       "requiredKeywords": [
         "git",
@@ -71,7 +71,7 @@
       "lang": "git",
       "story": "`git commit -m \"message\"` **grave** une étape dans l'Historique, avec son message.",
       "teach": "```\ngit commit -m \"Ajout login\"\n```",
-      "brief": "Crée un commit avec le message `Premier commit`.",
+      "brief": "**Grave** la première étape de l'Historique : un commit au message `Premier commit`.",
       "validationType": "keywords",
       "requiredKeywords": [
         "git",

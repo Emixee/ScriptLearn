@@ -4,7 +4,7 @@
   "language": "regex",
   "order": 5,
   "title": "La Voie du Regex",
-  "tagline": "Les Filtres d'ANIMA — son tri des motifs dans le flux, du texte littéral aux captures. Débutant → expert.",
+  "tagline": "Les Filtres d'ANIMA — par lesquels elle reconnaissait un signal dans le bruit — ont été noyés. Reforge-les en regex, du motif littéral jusqu'aux captures.",
   "synopsis": "Les **Filtres** d'ANIMA — par lesquels elle reconnaissait des motifs dans les torrents de données — ont été noyés par l'Ombre sous un flux de bruit. Une regex est un mini-langage pour décrire un motif ; brique après brique, tu réapprends à filtrer, puis tu écris de **vrais filtres testés** sur des échantillons du flux.",
   "objective": "Maîtriser les expressions régulières : classes, quantificateurs, ancres, groupes.",
   "career": "soc",

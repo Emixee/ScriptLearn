@@ -4,7 +4,7 @@
   "language": "kql",
   "order": 7,
   "title": "La Voie du KQL",
-  "tagline": "La Vigie d'ANIMA — l'interrogation de sa télémétrie en KQL, du filtre à la jointure. Débutant → expert.",
+  "tagline": "La Vigie d'ANIMA — l'œil qui scrutait sa propre télémétrie — a été aveuglée. Rallume-la en KQL, du premier filtre jusqu'à la corrélation, pour voir venir l'Ombre.",
   "synopsis": "La **Vigie** d'ANIMA — par laquelle elle scrutait ses propres journaux (tables `SecurityEvent`, `SigninLogs`, `Syslog`) pour détecter l'anomalie — a été aveuglée par l'Ombre. Requête après requête, tu réapprends KQL, puis tu composes de **vraies requêtes de chasse**, dont la structure du pipeline est vérifiée étape par étape.",
   "objective": "Maîtriser KQL : filtrer, projeter, agréger, regrouper, joindre.",
   "career": "soc",

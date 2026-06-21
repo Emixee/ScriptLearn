@@ -4,7 +4,7 @@
   "language": "spl",
   "order": 8,
   "title": "La Voie du SPL",
-  "tagline": "Les Sondes d'ANIMA — la recherche dans ses journaux indexés en SPL, du filtre à la visualisation. Débutant → expert.",
+  "tagline": "Les Sondes d'ANIMA — qui fouillaient des millions d'événements — ont été saturées de bruit. Réamorce-les en SPL, de la recherche brute jusqu'à la visualisation.",
   "synopsis": "Les **Sondes** d'ANIMA — par lesquelles elle fouillait des millions d'événements indexés pour en tirer des réponses — ont été saturées de bruit par l'Ombre. Recherche après recherche, tu réapprends SPL, puis tu composes de **vraies recherches**, dont la structure du pipeline est vérifiée étape par étape.",
   "objective": "Maîtriser SPL : recherche, champs, stats, eval, visualisations.",
   "career": "soc",

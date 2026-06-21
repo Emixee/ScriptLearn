@@ -4,7 +4,7 @@
   "language": "sql",
   "order": 4,
   "title": "La Voie du SQL",
-  "tagline": "La Mémoire d'ANIMA — sa banque de connaissances en SQL, de SELECT jusqu'aux jointures. Débutant → expert.",
+  "tagline": "La Mémoire d'ANIMA — l'immense base où elle savait tout — a été scellée. Force ses serrures en SQL, du premier SELECT jusqu'aux jointures, pour la rouvrir.",
   "synopsis": "La **Mémoire** d'ANIMA — l'immense base où elle stockait tout ce qu'elle savait (tables `employes`, `commandes`, `produits`) — a été verrouillée par l'Ombre. Requête après requête, tu apprends à l'interroger, puis tu écris de **vraies requêtes exécutées** sur la base pour en extraire exactement ce qu'il faut.",
   "objective": "Maîtriser SQL : SELECT, filtres, tri, agrégations, regroupements, jointures.",
   "career": "developer",

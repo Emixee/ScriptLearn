@@ -4,7 +4,7 @@
   "language": "yaml",
   "order": 9,
   "title": "La Voie du YAML",
-  "tagline": "Le Schéma directeur d'ANIMA — sa configuration de déploiement en YAML, de la clé-valeur aux ancres. Débutant → expert.",
+  "tagline": "Le Schéma directeur d'ANIMA — les plans qui décrivaient son déploiement — a été corrompu. Réécris-le en YAML, de la clé-valeur jusqu'aux ancres.",
   "synopsis": "Le **Schéma directeur** d'ANIMA — les fichiers de configuration qui décrivaient comment elle se déployait sur ses machines — a été corrompu par l'Ombre : indentations brisées, services fantômes. Ligne après ligne, tu réapprends YAML, puis tu rédiges de **vrais manifestes** dont la structure réelle est vérifiée après analyse.",
   "objective": "Maîtriser YAML : clés-valeurs, types, listes, imbrication, ancres.",
   "career": "devops",

@@ -4,7 +4,7 @@
   "language": "html",
   "order": 10,
   "title": "La Voie du HTML",
-  "tagline": "La Surface d'ANIMA — les écrans qu'elle montrait aux humains, de la première balise à la page accessible. Débutant → expert.",
+  "tagline": "La Surface d'ANIMA — les écrans par lesquels elle parlait au monde — a été lacérée par l'Ombre. Reconstruis-la, balise après balise, jusqu'à la page accessible.",
   "synopsis": "La **Surface** d'ANIMA — l'ensemble des pages par lesquelles elle se présentait aux opérateurs humains — a été lacérée par l'Ombre : balises arrachées, écrans noirs. Tu la reconstruis, balise après balise, puis tu rebâtis des **pages complètes** dont la structure réelle est vérifiée par le navigateur lui-même.",
   "objective": "Maîtriser HTML : structure, texte, liens, listes, tableaux, formulaires, sémantique.",
   "career": "developer",
@@ -34,34 +34,34 @@
       "tier": "debutant",
       "title": "Les titres",
       "lang": "html",
-      "story": "Un écran s'annonce par un **titre**. Les titres vont de `<h1>` (principal) à `<h6>`.",
+      "story": "Un écran de la Surface s'annonce par un **titre**. Les titres vont de `<h1>` (principal) à `<h6>`. Affiche le nom de l'entité que tu ranimes.",
       "teach": "```html\n<h1>Bienvenue</h1>\n```",
-      "brief": "Écris un titre principal `<h1>` contenant `Bienvenue`.",
+      "brief": "Écris un titre principal `<h1>` contenant `ANIMA`.",
       "validationType": "keywords",
       "requiredKeywords": [
         "<h1>",
-        "bienvenue"
+        "anima"
       ],
-      "hint": "`<h1>Bienvenue</h1>`",
-      "correction": "<h1>Bienvenue</h1>",
-      "reward": "Un titre s'affiche. La Surface reprend voix. Et du texte ?"
+      "hint": "`<h1>ANIMA</h1>`",
+      "correction": "<h1>ANIMA</h1>",
+      "reward": "Le nom **ANIMA** s'inscrit en haut de l'écran. La Surface reprend voix. Et du texte courant ?"
     },
     {
       "id": "d3",
       "tier": "debutant",
       "title": "Les paragraphes",
       "lang": "html",
-      "story": "Le contenu courant vit dans des **paragraphes** `<p>`.",
+      "story": "Le contenu courant de la Surface vit dans des **paragraphes** `<p>`. Affiche un premier message d'état.",
       "teach": "```html\n<p>Bonjour le monde.</p>\n```",
-      "brief": "Écris un paragraphe `<p>` contenant `Bonjour`.",
+      "brief": "Écris un paragraphe `<p>` annonçant `Systeme en ligne`.",
       "validationType": "keywords",
       "requiredKeywords": [
         "<p>",
-        "bonjour"
+        "systeme"
       ],
-      "hint": "`<p>Bonjour</p>`",
-      "correction": "<p>Bonjour</p>",
-      "reward": "Du texte s'inscrit. Les écrans se remplissent. Relie-les par des liens."
+      "hint": "`<p>Systeme en ligne</p>`",
+      "correction": "<p>Systeme en ligne</p>",
+      "reward": "Le message s'affiche : **Systeme en ligne**. Les écrans se remplissent. Relie-les par des liens."
     },
     {
       "id": "d4",
