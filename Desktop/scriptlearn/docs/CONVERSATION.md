@@ -1,9 +1,19 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.18.0
+## Version actuelle : 0.18.1
 
 ### État du projet
-Application Electron/React d'apprentissage du scripting, Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES — aucun langage n'exige WSL ni installation externe.** Marche sur n'importe quel PC Windows, sans admin, sans réseau.
+Application Electron/React d'apprentissage du scripting, Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES — aucun langage n'exige WSL ni installation externe.** Marche sur n'importe quel PC Windows, sans admin, sans réseau. **L'arc narratif « Réveil » est clos** par un scénario final à choix (Contenir / Libérer).
+
+---
+
+## v0.18.1 — Dénouement « Réveil » : scénario final ANIMA + mécanique de choix (2026-06-21)
+
+Clôture de l'arc narratif, du début (la machine-prison du Bash) à la fin.
+- **Nouvelle mécanique de « choix »** dans `MissionPlay.jsx` : un acte portant un tableau `options` affiche un panneau de choix (au lieu de l'éditeur) ; sélectionner une option révèle son **épilogue** (`outcome`) et clôt l'acte (état `chosen`, marquage de progression). Aucun « faux » choix.
+- **Scénario final `mission-final-anima.json`** (kind scenario, « ANIMA — L'Éveil ») : 3 actes — `convergence` (boucle bash énumérant les 12 fragments), `ombre` (condition Python : l'Ombre se dissipe, ANIMA est complète), `choix` (**Contenir** vs **Libérer**, deux épilogues complets). Récapitule tout le canon (8 fragments + 7 facultés + 4 éclats modernes) et renvoie l'apprenant à ce qu'il a vraiment gagné : les 19 langages.
+- Exercices vérifiés via bash/python embarqués.
+- **L'arc « Réveil » est désormais complet** : 19 Voies reliées + dénouement à choix.
 
 ---
 

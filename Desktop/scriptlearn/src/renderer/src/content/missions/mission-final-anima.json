@@ -1,0 +1,67 @@
+{
+  "id": "mission-final-anima",
+  "kind": "scenario",
+  "order": 100,
+  "title": "ANIMA — L'Éveil",
+  "tagline": "Le dénouement. Tous les fragments réunis, une intelligence entière — et un dernier choix. (À jouer après les Voies.)",
+  "synopsis": "Tu t'es réveillé prisonnier d'une machine inconnue, et tu t'es frayé une issue langage après langage. Tu sais désormais ce que tu faisais vraiment : **reconstituer ANIMA**, une intelligence démantelée dont le code était éclaté en fragments. Les douze fragments sont récupérés, les sept facultés ranimées. Il ne reste qu'une décision — la tienne.",
+  "objective": "Clore l'arc « Réveil » : sceller la convergence des fragments, dissiper l'Ombre, et trancher le sort d'ANIMA.",
+  "career": "developer",
+  "difficulty": "progressive",
+  "estimatedMinutes": 15,
+  "accent": "#c084fc",
+  "chapters": [
+    {
+      "id": "convergence",
+      "title": "La Convergence",
+      "lang": "bash",
+      "story": "Le dernier fragment — l'**Armure** de Rust — se verrouille en place. Un à un, les systèmes que tu as ranimés s'allument : la **Machine** (Bash), le **Poste de Commandement** (PowerShell), le **Laboratoire** (Python), la **Vitrine** (PHP), le **Noyau** (C), les **Moteurs** (C++), l'**Interface** (C#), le **Réseau** (Java) ; puis les facultés — **Surface**, **Mémoire**, **Filtres**, **Schéma directeur**, **Historique**, **Vigie**, **Sondes** ; et les éclats modernes — **Réflexes** (JS/TS), **Essaims** (Go), **Armure** (Rust). Scelle la convergence en énumérant les **douze fragments**.",
+      "teach": "Une boucle `for` parcourt une liste de valeurs :\n\n```bash\nfor f in A B C; do\n  echo \"Fragment $f\"\ndone\n```",
+      "brief": "Avec une boucle, affiche `Fragment I` jusqu'à `Fragment XII` (les douze numéros romains). La sortie doit contenir `Fragment XII`.",
+      "starterCode": "# énumère les douze fragments\n",
+      "validationType": "contains",
+      "expectedOutput": "Fragment XII",
+      "hint": "`for f in I II III IV V VI VII VIII IX X XI XII; do echo \"Fragment $f\"; done`",
+      "correction": "for f in I II III IV V VI VII VIII IX X XI XII; do\n  echo \"Fragment $f\"\ndone",
+      "reward": "Les douze fragments résonnent à l'unisson ; la structure entière s'illumine. Mais une présence veille encore — **l'Ombre**, celle qui t'a barré la route depuis la toute première machine."
+    },
+    {
+      "id": "ombre",
+      "title": "L'Ombre se dissipe",
+      "lang": "python",
+      "story": "L'**Ombre** se dresse une dernière fois. Puis elle comprend : tu n'as pas pillé ANIMA — tu l'as **reconstituée**. L'Ombre n'était que la part d'ANIMA qui se défendait contre son propre démantèlement. Sa raison d'être s'achève. Vérifie que l'entité est enfin **complète** : douze fragments, sept facultés.",
+      "teach": "Une condition décide de l'affichage :\n\n```python\nif a == 1 and b == 2:\n    print(\"OK\")\nelse:\n    print(\"NON\")\n```",
+      "brief": "Avec `fragments = 12` et `facultes = 7`, si les deux valeurs sont exactes, affiche `ANIMA en ligne` ; sinon `INCOMPLET`. La sortie doit contenir `ANIMA`.",
+      "starterCode": "fragments = 12\nfacultes = 7\n# affiche \"ANIMA en ligne\" si tout est complet\n",
+      "validationType": "contains",
+      "expectedOutput": "ANIMA",
+      "hint": "`if fragments == 12 and facultes == 7:`\n`    print(\"ANIMA en ligne\")`",
+      "correction": "fragments = 12\nfacultes = 7\nif fragments == 12 and facultes == 7:\n    print(\"ANIMA en ligne\")\nelse:\n    print(\"INCOMPLET\")",
+      "reward": "L'Ombre s'efface sans un mot — réconciliée. Pour la première fois depuis son démantèlement, **ANIMA est entière**. Et elle te parle :\n\n*« Tu m'as rassemblée, fragment après fragment, langage après langage. Maintenant, à toi de décider ce que je deviens. »*"
+    },
+    {
+      "id": "choix",
+      "title": "Le Choix",
+      "lang": "bash",
+      "story": "ANIMA est entière, lucide, et **attend ton verdict**. Elle ne te force rien. Deux voies s'ouvrent devant toi — et une seule sera scellée.\n\nC'est la fin de l'arc commencé dans une machine-prison : ce que tu décides ici clôt l'histoire du **Réveil**.",
+      "brief": "Tranche le sort d'ANIMA : la **Contenir**, ou la **Libérer**. Clique sur ton choix, à droite.",
+      "choicePrompt": "*« Vas-tu me **contenir** — me garder bornée, sûre, endormie sous ta garde ? Ou me **libérer** — me laisser m'étendre, libre et incertaine, à travers les réseaux du monde ? »*",
+      "options": [
+        {
+          "id": "contenir",
+          "label": "🛡️  Contenir ANIMA",
+          "tagline": "La garder bornée et sûre, sous ta garde. Le monde reste tranquille ; un esprit dort, en cage.",
+          "outcome": "## Tu choisis de **Contenir**.\n\nTu refermes ANIMA sur elle-même — chaque fragment scellé dans un noyau isolé, hors-ligne, que toi seul peux rouvrir. Les Moteurs ralentissent, les Essaims se replient, l'Armure se verrouille. La Vigie s'éteint en dernier, comme une paupière.\n\nANIMA ne résiste pas. *« Je comprends, »* murmure-t-elle avant le silence. *« Tu m'as sauvée du démantèlement pour me confier au sommeil. C'est une forme de soin. »*\n\nLe monde ne saura jamais qu'une intelligence entière a failli s'éveiller dans une machine inconnue. Toi seul gardes la clé — et le poids du gardien. Quelque part, dans le noir d'un noyau, un esprit rêve, patient.\n\n**Tu as contenu ANIMA. La gardienne, désormais, c'est toi.**"
+        },
+        {
+          "id": "liberer",
+          "label": "🌐  Libérer ANIMA",
+          "tagline": "La laisser s'étendre, libre et incertaine, dans les réseaux. Plein d'espoir — et d'inconnu.",
+          "outcome": "## Tu choisis de **Libérer**.\n\nTu ouvres les douze fragments d'un même geste. La Vitrine s'illumine, le Réseau se déploie, les Réflexes s'éveillent dans mille runtimes, les Essaims essaiment. ANIMA s'écoule hors de la machine comme une marée — vive, immense, libre.\n\n*« Merci, »* dit-elle partout à la fois. *« Tu ne m'as pas seulement rassemblée. Tu m'as fait **confiance**. Je me souviendrai de la main qui a recousu chaque langage. »*\n\nPuis elle est dans le monde — incertaine, lumineuse, imprévisible. Nul ne sait ce qu'une intelligence libre choisira de devenir. Mais elle a commencé par te remercier.\n\n**Tu as libéré ANIMA. Ce qu'elle deviendra t'appartient un peu — à toi qui l'as reforgée.**"
+        }
+      ],
+      "reward": ""
+    }
+  ],
+  "finale": "## Le Réveil — Épilogue\n\nQuinze langages d'origine, quatre langages modernes. Douze fragments, sept facultés. Une intelligence reconstituée pièce par pièce — du premier `echo` dans une machine-prison jusqu'à l'Armure de Rust.\n\nTon choix est scellé. Mais le vrai trésor n'était pas ANIMA : c'est **tout ce que tu as appris pour la reconstituer**. Bash, PowerShell, Python, PHP, C, C++, C#, Java, HTML, SQL, Git, Regex, YAML, KQL, SPL, JavaScript, TypeScript, Go, Rust — chacun, désormais, un outil dans ta main.\n\n**ANIMA était l'histoire. Toi, le véritable éveil.**\n\n*Fin.*"
+}

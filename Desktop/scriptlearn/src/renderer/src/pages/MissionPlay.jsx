@@ -39,11 +39,15 @@ export default function MissionPlay() {
   // Carte des chapitres déjà réussis (clé = id de chapitre) — pour le fil d'étapes
   // et pour reprendre la mission là où on l'avait laissée.
   const [completed, setCompleted] = useState({})
+  // Acte « choix » (dénouement) : l'option retenue par le joueur.
+  const [chosen, setChosen] = useState(null)
 
   const chapter = campaign?.chapters[chapterIdx] ?? null
   const lang = chapter?.lang ?? 'bash'
   const isLast = campaign ? chapterIdx === campaign.chapters.length - 1 : false
   const staticLang = isStatic(lang)
+  // Acte « choix » : présente des options (Contenir/Libérer) au lieu d'un éditeur.
+  const isChoice = Array.isArray(chapter?.options) && chapter.options.length > 0
   // termId unique par chapitre : change de chapitre = nouvelle session terminal
   // (sinon l'historique d'un acte polluerait le suivant).
   const termId = campaign ? `mission-${campaign.id}-${chapterIdx}` : 'mission-none'
@@ -70,6 +74,7 @@ export default function MissionPlay() {
     setStatus(STATUS.idle)
     setShowReward(false)
     setShowHint(false)
+    setChosen(null)
   }, [chapterIdx, campaign?.id])
 
   // Prépare les données de l'acte EN COULISSES dès l'ouverture (invocation WSL séparée,
@@ -122,6 +127,16 @@ export default function MissionPlay() {
     } else {
       setStatus(STATUS.error)
     }
+  }
+
+  // Acte « choix » : le joueur tranche le dénouement. On révèle l'épilogue de
+  // l'option et on marque l'acte résolu (le choix lui-même ne peut être « faux »).
+  const handleChoose = (opt) => {
+    if (chosen) return
+    setChosen(opt)
+    setShowReward(true)
+    setCompleted(prev => ({ ...prev, [chapter.id]: true }))
+    if (profile) window.electronAPI.store.markExerciseDone(profile.id, `${campaign.id}:${chapter.id}`)
   }
 
   const handleContinue = () => {
@@ -213,8 +228,8 @@ export default function MissionPlay() {
                 <div className="text-[10px] uppercase tracking-widest mb-2" style={{ color: accent }}>
                   {isLast ? 'Dénouement' : 'L\'enquête avance'}
                 </div>
-                <div className="text-stone-200 text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: parseMarkdown(chapter.reward) }} />
+                <div className="text-stone-200 text-sm leading-relaxed sl-prose"
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(isChoice ? (chosen?.outcome ?? '') : chapter.reward) }} />
                 <button
                   onClick={handleContinue}
                   className="mt-4 px-4 py-2 rounded font-medium text-sm text-[#0a0a09] transition-colors"
@@ -227,8 +242,34 @@ export default function MissionPlay() {
           </div>
         </div>
 
-        {/* Panneau droit — CODE + sortie */}
+        {/* Panneau droit — CODE + sortie, OU panneau de CHOIX (dénouement) */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {isChoice ? (
+            /* ── Acte « choix » : le dénouement Contenir / Libérer ──────────── */
+            <div className="flex-1 flex flex-col items-center justify-center p-8 gap-5 overflow-y-auto">
+              <div className="text-[10px] uppercase tracking-widest" style={{ color: accent }}>Le choix final</div>
+              {chapter.choicePrompt && (
+                <div className="text-stone-400 text-sm text-center max-w-md leading-relaxed sl-prose"
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(chapter.choicePrompt) }} />
+              )}
+              <div className="flex flex-col gap-3 w-full max-w-md">
+                {chapter.options.map(opt => (
+                  <button key={opt.id} onClick={() => handleChoose(opt)} disabled={!!chosen}
+                    className="text-left p-4 rounded border transition-colors disabled:cursor-default"
+                    style={{
+                      borderColor: chosen?.id === opt.id ? accent : '#2e2b26',
+                      backgroundColor: chosen?.id === opt.id ? `${accent}18` : '#111110',
+                      opacity: chosen && chosen.id !== opt.id ? 0.4 : 1,
+                    }}>
+                    <div className="font-medium text-sm" style={{ color: chosen?.id === opt.id ? accent : '#e7e2d9' }}>{opt.label}</div>
+                    {opt.tagline && <div className="text-stone-500 text-xs mt-1 leading-relaxed">{opt.tagline}</div>}
+                  </button>
+                ))}
+              </div>
+              {chosen && <div className="text-stone-500 text-xs">Ton choix est scellé — l'épilogue s'écrit à gauche ◂</div>}
+            </div>
+          ) : (
+          <>
           {/* Barre d'actions */}
           <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
             <span className="text-xs px-2 py-0.5 rounded font-medium"
@@ -298,6 +339,8 @@ export default function MissionPlay() {
               <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" />
             )}
           </div>
+          </>
+          )}
         </div>
       </div>
 
