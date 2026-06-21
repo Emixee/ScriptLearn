@@ -1,6 +1,16 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.18.2
+## Version actuelle : 0.18.3
+
+## v0.18.3 — Habillage « jeu narratif » (vague 1 : page Missions + fragments) (2026-06-21)
+
+- **Page Missions** (`Missions.jsx`) : intro et sous-titres réécrits en cadre « Réveil » (reconquête d'ANIMA fragment par fragment).
+- **Voies-fragments enrichies** (PowerShell, Python, PHP, C, C++, C#, Java) : taglines accrocheuses (hook + enjeu), stories étoffées, **sorties scénarisées** par thème (Poste de Commandement, Laboratoire R-7, Vitrine, Noyau, Moteurs, Interface, Réseau) — ex. `positif`→`AUTORISE`/`NOMINAL`/`CONNECTE`, `Bonjour X`→`Poste PC-7 en ligne`/`Noeud N-1 actif`. `teach` et mécanique de validation inchangés.
+- **Fix encodage PowerShell** (`terminal.js`) : BOM UTF-8 + `[Console]::OutputEncoding=UTF8` + invocation `-Command "& 'fichier' args"` → les accents des projets `.ps1` (`reconstitué`) ne sont plus corrompus.
+- Vérifié : toutes les corrections des 7 Voies passent via toolchains embarquées.
+- Reste : vague 2 (facultés : HTML, SQL, Git, Regex, YAML, KQL, SPL), vague 3 (modernes : JS, TS, Go, Rust).
+
+
 
 ### État du projet
 Application Electron/React, Windows, FR, hors-ligne, multi-profils. Installateur « Tout-en-un » (toolchains embarquées, WSL supprimé), arc narratif « Réveil » complet, **fenêtres de progression installation/MAJ**.
