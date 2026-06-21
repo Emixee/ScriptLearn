@@ -19,6 +19,7 @@ import { html as htmlMode } from '@codemirror/legacy-modes/mode/xml'
 import { javascript as jsMode } from '@codemirror/legacy-modes/mode/javascript'
 import { c as cMode, cpp as cppMode, java as javaMode, csharp as csharpMode } from '@codemirror/legacy-modes/mode/clike'
 import { go as goMode } from '@codemirror/legacy-modes/mode/go'
+import { rust as rustMode } from '@codemirror/legacy-modes/mode/rust'
 
 // Marqueur de fin d'exécution injecté dans le terminal pour savoir quand la
 // sortie d'une commande est complète (voir validate dans useCodeRunner/Exercise).
@@ -49,6 +50,9 @@ export const LANG_META = {
   // aucune install utilisateur. Pas de REPL : la validation passe par « Valider »
   // (exécution réelle en coulisses). termShell powershell = simple session par défaut.
   go:         { label: 'Go',         color: '#00add8', static: false, exec: 'direct',         termShell: 'powershell' },
+  // Rust : compilateur EMBARQUÉ (resources/rust) linké par MinGW. Pas de REPL :
+  // validation via « Valider » (compilation + exécution en coulisses).
+  rust:       { label: 'Rust',       color: '#dea584', static: false, exec: 'direct',         termShell: 'powershell' },
   powershell: { label: 'PowerShell', color: '#d97706', static: false, exec: 'direct',         termShell: 'powershell' },
   php:        { label: 'PHP',        color: '#8892bf', static: false, exec: 'heredoc-php',     termShell: 'bash' },
   c:          { label: 'C',          color: '#a8b9cc', static: false, exec: 'compile-c',       termShell: 'bash' },
@@ -85,6 +89,7 @@ export function getLangExtension(lang) {
   if (lang === 'js')     return StreamLanguage.define(jsMode)
   if (lang === 'ts')     return StreamLanguage.define(jsMode)
   if (lang === 'go')     return StreamLanguage.define(goMode)
+  if (lang === 'rust')   return StreamLanguage.define(rustMode)
   if (lang === 'php')    return StreamLanguage.define(jsMode)
   if (lang === 'c')      return StreamLanguage.define(cMode)
   if (lang === 'cpp')    return StreamLanguage.define(cppMode)
@@ -137,11 +142,7 @@ export function sentinelCommand(lang, sentinel) {
   return `echo "${sentinel}"`
 }
 
-// Liste des toolchains WSL nécessaires par langage compilé — sert à afficher un
-// message d'installation ciblé quand l'outil manque.
-export const TOOLCHAINS = {
-  c:      { tools: ['gcc'],          install: 'sudo apt install gcc' },
-  cpp:    { tools: ['g++'],          install: 'sudo apt install g++' },
-  java:   { tools: ['javac', 'java'], install: 'sudo apt install default-jdk' },
-  csharp: { tools: ['mcs', 'mono'],  install: 'sudo apt install mono-complete' },
-}
+// Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES dans l'app
+// (resources/). Plus aucune installation externe requise → table vide, la
+// bannière « toolchain manquante » (ToolchainBanner) ne s'affiche jamais.
+export const TOOLCHAINS = {}

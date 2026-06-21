@@ -1,6 +1,6 @@
 import { ipcMain, app } from 'electron'
 import { execSync, execFileSync } from 'child_process'
-import { existsSync, writeFileSync } from 'fs'
+import { existsSync, writeFileSync, rmSync, mkdtempSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { EventEmitter } from 'events'
@@ -10,48 +10,13 @@ import { EventEmitter } from 'events'
 // (@electron/rebuild) et embarqué via asarUnpack (binaires .node hors de l'asar).
 import nodePty from 'node-pty'
 
-// Sur Windows 11 / WSL2 récent, bash.exe n'est plus créé.
-// On détecte WSL via wsl.exe (toujours présent si WSL est installé).
-function checkBashAvailable() {
-  return existsSync('C:\\Windows\\System32\\wsl.exe')
-}
-
-function checkPythonAvailable() {
-  try {
-    execSync('python --version', { timeout: 3000, windowsHide: true, stdio: 'pipe' })
-    return true
-  } catch {
-    try {
-      execSync('python3 --version', { timeout: 3000, windowsHide: true, stdio: 'pipe' })
-      return true
-    } catch {
-      return false
-    }
-  }
-}
-
-// Vérifie que PHP est disponible DANS WSL — pas le php.exe Windows natif.
-function checkPhpAvailable() {
-  try {
-    execSync('wsl.exe -e php --version', { timeout: 5000, windowsHide: true, stdio: 'pipe' })
-    return true
-  } catch {
-    return false
-  }
-}
-
-// Vérifie qu'une toolchain (gcc, g++, javac, mono…) est installée DANS WSL.
-// Allow-list : la valeur vient du renderer, on ne l'injecte jamais telle quelle.
-const KNOWN_TOOLS = ['gcc', 'g++', 'javac', 'java', 'mcs', 'mono']
-function checkToolAvailable(tool) {
-  if (!KNOWN_TOOLS.includes(tool)) return false
-  try {
-    execSync(`wsl.exe -e ${tool} --version`, { timeout: 5000, windowsHide: true, stdio: 'pipe' })
-    return true
-  } catch {
-    return false
-  }
-}
+// Installateur « Tout-en-un » : tous les interpréteurs/compilateurs sont EMBARQUÉS
+// dans l'app — aucun n'exige WSL ni installation utilisateur. Ces vérifications
+// renvoient donc « disponible » (les bannières d'avertissement sont désactivées).
+function checkBashAvailable() { return true }
+function checkPythonAvailable() { return true }
+function checkPhpAvailable() { return true }
+function checkToolAvailable() { return true }
 
 const sessions = new Map()
 const emitter = new EventEmitter()
@@ -61,27 +26,35 @@ const emitter = new EventEmitter()
 // pour le retour à la ligne et l'alignement de la complétion.
 function createSession(id, shell, cols = 80, rows = 24) {
   let file, args
+  // Tous les interpréteurs/compilateurs sont EMBARQUÉS (resources/) — aucun
+  // recours à WSL ni à un outil système (hors PowerShell, natif Windows).
   if (shell === 'powershell') {
     file = 'powershell.exe'
     args = ['-NoLogo', '-NoExit']
   } else if (shell === 'python') {
-    file = 'python'
+    file = pyBin()
     args = ['-i', '-u']
   } else if (shell === 'node') {
-    // REPL Node interactif (JavaScript/TypeScript), comme le REPL Python.
-    file = 'node'
+    file = nodeBin()
     args = ['-i']
   } else {
-    // wsl.exe lance le shell de la distro par défaut
-    file = 'wsl.exe'
-    args = ['--', 'bash', '--login', '-i']
+    // bash MSYS2 EMBARQUÉ (PortableGit), interactif + login (environnement MSYS).
+    file = bashBin()
+    args = ['-i', '-l']
   }
+
+  // PATH augmenté de TOUTES les toolchains embarquées → dans le terminal bash,
+  // gcc/g++/javac/java/go/php/node/python sont directement utilisables.
+  const toolPath = [
+    mingwBinDir(), join(embedRoot('jdk'), 'bin'), join(embedRoot('go'), 'bin'),
+    embedRoot('php'), embedRoot('node'), embedRoot('python'),
+  ].join(';')
 
   const proc = nodePty.spawn(file, args, {
     name: 'xterm-256color',
     cols, rows,
     cwd: process.env.USERPROFILE || process.cwd(),
-    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8' }
+    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1', PATH: toolPath + ';' + (process.env.PATH || '') }
   })
 
   sessions.set(id, proc)
@@ -121,9 +94,41 @@ function runCapture(fileName, args, input, extraOpts) {
 function resourcesRoot() {
   return app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources')
 }
+// Racine d'une toolchain embarquée (resources/<nom>) et binaires usuels.
+function embedRoot(name) {
+  return join(resourcesRoot(), name)
+}
+const nodeBin = () => join(embedRoot('node'), 'node.exe')
+const pyBin   = () => join(embedRoot('python'), 'python.exe')
+const phpBin  = () => join(embedRoot('php'), 'php.exe')
+const gccBin  = () => join(embedRoot('mingw'), 'bin', 'gcc.exe')
+const gppBin  = () => join(embedRoot('mingw'), 'bin', 'g++.exe')
+const mingwBinDir = () => join(embedRoot('mingw'), 'bin')
+const javacBin = () => join(embedRoot('jdk'), 'bin', 'javac.exe')
+const javaBin  = () => join(embedRoot('jdk'), 'bin', 'java.exe')
+// Bash MSYS2 + Git EMBARQUÉS (PortableGit) : bash.exe fournit bash + coreutils,
+// et `git` est sur le PATH de ce bash (utilisé par la validation Git).
+const bashBin  = () => join(embedRoot('git'), 'bin', 'bash.exe')
+// Rust EMBARQUÉ (cible windows-gnu) : rustc utilise le linker gcc de MinGW. Le
+// PATH doit inclure rust/bin (DLLs de rustc) ET mingw/bin (linker + runtime).
+const rustcBin = () => join(embedRoot('rust'), 'bin', 'rustc.exe')
+const rustEnv = () => ({ ...process.env, PATH: join(embedRoot('rust'), 'bin') + ';' + mingwBinDir() + ';' + (process.env.PATH || '') })
+// C# : compilateur Roslyn/csc INTÉGRÉ à Windows (.NET Framework, toujours présent
+// sur Windows 10/11 — comme PowerShell). Aucun embarquement, C# 5. Produit un
+// .exe natif exécutable directement.
+const cscBin = () => join(process.env.WINDIR || 'C:\\Windows', 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe')
+
+// Compile une source vers un .exe puis l'exécute avec ses arguments. Renvoie la
+// sortie de compilation si l'exe n'a pas été produit (erreurs visibles).
+function compileExeThenRun(compileBin, compileArgs, exe, runArgs, runEnv) {
+  try { rmSync(exe, { force: true }) } catch { /* ignore */ }
+  const comp = runCapture(compileBin, compileArgs, undefined, { timeout: 60000 })
+  if (!existsSync(exe)) return comp || 'Erreur de compilation.'
+  return runCapture(exe, runArgs ?? [], undefined, runEnv ? { env: runEnv } : undefined)
+}
 // Racine du SDK Go embarqué (resources/go).
 function goRoot() {
-  return join(resourcesRoot(), 'go')
+  return embedRoot('go')
 }
 // Environnement d'exécution Go : GOROOT pointe le SDK embarqué ; GOCACHE/GOPATH
 // dans les données utilisateur (écriture interdite dans resources en prod) ;
@@ -201,22 +206,35 @@ function buildGitScript(commands, checks) {
 }
 
 function runGit(commands, checks) {
-  const out = runCapture('wsl.exe', ['-e', 'bash'], buildGitScript(commands, checks))
+  const out = runCapture(bashBin(), [], buildGitScript(commands, checks))
   // parts[0] = préambule (avant le 1er check) ; parts[i+1] = sortie du check i.
   const parts = out.split(GIT_SENTINEL)
   return (checks ?? []).map((_, i) => (parts[i + 1] ?? '').trim())
 }
 
 function runValidation(lang, code, project, args) {
-  // Python / PowerShell natifs en mode projet : on écrit un vrai fichier puis on
-  // l'exécute avec ses arguments (impossible via stdin, qui ne fournit pas argv).
+  // Python : interpréteur EMBARQUÉ (resources/python). En mode projet, fichier +
+  // arguments (sys.argv) ; sinon le code passe par stdin.
   if (lang === 'python') {
+    // PYTHONUTF8=1 force la sortie en UTF-8 (sinon le Python embarqué encode en
+    // codepage Windows → les accents ressortent mojibakés et la comparaison échoue).
+    const env = { ...process.env, PYTHONUTF8: '1' }
     if (project) {
       const f = join(tmpdir(), 'sl_proj.py')
       writeFileSync(f, code, 'utf8')
-      return runCapture('python', [f, ...(args ?? [])])
+      return runCapture(pyBin(), [f, ...(args ?? [])], undefined, { env })
     }
-    return runCapture('python', [], code)
+    return runCapture(pyBin(), [], code, { env })
+  }
+  // PHP : interpréteur EMBARQUÉ (resources/php). Projet → fichier + $argv ;
+  // sinon le code (`<?php …`) passe par stdin.
+  if (lang === 'php') {
+    if (project) {
+      const f = join(tmpdir(), 'sl_proj.php')
+      writeFileSync(f, code, 'utf8')
+      return runCapture(phpBin(), [f, ...(args ?? [])])
+    }
+    return runCapture(phpBin(), [], code)
   }
   if (lang === 'powershell') {
     if (project) {
@@ -235,9 +253,9 @@ function runValidation(lang, code, project, args) {
       const ext = lang === 'ts' ? 'ts' : 'js'
       const f = join(tmpdir(), `sl_proj.${ext}`)
       writeFileSync(f, code, 'utf8')
-      return runCapture('node', [f, ...(args ?? [])])
+      return runCapture(nodeBin(), [f, ...(args ?? [])])
     }
-    return runCapture('node', [], code)
+    return runCapture(nodeBin(), [], code)
   }
   // Go : compilateur EMBARQUÉ (resources/go), exécuté nativement sur Windows
   // (ni WSL ni installation). On écrit un .go et on lance `go run` avec l'env
@@ -247,8 +265,49 @@ function runValidation(lang, code, project, args) {
     writeFileSync(f, code, 'utf8')
     return runCapture(join(goRoot(), 'bin', 'go.exe'), ['run', f, ...(args ?? [])], undefined, { env: goEnv(), timeout: 90000 })
   }
-  // bash, php, c, cpp, csharp, java → via une invocation bash WSL jetable
-  return runCapture('wsl.exe', ['-e', 'bash'], buildBashScript(lang, code, project, args))
+  // C / C++ : compilateurs MinGW EMBARQUÉS (resources/mingw). C++ lié en statique
+  // (-static) pour ne dépendre d'aucune DLL runtime MinGW à l'exécution.
+  if (lang === 'c') {
+    const dir = tmpdir(); const src = join(dir, 'sl.c'); const exe = join(dir, 'sl_c.exe')
+    writeFileSync(src, code, 'utf8')
+    return compileExeThenRun(gccBin(), [src, '-o', exe], exe, args, { ...process.env, PATH: mingwBinDir() + ';' + (process.env.PATH || '') })
+  }
+  if (lang === 'cpp') {
+    const dir = tmpdir(); const src = join(dir, 'sl.cpp'); const exe = join(dir, 'sl_cpp.exe')
+    writeFileSync(src, code, 'utf8')
+    return compileExeThenRun(gppBin(), [src, '-static', '-o', exe], exe, args, { ...process.env, PATH: mingwBinDir() + ';' + (process.env.PATH || '') })
+  }
+  // Java : JDK EMBARQUÉ (resources/jdk). Compilation dans un dossier temporaire
+  // DÉDIÉ (sinon un Main.class périmé ferait croire à une compilation réussie).
+  if (lang === 'java') {
+    const dir = mkdtempSync(join(tmpdir(), 'sljava-'))
+    writeFileSync(join(dir, 'Main.java'), code, 'utf8')
+    // -encoding UTF-8 : lire la source UTF-8 ; -Dstdout.encoding=UTF-8 : émettre
+    // la sortie en UTF-8 (sinon les accents sortent en codepage console → mojibake).
+    const comp = runCapture(javacBin(), ['-encoding', 'UTF-8', join(dir, 'Main.java')], undefined, { timeout: 60000 })
+    if (!existsSync(join(dir, 'Main.class'))) return comp || 'Erreur de compilation.'
+    return runCapture(javaBin(), ['-Dstdout.encoding=UTF-8', '-cp', dir, 'Main', ...(args ?? [])])
+  }
+  // C# : csc INTÉGRÉ à Windows (.NET Framework). Produit un .exe natif exécuté direct.
+  if (lang === 'csharp') {
+    const dir = tmpdir(); const src = join(dir, 'Main.cs'); const exe = join(dir, 'sl_cs.exe')
+    writeFileSync(src, code, 'utf8')
+    return compileExeThenRun(cscBin(), ['/nologo', '/out:' + exe, src], exe, args)
+  }
+  // Rust : rustc EMBARQUÉ, linké par le gcc de MinGW. Compile vers un .exe puis
+  // l'exécute (l'env Rust est requis à la compilation ET à l'exécution — DLLs).
+  if (lang === 'rust') {
+    const dir = tmpdir(); const src = join(dir, 'sl.rs'); const exe = join(dir, 'sl_rs.exe')
+    writeFileSync(src, code, 'utf8')
+    const env = rustEnv()
+    try { rmSync(exe, { force: true }) } catch { /* ignore */ }
+    const comp = runCapture(rustcBin(), [src, '-o', exe, '-C', 'linker=' + gccBin()], undefined, { env, timeout: 90000 })
+    if (!existsSync(exe)) return comp || 'Erreur de compilation.'
+    return runCapture(exe, args ?? [], undefined, { env })
+  }
+  // bash : bash MSYS2 EMBARQUÉ (PortableGit). Le script est passé par stdin —
+  // /tmp, coreutils, heredocs, $1 et accents (UTF-8) fonctionnent nativement.
+  return runCapture(bashBin(), [], buildBashScript(lang, code, project, args))
 }
 
 export function setupTerminalIPC(mainWindow) {
@@ -258,11 +317,11 @@ export function setupTerminalIPC(mainWindow) {
   ipcMain.handle('terminal:toolAvailable',   (_, { tool }) => checkToolAvailable(tool))
 
   // Mise en place d'un acte de mission EN COULISSES (création de fichiers /tmp),
-  // dans une invocation WSL séparée et NON affichée — pour ne pas dévoiler les données.
+  // via le bash EMBARQUÉ (PortableGit), non affiché — pour ne pas dévoiler les données.
   ipcMain.handle('terminal:runSetup', (_, { setup }) => {
     if (!setup) return { ok: true }
     try {
-      execSync('wsl.exe -e bash', { input: setup, timeout: 10000, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] })
+      execFileSync(bashBin(), [], { input: setup, timeout: 15000, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] })
       return { ok: true }
     } catch (e) {
       return { ok: false, error: String(e?.message ?? e) }

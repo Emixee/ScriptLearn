@@ -1,9 +1,23 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.17.0
+## Version actuelle : 0.18.0
 
 ### État du projet
-Application Electron/React d'apprentissage du scripting (Bash, Python, PowerShell + langages complémentaires), Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Cap « Tout-en-un » amorcé** : objectif = embarquer les toolchains pour qu'aucun langage n'exige d'installation externe (ni WSL, ni SDK utilisateur).
+Application Electron/React d'apprentissage du scripting, Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES — aucun langage n'exige WSL ni installation externe.** Marche sur n'importe quel PC Windows, sans admin, sans réseau.
+
+---
+
+## v0.18.0 — Installateur « Tout-en-un » : toutes les toolchains embarquées (WSL supprimé) (2026-06-21)
+
+Aboutissement du cap « Tout-en-un ». Chaque langage s'exécute via une **toolchain native embarquée dans l'app** (`resources/`, `extraResources`), résolue en prod via `process.resourcesPath`. **Plus aucun appel à `wsl.exe`.**
+- **Toolchains embarquées** (`scripts/fetch-toolchains.mjs` les télécharge dans `resources/`, gitignoré) :
+  - **Node 24** (js/ts — Node 24 dépouille TS nativement), **Python embeddable** (`PYTHONUTF8=1`), **PHP**, **MinGW-w64** (gcc/g++, + linker de Rust), **JDK Temurin 21** (java, `-encoding/-Dstdout.encoding=UTF-8`), **PortableGit** (bash MSYS2 + coreutils + git), **Go**, **Rust** (rustc windows-gnu, linké par MinGW).
+  - **C#** : `csc` **intégré à Windows** (.NET Framework, toujours présent) — 0 Mo. Voie adaptée en **C# 5** (interpolation → concaténation).
+- **NOUVELLE Voie Rust** (Fragment XII — l'Armure) : 18 actes (println!, variables, vecteurs, structs, match, itérateurs, impl) + 3 projets `.rs` (`std::env::args`).
+- **`src/main/terminal.js`** réécrit : `runValidation` route chaque lang vers son binaire embarqué (python/php natif, c/cpp via gcc/g++ `-static`, java via javac/java, csharp via csc, go/rust compilés) ; `runSetup`, `runGit` (dépôt jetable) et le terminal interactif (`createSession`) passent par le **bash embarqué** ; checks de disponibilité → toujours vrai ; `TOOLCHAINS` vidé (plus de bannière).
+- **Vérifié end-to-end** : toutes les corrections de TOUTES les Voies exécutables compilent/s'exécutent via les binaires embarqués (php/python/js/ts 74/74 ; c/cpp/java/csharp 64/64 ; bash 24 + git ; go 18 ; rust 18). Encodage UTF-8 réglé (Python/Java) ; C# p3 en ASCII (csc Framework sort en codepage OEM).
+- **Taille** : `resources/` ≈ 2,67 Go (MinGW 939, Rust 573, git 351, jdk 329, go 261, node 105, php 87, python 22) → installateur compressé volumineux (~1 Go).
+- Reste : le **choix final Contenir/Libérer**.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "scriptlearn",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Logiciel d'apprentissage du scripting Bash & PowerShell",
   "main": "out/main/index.js",
   "scripts": {
@@ -28,10 +28,14 @@
       "**/sqljs/**"
     ],
     "extraResources": [
-      {
-        "from": "resources/go",
-        "to": "go"
-      }
+      { "from": "resources/go", "to": "go" },
+      { "from": "resources/node", "to": "node" },
+      { "from": "resources/python", "to": "python" },
+      { "from": "resources/php", "to": "php" },
+      { "from": "resources/mingw", "to": "mingw" },
+      { "from": "resources/jdk", "to": "jdk" },
+      { "from": "resources/git", "to": "git" },
+      { "from": "resources/rust", "to": "rust" }
     ],
     "win": {
       "target": [
