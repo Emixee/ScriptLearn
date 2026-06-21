@@ -1,6 +1,14 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.18.3
+## Version actuelle : 0.18.4
+
+## v0.18.4 — Habillage « jeu narratif » (vagues 2 & 3 : facultés + modernes) (2026-06-21)
+
+- **Facultés** (HTML, SQL, Git, Regex, YAML, KQL, SPL) : taglines accrocheuses (hook + enjeu) ; HTML thématisé (la Surface affiche `ANIMA` / `Systeme en ligne`) ; briefs Git narrativisés (rouvre/sonde/indexe/grave l'Historique). Données des requêtes déjà dans l'univers (employes, SecurityEvent, index=web) conservées.
+- **Modernes** (JavaScript, TypeScript, Go, Rust) : taglines accrocheuses + **sorties scénarisées** des actes d'ouverture — `Bonjour`→`Reflexe actif`/`Agent en ligne`/`Armure active`, `grand`→`DECLENCHE`/`DEPLOYE`/`VERROUILLE`.
+- Vérifié : toutes les corrections re-testées (HTML keyword ; JS/TS via Node 24, Go, Rust via toolchains embarquées). **Les 19 Voies ont désormais un habillage jeu narratif cohérent.**
+
+
 
 ## v0.18.3 — Habillage « jeu narratif » (vague 1 : page Missions + fragments) (2026-06-21)
 
