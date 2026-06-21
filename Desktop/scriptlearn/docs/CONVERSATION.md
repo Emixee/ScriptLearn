@@ -1,6 +1,22 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.18.1
+## Version actuelle : 0.18.2
+
+### État du projet
+Application Electron/React, Windows, FR, hors-ligne, multi-profils. Installateur « Tout-en-un » (toolchains embarquées, WSL supprimé), arc narratif « Réveil » complet, **fenêtres de progression installation/MAJ**.
+
+---
+
+## v0.18.2 — Fenêtres de progression installation & mise à jour (2026-06-21)
+
+- **Overlay de MAJ global** (`src/renderer/src/components/UpdateOverlay.jsx`, monté dans `AppLayout`) : s'affiche automatiquement au démarrage si une MAJ existe (via `ProfileContext` qui conserve désormais l'`updateInfo` complet). Cycle complet : disponible (version, taille, notes) → **téléchargement avec barre + `% · Mo/Mo · vitesse · ETA`** → lancement de l'installateur + message de redémarrage. Bouton « Plus tard ».
+- **Progression enrichie** (`src/main/updater.js`) : `downloadFile` émet un objet `{ percent, transferred, total, bytesPerSecond }` (throttle 150 ms) ; `Settings.jsx` adapté (rétro-compatible).
+- **Installation de MAJ VISIBLE** : `update:install` ne passe plus `/S` (silencieux) → l'installateur NSIS s'affiche avec sa **barre de progression native** pendant l'extraction (~2,6 Go) ; `/D=` pré-remplit le dossier.
+- **Install initiale explicitée** (`installer/custom.nsh`) : `DetailPrint` listant les outils embarqués (~2,6 Go) pendant l'installation.
+
+---
+
+## Historique — Version 0.18.1
 
 ### État du projet
 Application Electron/React d'apprentissage du scripting, Windows uniquement, interface 100% française, hors-ligne, multi-profils. **Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES — aucun langage n'exige WSL ni installation externe.** Marche sur n'importe quel PC Windows, sans admin, sans réseau. **L'arc narratif « Réveil » est clos** par un scénario final à choix (Contenir / Libérer).

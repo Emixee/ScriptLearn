@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import GlobalSearch from './GlobalSearch'
 import WindowControls from './WindowControls'
+import UpdateOverlay from './UpdateOverlay'
 
 function AppLayout() {
   const [showSearch, setShowSearch] = useState(false)
@@ -38,6 +39,8 @@ function AppLayout() {
         </main>
       </div>
       {showSearch && <GlobalSearch onClose={() => setShowSearch(false)} />}
+      {/* Overlay global de mise à jour (téléchargement + lancement installateur) */}
+      <UpdateOverlay />
     </div>
   )
 }

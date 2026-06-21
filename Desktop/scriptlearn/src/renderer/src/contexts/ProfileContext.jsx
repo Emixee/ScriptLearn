@@ -9,6 +9,9 @@ export function ProfileProvider({ children }) {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [updateAvailable, setUpdateAvailable] = useState(false)
+  // Infos complètes de la MAJ détectée (version, downloadUrl, assetName, taille,
+  // notes) — nécessaires à l'overlay global pour lancer le téléchargement.
+  const [updateInfo, setUpdateInfo] = useState(null)
 
   const refresh = useCallback(async () => {
     const [p, s] = await Promise.all([
@@ -37,14 +40,14 @@ export function ProfileProvider({ children }) {
     const timer = setTimeout(async () => {
       try {
         const info = await window.electronAPI.update.check()
-        if (info?.available) setUpdateAvailable(true)
+        if (info?.available) { setUpdateAvailable(true); setUpdateInfo(info) }
       } catch {}
     }, 5000)
     return () => clearTimeout(timer)
   }, [])
 
   return (
-    <ProfileContext.Provider value={{ profile, settings, loading, refresh, switchProfile, saveSettings, updateAvailable, setUpdateAvailable }}>
+    <ProfileContext.Provider value={{ profile, settings, loading, refresh, switchProfile, saveSettings, updateAvailable, setUpdateAvailable, updateInfo, setUpdateInfo }}>
       {!loading && children}
     </ProfileContext.Provider>
   )

@@ -41,6 +41,11 @@ function downloadFile(url, destPath, onProgress) {
     const file = createWriteStream(destPath)
     file.on('error', reject)
 
+    // Pour la vitesse : on échantillonne reçu/temps et on émet un objet riche
+    // { percent, transferred, total, bytesPerSecond } (l'UI affiche %, Mo, vitesse, ETA).
+    const startedAt = Date.now()
+    let lastEmit = 0
+
     function request(targetUrl) {
       const getter = targetUrl.startsWith('https') ? httpsGet : httpGet
       getter(targetUrl, { headers: { 'User-Agent': 'ScriptLearn-Updater' } }, (res) => {
@@ -53,7 +58,18 @@ function downloadFile(url, destPath, onProgress) {
         res.on('data', chunk => {
           file.write(chunk)
           received += chunk.length
-          if (total > 0) onProgress(Math.round(received / total * 100))
+          const now = Date.now()
+          // Throttle ~150 ms pour ne pas inonder le renderer d'événements IPC.
+          if (now - lastEmit >= 150 || (total > 0 && received >= total)) {
+            lastEmit = now
+            const elapsed = (now - startedAt) / 1000
+            onProgress({
+              percent: total > 0 ? Math.round(received / total * 100) : 0,
+              transferred: received,
+              total,
+              bytesPerSecond: elapsed > 0 ? Math.round(received / elapsed) : 0,
+            })
+          }
         })
         res.on('end', () => { file.close(); resolve() })
         res.on('error', reject)
@@ -105,8 +121,8 @@ export function setupUpdaterIPC(mainWindow) {
     const destPath = join(app.getPath('temp'), assetName)
     try { if (existsSync(destPath)) unlinkSync(destPath) } catch {}
     try {
-      await downloadFile(downloadUrl, destPath, pct => {
-        mainWindow?.webContents.send('update:progress', pct)
+      await downloadFile(downloadUrl, destPath, p => {
+        mainWindow?.webContents.send('update:progress', p)
       })
       return { ok: true, path: destPath }
     } catch (err) {
@@ -125,18 +141,19 @@ export function setupUpdaterIPC(mainWindow) {
     // Résultat sans /D= : deux versions coexistent, les raccourcis pointent toujours vers l'ancienne.
     const installDir = dirname(app.getPath('exe'))
 
-    // /S  = mode silencieux NSIS : aucune fenêtre, aucune invite utilisateur.
-    //       Sans ce flag, l'installeur ouvre une UI et attend une action — l'utilisateur
-    //       ne la voit souvent pas ou l'installe au mauvais endroit.
-    // /D= = répertoire cible (DOIT être le dernier argument NSIS, sans guillemets).
-    //       Garantit que la mise à jour écrase l'installation existante.
-    spawn(installerPath, ['/S', `/D=${installDir}`], {
+    // On lance l'installateur en mode VISIBLE (assistant NSIS) — PAS `/S` — pour que
+    // l'utilisateur voie la barre de progression pendant la longue extraction
+    // (~2,6 Go de toolchains embarquées). `/D=` pré-remplit le dossier cible (le
+    // répertoire d'installation actuel) — DOIT être le dernier argument, sans
+    // guillemets — afin que la mise à jour écrase bien l'installation existante.
+    spawn(installerPath, [`/D=${installDir}`], {
       detached: true,   // L'installeur survit à la fermeture du parent (app.quit)
-      stdio: 'ignore'   // Pas de pipes — l'installeur tourne en arrière-plan
+      stdio: 'ignore'   // Pas de pipes — l'installeur tourne dans sa propre fenêtre
     }).unref()
 
-    // Laisser 1,5s à l'installeur NSIS pour démarrer et vérifier les fichiers
-    // avant que l'app se ferme et libère les locks sur ses propres binaires.
+    // Laisser 1,5s à l'installeur NSIS pour démarrer (il attend sur sa 1re page),
+    // puis fermer l'app afin de libérer les locks sur ses propres binaires avant
+    // que l'utilisateur n'atteigne l'étape de copie des fichiers.
     setTimeout(() => app.quit(), 1500)
     return { ok: true }
   })

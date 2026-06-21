@@ -19,8 +19,12 @@
 ; ==============================================================================
 
 !macro customInstall
-  ; Afficher une information dans la barre de détail du NSIS pendant l'extraction
+  ; customInstall s'exécute APRÈS la copie des fichiers de l'app. La barre de
+  ; progression native a donc déjà couvert la longue extraction (~2,6 Go de
+  ; toolchains embarquées). On l'explicite pour que l'utilisateur comprenne le
+  ; volume installé, puis on enchaîne sur la configuration de l'IA.
   SetDetailsPrint both
+  DetailPrint "Outils de developpement embarques installes (~2,6 Go) : Node, Python, PHP, MinGW (C/C++), JDK (Java), Go, Rust, Git/Bash."
   DetailPrint "Configuration de l'assistant IA (Ollama)..."
 
   ; Extraire le script PowerShell vers le dossier temporaire de Windows.

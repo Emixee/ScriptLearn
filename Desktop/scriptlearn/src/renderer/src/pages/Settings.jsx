@@ -81,7 +81,9 @@ function Settings() {
     if (!updateInfo) return
     setUpdateStatus(UPDATE_STATUS.downloading)
     setDlProgress(0)
-    const unsub = window.electronAPI.update.onProgress(pct => setDlProgress(pct))
+    // La progression est désormais un objet { percent, transferred, total, bytesPerSecond } ;
+    // on garde la rétro-compatibilité si un simple nombre arrivait.
+    const unsub = window.electronAPI.update.onProgress(p => setDlProgress(typeof p === 'object' ? p.percent : p))
     const result = await window.electronAPI.update.download({
       downloadUrl: updateInfo.downloadUrl,
       assetName: updateInfo.assetName
