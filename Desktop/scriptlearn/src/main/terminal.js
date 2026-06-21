@@ -237,12 +237,21 @@ function runValidation(lang, code, project, args) {
     return runCapture(phpBin(), [], code)
   }
   if (lang === 'powershell') {
+    // Forcer la sortie en UTF-8 : sinon Write-Output encode les accents en
+    // codepage console (« reconstitué » → mojibake) et la comparaison échoue.
+    const enc = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;'
     if (project) {
+      // On passe par `-Command "& 'fichier' args"` (et non `-File`) pour pouvoir
+      // préfixer l'encodage SANS casser un éventuel `param()` en 1re ligne du script.
       const f = join(tmpdir(), 'sl_proj.ps1')
-      writeFileSync(f, code, 'utf8')
-      return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', f, ...(args ?? [])])
+      // BOM UTF-8 : sans lui, PowerShell 5.1 lit le .ps1 en codepage ANSI et les
+      // accents de la SOURCE sont déjà corrompus avant même l'affichage.
+      writeFileSync(f, '﻿' + code, 'utf8')
+      const a = (args ?? []).map(x => `'${String(x).replace(/'/g, "''")}'`).join(' ')
+      const fp = f.replace(/'/g, "''")
+      return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `${enc} & '${fp}' ${a}`])
     }
-    return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], code)
+    return runCapture('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '-'], enc + '\n' + code)
   }
   // JavaScript / TypeScript : Node natif. Node 24 exécute le TypeScript en
   // dépouillant les types (à la volée, y compris depuis stdin). En mode projet,

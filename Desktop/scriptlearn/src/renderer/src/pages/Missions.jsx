@@ -126,9 +126,12 @@ export default function Missions() {
     <div className="p-8 overflow-y-auto h-full">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-1">Missions</h1>
-        <p className="text-stone-400">
-          Joue dans un <span className="text-stone-200">vrai terminal Linux</span> (Labs), ou suis une <span className="text-stone-200">Voie</span> complète
-          qui te mène de débutant à expert dans un langage.
+        <p className="text-stone-400 leading-relaxed">
+          Une intelligence démantelée — <span className="text-stone-200">ANIMA</span> — s'éveille, ses
+          <span className="text-stone-200"> fragments</span> éparpillés à travers les langages. Chaque
+          <span className="text-stone-200"> Voie</span> est la reconquête d'un fragment : du premier signal
+          jusqu'à tes propres scripts, de débutant à expert. Les <span className="text-stone-200">Scénarios</span> referment
+          l'histoire ; les <span className="text-stone-200">Labs</span> te jettent dans un vrai terminal.
         </p>
       </div>
 
@@ -137,7 +140,7 @@ export default function Missions() {
         <section className="mb-8">
           <div className="flex items-baseline gap-3 mb-3">
             <h3 className="text-stone-400 text-xs uppercase tracking-widest">Labs — terminal Linux réel</h3>
-            <span className="text-stone-600 text-xs">Un seul terminal, on tape les commandes dedans. Objectifs en direct.</span>
+            <span className="text-stone-600 text-xs">Un vrai terminal, des objectifs en direct — les mains dans le cambouis.</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {labs.map(c => (
@@ -166,7 +169,8 @@ export default function Missions() {
       {/* ── Parcours complets (Voies) ── */}
       <section className="mb-8">
         <div className="flex items-baseline gap-3 mb-3">
-          <h3 className="text-stone-400 text-xs uppercase tracking-widest">Parcours complets — débutant → expert</h3>
+          <h3 className="text-stone-400 text-xs uppercase tracking-widest">Les Voies — un fragment d'ANIMA par langage</h3>
+          <span className="text-stone-600 text-xs">Reconquiers-les, de débutant à expert.</span>
         </div>
         <div className="grid grid-cols-2 gap-4">
           {voies.map(VoieCard)}
@@ -187,8 +191,8 @@ export default function Missions() {
       {scenarios.length > 0 && (
         <section className="mb-8">
           <div className="flex items-baseline gap-3 mb-3">
-            <h3 className="text-stone-400 text-xs uppercase tracking-widest">Scénarios</h3>
-            <span className="text-stone-600 text-xs">Enquêtes thématiques multi-langages.</span>
+            <h3 className="text-stone-400 text-xs uppercase tracking-widest">Scénarios — le dénouement</h3>
+            <span className="text-stone-600 text-xs">Plusieurs langages, une seule histoire — et le choix final.</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {scenarios.map(ScenarioCard)}
