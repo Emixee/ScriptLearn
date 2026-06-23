@@ -205,7 +205,7 @@ export default function Sandbox() {
                 <span className="text-stone-500 text-xs ml-2">
                   {isStatic ? `Référence ${LANG_LABELS[lang]}` :
                    lang === 'powershell' ? 'Windows PowerShell' :
-                   lang === 'python'     ? 'Python' : 'Bash (WSL)'}
+                   lang === 'python'     ? 'Python' : 'Bash'}
                 </span>
               </div>
               <div className="flex-1 overflow-hidden bg-[#080807]">

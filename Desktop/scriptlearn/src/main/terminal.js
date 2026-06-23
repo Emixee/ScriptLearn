@@ -21,19 +21,38 @@ function checkToolAvailable() { return true }
 const sessions = new Map()
 const emitter = new EventEmitter()
 
+// Marqueur de PROMPT invisible, émis par le shell AVANT chaque invite (mode
+// terminal-auto). Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js
+// (main ESM et renderer ne peuvent pas s'importer mutuellement → constante dupliquée).
+// On émet 0x1f (Unit Separator) — un caractère de contrôle absent d'une sortie
+// normale — autour d'un libellé. Terminal.jsx s'en sert pour découper le flux du PTY
+// en blocs « commande → sortie » et le RETIRE avant affichage (donc invisible).
+const PROMPT_MARKER = '\x1f__SLP__\x1f'
+
 // Crée une session terminal interactive dans un vrai PTY (node-pty).
 // cols/rows : taille initiale fournie par xterm (après fit) — le shell s'en sert
 // pour le retour à la ligne et l'alignement de la complétion.
 function createSession(id, shell, cols = 80, rows = 24) {
   let file, args
+  // Variables d'env additionnelles (selon le shell) pour faire émettre le marqueur
+  // de prompt. Le marqueur est TOUJOURS émis (et toujours retiré côté renderer) :
+  // inoffensif pour les terminaux en mode éditeur, exploité en mode terminal-auto.
+  const extraEnv = {}
   // Tous les interpréteurs/compilateurs sont EMBARQUÉS (resources/) — aucun
   // recours à WSL ni à un outil système (hors PowerShell, natif Windows).
   if (shell === 'powershell') {
     file = 'powershell.exe'
-    args = ['-NoLogo', '-NoExit']
+    // On (re)définit la fonction `prompt` pour préfixer chaque invite du marqueur.
+    // -NoExit garde la session interactive après l'exécution du -Command.
+    // [char]0x1f = l'octet du marqueur ; on reconstruit une invite « PS <chemin>> ».
+    const psPrompt = 'function prompt { "$([char]0x1f)__SLP__$([char]0x1f)PS $((Get-Location).Path)> " }'
+    args = ['-NoLogo', '-NoExit', '-Command', psPrompt]
   } else if (shell === 'python') {
     file = pyBin()
     args = ['-i', '-u']
+    // PYTHONSTARTUP : fichier exécuté au lancement du REPL interactif. On y préfixe
+    // l'invite primaire (sys.ps1) du marqueur → il précède chaque « >>> ».
+    extraEnv.PYTHONSTARTUP = pyStartupFile()
   } else if (shell === 'node') {
     file = nodeBin()
     args = ['-i']
@@ -41,6 +60,11 @@ function createSession(id, shell, cols = 80, rows = 24) {
     // bash MSYS2 EMBARQUÉ (PortableGit), interactif + login (environnement MSYS).
     file = bashBin()
     args = ['-i', '-l']
+    // PROMPT_COMMAND est exécuté par bash AVANT chaque invite. Le prompt MSYS2 est
+    // défini via PS1 (jamais via PROMPT_COMMAND, et aucun script d'init de /etc ne
+    // le touche) → on peut l'injecter par l'env sans abîmer le joli prompt git.
+    // \037 = 0x1f en octal (printf bash l'interprète de façon portable).
+    extraEnv.PROMPT_COMMAND = "printf '\\037__SLP__\\037'"
   }
 
   // PATH augmenté de TOUTES les toolchains embarquées → dans le terminal bash,
@@ -54,7 +78,7 @@ function createSession(id, shell, cols = 80, rows = 24) {
     name: 'xterm-256color',
     cols, rows,
     cwd: process.env.USERPROFILE || process.cwd(),
-    env: { ...process.env, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1', PATH: toolPath + ';' + (process.env.PATH || '') }
+    env: { ...process.env, ...extraEnv, TERM: 'xterm-256color', PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1', PATH: toolPath + ';' + (process.env.PATH || '') }
   })
 
   sessions.set(id, proc)
@@ -100,6 +124,15 @@ function embedRoot(name) {
 }
 const nodeBin = () => join(embedRoot('node'), 'node.exe')
 const pyBin   = () => join(embedRoot('python'), 'python.exe')
+// Fichier de démarrage du REPL Python (PYTHONSTARTUP) : préfixe l'invite primaire
+// du marqueur de prompt invisible (voir PROMPT_MARKER) → il précède chaque « >>> ».
+// On écrit l'échappement `\x1f` en TEXTE dans le fichier ; c'est Python qui le
+// transforme en octet 0x1f, ce qui évite tout souci d'encodage à l'écriture.
+function pyStartupFile() {
+  const f = join(tmpdir(), 'sl_py_startup.py')
+  writeFileSync(f, "import sys\nsys.ps1 = '\\x1f__SLP__\\x1f>>> '\nsys.ps2 = '... '\n", 'utf8')
+  return f
+}
 const phpBin  = () => join(embedRoot('php'), 'php.exe')
 const gccBin  = () => join(embedRoot('mingw'), 'bin', 'gcc.exe')
 const gppBin  = () => join(embedRoot('mingw'), 'bin', 'g++.exe')

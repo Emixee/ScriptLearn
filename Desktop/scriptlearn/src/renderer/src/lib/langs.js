@@ -25,6 +25,16 @@ import { rust as rustMode } from '@codemirror/legacy-modes/mode/rust'
 // sortie d'une commande est complète (voir validate dans useCodeRunner/Exercise).
 export const SENTINEL_PREFIX = '__SL_DONE_'
 
+// Marqueur de PROMPT invisible émis par le shell avant chaque invite (mode
+// terminal-auto). On choisit \x1f (Unit Separator) — un caractère de contrôle
+// qui n'apparaît jamais dans une sortie normale — encadrant un libellé. Terminal.jsx
+// s'en sert pour découper le flux du PTY en blocs « commande → sortie » et le RETIRE
+// avant affichage (donc invisible à l'écran).
+// IMPORTANT : cette constante est DUPLIQUÉE dans src/main/terminal.js (le main ESM et
+// le renderer ne peuvent pas s'importer mutuellement) — toute modification doit être
+// répercutée aux deux endroits.
+export const PROMPT_MARKER = '\x1f__SLP__\x1f'
+
 // Retire les séquences ANSI (couleurs xterm) et les \r pour comparer la sortie
 // réelle au résultat attendu sans être pollué par les codes d'échappement.
 export function stripAnsi(str) {
@@ -37,13 +47,22 @@ export function stripAnsi(str) {
 //  - static   : true => validation par mots-clés, pas d'exécution terminal
 //  - exec     : stratégie d'exécution (voir buildRunData) — absent si static
 //  - termShell: quel shell la session Terminal doit lancer pour ce langage
-//               (les langages compilés tournent dans la session bash WSL)
+//               (les langages compilés tournent dans la session bash MSYS2)
+//  - repl     : true => shell/REPL interactif où l'on TAPE directement les
+//               commandes. Ces langages basculent en « terminal-auto » (cours +
+//               missions) : plus d'éditeur, validation automatique sur la sortie
+//               réelle du terminal (voir isRepl + Terminal.jsx onOutput). Les
+//               compilés/PHP/statiques n'ont pas de frappe interactive naturelle.
 export const LANG_META = {
-  bash:       { label: 'Bash',       color: '#22d3ee', static: false, exec: 'direct',         termShell: 'bash' },
-  python:     { label: 'Python',     color: '#f59e0b', static: false, exec: 'direct',         termShell: 'python' },
+  bash:       { label: 'Bash',       color: '#22d3ee', static: false, exec: 'direct',         termShell: 'bash',       repl: true },
+  python:     { label: 'Python',     color: '#f59e0b', static: false, exec: 'direct',         termShell: 'python',     repl: true },
   // JavaScript / TypeScript : exécutés par Node NATIF (Windows), comme Python —
   // pas via WSL. Node 24 exécute aussi le TypeScript directement (dépouillement
   // des types), donc TS partage le même interpréteur et le même mode terminal.
+  // NB : js/ts ne sont PAS marqués repl. Le REPL Node (`node -i`) n'offre ni hook
+  // pré-exécution (type PS0/PROMPT_COMMAND) ni invite non ambiguë (`> ` se confond
+  // avec la sortie) → impossible d'isoler proprement la sortie réelle. Ils restent
+  // donc en mode éditeur + validation en coulisses.
   js:         { label: 'JavaScript', color: '#f7df1e', static: false, exec: 'direct',         termShell: 'node' },
   ts:         { label: 'TypeScript', color: '#3178c6', static: false, exec: 'direct',         termShell: 'node' },
   // Go : compilateur EMBARQUÉ dans l'app (resources/go), exécuté nativement —
@@ -53,7 +72,7 @@ export const LANG_META = {
   // Rust : compilateur EMBARQUÉ (resources/rust) linké par MinGW. Pas de REPL :
   // validation via « Valider » (compilation + exécution en coulisses).
   rust:       { label: 'Rust',       color: '#dea584', static: false, exec: 'direct',         termShell: 'powershell' },
-  powershell: { label: 'PowerShell', color: '#d97706', static: false, exec: 'direct',         termShell: 'powershell' },
+  powershell: { label: 'PowerShell', color: '#d97706', static: false, exec: 'direct',         termShell: 'powershell', repl: true },
   php:        { label: 'PHP',        color: '#8892bf', static: false, exec: 'heredoc-php',     termShell: 'bash' },
   c:          { label: 'C',          color: '#a8b9cc', static: false, exec: 'compile-c',       termShell: 'bash' },
   cpp:        { label: 'C++',        color: '#00599c', static: false, exec: 'compile-cpp',     termShell: 'bash' },
@@ -75,6 +94,9 @@ export const LANG_LABELS = Object.fromEntries(Object.entries(LANG_META).map(([k,
 export const STATIC_LANGS = Object.keys(LANG_META).filter(k => LANG_META[k].static)
 
 export const isStatic = (lang) => !!LANG_META[lang]?.static
+// Langage à shell/REPL interactif : l'élève tape directement ses commandes dans
+// le terminal, qui devient la source de vérité de la validation (mode terminal-auto).
+export const isRepl = (lang) => !!LANG_META[lang]?.repl
 // Quel shell ouvrir dans le composant Terminal pour ce langage.
 // Les langages compilés et PHP s'exécutent dans bash (WSL) ; les autres gardent
 // leur propre interpréteur. Fallback = le langage lui-même (Terminal.jsx route

@@ -294,16 +294,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Avertissement WSL */}
+      {/* Avertissement Bash (bloc inactif : le bash MSYS2 est embarqué depuis la
+          v0.18.0, donc bashAvailable est toujours vrai — conservé par sécurité). */}
       {!bashAvailable && (
         <div className="mb-5 bg-amber-500/10 border border-amber-500/30 rounded p-4 flex items-start gap-3">
           <span className="text-amber-400 text-lg flex-shrink-0">⚠</span>
           <div>
-            <p className="text-amber-300 text-sm font-medium">Bash (WSL) introuvable</p>
+            <p className="text-amber-300 text-sm font-medium">Bash introuvable</p>
             <p className="text-amber-200/60 text-xs mt-0.5">
-              Les exercices Bash nécessitent WSL. Installez-le avec :{' '}
-              <code className="bg-black/20 px-1 rounded font-mono">wsl --install</code>{' '}
-              dans PowerShell en tant qu'administrateur, puis redémarrez.
+              Le terminal Bash embarqué est indisponible. Réinstalle ScriptLearn pour
+              restaurer les outils embarqués.
             </p>
           </div>
         </div>

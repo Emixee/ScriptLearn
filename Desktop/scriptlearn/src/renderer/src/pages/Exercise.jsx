@@ -17,8 +17,9 @@ import contentIndex from '../content/index.json'
 // Avant, ces tables étaient dupliquées ici ET dans Sandbox — voir lib/langs.js.
 import {
   LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension,
-  buildRunData, termShellFor,
+  buildRunData, termShellFor, isRepl,
 } from '../lib/langs'
+import { matchesExpected } from '../lib/useCodeRunner'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 
@@ -426,6 +427,9 @@ export default function Exercise() {
   const isStaticLang = STATIC_LANGS.includes(lang)
 
   const [code, setCode] = useState('')
+  // Garde anti-double-validation (mode terminal-auto) : les blocs de sortie
+  // arrivent en flux ; on ne valide qu'UNE fois (les setState sont asynchrones).
+  const succeededRef = useRef(false)
   const [status, setStatus] = useState(STATUS.idle)
   const [feedback, setFeedback] = useState(null)
   const [aiPending, setAiPending] = useState(false)
@@ -463,6 +467,11 @@ export default function Exercise() {
   const isBoss = exercise?.isBoss ?? false
   const isDebug = exercise?.exerciseType === 'debug'
   const draftKey = `${moduleId}:${exerciseIndex}`
+  // Mode « terminal-auto » : langage à REPL/shell (bash/powershell/python) et
+  // exercice non-projet → l'élève tape DIRECTEMENT dans le terminal, validé
+  // automatiquement (pas d'éditeur, pas de bouton). Déclaré APRÈS `exercise`
+  // pour éviter la TDZ (cf. correctif v0.4.4).
+  const terminalAuto = isRepl(lang) && !isStaticLang && !exercise?.project
 
   const nextModule = useMemo(() => findNextModule(lang, level, moduleId), [lang, level, moduleId])
 
@@ -522,6 +531,7 @@ export default function Exercise() {
     setShowNote(false)
     setPreviewSrc('')
     outputBuffer.current = ''
+    succeededRef.current = false   // réarmer la détection terminal-auto
   }, [moduleId, exerciseIndex])
 
   // Charger la note
@@ -683,6 +693,19 @@ export default function Exercise() {
     }
   }
 
+  // Mode terminal-auto : appelé pour chaque SORTIE de commande (écho déjà retiré
+  // par Terminal.jsx). Dès que la sortie réelle contient le résultat attendu, on
+  // déclenche le MÊME flux de succès que « Valider » (finalize → progression, IA…).
+  const handleTerminalOutput = (block) => {
+    if (succeededRef.current) return
+    const isCorrect = exercise.validationType === 'output_nonempty'
+      ? block.trim().length > 0
+      : matchesExpected(block, exercise.expectedOutput)
+    if (!isCorrect) return
+    succeededRef.current = true
+    finalize(true, block)
+  }
+
   // Alias pour les raccourcis clavier
   const handleValidate = validate
 
@@ -827,6 +850,18 @@ export default function Exercise() {
 
           {/* Zone scrollable : éditeur + feedback + correction */}
           <div className="flex-1 overflow-y-auto min-h-0 p-4 flex flex-col gap-3">
+            {terminalAuto ? (
+              /* Mode terminal-auto : pas d'éditeur — l'élève tape dans le terminal à droite. */
+              <div className="rounded-sm border border-[#2e2b26] bg-[#111110] p-3 flex-shrink-0">
+                <div className="text-stone-400 text-xs uppercase tracking-widest mb-1.5">⌨ Terminal interactif</div>
+                <p className="text-stone-400 text-xs leading-relaxed">
+                  Tape directement tes commandes dans le terminal à droite. L'exercice se
+                  valide <span className="text-[#d97706]">automatiquement</span> dès que la sortie
+                  correspond au résultat attendu.
+                </p>
+              </div>
+            ) : (
+            <>
             <div className="flex items-center justify-between flex-shrink-0">
               <span className="text-stone-400 text-xs uppercase tracking-widest">
                 {isDebug ? 'Code à déboguer' : 'Votre script'}
@@ -875,6 +910,8 @@ export default function Exercise() {
                 }}
               />
             </div>
+            </>
+            )}
 
             {/* Feedback */}
             {feedback && (
@@ -929,6 +966,13 @@ export default function Exercise() {
 
           {/* Boutons */}
           <div className="flex-shrink-0 p-4 pt-3 border-t border-[#2e2b26] flex flex-col gap-2">
+            {terminalAuto ? (
+              /* Mode terminal-auto : aucune action manuelle — la validation est automatique. */
+              <div className="text-stone-500 text-xs py-1.5 text-center">
+                Validation <span className="text-[#d97706]">automatique</span> · tape dans le terminal →
+              </div>
+            ) : (
+            <>
             <div className="text-stone-600 text-[10px] mb-1">
               Ctrl+↵ Exécuter · Ctrl+Shift+↵ Valider · Ctrl+R Reset
             </div>
@@ -948,6 +992,8 @@ export default function Exercise() {
                 {status === STATUS.running ? '⏳ Validation…' : isStaticLang ? '✓ Valider' : '✓ Valider'}
               </button>
             </div>
+            </>
+            )}
             <div className="flex items-center justify-between">
               {!isBoss ? (
                 <button onClick={() => setShowCorrection(v => !v)}
@@ -999,7 +1045,7 @@ export default function Exercise() {
               <span className="text-stone-500 text-xs ml-2">
                 {isStaticLang
                   ? `Référence ${langLabel}`
-                  : lang === 'powershell' ? 'Windows PowerShell' : lang === 'python' ? 'Python' : 'Bash (WSL)'}
+                  : lang === 'powershell' ? 'Windows PowerShell' : lang === 'python' ? 'Python' : 'Bash'}
               </span>
               {!isStaticLang && status === STATUS.running && <span className="ml-auto text-stone-500 text-xs animate-pulse">en cours…</span>}
               {isStaticLang && <span className="ml-auto text-xs opacity-40" style={{ color: langAccent }}>{langLabel}</span>}
@@ -1026,8 +1072,10 @@ export default function Exercise() {
               <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
             ) : (
               // termShellFor : bash/python/powershell gardent leur interpréteur ;
-              // C/C++/C#/Java passent par la session bash WSL (compilation + run).
-              <Terminal id={termId} shell={termShellFor(lang)} className="h-full" />
+              // C/C++/C#/Java passent par la session bash embarquée (compilation + run).
+              // terminalAuto → onOutput valide automatiquement sur la sortie réelle.
+              <Terminal id={termId} shell={termShellFor(lang)} className="h-full"
+                onOutput={terminalAuto ? handleTerminalOutput : undefined} />
             )}
           </div>
         </div>

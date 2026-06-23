@@ -12,7 +12,15 @@
 // ============================================================================
 
 import { useCallback } from 'react'
-import { isStatic, buildRunData } from './langs'
+import { isStatic, buildRunData, stripAnsi } from './langs'
+
+// Détection « terminal-auto » : la sortie réelle d'une commande (déjà isolée de
+// l'écho par Terminal.jsx) contient-elle le résultat attendu ? Comparaison
+// insensible à la casse, ANSI retiré par sécurité. Partagé par MissionPlay et
+// Exercise pour ne pas dupliquer la logique (cf. handleOutput de MissionLab).
+export function matchesExpected(outputBlock, expected) {
+  return stripAnsi(outputBlock ?? '').toLowerCase().includes((expected ?? '').toLowerCase())
+}
 import { validateDom } from './validators/dom'
 import { validateSql } from './validators/sql'
 import { validateRegex } from './validators/regex'

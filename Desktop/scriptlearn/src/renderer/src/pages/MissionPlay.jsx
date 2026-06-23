@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
@@ -9,8 +9,8 @@ import ToolchainBanner from '../components/ToolchainBanner'
 import { getCampaign } from '../content/missions'
 import { parseMarkdown } from '../utils/markdown'
 import { useProfile } from '../contexts/ProfileContext'
-import { useCodeRunner } from '../lib/useCodeRunner'
-import { getLangExtension, isStatic, termShellFor, LANG_LABELS, LANG_COLORS } from '../lib/langs'
+import { useCodeRunner, matchesExpected } from '../lib/useCodeRunner'
+import { getLangExtension, isStatic, isRepl, termShellFor, LANG_LABELS, LANG_COLORS } from '../lib/langs'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 // Libellés des paliers d'une Voie (parcours débutant → expert).
@@ -41,6 +41,9 @@ export default function MissionPlay() {
   const [completed, setCompleted] = useState({})
   // Acte « choix » (dénouement) : l'option retenue par le joueur.
   const [chosen, setChosen] = useState(null)
+  // Garde anti-double-validation en mode terminal-auto : les blocs de sortie
+  // arrivent en flux ; on ne valide qu'UNE fois (les setState sont asynchrones).
+  const succeededRef = useRef(false)
 
   const chapter = campaign?.chapters[chapterIdx] ?? null
   const lang = chapter?.lang ?? 'bash'
@@ -48,6 +51,11 @@ export default function MissionPlay() {
   const staticLang = isStatic(lang)
   // Acte « choix » : présente des options (Contenir/Libérer) au lieu d'un éditeur.
   const isChoice = Array.isArray(chapter?.options) && chapter.options.length > 0
+  // Mode « terminal-auto » : langage à REPL/shell (bash/powershell/python), acte
+  // non-projet et non-statique → l'élève tape DIRECTEMENT dans le terminal, qui
+  // valide tout seul dès que la sortie réelle contient le résultat attendu.
+  // Pas d'éditeur, pas de bouton. Les actes projet/statiques gardent l'éditeur.
+  const terminalAuto = !!chapter && !isChoice && !staticLang && !chapter.project && isRepl(lang)
   // termId unique par chapitre : change de chapitre = nouvelle session terminal
   // (sinon l'historique d'un acte polluerait le suivant).
   const termId = campaign ? `mission-${campaign.id}-${chapterIdx}` : 'mission-none'
@@ -75,6 +83,7 @@ export default function MissionPlay() {
     setShowReward(false)
     setShowHint(false)
     setChosen(null)
+    succeededRef.current = false   // réarmer la détection terminal-auto pour le nouvel acte
   }, [chapterIdx, campaign?.id])
 
   // Prépare les données de l'acte EN COULISSES dès l'ouverture (invocation WSL séparée,
@@ -127,6 +136,22 @@ export default function MissionPlay() {
     } else {
       setStatus(STATUS.error)
     }
+  }
+
+  // Mode terminal-auto : appelé pour chaque SORTIE de commande (écho déjà retiré par
+  // Terminal.jsx). Dès que la sortie réelle contient le résultat attendu, on déclenche
+  // EXACTEMENT le même flux de succès que « Valider » (récompense + progression).
+  const handleTerminalOutput = (block) => {
+    if (succeededRef.current) return
+    const correct = chapter.validationType === 'output_nonempty'
+      ? block.trim().length > 0
+      : matchesExpected(block, chapter.expectedOutput)
+    if (!correct) return
+    succeededRef.current = true
+    setStatus(STATUS.success)
+    setShowReward(true)
+    setCompleted(prev => ({ ...prev, [chapter.id]: true }))
+    if (profile) window.electronAPI.store.markExerciseDone(profile.id, `${campaign.id}:${chapter.id}`)
   }
 
   // Acte « choix » : le joueur tranche le dénouement. On révèle l'épilogue de
@@ -268,6 +293,23 @@ export default function MissionPlay() {
               </div>
               {chosen && <div className="text-stone-500 text-xs">Ton choix est scellé — l'épilogue s'écrit à gauche ◂</div>}
             </div>
+          ) : terminalAuto ? (
+            /* ── Mode terminal-auto : l'élève tape dans le terminal, validation auto ── */
+            <>
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: `${LANG_COLORS[lang] ?? accent}20`, color: LANG_COLORS[lang] ?? accent }}>
+                  {LANG_LABELS[lang] ?? lang}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded font-medium bg-[#1c1c1a]" style={{ color: accent }}>
+                  ⌨ Tape tes commandes — validation automatique
+                </span>
+              </div>
+              {/* key={termId} : nouvelle session à chaque acte. onOutput → détection live. */}
+              <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
+                <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" onOutput={handleTerminalOutput} />
+              </div>
+            </>
           ) : (
           <>
           {/* Barre d'actions */}

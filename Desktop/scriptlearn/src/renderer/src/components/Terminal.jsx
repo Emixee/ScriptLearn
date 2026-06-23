@@ -3,6 +3,7 @@ import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import '@xterm/xterm/css/xterm.css'
+import { PROMPT_MARKER, stripAnsi } from '../lib/langs'
 
 // Thème Terminal Ambre — cohérent avec la palette de l'UI.
 // Le curseur ambre est immédiatement identifiable comme l'accent de l'application.
@@ -30,11 +31,37 @@ const THEME = {
   brightWhite:     '#f5f0e8'   // crème le plus clair
 }
 
-export default function Terminal({ id, shell = 'powershell', className = '' }) {
+// Invite (après marqueur retiré) selon le shell — sert à isoler la SORTIE réelle
+// d'une commande de l'écho de la commande tapée (le PTY réaffiche ce que l'élève
+// saisit sur la ligne d'invite). Tout ce qui suit la dernière ligne d'invite d'un
+// bloc = la sortie produite par la commande.
+function promptRegexFor(shell) {
+  if (shell === 'python') return /^(>>> |\.\.\. )/
+  if (shell === 'powershell') return /^PS /
+  return /^\$ /                       // bash MSYS2
+}
+
+// Longueur du suffixe de `s` qui est un PRÉFIXE du marqueur — pour gérer le cas où
+// le marqueur est coupé entre deux chunks du PTY (on met ce morceau en attente).
+function partialMarkerSuffixLen(s) {
+  const max = Math.min(s.length, PROMPT_MARKER.length - 1)
+  for (let k = max; k > 0; k--) {
+    if (s.slice(s.length - k) === PROMPT_MARKER.slice(0, k)) return k
+  }
+  return 0
+}
+
+// onOutput(outputBlock) : appelé avec la SORTIE réelle de chaque commande exécutée
+// (écho de la commande retiré), pour la validation « terminal-auto » (cours/missions).
+export default function Terminal({ id, shell = 'powershell', className = '', onOutput }) {
   const containerRef = useRef(null)
   const xtermRef = useRef(null)
   const fitRef = useRef(null)
   const unsubRef = useRef(null)
+  // Ref vers le dernier onOutput : init ne s'exécute qu'une fois (garde xtermRef),
+  // mais le parent peut fournir un nouveau callback à chaque rendu.
+  const onOutputRef = useRef(onOutput)
+  onOutputRef.current = onOutput
 
   const init = useCallback(async () => {
     if (!containerRef.current || xtermRef.current) return
@@ -63,13 +90,53 @@ export default function Terminal({ id, shell = 'powershell', className = '' }) {
     // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
     await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows })
 
-    // Afficher la sortie BRUTE du PTY (prompt, écho, séquences de complétion/curseur).
-    // Surtout PAS de découpage par lignes : un PTY émet des fragments sans \n (le prompt,
-    // les redraws de readline lors d'un Tab) qu'xterm doit recevoir tels quels pour
-    // s'afficher correctement.
+    // ── Affichage + isolation de la sortie pour la validation terminal-auto ──────
+    // Le shell émet un MARQUEUR invisible (PROMPT_MARKER) avant chaque invite. On
+    // s'en sert pour : (a) le RETIRER de l'affichage (sinon des caractères de contrôle
+    // pollueraient l'écran) ; (b) découper le flux en blocs « invite + commande tapée
+    // + sortie ». À chaque marqueur, le bloc accumulé depuis le précédent est complet :
+    // on isole la sortie réelle (lignes APRÈS la dernière ligne d'invite → l'écho de la
+    // commande est exclu, ce qui règle le piège « echo "texte attendu" ») et on l'émet.
+    const PROMPT_RE = promptRegexFor(shell)
+    let carry = ''        // morceau de marqueur éventuellement coupé entre 2 chunks
+    let turnBuf = ''      // bloc courant (depuis le dernier marqueur), marqueur retiré
+
+    const emitTurn = (text) => {
+      const cb = onOutputRef.current
+      if (!cb) return
+      const lines = stripAnsi(text).split('\n')
+      let lastPrompt = -1
+      for (let i = 0; i < lines.length; i++) {
+        if (PROMPT_RE.test(lines[i])) lastPrompt = i
+      }
+      if (lastPrompt === -1) return           // bloc sans commande (bannière de démarrage)
+      const output = lines.slice(lastPrompt + 1).join('\n').trim()
+      if (output) cb(output)
+    }
+
     unsubRef.current = window.electronAPI.terminal.onData(({ id: sid, chunk }) => {
       if (sid !== id) return
-      term.write(chunk)
+      let data = carry + chunk
+      carry = ''
+      let out = ''
+      let mi
+      while ((mi = data.indexOf(PROMPT_MARKER)) !== -1) {
+        const before = data.slice(0, mi)
+        out += before
+        turnBuf += before
+        emitTurn(turnBuf)                     // bloc complet → on isole et on émet sa sortie
+        turnBuf = ''
+        data = data.slice(mi + PROMPT_MARKER.length)
+      }
+      // Garder en attente un marqueur potentiellement coupé en fin de chunk.
+      const p = partialMarkerSuffixLen(data)
+      if (p > 0) { carry = data.slice(data.length - p); data = data.slice(0, data.length - p) }
+      out += data
+      turnBuf += data
+      // Borne de sécurité : sans marqueur (ex. shell node), turnBuf ne se réinitialise
+      // jamais — on évite une croissance mémoire illimitée.
+      if (turnBuf.length > 16384) turnBuf = turnBuf.slice(-8192)
+      term.write(out)
     })
 
     // Envoyer l'input utilisateur (flèches, Ctrl+C, caractères) au PTY.
