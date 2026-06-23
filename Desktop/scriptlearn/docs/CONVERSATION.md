@@ -1,6 +1,16 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.18.4
+## Version actuelle : 0.19.0
+
+## v0.19.0 — Validation « terminal-auto » : on tape dans le terminal, ça se valide tout seul (2026-06-23)
+
+Refonte de la résolution des cours ET des missions pour les langages à shell/REPL. **Problème** : « Valider » n'évaluait QUE l'éditeur (`runValidation` exécutait le code de l'éditeur en coulisses) ; ce que l'élève tapait dans le terminal MSYS2 affiché n'était relié à rien → taper la bonne commande dans le terminal ne validait jamais (éditeur vide → échec).
+
+- **Le terminal devient la source de vérité** (mode « terminal-auto ») pour **bash, powershell, python** (langages à REPL/shell). L'élève tape directement dans le terminal embarqué ; l'acte/exercice se valide **automatiquement** dès que la **sortie réelle** d'une commande contient le résultat attendu. Plus d'éditeur, plus de bouton dans ce mode.
+- **Marqueur de prompt invisible** (`PROMPT_MARKER`, octet 0x1f) émis par chaque shell avant chaque invite — bash via `PROMPT_COMMAND` (le prompt MSYS2 est en PS1, jamais touché), python via `PYTHONSTARTUP`/`sys.ps1`, powershell via `function prompt`. `Terminal.jsx` le retire de l'affichage (invisible) et découpe le flux en blocs « commande → sortie ». **Règle le piège « echo »** : la sortie est isolée de l'écho de la commande tapée (ex. `echo "Bonjour Bash !"` ne valide plus par son propre écho ; `echo 4271 > /dev/null` → sortie vide → rejeté).
+- **Périmètre** : la bascule s'applique si `isRepl(lang) && !project && !static`. Les actes **projet** (script multi-lignes + args), les langages **compilés** (C/C++/C#/Java/Go/Rust/PHP) et **statiques** (SQL/Regex/KQL/SPL/YAML/HTML/Git) **gardent l'éditeur + bouton Valider** inchangés. **js/ts exclus** du périmètre REPL (le REPL Node n'a ni hook pré-exécution ni invite non ambiguë pour isoler proprement la sortie).
+- **Fichiers** : `lib/langs.js` (flag `repl`, `isRepl`, `PROMPT_MARKER`), `main/terminal.js` (marqueurs par shell dans `createSession` + `pyStartupFile`), `components/Terminal.jsx` (prop `onOutput` + isolation des blocs, gestion du marqueur coupé entre 2 chunks), `lib/useCodeRunner.js` (`matchesExpected`), `pages/MissionPlay.jsx` + `pages/Exercise.jsx` (disposition + détection live, réutilisant le motif de `MissionLab`). Libellés trompeurs « Bash (WSL) » corrigés en « Bash » (Exercise/Sandbox/Dashboard).
+- **Vérifié** : build OK ; marqueur émis correctement par le bash embarqué ; isolation de sortie testée 7/7 (pièges echo inclus) ; streaming avec marqueur coupé géré et jamais visible à l'écran. **À tester en GUI** : déclenchement réel des marqueurs dans le PTY interactif (bash/powershell/python).
 
 ## v0.18.4 — Habillage « jeu narratif » (vagues 2 & 3 : facultés + modernes) (2026-06-21)
 
