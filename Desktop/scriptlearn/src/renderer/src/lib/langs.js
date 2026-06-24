@@ -25,15 +25,17 @@ import { rust as rustMode } from '@codemirror/legacy-modes/mode/rust'
 // sortie d'une commande est complète (voir validate dans useCodeRunner/Exercise).
 export const SENTINEL_PREFIX = '__SL_DONE_'
 
-// Marqueur de PROMPT invisible émis par le shell avant chaque invite (mode
-// terminal-auto). On choisit \x1f (Unit Separator) — un caractère de contrôle
-// qui n'apparaît jamais dans une sortie normale — encadrant un libellé. Terminal.jsx
-// s'en sert pour découper le flux du PTY en blocs « commande → sortie » et le RETIRE
-// avant affichage (donc invisible à l'écran).
+// Marqueur de PROMPT émis par le shell avant chaque invite (mode terminal-auto).
+// Terminal.jsx s'en sert pour découper le flux du PTY en blocs « commande → sortie »
+// et le RETIRE du flux avant de l'afficher (donc invisible à l'écran).
+// IMPORTANT : le marqueur doit être ENTIÈREMENT IMPRIMABLE. ConPTY (le pseudo-terminal
+// de Windows utilisé par node-pty) FILTRE les caractères de contrôle C0 (ex. 0x1f) :
+// un marqueur à base de 0x1f n'arrive jamais intact côté renderer. On prend donc un
+// jeton ASCII imprimable, long et distinctif, qui n'apparaît pas dans une sortie réelle.
 // IMPORTANT : cette constante est DUPLIQUÉE dans src/main/terminal.js (le main ESM et
 // le renderer ne peuvent pas s'importer mutuellement) — toute modification doit être
 // répercutée aux deux endroits.
-export const PROMPT_MARKER = '\x1f__SLP__\x1f'
+export const PROMPT_MARKER = '__SLPROMPTMARK__'
 
 // Retire les séquences ANSI (couleurs xterm) et les \r pour comparer la sortie
 // réelle au résultat attendu sans être pollué par les codes d'échappement.

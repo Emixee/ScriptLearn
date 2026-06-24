@@ -1,6 +1,11 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.19.0
+## Version actuelle : 0.19.1
+
+## v0.19.1 — Correctif terminal-auto : marqueur de prompt imprimable (ConPTY) (2026-06-24)
+
+- **Bug** (v0.19.0) : le marqueur de prompt utilisait `0x1f` (caractère de contrôle). **ConPTY** (le pseudo-terminal de Windows employé par node-pty) **filtre les caractères de contrôle C0** → le marqueur n'arrivait jamais intact côté renderer. Résultat : la partie imprimable `__SLP__` **s'affichait** dans le terminal ET la validation automatique ne se déclenchait pas (le flux n'était jamais découpé en blocs).
+- **Correctif** : marqueur **entièrement imprimable** `__SLPROMPTMARK__` (constante `PROMPT_MARKER` dans `lib/langs.js` + dupliquée dans `main/terminal.js`), émis par bash (`PROMPT_COMMAND`), python (`sys.ps1`) et powershell (`function prompt`). `Terminal.jsx` le retire du flux avant affichage (invisible) et l'utilise comme délimiteur de blocs « commande → sortie ». Re-vérifié (logique d'isolation + streaming avec marqueur coupé) ; affichage propre, sortie correctement isolée.
 
 ## v0.19.0 — Validation « terminal-auto » : on tape dans le terminal, ça se valide tout seul (2026-06-23)
 

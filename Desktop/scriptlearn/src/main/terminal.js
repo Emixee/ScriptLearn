@@ -21,13 +21,13 @@ function checkToolAvailable() { return true }
 const sessions = new Map()
 const emitter = new EventEmitter()
 
-// Marqueur de PROMPT invisible, émis par le shell AVANT chaque invite (mode
-// terminal-auto). Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js
-// (main ESM et renderer ne peuvent pas s'importer mutuellement → constante dupliquée).
-// On émet 0x1f (Unit Separator) — un caractère de contrôle absent d'une sortie
-// normale — autour d'un libellé. Terminal.jsx s'en sert pour découper le flux du PTY
-// en blocs « commande → sortie » et le RETIRE avant affichage (donc invisible).
-const PROMPT_MARKER = '\x1f__SLP__\x1f'
+// Marqueur de PROMPT émis par le shell AVANT chaque invite (mode terminal-auto).
+// Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js (main ESM et
+// renderer ne peuvent pas s'importer mutuellement → constante dupliquée).
+// IMPORTANT : ENTIÈREMENT IMPRIMABLE — ConPTY (pseudo-terminal Windows de node-pty)
+// FILTRE les caractères de contrôle C0 (0x1f & co), donc un marqueur de contrôle
+// n'arrive pas intact côté renderer. Terminal.jsx le retire du flux avant affichage.
+const PROMPT_MARKER = '__SLPROMPTMARK__'
 
 // Crée une session terminal interactive dans un vrai PTY (node-pty).
 // cols/rows : taille initiale fournie par xterm (après fit) — le shell s'en sert
@@ -42,10 +42,10 @@ function createSession(id, shell, cols = 80, rows = 24) {
   // recours à WSL ni à un outil système (hors PowerShell, natif Windows).
   if (shell === 'powershell') {
     file = 'powershell.exe'
-    // On (re)définit la fonction `prompt` pour préfixer chaque invite du marqueur.
-    // -NoExit garde la session interactive après l'exécution du -Command.
-    // [char]0x1f = l'octet du marqueur ; on reconstruit une invite « PS <chemin>> ».
-    const psPrompt = 'function prompt { "$([char]0x1f)__SLP__$([char]0x1f)PS $((Get-Location).Path)> " }'
+    // On (re)définit la fonction `prompt` pour préfixer chaque invite du marqueur
+    // (imprimable, retiré côté renderer). -NoExit garde la session interactive
+    // après l'exécution du -Command. On reconstruit une invite « PS <chemin>> ».
+    const psPrompt = 'function prompt { "__SLPROMPTMARK__PS $((Get-Location).Path)> " }'
     args = ['-NoLogo', '-NoExit', '-Command', psPrompt]
   } else if (shell === 'python') {
     file = pyBin()
@@ -63,8 +63,8 @@ function createSession(id, shell, cols = 80, rows = 24) {
     // PROMPT_COMMAND est exécuté par bash AVANT chaque invite. Le prompt MSYS2 est
     // défini via PS1 (jamais via PROMPT_COMMAND, et aucun script d'init de /etc ne
     // le touche) → on peut l'injecter par l'env sans abîmer le joli prompt git.
-    // \037 = 0x1f en octal (printf bash l'interprète de façon portable).
-    extraEnv.PROMPT_COMMAND = "printf '\\037__SLP__\\037'"
+    // Marqueur imprimable (ConPTY filtrerait un caractère de contrôle).
+    extraEnv.PROMPT_COMMAND = "printf '__SLPROMPTMARK__'"
   }
 
   // PATH augmenté de TOUTES les toolchains embarquées → dans le terminal bash,
@@ -125,12 +125,10 @@ function embedRoot(name) {
 const nodeBin = () => join(embedRoot('node'), 'node.exe')
 const pyBin   = () => join(embedRoot('python'), 'python.exe')
 // Fichier de démarrage du REPL Python (PYTHONSTARTUP) : préfixe l'invite primaire
-// du marqueur de prompt invisible (voir PROMPT_MARKER) → il précède chaque « >>> ».
-// On écrit l'échappement `\x1f` en TEXTE dans le fichier ; c'est Python qui le
-// transforme en octet 0x1f, ce qui évite tout souci d'encodage à l'écriture.
+// du marqueur de prompt (imprimable, retiré côté renderer) → il précède chaque « >>> ».
 function pyStartupFile() {
   const f = join(tmpdir(), 'sl_py_startup.py')
-  writeFileSync(f, "import sys\nsys.ps1 = '\\x1f__SLP__\\x1f>>> '\nsys.ps2 = '... '\n", 'utf8')
+  writeFileSync(f, "import sys\nsys.ps1 = '__SLPROMPTMARK__>>> '\nsys.ps2 = '... '\n", 'utf8')
   return f
 }
 const phpBin  = () => join(embedRoot('php'), 'php.exe')
