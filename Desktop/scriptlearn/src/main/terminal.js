@@ -32,7 +32,19 @@ const PROMPT_MARKER = '__SLPROMPTMARK__'
 // Crée une session terminal interactive dans un vrai PTY (node-pty).
 // cols/rows : taille initiale fournie par xterm (après fit) — le shell s'en sert
 // pour le retour à la ligne et l'alignement de la complétion.
-function createSession(id, shell, cols = 80, rows = 24) {
+function createSession(id, shell, cols = 80, rows = 24, setup) {
+  // Préparation des données de l'acte (mkdir/printf…) EXÉCUTÉE ICI, de façon
+  // synchrone AVANT de lancer le shell interactif. POURQUOI ici et pas en
+  // « fire-and-forget » côté renderer : ainsi les fichiers sont garantis présents
+  // dans le MÊME /tmp (%TEMP%) et AVANT toute frappe de l'élève, à chaque création
+  // de session (chaque acte, reprise, recréation) — le mode terminal-auto n'a plus
+  // de bouton Valider pour relancer le setup, il ne faut donc aucune course. Le
+  // setup est toujours du bash (mkdir/printf), quel que soit le shell de la session.
+  if (setup) {
+    try {
+      execFileSync(bashBin(), [], { input: setup, timeout: 15000, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] })
+    } catch { /* setup best-effort : on n'empêche pas l'ouverture du terminal */ }
+  }
   let file, args
   // Variables d'env additionnelles (selon le shell) pour faire émettre le marqueur
   // de prompt. Le marqueur est TOUJOURS émis (et toujours retiré côté renderer) :
@@ -388,9 +400,9 @@ export function setupTerminalIPC(mainWindow) {
     }
   })
 
-  ipcMain.handle('terminal:create', (_, { id, shell, cols, rows }) => {
+  ipcMain.handle('terminal:create', (_, { id, shell, cols, rows, setup }) => {
     if (sessions.has(id)) return { ok: true }
-    createSession(id, shell, cols, rows)
+    createSession(id, shell, cols, rows, setup)
     return { ok: true }
   })
 

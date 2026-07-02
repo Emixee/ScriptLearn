@@ -86,14 +86,13 @@ export default function MissionPlay() {
     succeededRef.current = false   // réarmer la détection terminal-auto pour le nouvel acte
   }, [chapterIdx, campaign?.id])
 
-  // Prépare les données de l'acte EN COULISSES dès l'ouverture (invocation WSL séparée,
-  // NON affichée). Les fichiers atterrissent dans /tmp (partagé avec la session du
-  // terminal) sans que la commande de préparation n'apparaisse jamais à l'écran —
-  // sinon elle dévoilerait les données que l'élève doit découvrir avec ls/cat/grep.
-  useEffect(() => {
-    if (!chapter || staticLang || !chapter.setup) return
-    window.electronAPI.terminal.runSetup(chapter.setup)
-  }, [chapter?.id, staticLang])
+  // NB : la préparation des données de l'acte (chapter.setup) est désormais exécutée
+  // par la session terminale elle-même, à sa création (voir la prop `setup` passée au
+  // <Terminal> et createSession dans src/main/terminal.js). Cela garantit que les
+  // fichiers de /tmp sont prêts AVANT toute frappe, à chaque acte/reprise — sans quoi,
+  // en mode terminal-auto (sans bouton Valider pour relancer le setup), une course
+  // laissait le fichier vide (ex. grep renvoyait 0 au lieu du compte attendu).
+  // handleRun/handleValidate (mode éditeur) relancent quand même runSetup par sécurité.
 
   if (!campaign) {
     return (
@@ -305,9 +304,10 @@ export default function MissionPlay() {
                   ⌨ Tape tes commandes — validation automatique
                 </span>
               </div>
-              {/* key={termId} : nouvelle session à chaque acte. onOutput → détection live. */}
+              {/* key={termId} : nouvelle session à chaque acte. onOutput → détection live.
+                  setup → données de l'acte préparées à la création de session (avant frappe). */}
               <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
-                <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" onOutput={handleTerminalOutput} />
+                <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} />
               </div>
             </>
           ) : (
@@ -378,7 +378,8 @@ export default function MissionPlay() {
               </div>
             ) : (
               // key={termId} force une session neuve à chaque acte exécuté.
-              <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" />
+              // setup : données de l'acte préparées à la création de session (exploration libre).
+              <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" setup={chapter.setup} />
             )}
           </div>
           </>

@@ -53,7 +53,10 @@ function partialMarkerSuffixLen(s) {
 
 // onOutput(outputBlock) : appelé avec la SORTIE réelle de chaque commande exécutée
 // (écho de la commande retiré), pour la validation « terminal-auto » (cours/missions).
-export default function Terminal({ id, shell = 'powershell', className = '', onOutput }) {
+// setup : commandes bash (mkdir/printf…) exécutées EN COULISSES à la création de la
+// session, AVANT le shell interactif — garantit que les fichiers de l'acte sont prêts
+// dans /tmp avant toute frappe (voir createSession dans src/main/terminal.js).
+export default function Terminal({ id, shell = 'powershell', className = '', onOutput, setup }) {
   const containerRef = useRef(null)
   const xtermRef = useRef(null)
   const fitRef = useRef(null)
@@ -88,7 +91,7 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
 
     // Créer la session côté main process avec la taille initiale (cols/rows) —
     // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
-    await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows })
+    await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
 
     // ── Affichage + isolation de la sortie pour la validation terminal-auto ──────
     // Le shell émet un MARQUEUR invisible (PROMPT_MARKER) avant chaque invite. On
@@ -167,7 +170,7 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
     term.writeln(`\x1b[36m# Terminal ${label} — ScriptLearn\x1b[0m`)
     term.writeln('')
 
-  }, [id, shell])
+  }, [id, shell, setup])
 
   useEffect(() => {
     init()

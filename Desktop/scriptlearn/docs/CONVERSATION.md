@@ -1,6 +1,14 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.19.1
+## Version actuelle : 0.19.2
+
+## v0.19.2 — Correctif terminal-auto : préparation (setup) garantie à la création de session (2026-06-24)
+
+- **Bug** : en mode terminal-auto (missions), un acte à données préparées (`setup`) pouvait rester non-validable car son fichier de `/tmp` était **vide**. Ex. Voie du Bash acte 5 : `grep "VERROUILLEE" /tmp/sl_bash/d5/portes.txt | wc -l` renvoyait `0` au lieu de `3`.
+- **Cause** : le mode éditeur relançait (et attendait) `runSetup` **avant chaque validation** → fichier toujours frais. Le mode terminal-auto (sans bouton) ne déclenchait le `setup` **qu'une fois**, en fire-and-forget, dans un **processus bash séparé** de la session interactive → aucune garantie d'ordre/fraîcheur (course avec la création de session, reprise directe sur l'acte, fichier vide résiduel) et **aucun filet** pour rattraper. (Le mécanisme `runSetup` lui-même et le partage de `/tmp` via le mount `usertemp`→`%TEMP%` ont été vérifiés corrects.)
+- **Correctif** : le `setup` est désormais exécuté **par la session terminale elle-même, à sa création** (`createSession` dans `src/main/terminal.js`), de façon **synchrone avant le lancement du shell** — donc dans le même `/tmp`, avant toute frappe, à chaque acte/reprise/recréation. `Terminal.jsx` reçoit une prop `setup` transmise au handler `terminal:create` ; `MissionPlay.jsx` la passe (`chapter.setup`) et l'ancien effet fire-and-forget est retiré. Portée missions uniquement (les cours n'utilisent pas `setup`).
+
+## v0.19.1 — Correctif terminal-auto : marqueur de prompt imprimable (ConPTY) (2026-06-24)
 
 ## v0.19.1 — Correctif terminal-auto : marqueur de prompt imprimable (ConPTY) (2026-06-24)
 
