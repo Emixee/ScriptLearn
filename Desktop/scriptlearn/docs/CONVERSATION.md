@@ -1,6 +1,18 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.19.2
+## Version actuelle : 0.20.0
+
+## v0.20.0 — Actes de scripting Expert composés dans un vrai fichier (nano) (2026-07-03)
+
+Les actes de **tier Expert** des Voies **Bash / Python / PowerShell** (fonctions, classes, boucles/conditions en blocs, scripts complets) ne se tapent plus en **one-liner au terminal** : l'élève **compose un vrai fichier script dans `nano`** (éditeur embarqué, `resources/git/usr/bin/nano.exe`), le sauvegarde et le lance. Vraie composition de fichier + apprentissage de nano.
+
+- **Session bash forcée** pour ces actes (nano + interpréteurs y sont dispo) quel que soit le langage ; l'élève fait `nano solution.sh|py|ps1` → écrit → `Ctrl+O`/`Entrée` → `Ctrl+X` → lance (`bash`/`python`/`powershell -File`). Détection **inchangée** : validation sur la **sortie réelle du script lancé**.
+- **Repérage** : `isNanoAct(lang, chapter) = isRepl(lang) && tier==='expert'` (helpers `scriptFileFor`/`scriptRunCmd` dans `lib/langs.js`). Les actes Avancé (pipelines one-liner) restent en terminal direct.
+- **Garde-fou « éditeur »** (`Terminal.jsx`) : les tours dont la commande est un éditeur/pager (`nano|vim|vi|less|man`…) sont **ignorés pour la détection** — l'écran de nano (qui affiche le code, ex. `echo "TROUVE"`) ne peut pas déclencher une fausse validation ; seule la sortie de `bash solution.sh` compte. Commande capturée tôt (robuste à la troncature des redraws de nano).
+- **Contenu** : histoire + consignes des **20 actes Expert** adaptées au procédé « composer un fichier ». **`powershell/p3` réécrit en ASCII** (« reconstruit ») car PowerShell 5.1 lit un `.ps1` **sans BOM** en codepage ANSI → un accent en sortie serait mojibaké et bloquerait la validation. bash/python p3 restent accentués (UTF-8 OK, testé).
+- **Sûreté** : aucune opération destructive/privilège nouveaux ; au plus 3 fichiers `solution.*` (noms fixes, écrasés) dans le home. **Vérifié end-to-end : 20/20** actes lancés produisent la sortie attendue ; garde-fou éditeur testé. **Reste à valider en GUI** : rendu de nano dans xterm (stack node-pty + xterm 6, identique au terminal de VS Code).
+
+## v0.19.2 — Correctif terminal-auto : préparation (setup) garantie à la création de session (2026-06-24)
 
 ## v0.19.2 — Correctif terminal-auto : préparation (setup) garantie à la création de session (2026-06-24)
 
