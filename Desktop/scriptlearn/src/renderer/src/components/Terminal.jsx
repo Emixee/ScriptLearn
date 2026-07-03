@@ -41,6 +41,13 @@ function promptRegexFor(shell) {
   return /^\$ /                       // bash MSYS2
 }
 
+// Commandes qui prennent le contrôle plein écran du terminal (éditeurs/pagers) :
+// leur « sortie » = l'écran redessiné (contenant le fichier édité), qui peut inclure
+// le résultat attendu (ex. `echo "TROUVE"` visible dans nano). On IGNORE ces tours
+// pour la détection, sinon on validerait sur l'écran de l'éditeur, pas sur le script
+// réellement lancé. Le tour `bash solution.sh` (non-éditeur) reste évalué normalement.
+const EDITOR_CMD_RE = /^(nano|vim|vi|nvim|emacs|less|more|man)\b/
+
 // Longueur du suffixe de `s` qui est un PRÉFIXE du marqueur — pour gérer le cas où
 // le marqueur est coupé entre deux chunks du PTY (on met ce morceau en attente).
 function partialMarkerSuffixLen(s) {
@@ -103,10 +110,24 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
     const PROMPT_RE = promptRegexFor(shell)
     let carry = ''        // morceau de marqueur éventuellement coupé entre 2 chunks
     let turnBuf = ''      // bloc courant (depuis le dernier marqueur), marqueur retiré
+    let turnCmd = null    // commande du tour, capturée TÔT (avant que nano ne noie le buffer)
+
+    // Extrait la commande tapée d'un buffer : 1re ligne d'invite SUIVIE d'une autre
+    // ligne (donc « Entrée » a été pressée). Capturée dès qu'elle est disponible pour
+    // rester fiable même si turnBuf est ensuite tronqué par les redraws de nano.
+    const extractCmd = (buf) => {
+      const lines = stripAnsi(buf).split('\n')
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (PROMPT_RE.test(lines[i])) return lines[i].replace(PROMPT_RE, '').trim()
+      }
+      return null
+    }
 
     const emitTurn = (text) => {
       const cb = onOutputRef.current
       if (!cb) return
+      // Ignorer les tours « éditeur/pager » (nano…) : on ne valide pas sur leur écran.
+      if (turnCmd && EDITOR_CMD_RE.test(turnCmd)) return
       const lines = stripAnsi(text).split('\n')
       let lastPrompt = -1
       for (let i = 0; i < lines.length; i++) {
@@ -127,8 +148,10 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
         const before = data.slice(0, mi)
         out += before
         turnBuf += before
+        if (turnCmd === null) turnCmd = extractCmd(turnBuf)
         emitTurn(turnBuf)                     // bloc complet → on isole et on émet sa sortie
         turnBuf = ''
+        turnCmd = null                        // réarmer pour le tour suivant
         data = data.slice(mi + PROMPT_MARKER.length)
       }
       // Garder en attente un marqueur potentiellement coupé en fin de chunk.
@@ -136,8 +159,10 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
       if (p > 0) { carry = data.slice(data.length - p); data = data.slice(0, data.length - p) }
       out += data
       turnBuf += data
-      // Borne de sécurité : sans marqueur (ex. shell node), turnBuf ne se réinitialise
-      // jamais — on évite une croissance mémoire illimitée.
+      // Capturer la commande du tour DÈS qu'elle est disponible (avant troncature).
+      if (turnCmd === null) turnCmd = extractCmd(turnBuf)
+      // Borne de sécurité : sans marqueur (ex. shell node) ou pendant une longue session
+      // nano, turnBuf ne se réinitialise pas — on évite une croissance mémoire illimitée.
       if (turnBuf.length > 16384) turnBuf = turnBuf.slice(-8192)
       term.write(out)
     })

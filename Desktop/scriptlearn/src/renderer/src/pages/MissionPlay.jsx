@@ -10,7 +10,7 @@ import { getCampaign } from '../content/missions'
 import { parseMarkdown } from '../utils/markdown'
 import { useProfile } from '../contexts/ProfileContext'
 import { useCodeRunner, matchesExpected } from '../lib/useCodeRunner'
-import { getLangExtension, isStatic, isRepl, termShellFor, LANG_LABELS, LANG_COLORS } from '../lib/langs'
+import { getLangExtension, isStatic, isRepl, isNanoAct, scriptFileFor, scriptRunCmd, termShellFor, LANG_LABELS, LANG_COLORS } from '../lib/langs'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 // Libellés des paliers d'une Voie (parcours débutant → expert).
@@ -51,11 +51,15 @@ export default function MissionPlay() {
   const staticLang = isStatic(lang)
   // Acte « choix » : présente des options (Contenir/Libérer) au lieu d'un éditeur.
   const isChoice = Array.isArray(chapter?.options) && chapter.options.length > 0
-  // Mode « terminal-auto » : langage à REPL/shell (bash/powershell/python), acte
-  // non-projet et non-statique → l'élève tape DIRECTEMENT dans le terminal, qui
-  // valide tout seul dès que la sortie réelle contient le résultat attendu.
-  // Pas d'éditeur, pas de bouton. Les actes projet/statiques gardent l'éditeur.
-  const terminalAuto = !!chapter && !isChoice && !staticLang && !chapter.project && isRepl(lang)
+  // Mode « nano » : actes de scripting (palier Expert des Voies REPL) → l'élève
+  // COMPOSE un vrai fichier script dans nano, le sauvegarde et le lance. La session
+  // est un bash (nano + interpréteurs disponibles), quel que soit le langage.
+  const nanoAct = !isChoice && isNanoAct(lang, chapter)
+  const scriptFile = nanoAct ? scriptFileFor(lang) : null
+  const runCmd = nanoAct ? scriptRunCmd(lang, scriptFile, chapter.args) : null
+  // Mode « terminal-auto » (one-liners) : REPL, non-projet, non-statique, hors nano
+  // → l'élève tape directement dans le terminal, validé sur la sortie réelle.
+  const terminalAuto = !!chapter && !isChoice && !nanoAct && !staticLang && !chapter.project && isRepl(lang)
   // termId unique par chapitre : change de chapitre = nouvelle session terminal
   // (sinon l'historique d'un acte polluerait le suivant).
   const termId = campaign ? `mission-${campaign.id}-${chapterIdx}` : 'mission-none'
@@ -292,6 +296,33 @@ export default function MissionPlay() {
               </div>
               {chosen && <div className="text-stone-500 text-xs">Ton choix est scellé — l'épilogue s'écrit à gauche ◂</div>}
             </div>
+          ) : nanoAct ? (
+            /* ── Mode nano : composer un vrai fichier script, le sauver, le lancer ── */
+            <>
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#111110] border-b border-[#2e2b26] flex-shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: `${LANG_COLORS[lang] ?? accent}20`, color: LANG_COLORS[lang] ?? accent }}>
+                  {LANG_LABELS[lang] ?? lang}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded font-medium bg-[#1c1c1a]" style={{ color: accent }}>
+                  🖋 Compose ton script dans nano
+                </span>
+              </div>
+              {/* Marche à suivre — l'élève écrit un VRAI fichier puis le lance. */}
+              <div className="px-4 py-2.5 bg-[#0d0d0c] border-b border-[#2e2b26] flex-shrink-0 text-xs text-stone-400 leading-relaxed">
+                <span className="text-stone-500">1.</span> Ouvre l'éditeur : <code className="text-stone-200 bg-[#1c1c1a] px-1 rounded">nano {scriptFile}</code>
+                <span className="mx-1 text-stone-600">·</span>
+                <span className="text-stone-500">2.</span> écris ton script
+                <span className="mx-1 text-stone-600">·</span>
+                <span className="text-stone-500">3.</span> sauvegarde <code className="text-stone-200 bg-[#1c1c1a] px-1 rounded">Ctrl+O</code> <code className="text-stone-200 bg-[#1c1c1a] px-1 rounded">Entrée</code>, quitte <code className="text-stone-200 bg-[#1c1c1a] px-1 rounded">Ctrl+X</code>
+                <span className="mx-1 text-stone-600">·</span>
+                <span className="text-stone-500">4.</span> lance-le : <code className="px-1 rounded font-medium" style={{ color: accent, backgroundColor: `${accent}18` }}>{runCmd}</code>
+              </div>
+              {/* key={termId} : session bash neuve à chaque acte. onOutput → détection sur la sortie du script lancé. */}
+              <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
+                <Terminal key={termId} id={termId} shell="bash" className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} />
+              </div>
+            </>
           ) : terminalAuto ? (
             /* ── Mode terminal-auto : l'élève tape dans le terminal, validation auto ── */
             <>

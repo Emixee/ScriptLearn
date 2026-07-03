@@ -170,3 +170,36 @@ export function sentinelCommand(lang, sentinel) {
 // (resources/). Plus aucune installation externe requise → table vide, la
 // bannière « toolchain manquante » (ToolchainBanner) ne s'affiche jamais.
 export const TOOLCHAINS = {}
+
+// ── Mode « nano » : composer un vrai fichier script puis le lancer ────────────
+// Les actes Expert (fonctions, classes, boucles/conditions, scripts complets) ne
+// se tapent pas naturellement en one-liner. On les fait écrire dans nano (éditeur
+// du terminal), sauvegarder, puis lancer avec l'interpréteur. Ces actes tournent
+// dans une SESSION BASH (nano + interpréteurs y sont disponibles), quel que soit
+// le langage enseigné.
+
+// Nom du fichier script à composer, selon le langage.
+export function scriptFileFor(lang) {
+  if (lang === 'python') return 'solution.py'
+  if (lang === 'powershell') return 'solution.ps1'
+  return 'solution.sh' // bash (défaut)
+}
+
+// Commande de lancement du script (tapée dans le bash), + arguments éventuels
+// (actes « projet » qui reçoivent un argument, ex. `python solution.py III`).
+// PowerShell : `-File` est requis — `powershell solution.ps1` (nom nu) n'est PAS
+// reconnu par PowerShell ; `-File` lance le script local et transmet ses arguments
+// au `param(...)`.
+export function scriptRunCmd(lang, file, args) {
+  const a = (args && args.length) ? ' ' + args.join(' ') : ''
+  if (lang === 'python') return `python ${file}${a}`
+  if (lang === 'powershell') return `powershell -File ${file}${a}`
+  return `bash ${file}${a}`
+}
+
+// Un acte se résout-il en composant un fichier script dans nano ? Vrai pour les
+// langages à REPL/shell (bash/python/powershell) au palier Expert. Les actes
+// Avancé (pipelines one-liner) et les autres paliers restent en terminal direct.
+export function isNanoAct(lang, chapter) {
+  return isRepl(lang) && chapter?.tier === 'expert' && chapter?.nano !== false
+}
