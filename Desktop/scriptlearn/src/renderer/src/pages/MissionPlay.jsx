@@ -44,6 +44,9 @@ export default function MissionPlay() {
   // Retour d'échec léger (mode nano/terminal) : une vraie tentative dont la sortie ne
   // correspond pas → bandeau discret « vérifie l'orthographe/les espaces/la casse ».
   const [nearMiss, setNearMiss] = useState(false)
+  // Index le plus avancé DÉBLOQUÉ (la « frontière ») : permet de revenir sur un acte
+  // déjà atteint, sans jamais sauter en avant vers un acte encore verrouillé.
+  const [maxReached, setMaxReached] = useState(0)
   // Garde anti-double-validation en mode terminal-auto : les blocs de sortie
   // arrivent en flux ; on ne valide qu'UNE fois (les setState sont asynchrones).
   const succeededRef = useRef(false)
@@ -80,6 +83,8 @@ export default function MissionPlay() {
       setCompleted(map)
       const firstIncomplete = campaign.chapters.findIndex(ch => !map[ch.id])
       setChapterIdx(firstIncomplete === -1 ? 0 : firstIncomplete)
+      // Frontière = dernier acte débloqué (tous faits → dernier ; sinon le 1er non résolu).
+      setMaxReached(firstIncomplete === -1 ? campaign.chapters.length - 1 : firstIncomplete)
     })
   }, [profile?.id, campaign?.id])
 
@@ -92,6 +97,8 @@ export default function MissionPlay() {
     setChosen(null)
     setNearMiss(false)
     succeededRef.current = false   // réarmer la détection terminal-auto pour le nouvel acte
+    // Toute avancée fait grandir la frontière ; un retour en arrière la laisse intacte.
+    setMaxReached(m => Math.max(m, chapterIdx))
   }, [chapterIdx, campaign?.id])
 
   // NB : la préparation des données de l'acte (chapter.setup) est désormais exécutée
@@ -188,6 +195,13 @@ export default function MissionPlay() {
     setChapterIdx(i => i + 1)
   }
 
+  // Navigation manuelle entre actes DÉJÀ ATTEINTS (i <= maxReached) — pas de saut en avant.
+  const goToAct = (i) => {
+    if (i >= 0 && i <= maxReached && i < campaign.chapters.length) setChapterIdx(i)
+  }
+  const goPrev = () => goToAct(chapterIdx - 1)
+  const goNext = () => goToAct(chapterIdx + 1)
+
   return (
     <div className="flex flex-col h-screen bg-[#0a0a09]">
       {/* ── Barre du haut (draggable) ──────────────────────────────────── */}
@@ -200,26 +214,38 @@ export default function MissionPlay() {
           <h1 className="text-white font-medium text-sm truncate">{campaign.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
-          {/* Fil des actes : ✓ réussi · ▸ courant · · à venir.
+          {/* Fil des actes : ✓ réussi · ▸ courant · · à venir. Les actes DÉJÀ ATTEINTS
+              (i <= maxReached) sont cliquables pour y revenir ; les futurs sont verrouillés.
               Un fin séparateur « | » matérialise chaque changement de palier. */}
           <div className="flex items-center gap-1">
             {campaign.chapters.map((ch, i) => {
               const tierBreak = i > 0 && ch.tier && campaign.chapters[i - 1].tier && ch.tier !== campaign.chapters[i - 1].tier
+              const reachable = i <= maxReached
               return (
                 <span key={ch.id} className="flex items-center gap-1">
                   {tierBreak && <span className="text-[#2e2b26] text-xs">|</span>}
-                  <span className="text-xs" title={`${ch.title}${ch.tier ? ' · ' + (TIER_LABELS[ch.tier] ?? ch.tier) : ''}`}
+                  <button onClick={() => goToAct(i)} disabled={!reachable}
+                    className={`text-xs leading-none ${reachable ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                    title={`${ch.title}${ch.tier ? ' · ' + (TIER_LABELS[ch.tier] ?? ch.tier) : ''}${reachable && i !== chapterIdx ? ' — cliquer pour y revenir' : ''}`}
                     style={{ color: completed[ch.id] ? '#86efac' : i === chapterIdx ? accent : '#3d3a34' }}>
                     {completed[ch.id] ? '✓' : i === chapterIdx ? '▸' : '·'}
-                  </span>
+                  </button>
                 </span>
               )
             })}
           </div>
-          <span className="text-stone-500 text-xs">
-            Acte {chapterIdx + 1} / {campaign.chapters.length}
-            {chapter.tier && <span style={{ color: accent }}> · {TIER_LABELS[chapter.tier] ?? chapter.tier}</span>}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button onClick={goPrev} disabled={chapterIdx === 0}
+              className="text-stone-500 enabled:hover:text-white disabled:opacity-30 disabled:cursor-default text-sm leading-none px-1"
+              title="Acte précédent">◀</button>
+            <span className="text-stone-500 text-xs whitespace-nowrap">
+              Acte {chapterIdx + 1} / {campaign.chapters.length}
+              {chapter.tier && <span style={{ color: accent }}> · {TIER_LABELS[chapter.tier] ?? chapter.tier}</span>}
+            </span>
+            <button onClick={goNext} disabled={chapterIdx >= maxReached}
+              className="text-stone-500 enabled:hover:text-white disabled:opacity-30 disabled:cursor-default text-sm leading-none px-1"
+              title="Acte suivant (déjà atteint)">▶</button>
+          </div>
           <WindowControls />
         </div>
       </div>

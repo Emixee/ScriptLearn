@@ -1,6 +1,14 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.20.1
+## Version actuelle : 0.21.0
+
+## v0.21.0 — Navigation vers les actes précédents (missions) (2026-07-03)
+
+- La progression d'une mission était **à sens unique** (aucun moyen de revenir sur un acte fait). On peut désormais **revenir en arrière** — via **boutons ◀/▶** encadrant « Acte X / N » **ET** la **frise d'actes cliquable** (cliquer un point ✓/▸ pour y sauter). Limité aux **actes déjà atteints** : impossible de sauter en avant vers un acte encore verrouillé (▶ désactivé à la frontière, points futurs non cliquables).
+- **`MissionPlay.jsx` uniquement** : nouvel état `maxReached` (la « frontière » débloquée, mise à jour à la reprise et à chaque avancée), handlers `goToAct`/`goPrev`/`goNext` (bornés par `maxReached`), frise en boutons + boutons ◀/▶. La logique de validation et le contenu sont inchangés ; revenir sur un acte le rouvre « frais » (session terminale neuve, `setup` rejoué), la progression est préservée.
+- **Inclut aussi la v0.20.1** (jamais publiée en installateur séparé) : retour d'échec léger (nudge) en mode nano/terminal.
+
+## v0.20.1 — Retour d'échec léger en mode nano/terminal (nudge) (2026-07-03)
 
 ## v0.20.1 — Retour d'échec léger en mode nano/terminal (nudge) (2026-07-03)
 
