@@ -1,6 +1,13 @@
 # ScriptLearn — Journal de développement
 
-## Version actuelle : 0.20.0
+## Version actuelle : 0.20.1
+
+## v0.20.1 — Retour d'échec léger en mode nano/terminal (nudge) (2026-07-03)
+
+- **Problème** : en mode nano/terminal-auto, aucun retour n'indiquait pourquoi un acte ne se validait pas (contrairement au mode éditeur « Résultat attendu : … »). Constaté sur la Voie Bash acte 23 (`p2`) : sortie `Secteurs corrompu : 2` au lieu de `Secteurs corrompus : 2` (un `s` manquant, sournois car le marqueur des fichiers est `CORROMPU`) → l'élève restait bloqué sans comprendre.
+- **Correctif** : un **bandeau discret** (ambre) apparaît au-dessus du terminal quand une **vraie tentative** ne correspond pas : « Pas tout à fait — vérifie l'orthographe, les espaces et la casse ». **Sans révéler la sortie attendue** (choix produit). `Terminal.jsx` transmet la commande du tour à `onOutput(output, cmd)` ; `MissionPlay.jsx` n'affiche le nudge que pour une tentative réelle — acte nano : le **lancement du script** (`bash`/`python`/`powershell`), pas l'exploration (`ls`, `cat`) ; acte terminal-auto : toute commande. Réinitialisé à la réussite et au changement d'acte. **La logique de validation est inchangée.**
+
+## v0.20.0 — Actes de scripting Expert composés dans un vrai fichier (nano) (2026-07-03)
 
 ## v0.20.0 — Actes de scripting Expert composés dans un vrai fichier (nano) (2026-07-03)
 

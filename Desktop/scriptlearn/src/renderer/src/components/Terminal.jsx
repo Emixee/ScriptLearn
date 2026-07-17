@@ -135,7 +135,9 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
       }
       if (lastPrompt === -1) return           // bloc sans commande (bannière de démarrage)
       const output = lines.slice(lastPrompt + 1).join('\n').trim()
-      if (output) cb(output)
+      // On transmet aussi la commande du tour : le parent peut ainsi distinguer un
+      // VRAI lancement de script (bash/python/powershell…) d'une commande d'exploration.
+      if (output) cb(output, turnCmd)
     }
 
     unsubRef.current = window.electronAPI.terminal.onData(({ id: sid, chunk }) => {

@@ -41,6 +41,9 @@ export default function MissionPlay() {
   const [completed, setCompleted] = useState({})
   // Acte « choix » (dénouement) : l'option retenue par le joueur.
   const [chosen, setChosen] = useState(null)
+  // Retour d'échec léger (mode nano/terminal) : une vraie tentative dont la sortie ne
+  // correspond pas → bandeau discret « vérifie l'orthographe/les espaces/la casse ».
+  const [nearMiss, setNearMiss] = useState(false)
   // Garde anti-double-validation en mode terminal-auto : les blocs de sortie
   // arrivent en flux ; on ne valide qu'UNE fois (les setState sont asynchrones).
   const succeededRef = useRef(false)
@@ -87,6 +90,7 @@ export default function MissionPlay() {
     setShowReward(false)
     setShowHint(false)
     setChosen(null)
+    setNearMiss(false)
     succeededRef.current = false   // réarmer la détection terminal-auto pour le nouvel acte
   }, [chapterIdx, campaign?.id])
 
@@ -141,20 +145,32 @@ export default function MissionPlay() {
     }
   }
 
-  // Mode terminal-auto : appelé pour chaque SORTIE de commande (écho déjà retiré par
-  // Terminal.jsx). Dès que la sortie réelle contient le résultat attendu, on déclenche
-  // EXACTEMENT le même flux de succès que « Valider » (récompense + progression).
-  const handleTerminalOutput = (block) => {
+  // Mode terminal-auto / nano : appelé pour chaque SORTIE de commande (écho déjà retiré
+  // par Terminal.jsx), avec la commande du tour. Dès que la sortie réelle contient le
+  // résultat attendu → flux de succès. Sinon, sur une VRAIE tentative, on affiche un
+  // nudge discret (sans révéler la sortie attendue).
+  const handleTerminalOutput = (block, cmd) => {
     if (succeededRef.current) return
     const correct = chapter.validationType === 'output_nonempty'
       ? block.trim().length > 0
       : matchesExpected(block, chapter.expectedOutput)
-    if (!correct) return
-    succeededRef.current = true
-    setStatus(STATUS.success)
-    setShowReward(true)
-    setCompleted(prev => ({ ...prev, [chapter.id]: true }))
-    if (profile) window.electronAPI.store.markExerciseDone(profile.id, `${campaign.id}:${chapter.id}`)
+    if (correct) {
+      succeededRef.current = true
+      setNearMiss(false)
+      setStatus(STATUS.success)
+      setShowReward(true)
+      setCompleted(prev => ({ ...prev, [chapter.id]: true }))
+      if (profile) window.electronAPI.store.markExerciseDone(profile.id, `${campaign.id}:${chapter.id}`)
+      return
+    }
+    // Échec : n'afficher le nudge que si c'est une tentative de résolution.
+    // - Acte nano : seul le LANCEMENT du script compte (bash/python/powershell…),
+    //   pas l'exploration (`ls`, `cat solution.sh`).
+    // - Acte terminal-auto (one-liner) : toute commande est une tentative.
+    const c = (cmd ?? '').trim()
+    const runner = lang === 'python' ? 'python' : lang === 'powershell' ? 'powershell' : 'bash'
+    const isAttempt = nanoAct ? c.startsWith(runner) : true
+    if (isAttempt) setNearMiss(true)
   }
 
   // Acte « choix » : le joueur tranche le dénouement. On révèle l'épilogue de
@@ -318,6 +334,12 @@ export default function MissionPlay() {
                 <span className="mx-1 text-stone-600">·</span>
                 <span className="text-stone-500">4.</span> lance-le : <code className="px-1 rounded font-medium" style={{ color: accent, backgroundColor: `${accent}18` }}>{runCmd}</code>
               </div>
+              {/* Nudge discret : le script lancé n'a pas produit la sortie attendue. */}
+              {nearMiss && (
+                <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/25 text-amber-300/90 text-xs flex-shrink-0">
+                  Pas tout à fait — vérifie l'orthographe, les espaces et la casse, puis relance ton script.
+                </div>
+              )}
               {/* key={termId} : session bash neuve à chaque acte. onOutput → détection sur la sortie du script lancé. */}
               <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
                 <Terminal key={termId} id={termId} shell="bash" className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} />
@@ -335,6 +357,12 @@ export default function MissionPlay() {
                   ⌨ Tape tes commandes — validation automatique
                 </span>
               </div>
+              {/* Nudge discret : la commande tapée n'a pas produit la sortie attendue. */}
+              {nearMiss && (
+                <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/25 text-amber-300/90 text-xs flex-shrink-0">
+                  Pas tout à fait — vérifie l'orthographe, les espaces et la casse, puis réessaie.
+                </div>
+              )}
               {/* key={termId} : nouvelle session à chaque acte. onOutput → détection live.
                   setup → données de l'acte préparées à la création de session (avant frappe). */}
               <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
