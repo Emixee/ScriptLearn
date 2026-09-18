@@ -30,4 +30,9 @@ export function setupStoreIPC() {
   ipcMain.handle('store:importProfileJSON',   (_, p)     => store.importProfileJSON(p.payload))
   // Notification helpers
   ipcMain.handle('store:getLastActivityDate', (_, p)     => store.getLastActivityDate(p.profileId))
+  // Avertissement de chargement (fichier de données corrompu au démarrage) :
+  // affiché dans Paramètres, pour que l'utilisateur comprenne pourquoi sa
+  // progression a disparu au lieu de croire à un bug silencieux.
+  ipcMain.handle('store:getLoadWarning',      ()         => store.getLoadWarning())
+  ipcMain.handle('store:maxWeeklyGoal',       ()         => store.MAX_WEEKLY_GOAL)
 }

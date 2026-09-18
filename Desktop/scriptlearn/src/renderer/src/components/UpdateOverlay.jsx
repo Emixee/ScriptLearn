@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { useProfile } from '../contexts/ProfileContext'
-import { parseMarkdown } from '../utils/markdown'
 
 // UpdateOverlay — fenêtre de progression GLOBALE pour les mises à jour.
 // POURQUOI : l'installateur fait ~793 Mo (≈2,6 Go décompressés). Sans retour
@@ -45,11 +44,23 @@ export default function UpdateOverlay() {
     unsubRef.current = window.electronAPI.update.onProgress((p) => {
       if (p && typeof p === 'object') setProg(p)
     })
-    const res = await window.electronAPI.update.download({
-      downloadUrl: updateInfo.downloadUrl,
-      assetName: updateInfo.assetName,
-    })
-    unsubRef.current?.(); unsubRef.current = null
+    // assetSize + metaUrl sont transmis pour permettre au processus principal de
+    // VÉRIFIER le fichier (taille + sha512 de latest.yml) avant de l'exécuter.
+    let res
+    try {
+      res = await window.electronAPI.update.download({
+        downloadUrl: updateInfo.downloadUrl,
+        assetName: updateInfo.assetName,
+        assetSize: updateInfo.assetSize,
+        metaUrl: updateInfo.metaUrl,
+      })
+    } catch (e) {
+      res = { ok: false, error: String(e?.message ?? e) }
+    } finally {
+      // finally : sans ça, une exception IPC laissait l'abonnement à
+      // `update:progress` actif et setProg() continuait sur un composant démonté.
+      unsubRef.current?.(); unsubRef.current = null
+    }
     if (!res?.ok) { setError(res?.error || 'Téléchargement échoué.'); setPhase(PHASE.error); return }
     // L'installateur NSIS s'ouvre (fenêtre visible) ; l'app va se fermer puis redémarrer.
     setPhase(PHASE.installing)
@@ -70,10 +81,19 @@ export default function UpdateOverlay() {
           </div>
         </div>
 
-        {/* Notes de version (repliées si longues) */}
+        {/* Notes de version (repliées si longues).
+            POURQUOI en TEXTE BRUT et non en markdown rendu : `releaseNotes` est
+            le corps de la release récupéré sur l'API GitHub — la SEULE donnée
+            distante affichée par l'app. L'injecter via dangerouslySetInnerHTML
+            ouvrait une chaîne complète « HTML distant → window.electronAPI →
+            exécution de code local ». `whitespace-pre-wrap` conserve la mise en
+            forme (sauts de ligne, listes) sans interpréter la moindre balise.
+            Le markdown des LEÇONS, lui, reste rendu (contenu local, et de toute
+            façon désinfecté par utils/sanitizeHtml.js). */}
         {phase === PHASE.available && updateInfo.releaseNotes && (
-          <div className="mb-4 max-h-40 overflow-y-auto rounded border border-[#2e2b26] bg-[#0a0a09] p-3 text-stone-300 text-xs leading-relaxed sl-prose"
-            dangerouslySetInnerHTML={{ __html: parseMarkdown(updateInfo.releaseNotes) }} />
+          <div className="mb-4 max-h-40 overflow-y-auto rounded border border-[#2e2b26] bg-[#0a0a09] p-3 text-stone-300 text-xs leading-relaxed whitespace-pre-wrap break-words">
+            {updateInfo.releaseNotes}
+          </div>
         )}
 
         {/* Barre de progression du téléchargement */}

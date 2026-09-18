@@ -95,5 +95,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     importProfileJSON:   (payload)                 => ipcRenderer.invoke('store:importProfileJSON', { payload }),
     // Notifications
     getLastActivityDate: (profileId)               => ipcRenderer.invoke('store:getLastActivityDate', { profileId }),
+    // Diagnostic : message si le fichier de données était illisible au démarrage.
+    getLoadWarning:      ()                        => ipcRenderer.invoke('store:getLoadWarning'),
+    // Borne de l'objectif hebdomadaire, définie côté persistance (source unique).
+    maxWeeklyGoal:       ()                        => ipcRenderer.invoke('store:maxWeeklyGoal'),
   }
 })

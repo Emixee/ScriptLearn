@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useProfile } from '../contexts/ProfileContext'
 import { checkOllama } from '../utils/ollama'
 import contentIndex from '../content/index.json'
@@ -9,11 +9,37 @@ const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', 
 
 const UPDATE_STATUS = { idle: 'idle', checking: 'checking', uptodate: 'uptodate', available: 'available', downloading: 'downloading', ready: 'ready', error: 'error' }
 
-function Toggle({ enabled, onToggle }) {
+// IMPORTANT : doit rester synchronisé avec MAX_WEEKLY_GOAL dans src/main/store.js.
+// L'UI acceptait 200 alors que la persistance bornait à 100 : saisir 150
+// affichait 150, puis 100 après rechargement (valeur « fantôme »).
+const MAX_WEEKLY_GOAL = 100
+
+// Une URL Ollama valide est http(s) ET analysable. POURQUOI valider avant de
+// persister : l'ancien onBlur enregistrait n'importe quoi, le message d'erreur
+// rouge était purement décoratif, et tous les appels IA échouaient ensuite en
+// silence (ollama:generate renvoie null).
+function isValidOllamaUrl(value) {
+  try {
+    const u = new URL(String(value))
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+// POURQUOI role="switch" + aria-checked + focus-visible : sans eux, le
+// composant est un bouton vide — un lecteur d'écran annonce « bouton » sans
+// dire s'il est activé, et `focus:outline-none` seul rendait la navigation au
+// clavier totalement invisible.
+function Toggle({ enabled, onToggle, label }) {
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
       onClick={onToggle}
-      className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 focus:outline-none overflow-hidden ${
+      className={`w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d97706] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111110] overflow-hidden ${
         enabled ? 'bg-[#d97706]' : 'bg-[#2e2b26]'
       }`}
     >
@@ -27,7 +53,7 @@ function Toggle({ enabled, onToggle }) {
 }
 
 function Settings() {
-  const { profile, settings, saveSettings, updateAvailable, setUpdateAvailable } = useProfile()
+  const { profile, settings, saveSettings, updateAvailable, setUpdateAvailable, refresh } = useProfile()
 
   const [aiEnabled, setAiEnabled] = useState(false)
   const [aiModel,   setAiModel]   = useState('llama3.2')
@@ -52,9 +78,27 @@ function Settings() {
   const [updateInfo,   setUpdateInfo]   = useState(null)
   const [dlProgress,   setDlProgress]   = useState(0)
   const [installerPath, setInstallerPath] = useState(null)
+  // Message d'erreur précis de la MàJ (ex. « Empreinte sha512 invalide »).
+  // POURQUOI : l'UI affichait toujours « Vérifiez votre connexion », ce qui
+  // masquait les vrais motifs de rejet (fichier tronqué, asset altéré).
+  const [updateError,  setUpdateError]  = useState('')
+  // Avertissement du store (fichier de données illisible au démarrage).
+  const [loadWarning,  setLoadWarning]  = useState('')
+  // Désabonnements du pull Ollama, conservés dans un ref pour pouvoir les
+  // appeler au DÉMONTAGE : avant, ils n'étaient retirés que dans le callback
+  // « pull-done » — un pull interrompu (Ollama tué) laissait les handlers IPC
+  // vivants jusqu'à la fermeture de l'app, et deux clics en empilaient deux paires.
+  const pullUnsubs = useRef([])
 
   useEffect(() => {
-    window.electronAPI.app.getVersion().then(setAppVersion)
+    window.electronAPI.app.getVersion().then(setAppVersion).catch(() => setAppVersion('?'))
+    window.electronAPI.store.getLoadWarning?.().then(w => { if (w) setLoadWarning(w) }).catch(() => {})
+  }, [])
+
+  // Nettoyage global au démontage : abonnements de progression du pull.
+  useEffect(() => () => {
+    for (const fn of pullUnsubs.current) { try { fn?.() } catch { /* ignore */ } }
+    pullUnsubs.current = []
   }, [])
 
   // Afficher la section MàJ directement si une MàJ est déjà détectée
@@ -65,12 +109,14 @@ function Settings() {
   const checkUpdate = async () => {
     setUpdateStatus(UPDATE_STATUS.checking)
     setUpdateInfo(null)
-    const info = await window.electronAPI.update.check()
+    setUpdateError('')
+    const info = await window.electronAPI.update.check().catch(e => ({ error: String(e?.message ?? e) }))
     if (info.available) {
       setUpdateInfo(info)
       setUpdateStatus(UPDATE_STATUS.available)
       setUpdateAvailable(true)
     } else if (info.error) {
+      setUpdateError(info.error)
       setUpdateStatus(UPDATE_STATUS.error)
     } else {
       setUpdateStatus(UPDATE_STATUS.uptodate)
@@ -80,19 +126,32 @@ function Settings() {
   const downloadUpdate = async () => {
     if (!updateInfo) return
     setUpdateStatus(UPDATE_STATUS.downloading)
+    setUpdateError('')
     setDlProgress(0)
     // La progression est désormais un objet { percent, transferred, total, bytesPerSecond } ;
     // on garde la rétro-compatibilité si un simple nombre arrivait.
     const unsub = window.electronAPI.update.onProgress(p => setDlProgress(typeof p === 'object' ? p.percent : p))
-    const result = await window.electronAPI.update.download({
-      downloadUrl: updateInfo.downloadUrl,
-      assetName: updateInfo.assetName
-    })
-    unsub()
+    let result
+    try {
+      result = await window.electronAPI.update.download({
+        downloadUrl: updateInfo.downloadUrl,
+        assetName: updateInfo.assetName,
+        assetSize: updateInfo.assetSize,
+        metaUrl: updateInfo.metaUrl
+      })
+    } catch (e) {
+      result = { ok: false, error: String(e?.message ?? e) }
+    } finally {
+      // finally : l'ancien code n'appelait unsub() qu'en cas de succès — un échec
+      // (ou un départ de la page pendant les ~800 Mo) laissait le listener IPC
+      // vivant et setDlProgress s'exécutait sur un composant démonté.
+      unsub()
+    }
     if (result.ok) {
       setInstallerPath(result.path)
       setUpdateStatus(UPDATE_STATUS.ready)
     } else {
+      setUpdateError(result.error || 'Téléchargement échoué.')
       setUpdateStatus(UPDATE_STATUS.error)
     }
   }
@@ -143,6 +202,10 @@ function Settings() {
         const payload = JSON.parse(text)
         const result = await window.electronAPI.store.importProfileJSON(payload)
         if (result.ok) {
+          // POURQUOI refresh() : sans ça le profil importé restait invisible
+          // jusqu'au redémarrage de l'app, alors que l'UI affichait « ✓ Profil
+          // importé » — l'utilisateur croyait à un échec.
+          await refresh()
           setImportState('done')
           setTimeout(() => setImportState(null), 4000)
         } else {
@@ -158,7 +221,7 @@ function Settings() {
   }
 
   const handleWeeklyGoalBlur = async () => {
-    const n = Math.max(1, Math.min(200, parseInt(weeklyGoalInput, 10) || 10))
+    const n = Math.max(1, Math.min(MAX_WEEKLY_GOAL, parseInt(weeklyGoalInput, 10) || 10))
     setWeeklyGoal(n)
     setWeeklyGoalInput(String(n))
     if (profile) await window.electronAPI.store.setWeeklyGoal(profile.id, n)
@@ -188,16 +251,22 @@ function Settings() {
   }
 
   const pullModel = async () => {
+    // Garde : un second clic pendant un téléchargement empilerait une deuxième
+    // paire d'abonnements IPC (progression comptée deux fois).
+    if (pullState === 'pulling' || (pullState && typeof pullState === 'object')) return
     // Télécharger le modèle sélectionné et le définir comme modèle par défaut
     setPullState('pulling')
 
+    const clearSubs = () => {
+      for (const fn of pullUnsubs.current) { try { fn?.() } catch { /* ignore */ } }
+      pullUnsubs.current = []
+    }
     // S'abonner aux événements de progression envoyés par le main process
     const unsubProgress = window.electronAPI.ollama.onPullProgress(({ status, pct }) => {
       setPullState({ status, pct })
     })
     const unsubDone = window.electronAPI.ollama.onPullDone(({ ok }) => {
-      unsubProgress()
-      unsubDone()
+      clearSubs()
       if (ok) {
         // Activer le modèle téléchargé comme défaut et rafraîchir la liste
         persist({ aiModel, aiEnabled: true })
@@ -210,8 +279,17 @@ function Settings() {
       }
     })
 
-    // Lancer le pull via IPC — le main process gère le streaming NDJSON
-    await window.electronAPI.ollama.pull({ url: aiUrl, model: aiModel })
+    pullUnsubs.current = [unsubProgress, unsubDone]
+
+    // Lancer le pull via IPC — le main process gère le streaming NDJSON.
+    // try/finally : une exception IPC laissait l'UI bloquée sur « pulling » et
+    // les abonnements en place.
+    try {
+      await window.electronAPI.ollama.pull({ url: aiUrl, model: aiModel })
+    } catch (e) {
+      clearSubs()
+      setPullState('error')
+    }
   }
 
   const testConnection = async () => {
@@ -299,9 +377,36 @@ function Settings() {
     setTimeout(() => setResetState(null), 3000)
   }
 
+  // Résumé du catalogue CALCULÉ à partir du contenu réel.
+  // POURQUOI : la valeur était écrite en dur (« 118 modules · 8 niveaux ») et
+  // avait dérivé du contenu (213 modules, 6 niveaux + 12 parcours), alors que le
+  // Dashboard affichait, lui, le total calculé — deux chiffres contradictoires
+  // dans la même app. useMemo : le parcours de l'index ne dépend de rien, il ne
+  // doit pas être refait à chaque rendu de la page.
+  const catalogSummary = useMemo(() => {
+    const levels = contentIndex.levels ?? []
+    let modules = 0
+    for (const lvl of levels) {
+      for (const refs of Object.values(lvl.languages ?? {})) modules += refs.length
+    }
+    const tracks = Object.values(contentIndex.complementary?.tracks ?? {})
+    for (const t of tracks) {
+      for (const lvl of (t.levels ?? [])) modules += (lvl.modules ?? []).length
+    }
+    return `${modules} modules · ${levels.length} niveaux · ${tracks.length} parcours`
+  }, [])
+
   return (
     <div className="p-8 max-w-2xl overflow-y-auto h-full">
       <h1 className="text-2xl font-bold text-white mb-8">Paramètres</h1>
+
+      {/* Avertissement de chargement : un fichier de données illisible se
+          traduisait par une progression « disparue » sans aucune explication. */}
+      {loadWarning && (
+        <div role="alert" className="mb-6 rounded border border-red-500/40 bg-red-500/10 p-4 text-red-200 text-sm">
+          ⚠ {loadWarning}
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* IA locale */}
@@ -321,7 +426,7 @@ function Settings() {
                   : 'Inactif — corrections statiques utilisées'}
               </p>
             </div>
-            <Toggle enabled={aiEnabled} onToggle={() => persist({ aiEnabled: !aiEnabled })} />
+            <Toggle enabled={aiEnabled} label="Activer l'IA locale (Ollama)" onToggle={() => persist({ aiEnabled: !aiEnabled })} />
           </div>
 
           {aiEnabled && (
@@ -341,15 +446,21 @@ function Settings() {
                 <input
                   value={aiUrl}
                   onChange={e => setAiUrl(e.target.value)}
-                  onBlur={() => persist({ aiUrl })}
+                  onBlur={() => {
+                    // On ne persiste QUE si l'URL est exploitable ; sinon on
+                    // restaure la dernière valeur enregistrée pour ne pas
+                    // laisser l'app dans un état non fonctionnel.
+                    if (isValidOllamaUrl(aiUrl)) persist({ aiUrl })
+                    else setAiUrl(settings.aiUrl ?? 'http://localhost:11434')
+                  }}
                   className={`w-full bg-[#0a0a09] border rounded-sm px-3 py-2 text-sm text-stone-200 font-mono focus:outline-none transition-colors ${
-                    aiUrl && !aiUrl.startsWith('http')
+                    aiUrl && !isValidOllamaUrl(aiUrl)
                       ? 'border-red-500/60 focus:border-red-500'
                       : 'border-[#2e2b26] focus:border-[#d97706]'
                   }`}
                   placeholder="http://localhost:11434"
                 />
-                {aiUrl && !aiUrl.startsWith('http') && (
+                {aiUrl && !isValidOllamaUrl(aiUrl) && (
                   <p className="text-red-400 text-xs mt-1">
                     L'URL doit commencer par http:// ou https:// — ex : http://localhost:11434
                   </p>
@@ -516,7 +627,7 @@ function Settings() {
                 {remindersEnabled ? `Actif — notification à ${reminderTime}` : 'Inactif'}
               </p>
             </div>
-            <Toggle enabled={remindersEnabled} onToggle={() => persist({ remindersEnabled: !remindersEnabled })} />
+            <Toggle enabled={remindersEnabled} label="Activer le rappel quotidien" onToggle={() => persist({ remindersEnabled: !remindersEnabled })} />
           </div>
           {remindersEnabled && (
             <div>
@@ -542,7 +653,7 @@ function Settings() {
             <input
               type="number"
               min={1}
-              max={200}
+              max={MAX_WEEKLY_GOAL}
               value={weeklyGoalInput}
               onChange={e => setWeeklyGoalInput(e.target.value)}
               onBlur={handleWeeklyGoalBlur}
@@ -706,7 +817,7 @@ function Settings() {
           {/* Erreur */}
           {updateStatus === UPDATE_STATUS.error && (
             <p className="text-red-400/80 text-sm mb-4">
-              Impossible de vérifier les mises à jour. Vérifiez votre connexion.
+              {updateError || 'Impossible de vérifier les mises à jour. Vérifiez votre connexion.'}
             </p>
           )}
 
@@ -736,7 +847,7 @@ function Settings() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-400">Modules</span>
-              <span className="text-stone-300">118 modules · 8 niveaux</span>
+              <span className="text-stone-300">{catalogSummary}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-400">Licence</span>

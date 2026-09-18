@@ -1,5 +1,9 @@
 import { marked } from 'marked'
 import Prism from 'prismjs'
+// Désinfection OBLIGATOIRE : marked ne sanitize plus rien depuis la v5 et le
+// HTML produit ici part directement dans dangerouslySetInnerHTML (cf. le
+// commentaire d'en-tête de sanitizeHtml.js).
+import { sanitizeHtml } from './sanitizeHtml'
 // Grammaires additionnelles (bash et powershell sont les plus importants)
 import 'prismjs/components/prism-bash.js'
 import 'prismjs/components/prism-powershell.js'
@@ -24,6 +28,16 @@ const LANG_MAP = {
   sql: 'sql',
 }
 
+// Échappement HTML minimal, factorisé : utilisé pour le badge de langage et
+// comme repli quand aucune grammaire Prism ne correspond.
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 function highlightCode(text, lang) {
   const prismLang = LANG_MAP[lang?.toLowerCase()]
   if (prismLang && Prism.languages[prismLang]) {
@@ -34,10 +48,7 @@ function highlightCode(text, lang) {
     }
   }
   // Pas de grammaire → échapper le HTML brut
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return escapeHtml(text)
 }
 
 marked.use({
@@ -46,7 +57,10 @@ marked.use({
   renderer: {
     code({ text, lang }) {
       const highlighted = highlightCode(text, lang)
-      const badge = lang ? `<span class="sl-lang-badge">${lang}</span>` : ''
+      // `lang` vient de l'info-string du bloc de code (```xxx) : c'est une donnée
+      // d'entrée, donc on l'échappe. Sans ça, ```<img onerror=...> injecterait du
+      // HTML dans le badge alors même que le CORPS du bloc est protégé.
+      const badge = lang ? `<span class="sl-lang-badge">${escapeHtml(lang)}</span>` : ''
       return `<div class="sl-code-block">${badge}<pre><code>${highlighted}</code></pre></div>`
     },
 
@@ -55,12 +69,7 @@ marked.use({
       // Sans échappement, le navigateur interprète ces caractères comme du vrai HTML
       // et les balises disparaissent au lieu d'être affichées.
       // La même logique s'applique dans highlightCode() pour les blocs de code.
-      const escaped = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-      return `<code class="sl-inline-code">${escaped}</code>`
+      return `<code class="sl-inline-code">${escapeHtml(text)}</code>`
     },
 
     tablecell(token) {
@@ -114,5 +123,9 @@ marked.use({
 
 export function parseMarkdown(md) {
   if (!md) return ''
-  return marked.parse(md)
+  // Le passage par sanitizeHtml est le dernier rempart : il vaut pour TOUS les
+  // appelants (leçons locales, mais aussi notes de release et réponses d'un
+  // modèle IA, qui ne sont pas de confiance). Le coût est négligeable devant le
+  // rendu React, et il est impossible d'oublier la désinfection à un appel.
+  return sanitizeHtml(marked.parse(md))
 }

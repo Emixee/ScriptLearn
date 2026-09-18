@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
 import WindowControls from '../components/WindowControls'
@@ -27,6 +27,12 @@ export default function Home() {
   const [newEmoji,   setNewEmoji]  = useState('🧑')
   const [newCareer,  setNewCareer] = useState(null)
   const [version,    setVersion]   = useState('')
+  // Profil dont la suppression attend une confirmation (second clic).
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const confirmTimer = useRef(null)
+  // Nettoyage du minuteur au démontage : un setTimeout encore en vol appellerait
+  // setState sur un composant démonté.
+  useEffect(() => () => clearTimeout(confirmTimer.current), [])
 
   useEffect(() => {
     window.electronAPI.store.listProfiles().then(setProfiles)
@@ -52,10 +58,26 @@ export default function Home() {
     await selectProfile(p.id)
   }
 
+  // Suppression en DEUX temps.
+  // POURQUOI : store.deleteProfile() efface définitivement progression,
+  // activité, brouillons ET notes du profil — un seul clic (sur une croix qui
+  // n'apparaît qu'au survol, donc facile à toucher par erreur) suffisait. La
+  // page Paramètres, elle, demandait déjà une double confirmation pour une
+  // action MOINS destructrice : on aligne le comportement.
   const deleteProfile = async (e, id) => {
     e.stopPropagation()
-    const result = await window.electronAPI.store.deleteProfile(id)
-    if (result.ok) setProfiles(prev => prev.filter(p => p.id !== id))
+    if (confirmDeleteId !== id) {
+      setConfirmDeleteId(id)
+      // Sécurité : la demande de confirmation expire, pour ne pas laisser un
+      // bouton « armé » si l'utilisateur passe à autre chose.
+      clearTimeout(confirmTimer.current)
+      confirmTimer.current = setTimeout(() => setConfirmDeleteId(null), 4000)
+      return
+    }
+    clearTimeout(confirmTimer.current)
+    setConfirmDeleteId(null)
+    const result = await window.electronAPI.store.deleteProfile(id).catch(() => ({ ok: false }))
+    if (result?.ok) setProfiles(prev => prev.filter(p => p.id !== id))
   }
 
   return (
@@ -147,10 +169,19 @@ export default function Home() {
                     {profiles.length > 1 && (
                       <button
                         onClick={(e) => deleteProfile(e, profile.id)}
-                        title="Supprimer ce profil"
-                        className="absolute right-10 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#3d3a34] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                        title={confirmDeleteId === profile.id
+                          ? 'Confirmer la suppression (progression, notes et brouillons perdus)'
+                          : 'Supprimer ce profil'}
+                        aria-label={confirmDeleteId === profile.id
+                          ? `Confirmer la suppression du profil ${profile.name}`
+                          : `Supprimer le profil ${profile.name}`}
+                        className={`absolute right-10 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all ${
+                          confirmDeleteId === profile.id
+                            ? 'opacity-100 text-red-400 text-[10px] px-1.5 h-5 rounded border border-red-500/50 bg-red-500/10'
+                            : 'w-5 h-5 text-[#3d3a34] hover:text-red-400 opacity-0 group-hover:opacity-100 text-xs'
+                        }`}
                       >
-                        ×
+                        {confirmDeleteId === profile.id ? 'confirmer ?' : '×'}
                       </button>
                     )}
                   </div>
