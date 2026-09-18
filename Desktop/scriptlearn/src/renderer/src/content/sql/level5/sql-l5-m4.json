@@ -26,7 +26,7 @@
       "title": "Upsert simple",
       "instructions": "Insérez la paire `('max_users', '100')` dans la table `settings (key, value)`. Si `key` existe déjà, mettez à jour `value`.",
       "requiredKeywords": ["insert into", "settings", "values", "max_users", "100", "on conflict", "key", "do update", "set", "value"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "INSERT INTO settings (key, value) VALUES ('max_users', '100') ON CONFLICT (key) DO UPDATE SET value = excluded.value;",
       "explanation": "`ON CONFLICT (key) DO UPDATE` déclenche la mise à jour si `key` viole une contrainte UNIQUE. `excluded.value` référence la valeur qu'on tentait d'insérer."
     },
@@ -36,7 +36,8 @@
       "title": "CASE — catégorisation",
       "instructions": "Ajoutez une colonne `niveau` aux employés : `'Senior'` si salary > 80000, `'Mid'` si > 50000, sinon `'Junior'`.",
       "requiredKeywords": ["select", "name", "salary", "case", "when", "salary", ">", "80000", "then", "senior", "when", "salary", ">", "50000", "then", "mid", "else", "junior", "end", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlCheckColumns": true,
       "correction": "SELECT name, salary, CASE WHEN salary > 80000 THEN 'Senior' WHEN salary > 50000 THEN 'Mid' ELSE 'Junior' END AS niveau FROM employees;",
       "explanation": "`CASE WHEN ... THEN ... END` est l'équivalent SQL de if/elif/else. Les conditions sont évaluées dans l'ordre — la première vraie gagne."
     },
@@ -46,7 +47,7 @@
       "title": "COALESCE — gérer les NULL",
       "instructions": "Sélectionnez `name` et `phone` depuis `employees`. Si `phone` est NULL, afficher `'Indisponible'` à la place.",
       "requiredKeywords": ["select", "name", "coalesce", "phone", "indisponible", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name, COALESCE(phone, 'Indisponible') AS contact FROM employees;",
       "explanation": "`COALESCE(a, b, c)` retourne le premier argument non NULL. Très utilisé pour les valeurs par défaut, les données manquantes ou les jointures avec des NULL."
     },
@@ -56,7 +57,8 @@
       "title": "Agrégation PIVOT avec CASE",
       "instructions": "Comptez le nombre d'employés dans les colonnes `nb_it`, `nb_dev`, `nb_sec` en une seule requête sans `GROUP BY`.",
       "requiredKeywords": ["select", "count", "case", "when", "department", "it", "then", "nb_it", "count", "case", "when", "department", "dev", "then", "nb_dev", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlCheckColumns": true,
       "correction": "SELECT COUNT(CASE WHEN department = 'IT' THEN 1 END) AS nb_it, COUNT(CASE WHEN department = 'Dev' THEN 1 END) AS nb_dev, COUNT(CASE WHEN department = 'Sec' THEN 1 END) AS nb_sec FROM employees;",
       "explanation": "`COUNT(CASE WHEN ... THEN 1 END)` compte les lignes qui satisfont la condition. Le `CASE` retourne `NULL` pour les lignes non concernées, et `COUNT` ignore les NULL — c'est le mécanisme du PIVOT manuel."
     },
@@ -66,7 +68,7 @@
       "title": "NULLIF — division sécurisée",
       "instructions": "Calculez `revenue / NULLIF(quantity, 0)` pour éviter une division par zéro dans la table `sales`.",
       "requiredKeywords": ["select", "revenue", "/", "nullif", "quantity", "0", "from", "sales"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT revenue / NULLIF(quantity, 0) AS prix_unitaire FROM sales;",
       "explanation": "`NULLIF(quantity, 0)` retourne `NULL` quand `quantity = 0`. La division par `NULL` retourne `NULL` (pas une erreur) — ainsi les lignes problématiques sont exclues plutôt que de crasher la requête."
     }

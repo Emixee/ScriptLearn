@@ -37,10 +37,20 @@ export const SENTINEL_PREFIX = '__SL_DONE_'
 // répercutée aux deux endroits.
 export const PROMPT_MARKER = '__SLPROMPTMARK__'
 
-// Retire les séquences ANSI (couleurs xterm) et les \r pour comparer la sortie
-// réelle au résultat attendu sans être pollué par les codes d'échappement.
+// Retire les séquences d'échappement ANSI et les \r pour comparer la sortie réelle
+// au résultat attendu sans être pollué par les codes d'échappement.
+// Trois familles sont traitées, et pas seulement la première :
+//   1. CSI  : \x1b[…m  → couleurs, déplacements de curseur
+//   2. OSC  : \x1b]0;titre\x07 → le prompt de MSYS2 en émet à CHAQUE invite (titre
+//             de la fenêtre) ; sans ce nettoyage, ce texte se retrouvait dans la
+//             sortie comparée par matchesExpected et dans l'aperçu PHP.
+//   3. deux caractères : \x1b(B → jeu de caractères, émis par certains programmes.
 export function stripAnsi(str) {
-  return str.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '').replace(/\r/g, '')
+  return String(str)
+    .replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '')
+    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+    .replace(/\x1b[()][0-9A-Za-z]/g, '')
+    .replace(/\r/g, '')
 }
 
 // LANG_META : description de chaque langage.
@@ -127,8 +137,17 @@ export function getLangExtension(lang) {
 // variables ($x), les backticks et autres caractères spéciaux du code source
 // avant que le compilateur ne les voie. Les lignes internes sont séparées par
 // \n ; la commande suivante (compilation) est concaténée par l'appelant.
+// Délimiteur UNIQUE par exécution.
+// POURQUOI : avec un délimiteur fixe (« SLEOF », « PHPEOF »), un code contenant
+// une ligne valant exactement ce mot fermait le heredoc trop tôt et le reste du
+// code partait comme commandes shell — comportement incompréhensible pour l'élève.
+function uniqueEof(prefix) {
+  return `${prefix}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+}
+
 function heredocWrite(path, code) {
-  return `cat > ${path} <<'SLEOF'\n${code}\nSLEOF\n`
+  const eof = uniqueEof('SLEOF')
+  return `cat > ${path} <<'${eof}'\n${code}\n${eof}\n`
 }
 
 // buildRunData : construit la chaîne à écrire dans le terminal pour EXÉCUTER le
@@ -138,9 +157,11 @@ function heredocWrite(path, code) {
 export function buildRunData(lang, code) {
   const mode = LANG_META[lang]?.exec
   switch (mode) {
-    case 'heredoc-php':
+    case 'heredoc-php': {
       // PHP : heredoc directement vers l'interpréteur php (pas de fichier).
-      return `php << 'PHPEOF'\n${code}\nPHPEOF\r`
+      const eof = uniqueEof('PHPEOF')
+      return `php << '${eof}'\n${code}\n${eof}\r`
+    }
     case 'compile-c':
       return heredocWrite('/tmp/sl.c', code) + 'gcc /tmp/sl.c -o /tmp/sl_bin 2>&1 && /tmp/sl_bin\r'
     case 'compile-cpp':

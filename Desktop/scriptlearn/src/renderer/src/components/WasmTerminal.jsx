@@ -19,6 +19,10 @@ const V86_BASE = isDev ? '/v86' : './v86'
 const V86_JS_URL = `${V86_BASE}/libv86.js`
 const KERNEL_URL = `${V86_BASE}/buildroot-bzimage68.bin`
 
+// Plafond de l'historique affiché (cf. pushLine) : xterm limite déjà son propre
+// scrollback à 1000 lignes, cette liste React n'avait aucune borne.
+const MAX_LINES = 2000
+
 const STATES = { IDLE: 'idle', LOADING: 'loading', BOOTING: 'booting', READY: 'ready', ERROR: 'error' }
 
 // onOutput(line) : appelé pour CHAQUE ligne affichée (commande tapée + sorties) →
@@ -48,10 +52,23 @@ export default function WasmTerminal({ seedFiles = {}, title = 'Lab', onOutput, 
     }
   }, [lines])
 
-  // Ajoute une ligne ET la transmet au moteur de jeu (détection live).
-  const pushLine = useCallback((type, text) => {
-    setLines(l => [...l, { type, text }])
-    onOutputRef.current?.(text)
+  // Ajoute une ligne à l'affichage. `notify` décide si la ligne est transmise au
+  // moteur de jeu (détection des objectifs).
+  //
+  // POURQUOI ce paramètre : la ligne d'invite contient la COMMANDE TAPÉE par le
+  // joueur, et elle était envoyée au détecteur AVANT même son exécution. Les
+  // objectifs du lab se valident sur une regex (`detect`) appliquée à cette
+  // ligne : taper `echo 185.220.101.5` — ou même `# backdoor` — débloquait le
+  // fragment sans exécuter la moindre commande utile. Seule la sortie RÉELLE de
+  // la VM (branche `output`) doit alimenter la détection.
+  const pushLine = useCallback((type, text, notify = true) => {
+    setLines(l => {
+      // Historique borné : chaque ligne re-rend la liste entière, et une commande
+      // bavarde (`dmesg`, `find /`) en produit des milliers → UI figée.
+      const next = l.length >= MAX_LINES ? l.slice(-Math.floor(MAX_LINES / 2)) : l
+      return [...next, { type, text }]
+    })
+    if (notify) onOutputRef.current?.(text)
   }, [])
 
   // ── Boot de l'émulateur (une seule fois) ─────────────────────────────────────
@@ -223,7 +240,8 @@ export default function WasmTerminal({ seedFiles = {}, title = 'Lab', onOutput, 
     const cmd = input.trim()
     if (!cmd || !v86Ref.current || !readyRef.current) return
     setInput('')
-    pushLine('prompt', `$ ${cmd}`)
+    // notify:false → la commande tapée n'est PAS soumise au détecteur d'objectifs.
+    pushLine('prompt', `$ ${cmd}`, false)
     v86Ref.current.serial0_send(cmd + '\n')
   }
 

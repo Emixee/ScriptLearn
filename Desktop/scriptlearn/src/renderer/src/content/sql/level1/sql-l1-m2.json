@@ -26,7 +26,7 @@
       "title": "Filtrer par département",
       "instructions": "Sélectionnez tous les employés du département `'IT'` de la table `employees`.",
       "requiredKeywords": ["select", "*", "from", "employees", "where", "department", "it"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE department = 'IT';",
       "explanation": "Le `WHERE` compare la colonne `department` à la valeur `'IT'`. Les guillemets simples sont obligatoires pour les chaînes. La comparaison est insensible à la casse dans certains SGBD (MySQL) mais sensible dans d'autres (PostgreSQL)."
     },
@@ -36,7 +36,7 @@
       "title": "Double condition",
       "instructions": "Sélectionnez les employés du département `'IT'` **avec un salaire supérieur à 60 000**.",
       "requiredKeywords": ["select", "from", "employees", "where", "department", "it", "and", "salary", "60000"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE department = 'IT' AND salary > 60000;",
       "explanation": "`AND` exige que les deux conditions soient vraies simultanément. Ici, un employé doit être en IT ET avoir un salaire > 60000. Si une seule suffit, utilisez `OR`."
     },
@@ -46,7 +46,7 @@
       "title": "Plusieurs départements avec IN",
       "instructions": "Sélectionnez les employés des départements `'IT'`, `'Dev'` ou `'Sec'`.\n\nUtilisez `IN` plutôt que plusieurs `OR`.",
       "requiredKeywords": ["select", "from", "employees", "where", "department", "in", "it", "dev", "sec"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE department IN ('IT', 'Dev', 'Sec');",
       "explanation": "`IN (liste)` est plus lisible et plus court que `dept = 'IT' OR dept = 'Dev' OR dept = 'Sec'`. Fonctionne aussi avec des nombres : `WHERE id IN (1, 5, 7)`."
     },
@@ -56,7 +56,7 @@
       "title": "Intervalle de salaires",
       "instructions": "Sélectionnez les employés avec un salaire **entre 40 000 et 80 000** (inclus).",
       "requiredKeywords": ["select", "from", "employees", "where", "salary", "between", "40000", "80000"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE salary BETWEEN 40000 AND 80000;",
       "explanation": "`BETWEEN a AND b` est inclusif — équivalent à `>= a AND <= b`. Plus lisible pour les plages numériques ou de dates. Fonctionne aussi sur les chaînes (ordre alphabétique)."
     },
@@ -66,7 +66,7 @@
       "title": "Valeurs manquantes",
       "instructions": "Sélectionnez les employés qui **n'ont pas de manager** (colonne `manager_id` vide).",
       "requiredKeywords": ["select", "from", "employees", "where", "manager_id", "is null"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE manager_id IS NULL;",
       "explanation": "`NULL` représente une valeur manquante ou inconnue. On ne peut pas le tester avec `=` (qui retournerait toujours faux) — toujours utiliser `IS NULL` ou `IS NOT NULL`. C'est un piège classique en SQL."
     }

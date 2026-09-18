@@ -26,7 +26,9 @@
       "title": "Rang par salaire",
       "instructions": "Ajoutez une colonne `rang` à chaque employé, indiquant son rang par salaire décroissant avec `RANK()`.",
       "requiredKeywords": ["select", "name", "salary", "rank", "()", "over", "order by", "salary", "desc", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT name, salary, RANK() OVER (ORDER BY salary DESC) AS rang FROM employees;",
       "explanation": "`RANK() OVER (ORDER BY salary DESC)` calcule le rang pour chaque ligne sans les regrouper. La ligne reste visible avec toutes ses colonnes plus le rang ajouté."
     },
@@ -36,7 +38,9 @@
       "title": "ROW_NUMBER unique",
       "instructions": "Numérotez chaque ligne de `employees` de 1 à N par ordre alphabétique du nom avec `ROW_NUMBER()`.",
       "requiredKeywords": ["select", "name", "row_number", "()", "over", "order by", "name", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT name, ROW_NUMBER() OVER (ORDER BY name) AS num FROM employees;",
       "explanation": "`ROW_NUMBER()` attribue un numéro unique à chaque ligne. Contrairement à `RANK()`, il n'y a jamais d'ex-æquo — utile pour la pagination ou identifier de façon unique dans un ensemble ordonné."
     },
@@ -46,7 +50,9 @@
       "title": "RANK par département",
       "instructions": "Calculez le rang de chaque employé par salaire **au sein de son département** (`PARTITION BY department`).",
       "requiredKeywords": ["select", "name", "department", "salary", "rank", "()", "over", "partition by", "department", "order by", "salary", "desc", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT name, department, salary, RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rang FROM employees;",
       "explanation": "`PARTITION BY department` redémarre la numérotation pour chaque département. C'est la combinaison la plus puissante : calculer un rang ou une agrégation dans chaque sous-groupe sans perdre les lignes individuelles."
     },
@@ -56,7 +62,9 @@
       "title": "Top 1 par département",
       "instructions": "Trouvez le **mieux payé de chaque département** en utilisant `ROW_NUMBER()` + CTE.\n\nFiltrez sur `rang = 1`.",
       "requiredKeywords": ["with", "as", "row_number", "()", "over", "partition by", "department", "order by", "salary", "desc", "select", "from", "where", "rang", "=", "1"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "WITH ranked AS (SELECT name, department, salary, ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rang FROM employees) SELECT name, department, salary FROM ranked WHERE rang = 1;",
       "explanation": "Pattern classique \"top N par groupe\" : 1) calculer le rang avec `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)`, 2) encapsuler dans une CTE, 3) filtrer sur `rang <= N`."
     },
@@ -66,7 +74,9 @@
       "title": "DENSE_RANK vs RANK",
       "instructions": "Calculez le rang avec `DENSE_RANK()` par salaire décroissant. Quelle est la différence avec `RANK()` en cas d'ex-æquo ?",
       "requiredKeywords": ["select", "name", "salary", "dense_rank", "()", "over", "order by", "salary", "desc", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT name, salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rang FROM employees;",
       "explanation": "`DENSE_RANK` : si deux employés sont ex-æquo en rang 2, le suivant est rang 3 (pas de saut). `RANK` : le suivant serait rang 4 (saute le 3). `DENSE_RANK` donne des rangs continus."
     }

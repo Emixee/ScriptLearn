@@ -19,7 +19,11 @@ import {
   LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension,
   buildRunData, termShellFor, isRepl,
 } from '../lib/langs'
-import { matchesExpected } from '../lib/useCodeRunner'
+// useCodeRunner est l'UNIQUE implémentation de la validation (les six moteurs
+// réels + le repli par mots-clés). Cette page en avait sa propre copie, sans
+// aucun moteur : les exercices SQL/Regex/YAML/Git/HTML étaient validés par
+// simple recherche de mots-clés alors que les validateurs existaient déjà.
+import { useCodeRunner, matchesExpected } from '../lib/useCodeRunner'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
 
@@ -425,6 +429,11 @@ export default function Exercise() {
   const { profile, settings } = useProfile()
   const isKQL = lang === 'kql'
   const isStaticLang = STATIC_LANGS.includes(lang)
+  const [termReady, setTermReady] = useState(false)
+  // Validation partagée avec MissionPlay (six moteurs réels + repli mots-clés).
+  const { validate: runnerValidate } = useCodeRunner(termId, lang)
+  // Session PTY prête ? (Terminal.onReady) — « ▶ Exécuter » écrivait sinon dans une
+  // session parfois inexistante, et l'ordre était jeté EN SILENCE côté main.
 
   const [code, setCode] = useState('')
   // Garde anti-double-validation (mode terminal-auto) : les blocs de sortie
@@ -446,7 +455,6 @@ export default function Exercise() {
   // Pour PHP, cet état est mis à jour après l'exécution (sortie terminal stripée)
   const [previewSrc, setPreviewSrc] = useState('')
 
-  const outputBuffer = useRef('')
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
   const dragStartW = useRef(DEFAULT_PANEL_WIDTH)
@@ -501,14 +509,6 @@ export default function Exercise() {
     return () => clearTimeout(saveTimeout.current)
   }, [code, profile?.id, draftLoaded, status])
 
-  // Écouter la sortie terminal
-  useEffect(() => {
-    const cleanup = window.electronAPI.terminal.onData(({ id, chunk }) => {
-      if (id === termId) outputBuffer.current += chunk
-    })
-    return cleanup
-  }, [termId])
-
   // Charger le score du module pour l'écran de complétion
   useEffect(() => {
     if (!profile || !showCompletion || !module) return
@@ -530,7 +530,6 @@ export default function Exercise() {
     setNoteText('')
     setShowNote(false)
     setPreviewSrc('')
-    outputBuffer.current = ''
     succeededRef.current = false   // réarmer la détection terminal-auto
   }, [moduleId, exerciseIndex])
 
@@ -601,7 +600,6 @@ export default function Exercise() {
 
   const handleRun = () => {
     if (!code.trim() || isStaticLang) return
-    outputBuffer.current = ''
     setFeedback(null)
     setStatus(STATUS.idle)
 
@@ -613,42 +611,21 @@ export default function Exercise() {
     window.electronAPI.terminal.write({ id: termId, data: buildRunData(lang, code) })
   }
 
-  const validateStatic = async () => {
-    const trimmed = code.trim()
-    if (!trimmed || status === STATUS.running) return
-    setStatus(STATUS.running)
-    setFeedback(null)
-    await new Promise(r => setTimeout(r, 250))
-    const lowerQuery = trimmed.toLowerCase()
-    const requiredTable = exercise.requiredTable ?? ''
-    const requiredKeywords = exercise.requiredKeywords ?? []
-    let isCorrect = true
-    if (requiredTable && !lowerQuery.includes(requiredTable.toLowerCase())) isCorrect = false
-    if (isCorrect) {
-      for (const kw of requiredKeywords) {
-        if (!lowerQuery.includes(kw.toLowerCase())) { isCorrect = false; break }
-      }
-    }
-    finalize(isCorrect, trimmed)
-  }
-
   const validate = async () => {
-    if (isStaticLang) return validateStatic()
     const trimmed = code.trim()
     if (!trimmed || status === STATUS.running) return
     setStatus(STATUS.running)
     setFeedback(null)
     if (lang === 'php') setPreviewSrc('')
 
-    // Validation EN COULISSES : on exécute le code dans un processus jetable (sans PTY,
-    // donc sans écho de la commande) et on récupère une sortie propre et déterministe.
-    // Cela évite que l'écho du PTY ne fausse la comparaison, et règle les soucis de
-    // REPL (Python multi-lignes) et de compilation.
-    const { output } = await window.electronAPI.terminal.runValidation({ lang, code: trimmed })
+    // Toute la logique est dans useCodeRunner : moteur réel si l'exercice en
+    // déclare un (sql, dom, regex, yaml, git, structured), sinon exécution en
+    // coulisses et comparaison de la sortie, sinon mots-clés.
+    const { correct, output, error } = await runnerValidate(exercise, trimmed)
     const cleanOutput = output ?? ''
 
     // PHP : la sortie est déjà propre → on alimente directement l'aperçu HTML.
-    if (lang === 'php') {
+    if (lang === 'php' && !error) {
       const phpHtmlOut = cleanOutput.trim()
       const isFullHtml = phpHtmlOut.toLowerCase().startsWith('<!doctype') || phpHtmlOut.toLowerCase().startsWith('<html')
       setPreviewSrc(isFullHtml
@@ -657,16 +634,13 @@ export default function Exercise() {
       )
     }
 
-    let isCorrect = false
-    if (exercise.validationType === 'output_nonempty') {
-      isCorrect = trimmed.length > 0
-    } else {
-      isCorrect = cleanOutput.toLowerCase().includes((exercise.expectedOutput ?? '').toLowerCase())
-    }
-    finalize(isCorrect, trimmed)
+    finalize(correct, trimmed, { detail: cleanOutput, execError: error })
   }
 
-  const finalize = (isCorrect, trimmed) => {
+  // `info.detail` : rapport du moteur de validation (lignes ✅/❌, sortie réelle,
+  // message d'erreur SQL…). Affiché en cas d'échec : sans lui, l'élève ne voyait
+  // que « Résultat attendu : … » sans savoir ce que SON code avait produit.
+  const finalize = (isCorrect, trimmed, info = {}) => {
     if (isCorrect) {
       setStatus(STATUS.success)
       setFeedback({ type: 'success', title: 'Correct !', body: exercise.explanation, aiBody: null })
@@ -676,10 +650,25 @@ export default function Exercise() {
       if (isLast) setTimeout(() => setShowCompletion(true), 900)
     } else {
       setStatus(STATUS.error)
-      const errorBody = isStaticLang
-        ? `Vérifiez ${exercise.requiredTable ? `la table/source (\`${exercise.requiredTable}\`) et ` : ''}les mots-clés requis.`
-        : `Résultat attendu : \`${exercise.expectedOutput}\`\n\nVérifiez votre commande et réessayez.`
-      setFeedback({ type: 'error', title: 'Pas tout à fait…', body: errorBody, aiBody: null })
+      // Une erreur d'EXÉCUTION (toolchain absente, moteur indisponible) n'est pas
+      // une erreur de l'élève : on la distingue explicitement.
+      const detail = (info.detail ?? '').trim()
+      let errorBody
+      if (info.execError) {
+        errorBody = `Impossible d'exécuter le code :\n\n\`\`\`\n${detail}\n\`\`\``
+      } else if (detail) {
+        errorBody = `${exercise.expectedOutput ? `Résultat attendu : \`${exercise.expectedOutput}\`\n\n` : ''}Obtenu :\n\n\`\`\`\n${detail.slice(0, 1200)}\n\`\`\``
+      } else if (isStaticLang) {
+        errorBody = `Vérifiez ${exercise.requiredTable ? `la table/source (\`${exercise.requiredTable}\`) et ` : ''}les mots-clés requis.`
+      } else {
+        errorBody = `Résultat attendu : \`${exercise.expectedOutput}\`\n\nVérifiez votre commande et réessayez.`
+      }
+      setFeedback({
+        type: 'error',
+        title: info.execError ? 'Erreur d\'exécution' : 'Pas tout à fait…',
+        body: errorBody,
+        aiBody: null
+      })
       if (profile) window.electronAPI.store.recordAttempt(profile.id, exercise.id)
     }
     if (settings?.aiEnabled && trimmed) {
@@ -696,8 +685,16 @@ export default function Exercise() {
   // Mode terminal-auto : appelé pour chaque SORTIE de commande (écho déjà retiré
   // par Terminal.jsx). Dès que la sortie réelle contient le résultat attendu, on
   // déclenche le MÊME flux de succès que « Valider » (finalize → progression, IA…).
-  const handleTerminalOutput = (block) => {
+  const handleTerminalOutput = (block, cmd) => {
     if (succeededRef.current) return
+    // Même garde-fou opt-in que dans MissionPlay : un exercice peut exiger que la
+    // commande employée corresponde à `requiredCmd` (sinon `echo <résultat attendu>`
+    // valide l'exercice, la comparaison portant sur la sortie).
+    if (exercise.requiredCmd) {
+      let cmdOk = false
+      try { cmdOk = new RegExp(exercise.requiredCmd, 'i').test(cmd ?? '') } catch { cmdOk = true }
+      if (!cmdOk) return
+    }
     const isCorrect = exercise.validationType === 'output_nonempty'
       ? block.trim().length > 0
       : matchesExpected(block, exercise.expectedOutput)
@@ -978,8 +975,9 @@ export default function Exercise() {
             </div>
             <div className="flex gap-2">
               {!isStaticLang && (
-                <button onClick={handleRun}
-                  className="flex-1 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-sm py-2 rounded-sm transition-colors font-medium">
+                <button onClick={handleRun} disabled={!termReady}
+                  title={termReady ? 'Exécuter dans le terminal' : 'Terminal en cours de démarrage…'}
+                  className="flex-1 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-sm py-2 rounded-sm transition-colors font-medium disabled:opacity-40">
                   ▶ Exécuter
                 </button>
               )}
@@ -1062,7 +1060,7 @@ export default function Exercise() {
               // Le PreviewPane montre la sortie rendue après validation
               <div className="flex flex-col h-full">
                 <div style={{ flex: '0 0 60%', overflow: 'hidden' }}>
-                  <Terminal id={termId} shell="bash" className="h-full" />
+                  <Terminal id={termId} shell="bash" className="h-full" onReady={setTermReady} />
                 </div>
                 <div className="border-t border-[#2e2b26] flex-shrink-0" style={{ flex: '0 0 40%', overflow: 'hidden' }}>
                   <PreviewPane srcDoc={previewSrc} label="PHP" langColor={langAccent} />
@@ -1074,7 +1072,7 @@ export default function Exercise() {
               // termShellFor : bash/python/powershell gardent leur interpréteur ;
               // C/C++/C#/Java passent par la session bash embarquée (compilation + run).
               // terminalAuto → onOutput valide automatiquement sur la sortie réelle.
-              <Terminal id={termId} shell={termShellFor(lang)} className="h-full"
+              <Terminal id={termId} shell={termShellFor(lang)} onReady={setTermReady} className="h-full"
                 onOutput={terminalAuto ? handleTerminalOutput : undefined} />
             )}
           </div>

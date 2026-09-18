@@ -31,6 +31,16 @@ export default function MissionPlay() {
   const campaign = getCampaign(campaignId)
 
   const [chapterIdx, setChapterIdx] = useState(0)
+  // La progression est-elle chargée ? POURQUOI c'est nécessaire : au premier
+  // rendu, chapterIdx vaut 0, donc le terminal de l'acte 1 était créé (avec son
+  // `setup`, exécuté côté main) puis immédiatement tué quand getProgress
+  // répondait et faisait sauter à l'acte non résolu. Deux sessions PTY et deux
+  // setups par ouverture de mission — et c'est exactement cette fenêtre de
+  // démontage précoce qui déclenchait la fuite d'abonnement de Terminal.jsx.
+  const [progressLoaded, setProgressLoaded] = useState(false)
+  // Session PTY prête ? « Exécuter » écrivait dans une session parfois inexistante
+  // (juste après un changement d'acte) et l'ordre était jeté EN SILENCE côté main.
+  const [termReady, setTermReady] = useState(false)
   const [code, setCode] = useState('')
   const [status, setStatus] = useState(STATUS.idle)
   const [showReward, setShowReward] = useState(false)
@@ -77,15 +87,26 @@ export default function MissionPlay() {
   // Reprise : au montage, on charge la progression et on saute au premier acte non résolu.
   useEffect(() => {
     if (!profile || !campaign) return
-    window.electronAPI.store.getProgress(profile.id).then(p => {
-      const map = {}
-      campaign.chapters.forEach(ch => { if (p[`${campaign.id}:${ch.id}`]?.completed) map[ch.id] = true })
-      setCompleted(map)
-      const firstIncomplete = campaign.chapters.findIndex(ch => !map[ch.id])
-      setChapterIdx(firstIncomplete === -1 ? 0 : firstIncomplete)
-      // Frontière = dernier acte débloqué (tous faits → dernier ; sinon le 1er non résolu).
-      setMaxReached(firstIncomplete === -1 ? campaign.chapters.length - 1 : firstIncomplete)
-    })
+    // `cancelled` : une réponse tardive (changement de mission entre-temps) ne doit
+    // pas écraser l'acte courant.
+    let cancelled = false
+    setProgressLoaded(false)
+    window.electronAPI.store.getProgress(profile.id)
+      .then(p => {
+        if (cancelled) return
+        const map = {}
+        campaign.chapters.forEach(ch => { if (p[`${campaign.id}:${ch.id}`]?.completed) map[ch.id] = true })
+        setCompleted(map)
+        const firstIncomplete = campaign.chapters.findIndex(ch => !map[ch.id])
+        setChapterIdx(firstIncomplete === -1 ? 0 : firstIncomplete)
+        // Frontière = dernier acte débloqué (tous faits → dernier ; sinon le 1er non résolu).
+        setMaxReached(firstIncomplete === -1 ? campaign.chapters.length - 1 : firstIncomplete)
+      })
+      // .catch : sans lui, un rejet IPC laissait une « unhandled rejection » et la
+      // mission bloquée sur un écran de chargement.
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setProgressLoaded(true) })
+    return () => { cancelled = true }
   }, [profile?.id, campaign?.id])
 
   // À chaque changement d'acte : recharger le code de départ et réinitialiser l'état.
@@ -158,6 +179,18 @@ export default function MissionPlay() {
   // nudge discret (sans révéler la sortie attendue).
   const handleTerminalOutput = (block, cmd) => {
     if (succeededRef.current) return
+    // `requiredCmd` (optionnel, déclaré par l'acte) : expression régulière que la
+    // COMMANDE doit satisfaire, en plus de la sortie attendue.
+    // POURQUOI ce garde-fou : la validation terminal-auto compare la SORTIE. Or la
+    // sortie de `echo SESAME` est indiscernable de celle de la vraie solution —
+    // taper le résultat attendu suffisait donc à valider l'acte. Un acte qui
+    // déclare `"requiredCmd": "grep|wc"` exige en plus d'avoir employé l'outil.
+    // (Mécanisme opt-in : les actes existants ne changent pas de comportement.)
+    if (chapter.requiredCmd) {
+      let cmdOk = false
+      try { cmdOk = new RegExp(chapter.requiredCmd, 'i').test((cmd ?? '')) } catch { cmdOk = true }
+      if (!cmdOk) { setNearMiss(true); return }
+    }
     const correct = chapter.validationType === 'output_nonempty'
       ? block.trim().length > 0
       : matchesExpected(block, chapter.expectedOutput)
@@ -282,8 +315,11 @@ export default function MissionPlay() {
             </div>
 
             {/* Indice repliable */}
+            {/* onToggle : sans lui, `showHint` n'était JAMAIS mis à true (aucun
+                setShowHint(true) n'existait) — l'état était mort et le <details>
+                restait piloté sur false. */}
             {chapter.hint && (
-              <details className="mb-4" open={showHint}>
+              <details className="mb-4" open={showHint} onToggle={(e) => setShowHint(e.currentTarget.open)}>
                 <summary className="text-stone-500 text-xs cursor-pointer hover:text-stone-300 transition-colors select-none">
                   💡 Afficher un indice
                 </summary>
@@ -368,7 +404,7 @@ export default function MissionPlay() {
               )}
               {/* key={termId} : session bash neuve à chaque acte. onOutput → détection sur la sortie du script lancé. */}
               <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
-                <Terminal key={termId} id={termId} shell="bash" className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} />
+                {progressLoaded && <Terminal key={termId} id={termId} shell="bash" className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} onReady={setTermReady} />}
               </div>
             </>
           ) : terminalAuto ? (
@@ -392,7 +428,7 @@ export default function MissionPlay() {
               {/* key={termId} : nouvelle session à chaque acte. onOutput → détection live.
                   setup → données de l'acte préparées à la création de session (avant frappe). */}
               <div className="flex-1 overflow-hidden bg-[#080807]" style={{ minHeight: 0 }}>
-                <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} />
+                {progressLoaded && <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" onOutput={handleTerminalOutput} setup={chapter.setup} onReady={setTermReady} />}
               </div>
             </>
           ) : (
@@ -417,8 +453,11 @@ export default function MissionPlay() {
                 </button>
               )}
               {!staticLang && (
-                <button onClick={handleRun}
-                  className="px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors">
+                // disabled tant que la session PTY n'est pas prête : l'écriture
+                // partait sinon dans le vide, sans aucun retour visible.
+                <button onClick={handleRun} disabled={!termReady}
+                  title={termReady ? 'Exécuter dans le terminal' : 'Terminal en cours de démarrage…'}
+                  className="px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors disabled:opacity-40">
                   ▶ Exécuter
                 </button>
               )}
@@ -464,7 +503,7 @@ export default function MissionPlay() {
             ) : (
               // key={termId} force une session neuve à chaque acte exécuté.
               // setup : données de l'acte préparées à la création de session (exploration libre).
-              <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" setup={chapter.setup} />
+              progressLoaded && <Terminal key={termId} id={termId} shell={termShellFor(lang)} className="h-full" setup={chapter.setup} onReady={setTermReady} />
             )}
           </div>
           </>

@@ -26,7 +26,7 @@
       "title": "Transaction de virement",
       "instructions": "Écrivez une transaction qui débite `500` du compte `id=1` et crédite `500` au compte `id=2` dans la table `comptes`.",
       "requiredKeywords": ["begin", "update", "comptes", "set", "solde", "500", "where", "id", "=", "1", "update", "comptes", "set", "solde", "500", "where", "id", "=", "2", "commit"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "BEGIN; UPDATE comptes SET solde = solde - 500 WHERE id = 1; UPDATE comptes SET solde = solde + 500 WHERE id = 2; COMMIT;",
       "explanation": "`BEGIN` ouvre la transaction. Les deux `UPDATE` sont atomiques — soit les deux réussissent, soit aucun. `COMMIT` valide définitivement. Sans transaction, si le second `UPDATE` échoue, le premier serait quand même appliqué — l'argent disparaîtrait !"
     },
@@ -36,7 +36,7 @@
       "title": "ROLLBACK en cas d'erreur",
       "instructions": "Écrivez le squelette d'une transaction sur `orders` qui effectue un `INSERT`, puis fait un `ROLLBACK` si la commande est invalide.",
       "requiredKeywords": ["begin", "insert into", "orders", "rollback"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "BEGIN; INSERT INTO orders (customer_id, total) VALUES (1, 250); -- Vérification : SELECT total FROM orders WHERE customer_id = 1; ROLLBACK;",
       "explanation": "`ROLLBACK` annule TOUTES les modifications depuis le `BEGIN`. Les données reviennent exactement à leur état précédent — comme si la transaction n'avait jamais eu lieu."
     },
@@ -46,7 +46,7 @@
       "title": "SAVEPOINT",
       "instructions": "Créez un `SAVEPOINT` nommé `step1` dans une transaction.",
       "requiredKeywords": ["begin", "savepoint", "step1"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "BEGIN; INSERT INTO logs VALUES ('étape 1'); SAVEPOINT step1; INSERT INTO logs VALUES ('étape 2'); ROLLBACK TO SAVEPOINT step1; COMMIT;",
       "explanation": "`SAVEPOINT` crée un point de retour intermédiaire. `ROLLBACK TO SAVEPOINT step1` annule uniquement les opérations depuis ce point, pas toute la transaction. Le `COMMIT` final valide ce qui reste."
     },
@@ -56,7 +56,7 @@
       "title": "Transaction DELETE sécurisée",
       "instructions": "Écrivez une transaction qui supprime les employés avec `salary < 20000`, puis valide.",
       "requiredKeywords": ["begin", "delete from", "employees", "where", "salary", "<", "20000", "commit"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "BEGIN; DELETE FROM employees WHERE salary < 20000; COMMIT;",
       "explanation": "Envelopper un `DELETE` dans une transaction permet de vérifier (`SELECT COUNT(*) WHERE salary < 20000`) avant de `COMMIT`. Si le résultat est surprenant, `ROLLBACK` annule sans dommage."
     },

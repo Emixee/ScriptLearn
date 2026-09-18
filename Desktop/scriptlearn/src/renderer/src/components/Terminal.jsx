@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
@@ -58,167 +58,243 @@ function partialMarkerSuffixLen(s) {
   return 0
 }
 
-// onOutput(outputBlock) : appelé avec la SORTIE réelle de chaque commande exécutée
-// (écho de la commande retiré), pour la validation « terminal-auto » (cours/missions).
+// Préfixe d'invite SYNTHÉTIQUE, utilisé quand on doit tronquer le tampon d'un
+// tour (voir plus bas) : emitTurn repère la sortie « après la dernière ligne
+// d'invite », il faut donc qu'une ligne d'invite subsiste dans le tampon tronqué.
+function promptPrefixFor(shell) {
+  if (shell === 'python') return '>>> '
+  if (shell === 'powershell') return 'PS '
+  return '$ '
+}
+
+// onOutput(outputBlock, cmd) : appelé avec la SORTIE réelle de chaque commande
+// exécutée (écho de la commande retiré), pour la validation « terminal-auto ».
+// onReady(bool) : signale que la session PTY existe (ou qu'elle a échoué). Le
+// parent peut ainsi désactiver « Exécuter » tant que le terminal n'est pas prêt —
+// avant, un write() vers une session inexistante était jeté EN SILENCE côté main.
 // setup : commandes bash (mkdir/printf…) exécutées EN COULISSES à la création de la
 // session, AVANT le shell interactif — garantit que les fichiers de l'acte sont prêts
 // dans /tmp avant toute frappe (voir createSession dans src/main/terminal.js).
-export default function Terminal({ id, shell = 'powershell', className = '', onOutput, setup }) {
+export default function Terminal({ id, shell = 'powershell', className = '', onOutput, onReady, setup }) {
   const containerRef = useRef(null)
   const xtermRef = useRef(null)
   const fitRef = useRef(null)
-  const unsubRef = useRef(null)
-  // Ref vers le dernier onOutput : init ne s'exécute qu'une fois (garde xtermRef),
-  // mais le parent peut fournir un nouveau callback à chaque rendu.
+  // Refs vers les derniers callbacks : l'effet d'initialisation ne s'exécute
+  // qu'une fois par (id, shell), mais le parent peut fournir de nouveaux
+  // callbacks à chaque rendu.
   const onOutputRef = useRef(onOutput)
   onOutputRef.current = onOutput
-
-  const init = useCallback(async () => {
-    if (!containerRef.current || xtermRef.current) return
-
-    const term = new XTerm({
-      theme: THEME,
-      fontFamily: '"JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace',
-      fontSize: 13,
-      lineHeight: 1.4,
-      cursorBlink: true,
-      scrollback: 1000,
-      convertEol: true
-    })
-
-    const fitAddon = new FitAddon()
-    const linksAddon = new WebLinksAddon()
-    term.loadAddon(fitAddon)
-    term.loadAddon(linksAddon)
-    term.open(containerRef.current)
-    fitAddon.fit()
-
-    xtermRef.current = term
-    fitRef.current = fitAddon
-
-    // Créer la session côté main process avec la taille initiale (cols/rows) —
-    // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
-    await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
-
-    // ── Affichage + isolation de la sortie pour la validation terminal-auto ──────
-    // Le shell émet un MARQUEUR invisible (PROMPT_MARKER) avant chaque invite. On
-    // s'en sert pour : (a) le RETIRER de l'affichage (sinon des caractères de contrôle
-    // pollueraient l'écran) ; (b) découper le flux en blocs « invite + commande tapée
-    // + sortie ». À chaque marqueur, le bloc accumulé depuis le précédent est complet :
-    // on isole la sortie réelle (lignes APRÈS la dernière ligne d'invite → l'écho de la
-    // commande est exclu, ce qui règle le piège « echo "texte attendu" ») et on l'émet.
-    const PROMPT_RE = promptRegexFor(shell)
-    let carry = ''        // morceau de marqueur éventuellement coupé entre 2 chunks
-    let turnBuf = ''      // bloc courant (depuis le dernier marqueur), marqueur retiré
-    let turnCmd = null    // commande du tour, capturée TÔT (avant que nano ne noie le buffer)
-
-    // Extrait la commande tapée d'un buffer : 1re ligne d'invite SUIVIE d'une autre
-    // ligne (donc « Entrée » a été pressée). Capturée dès qu'elle est disponible pour
-    // rester fiable même si turnBuf est ensuite tronqué par les redraws de nano.
-    const extractCmd = (buf) => {
-      const lines = stripAnsi(buf).split('\n')
-      for (let i = 0; i < lines.length - 1; i++) {
-        if (PROMPT_RE.test(lines[i])) return lines[i].replace(PROMPT_RE, '').trim()
-      }
-      return null
-    }
-
-    const emitTurn = (text) => {
-      const cb = onOutputRef.current
-      if (!cb) return
-      // Ignorer les tours « éditeur/pager » (nano…) : on ne valide pas sur leur écran.
-      if (turnCmd && EDITOR_CMD_RE.test(turnCmd)) return
-      const lines = stripAnsi(text).split('\n')
-      let lastPrompt = -1
-      for (let i = 0; i < lines.length; i++) {
-        if (PROMPT_RE.test(lines[i])) lastPrompt = i
-      }
-      if (lastPrompt === -1) return           // bloc sans commande (bannière de démarrage)
-      const output = lines.slice(lastPrompt + 1).join('\n').trim()
-      // On transmet aussi la commande du tour : le parent peut ainsi distinguer un
-      // VRAI lancement de script (bash/python/powershell…) d'une commande d'exploration.
-      if (output) cb(output, turnCmd)
-    }
-
-    unsubRef.current = window.electronAPI.terminal.onData(({ id: sid, chunk }) => {
-      if (sid !== id) return
-      let data = carry + chunk
-      carry = ''
-      let out = ''
-      let mi
-      while ((mi = data.indexOf(PROMPT_MARKER)) !== -1) {
-        const before = data.slice(0, mi)
-        out += before
-        turnBuf += before
-        if (turnCmd === null) turnCmd = extractCmd(turnBuf)
-        emitTurn(turnBuf)                     // bloc complet → on isole et on émet sa sortie
-        turnBuf = ''
-        turnCmd = null                        // réarmer pour le tour suivant
-        data = data.slice(mi + PROMPT_MARKER.length)
-      }
-      // Garder en attente un marqueur potentiellement coupé en fin de chunk.
-      const p = partialMarkerSuffixLen(data)
-      if (p > 0) { carry = data.slice(data.length - p); data = data.slice(0, data.length - p) }
-      out += data
-      turnBuf += data
-      // Capturer la commande du tour DÈS qu'elle est disponible (avant troncature).
-      if (turnCmd === null) turnCmd = extractCmd(turnBuf)
-      // Borne de sécurité : sans marqueur (ex. shell node) ou pendant une longue session
-      // nano, turnBuf ne se réinitialise pas — on évite une croissance mémoire illimitée.
-      if (turnBuf.length > 16384) turnBuf = turnBuf.slice(-8192)
-      term.write(out)
-    })
-
-    // Envoyer l'input utilisateur (flèches, Ctrl+C, caractères) au PTY.
-    term.onData((data) => {
-      window.electronAPI.terminal.write({ id, data })
-    })
-
-    // Forwarder EXPLICITE de la touche Tab vers le PTY.
-    // POURQUOI : à partir d'xterm 6, Tab n'est plus toujours envoyé au shell par
-    // défaut (il est laissé à la navigation clavier du navigateur) — d'où l'absence
-    // de complétion alors que tout le reste fonctionne. On intercepte donc Tab,
-    // on bloque le comportement par défaut du navigateur (preventDefault) et on
-    // envoie nous-mêmes le caractère de tabulation (\t) qui déclenche la complétion
-    // readline de bash. `return false` empêche xterm de retraiter la touche (pas de
-    // double envoi). Shift+Tab → séquence de complétion inverse.
-    term.attachCustomKeyEventHandler((e) => {
-      if (e.type === 'keydown' && e.key === 'Tab') {
-        e.preventDefault()
-        const seq = e.shiftKey ? '\x1b[Z' : '\t'
-        window.electronAPI.terminal.write({ id, data: seq })
-        return false
-      }
-      return true
-    })
-
-    // Message de bienvenue
-    const label = shell === 'powershell' ? 'PowerShell' : 'Bash'
-    term.writeln(`\x1b[36m# Terminal ${label} — ScriptLearn\x1b[0m`)
-    term.writeln('')
-
-  }, [id, shell, setup])
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
 
   useEffect(() => {
-    init()
+    // ── Cycle de vie ─────────────────────────────────────────────────────────
+    // POURQUOI tout est dans CE useEffect avec un drapeau local `alive`, et non
+    // dans un useCallback avec des refs partagées : l'initialisation est
+    // ASYNCHRONE (await terminal.create) alors que le nettoyage est synchrone.
+    // Séquence observée en StrictMode (et en production dès qu'un démontage
+    // survient avant la fin du create — changement d'acte rapide) :
+    //   run #1 crée xterm A → await → cleanup #1 (l'abonnement n'existe pas
+    //   encore, donc rien n'est désabonné) → run #2 crée xterm B et s'abonne →
+    //   la suite du run #1 reprend et ÉCRASE la référence d'abonnement.
+    // Résultat : un écouteur fantôme filtrant le MÊME id restait actif à vie →
+    // onOutput appelé deux fois par tour (double validation) et écriture dans un
+    // xterm déjà dispose(). Avec un drapeau et des variables LOCALES, chaque run
+    // ne nettoie que ses propres ressources.
+    let alive = true
+    let unsub = null
+    let term = null
+    let resizeTimer = null
+    let lastSize = { cols: 0, rows: 0 }
 
     const observer = new ResizeObserver(() => {
-      fitRef.current?.fit()
-      // Informer le PTY de la nouvelle taille pour aligner le retour à la ligne
-      // et la mise en page de la complétion.
-      const t = xtermRef.current
-      if (t) window.electronAPI.terminal.resize({ id, cols: t.cols, rows: t.rows })
+      // Débounce : le ResizeObserver se déclenche à chaque frame pendant un
+      // redimensionnement de fenêtre ; sans ça, on envoyait des dizaines de
+      // resize ConPTY par seconde (chacun provoquant un redessin complet du shell).
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        if (!alive) return
+        fitRef.current?.fit()
+        const t = xtermRef.current
+        if (!t) return
+        // Ne rien envoyer si la taille en caractères n'a pas changé (un
+        // redimensionnement de quelques pixels ne change souvent rien).
+        if (t.cols === lastSize.cols && t.rows === lastSize.rows) return
+        lastSize = { cols: t.cols, rows: t.rows }
+        window.electronAPI.terminal.resize({ id, cols: t.cols, rows: t.rows })
+      }, 120)
     })
+
+    async function init() {
+      if (!containerRef.current || xtermRef.current) return
+
+      term = new XTerm({
+        theme: THEME,
+        fontFamily: '"JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace',
+        fontSize: 13,
+        lineHeight: 1.4,
+        cursorBlink: true,
+        scrollback: 1000,
+        convertEol: true
+      })
+
+      const fitAddon = new FitAddon()
+      const linksAddon = new WebLinksAddon()
+      term.loadAddon(fitAddon)
+      term.loadAddon(linksAddon)
+      term.open(containerRef.current)
+      fitAddon.fit()
+
+      xtermRef.current = term
+      fitRef.current = fitAddon
+      lastSize = { cols: term.cols, rows: term.rows }
+
+      // Créer la session côté main process avec la taille initiale (cols/rows) —
+      // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
+      const res = await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
+
+      // Démontage pendant le create : on referme immédiatement ce qu'on vient
+      // d'ouvrir et on n'installe AUCUN abonnement.
+      if (!alive) {
+        window.electronAPI.terminal.kill({ id })
+        return
+      }
+      if (res && res.ok === false) {
+        term.writeln(`\x1b[31m# Terminal indisponible : ${res.error ?? 'erreur inconnue'}\x1b[0m`)
+        onReadyRef.current?.(false)
+        return
+      }
+
+      // ── Affichage + isolation de la sortie pour la validation terminal-auto ──────
+      // Le shell émet un MARQUEUR invisible (PROMPT_MARKER) avant chaque invite. On
+      // s'en sert pour : (a) le RETIRER de l'affichage (sinon des caractères de contrôle
+      // pollueraient l'écran) ; (b) découper le flux en blocs « invite + commande tapée
+      // + sortie ». À chaque marqueur, le bloc accumulé depuis le précédent est complet :
+      // on isole la sortie réelle (lignes APRÈS la dernière ligne d'invite → l'écho de la
+      // commande est exclu, ce qui règle le piège « echo "texte attendu" ») et on l'émet.
+      const PROMPT_RE = promptRegexFor(shell)
+      const PROMPT_PREFIX = promptPrefixFor(shell)
+      let carry = ''        // morceau de marqueur éventuellement coupé entre 2 chunks
+      let turnBuf = ''      // bloc courant (depuis le dernier marqueur), marqueur retiré
+      let turnCmd = null    // commande du tour, capturée TÔT (avant que nano ne noie le buffer)
+
+      // Extrait la commande tapée d'un buffer : 1re ligne d'invite SUIVIE d'une autre
+      // ligne (donc « Entrée » a été pressée). Capturée dès qu'elle est disponible pour
+      // rester fiable même si turnBuf est ensuite tronqué par les redraws de nano.
+      const extractCmd = (buf) => {
+        const lines = stripAnsi(buf).split('\n')
+        for (let i = 0; i < lines.length - 1; i++) {
+          if (PROMPT_RE.test(lines[i])) return lines[i].replace(PROMPT_RE, '').trim()
+        }
+        return null
+      }
+
+      const emitTurn = (text) => {
+        const cb = onOutputRef.current
+        if (!cb) return
+        // Ignorer les tours « éditeur/pager » (nano…) : on ne valide pas sur leur écran.
+        if (turnCmd && EDITOR_CMD_RE.test(turnCmd)) return
+        const lines = stripAnsi(text).split('\n')
+        let lastPrompt = -1
+        for (let i = 0; i < lines.length; i++) {
+          if (PROMPT_RE.test(lines[i])) lastPrompt = i
+        }
+        if (lastPrompt === -1) return           // bloc sans commande (bannière de démarrage)
+        const output = lines.slice(lastPrompt + 1).join('\n').trim()
+        // On transmet aussi la commande du tour : le parent peut ainsi distinguer un
+        // VRAI lancement de script (bash/python/powershell…) d'une commande d'exploration.
+        if (output) cb(output, turnCmd)
+      }
+
+      unsub = window.electronAPI.terminal.onData(({ id: sid, chunk }) => {
+        if (sid !== id || !alive) return
+        let data = carry + chunk
+        carry = ''
+        let out = ''
+        let mi
+        while ((mi = data.indexOf(PROMPT_MARKER)) !== -1) {
+          const before = data.slice(0, mi)
+          out += before
+          turnBuf += before
+          if (turnCmd === null) turnCmd = extractCmd(turnBuf)
+          emitTurn(turnBuf)                     // bloc complet → on isole et on émet sa sortie
+          turnBuf = ''
+          turnCmd = null                        // réarmer pour le tour suivant
+          data = data.slice(mi + PROMPT_MARKER.length)
+        }
+        // Garder en attente un marqueur potentiellement coupé en fin de chunk.
+        // Seuil de 3 caractères : avec 1, un simple « _ » tapé en fin de chunk
+        // (nom de variable) était retenu et n'apparaissait qu'à la frappe suivante.
+        const p = partialMarkerSuffixLen(data)
+        if (p >= 3) { carry = data.slice(data.length - p); data = data.slice(0, data.length - p) }
+        out += data
+        turnBuf += data
+        // Capturer la commande du tour DÈS qu'elle est disponible (avant troncature).
+        if (turnCmd === null) turnCmd = extractCmd(turnBuf)
+        // Borne de sécurité : sans marqueur (ex. shell node) ou pendant une longue session
+        // nano, turnBuf ne se réinitialise pas — on évite une croissance mémoire illimitée.
+        // On RÉINJECTE une ligne d'invite synthétique en tête : la troncature
+        // coupait par le début et emportait la vraie ligne d'invite, donc
+        // emitTurn ne trouvait plus de repère et n'émettait RIEN — toute commande
+        // produisant plus de 16 Ko (un `grep -r`, un `cat` de log) n'était jamais
+        // évaluée, l'élève voyait le bon résultat sans que l'acte se valide.
+        if (turnBuf.length > 16384) {
+          turnBuf = `${PROMPT_PREFIX}${turnCmd ?? ''}\n` + turnBuf.slice(-8192)
+        }
+        term.write(out)
+      })
+
+      // Envoyer l'input utilisateur (flèches, Ctrl+C, caractères) au PTY.
+      term.onData((data) => {
+        window.electronAPI.terminal.write({ id, data })
+      })
+
+      // Forwarder EXPLICITE de la touche Tab vers le PTY.
+      // POURQUOI : à partir d'xterm 6, Tab n'est plus toujours envoyé au shell par
+      // défaut (il est laissé à la navigation clavier du navigateur) — d'où l'absence
+      // de complétion alors que tout le reste fonctionne. On intercepte donc Tab,
+      // on bloque le comportement par défaut du navigateur (preventDefault) et on
+      // envoie nous-mêmes le caractère de tabulation (\t) qui déclenche la complétion
+      // readline de bash. `return false` empêche xterm de retraiter la touche (pas de
+      // double envoi). Shift+Tab → séquence de complétion inverse.
+      term.attachCustomKeyEventHandler((e) => {
+        if (e.type === 'keydown' && e.key === 'Tab') {
+          e.preventDefault()
+          const seq = e.shiftKey ? '\x1b[Z' : '\t'
+          window.electronAPI.terminal.write({ id, data: seq })
+          return false
+        }
+        return true
+      })
+
+      // Message de bienvenue
+      const label = shell === 'powershell' ? 'PowerShell' : 'Bash'
+      term.writeln(`\x1b[36m# Terminal ${label} — ScriptLearn\x1b[0m`)
+      term.writeln('')
+      onReadyRef.current?.(true)
+    }
+
+    // .catch : une promesse rejetée ici (IPC indisponible) laissait un panneau
+    // noir sans le moindre message et une « unhandled rejection » en console.
+    init().catch((e) => {
+      try { xtermRef.current?.writeln(`\x1b[31m# Erreur d'initialisation : ${String(e?.message ?? e)}\x1b[0m`) } catch { /* xterm déjà détruit */ }
+      onReadyRef.current?.(false)
+    })
+
     if (containerRef.current) observer.observe(containerRef.current)
 
     return () => {
+      alive = false
+      clearTimeout(resizeTimer)
       observer.disconnect()
-      unsubRef.current?.()
+      unsub?.()
       window.electronAPI.terminal.kill({ id })
+      onReadyRef.current?.(false)
       xtermRef.current?.dispose()
       xtermRef.current = null
+      fitRef.current = null
     }
-  }, [id, init])
+  }, [id, shell, setup])
 
   return (
     <div

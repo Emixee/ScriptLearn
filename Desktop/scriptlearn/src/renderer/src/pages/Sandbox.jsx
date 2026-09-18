@@ -6,7 +6,11 @@ import Terminal from '../components/Terminal'
 import PreviewPane from '../components/PreviewPane'
 import ToolchainBanner from '../components/ToolchainBanner'
 // Métadonnées langages centralisées — partagées avec Exercise et MissionPlay.
-import { LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension, buildRunData, termShellFor } from '../lib/langs'
+import { LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension, buildRunData, termShellFor, stripAnsi, PROMPT_MARKER } from '../lib/langs'
+
+// Borne du tampon de sortie : il n'était vidé qu'à l'exécution suivante, donc une
+// commande bavarde laissée tourner faisait croître la mémoire du renderer sans fin.
+const MAX_OUTPUT_BUFFER = 256 * 1024
 
 const REFERENCE = {
   kql: `Tables : SecurityEvent · SigninLogs · Syslog · DnsEvents · AuditLogs · SecurityAlert\n\nStructure :\nTable\n| where TimeGenerated > ago(24h)\n| project Col1, Col2\n| summarize Count=count() by IpAddress\n| sort by Count desc\n| take 100`,
@@ -33,16 +37,34 @@ export default function Sandbox() {
   // Mis à jour manuellement via le bouton "Actualiser l'aperçu"
   // (pas de boucle sentinel en Sandbox — pas de validation automatique)
   const [phpPreviewSrc, setPhpPreviewSrc] = useState('')
+  // Code HTML DÉBOUNCÉ pour l'aperçu.
+  // POURQUOI : `srcDoc={code}` rechargeait l'iframe à CHAQUE caractère tapé —
+  // scripts de l'élève réexécutés en boucle, focus et état du rendu perdus.
+  const [htmlPreview, setHtmlPreview] = useState('')
+  // Session PTY prête ? (voir Terminal.jsx onReady) — sans ça, « ▶ Exécuter »
+  // juste après un changement de langage écrivait dans une session inexistante.
+  const [termReady, setTermReady] = useState(false)
   const outputBuffer = useRef('')
   const termId = `sandbox-${uid}-${lang}`
   const isStatic = STATIC_LANGS.includes(lang)
   const langColor = LANG_COLORS[lang] ?? '#d97706'
 
+  // Aperçu HTML : on attend 300 ms de calme dans la frappe avant de recharger
+  // l'iframe.
+  useEffect(() => {
+    const t = setTimeout(() => setHtmlPreview(code), 300)
+    return () => clearTimeout(t)
+  }, [code])
+
   // Écouter la sortie terminal pour le Sandbox PHP
   // Permet d'actualiser l'aperçu avec le bouton "Actualiser l'aperçu"
   useEffect(() => {
     const cleanup = window.electronAPI.terminal.onData(({ id, chunk }) => {
-      if (id === termId) outputBuffer.current += chunk
+      if (id !== termId) return
+      const next = outputBuffer.current + chunk
+      outputBuffer.current = next.length > MAX_OUTPUT_BUFFER
+        ? next.slice(-MAX_OUTPUT_BUFFER)
+        : next
     })
     return cleanup
   }, [termId])
@@ -66,8 +88,14 @@ export default function Sandbox() {
   // Actualiser l'aperçu PHP avec la sortie capturée dans outputBuffer
   // Appelé manuellement par le bouton "Actualiser l'aperçu"
   const refreshPhpPreview = useCallback(() => {
-    const { default: stripAnsi } = { default: (s) => s.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '').replace(/\r/g, '') }
-    const raw = stripAnsi(outputBuffer.current)
+    // stripAnsi vient de lib/langs (il y en avait une RÉIMPLÉMENTATION locale ici,
+    // vouée à diverger de l'originale).
+    // PROMPT_MARKER doit être retiré AVANT le filtrage : le flux brut du PTY le
+    // contient (il est émis via PROMPT_COMMAND à chaque invite) et seul
+    // Terminal.jsx le retirait, pour son propre affichage. Résultat : le marqueur
+    // et les lignes d'invite se retrouvaient dans l'aperçu PHP, car le filtre
+    // /^\$\s/ ne reconnaît pas « __SLPROMPTMARK__$ … ».
+    const raw = stripAnsi(outputBuffer.current.split(PROMPT_MARKER).join(''))
     const lines = raw.split('\n').filter(l => !l.match(/^\$\s/) && !l.includes('PHPEOF') && !l.startsWith('php <<'))
     const phpOut = lines.join('\n').trim()
     if (!phpOut) return
@@ -80,11 +108,11 @@ export default function Sandbox() {
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); handleRun() }
+      if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); if (termReady) handleRun() }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [handleRun])
+  }, [handleRun, termReady])
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a09]">
@@ -122,7 +150,9 @@ export default function Sandbox() {
           {!isStatic && (
             <button
               onClick={handleRun}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors"
+              disabled={!termReady}
+              title={termReady ? 'Exécuter dans le terminal' : 'Terminal en cours de démarrage…'}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs rounded-sm transition-colors disabled:opacity-40"
             >
               ▶ Exécuter <kbd className="opacity-40 ml-1">Ctrl+↵</kbd>
             </button>
@@ -176,13 +206,13 @@ export default function Sandbox() {
           {/* HTML : prévisualisation plein panneau (temps réel) */}
           {lang === 'html' ? (
             <div className="flex-1 overflow-hidden">
-              <PreviewPane srcDoc={code} label="HTML" langColor={langColor} />
+              <PreviewPane srcDoc={htmlPreview} label="HTML" langColor={langColor} />
             </div>
           ) : lang === 'php' ? (
             // PHP : terminal bash (60 %) + aperçu (40 %)
             <div className="flex flex-col h-full">
               <div style={{ flex: '0 0 60%', overflow: 'hidden' }}>
-                <Terminal id={termId} shell="bash" className="h-full" />
+                <Terminal id={termId} shell="bash" className="h-full" onReady={setTermReady} />
               </div>
               <div className="border-t border-[#2e2b26]" style={{ flex: '0 0 40%', overflow: 'hidden' }}>
                 <PreviewPane srcDoc={phpPreviewSrc} label="PHP" langColor={langColor} />
@@ -216,7 +246,7 @@ export default function Sandbox() {
                 ) : (
                   // termShellFor : C/C++/C#/Java passent par bash WSL (compilation) ;
                   // bash/python/powershell gardent leur interpréteur.
-                  <Terminal id={termId} shell={termShellFor(lang)} className="h-full" />
+                  <Terminal id={termId} shell={termShellFor(lang)} className="h-full" onReady={setTermReady} />
                 )}
               </div>
             </>

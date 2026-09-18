@@ -26,7 +26,7 @@
       "title": "Nombre d'employés par département",
       "instructions": "Affichez le **nombre d'employés** pour chaque département de la table `employees`.",
       "requiredKeywords": ["select", "department", "count", "*", "from", "employees", "group by", "department"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT department, COUNT(*) AS nb_employes FROM employees GROUP BY department;",
       "explanation": "`GROUP BY department` crée un groupe par département. `COUNT(*)` compte les lignes de chaque groupe. Sans `GROUP BY`, `COUNT(*)` retournerait le total global."
     },
@@ -36,7 +36,8 @@
       "title": "Salaire moyen par département",
       "instructions": "Calculez le **salaire moyen** pour chaque département, trié par moyenne décroissante.",
       "requiredKeywords": ["select", "department", "avg", "salary", "from", "employees", "group by", "department", "order by"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
       "correction": "SELECT department, AVG(salary) AS salaire_moyen FROM employees GROUP BY department ORDER BY salaire_moyen DESC;",
       "explanation": "On peut utiliser l'alias `salaire_moyen` dans `ORDER BY`. L'agrégation est calculée pour chaque groupe, puis les résultats sont triés."
     },
@@ -46,7 +47,7 @@
       "title": "Départements avec plus de 3 employés",
       "instructions": "Listez les **départements qui ont plus de 3 employés**.",
       "requiredKeywords": ["select", "department", "count", "from", "employees", "group by", "department", "having", "3"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT department, COUNT(*) AS nb FROM employees GROUP BY department HAVING COUNT(*) > 3;",
       "explanation": "`HAVING COUNT(*) > 3` s'applique sur les groupes — après que `COUNT(*)` a été calculé pour chaque département. `WHERE COUNT(*) > 3` serait une erreur car `WHERE` s'évalue avant l'agrégation."
     },
@@ -56,7 +57,7 @@
       "title": "Salaire max par département",
       "instructions": "Affichez le **salaire maximum** de chaque département.",
       "requiredKeywords": ["select", "department", "max", "salary", "from", "employees", "group by", "department"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT department, MAX(salary) AS max_salaire FROM employees GROUP BY department;",
       "explanation": "`MAX(salary)` retourne la valeur maximale de `salary` dans chaque groupe formé par `GROUP BY department`. C'est utile pour identifier le mieux payé de chaque département."
     },
@@ -66,7 +67,9 @@
       "title": "Requête complète avec HAVING et ORDER BY",
       "instructions": "Affichez les départements dont le **salaire moyen dépasse 55000**, triés par moyenne décroissante.",
       "requiredKeywords": ["select", "department", "avg", "salary", "from", "employees", "group by", "having", "55000", "order by"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT department, AVG(salary) AS moy FROM employees GROUP BY department HAVING AVG(salary) > 55000 ORDER BY moy DESC;",
       "explanation": "Ordre d'exécution : 1) `FROM employees` → 2) `GROUP BY department` → 3) `HAVING AVG(salary) > 55000` (filtre les groupes) → 4) `ORDER BY moy DESC` (trie le résultat)."
     }

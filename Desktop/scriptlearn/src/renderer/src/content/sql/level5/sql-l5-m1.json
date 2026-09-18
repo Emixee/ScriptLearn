@@ -26,7 +26,7 @@
       "title": "Créer un index simple",
       "instructions": "Créez un index `idx_emp_dept` sur la colonne `department` de la table `employees`.",
       "requiredKeywords": ["create index", "idx_emp_dept", "on", "employees", "department"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE INDEX idx_emp_dept ON employees(department);",
       "explanation": "Cet index accélère toutes les requêtes `WHERE department = '...'` et `GROUP BY department`. Le coût : l'espace disque et un léger ralentissement des INSERT/UPDATE/DELETE (l'index doit être maintenu)."
     },
@@ -36,7 +36,7 @@
       "title": "Index unique",
       "instructions": "Créez un **index unique** `idx_emp_email` sur la colonne `email` de `employees`.",
       "requiredKeywords": ["create unique index", "idx_emp_email", "on", "employees", "email"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE UNIQUE INDEX idx_emp_email ON employees(email);",
       "explanation": "Un index unique remplit deux rôles : accélérer les recherches par email ET garantir qu'aucun doublon ne peut être inséré. C'est l'alternative à `UNIQUE` dans `CREATE TABLE` pour les tables existantes."
     },
@@ -46,7 +46,7 @@
       "title": "Index composite",
       "instructions": "Créez un index composite `idx_dept_salary` sur `(department, salary)` pour accélérer les requêtes filtrant par département ET triant par salaire.",
       "requiredKeywords": ["create index", "idx_dept_salary", "on", "employees", "department", "salary"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE INDEX idx_dept_salary ON employees(department, salary);",
       "explanation": "Un index composite sur `(department, salary)` sert aux requêtes `WHERE department = ... ORDER BY salary`. La règle du préfixe : l'index sert aussi pour `WHERE department = ...` seul, mais pas pour `WHERE salary = ...` seul."
     },

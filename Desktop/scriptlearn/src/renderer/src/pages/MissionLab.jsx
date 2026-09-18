@@ -33,15 +33,33 @@ export default function MissionLab() {
   // Jauge de menace : 100% au départ, descend proportionnellement aux objectifs validés.
   const threat = Math.round((1 - doneCount / Math.max(1, objectives.length)) * (lab?.threatMax ?? 100))
 
-  // Reprise : pré-marquer les objectifs déjà réussis.
+  // Reprise : pré-marquer les objectifs déjà réussis, et REMETTRE À ZÉRO l'état de
+  // jeu quand on change de lab.
+  // POURQUOI la remise à zéro : la route /lab/:labId réutilise le même composant.
+  // En passant d'un lab à l'autre, `log`, `vaultInput` et `showFinale` gardaient
+  // les valeurs du lab précédent (seul `done` était rechargé).
   useEffect(() => {
-    if (!profile || !lab) return
-    window.electronAPI.store.getProgress(profile.id).then(p => {
-      const map = {}
-      objectives.forEach(o => { if (p[`${lab.id}:${o.id}`]?.completed) map[o.id] = true })
-      doneRef.current = map
-      setDone({ ...map })
-    })
+    if (!lab) return
+    let cancelled = false
+    setLog([])
+    setVaultInput('')
+    setVaultError(false)
+    setShowFinale(false)
+    doneRef.current = {}
+    setDone({})
+    if (!profile) return
+    window.electronAPI.store.getProgress(profile.id)
+      .then(p => {
+        if (cancelled) return
+        const map = {}
+        objectives.forEach(o => { if (p[`${lab.id}:${o.id}`]?.completed) map[o.id] = true })
+        doneRef.current = map
+        setDone({ ...map })
+      })
+      // .catch : un rejet IPC produisait une « unhandled rejection » et laissait le
+      // lab sans progression, sans message.
+      .catch(() => {})
+    return () => { cancelled = true }
   }, [profile?.id, lab?.id])
 
   // Détection LIVE : appelée pour chaque ligne affichée par le terminal.
@@ -193,7 +211,11 @@ export default function MissionLab() {
 
         {/* Terminal Linux réel — la SEULE zone de saisie */}
         <div className="flex-1 min-w-0">
-          <WasmTerminal seedFiles={lab.seedFiles || {}} title={lab.title} onOutput={handleOutput} />
+          {/* key={lab.id} : SANS elle, naviguer de /lab/a vers /lab/b ne remontait
+              pas le composant (même route) — l'effet de boot a les dépendances [],
+              donc la VM et le système de fichiers du lab précédent étaient réutilisés
+              avec les objectifs du nouveau lab. */}
+          <WasmTerminal key={lab.id} seedFiles={lab.seedFiles || {}} title={lab.title} onOutput={handleOutput} />
         </div>
       </div>
 

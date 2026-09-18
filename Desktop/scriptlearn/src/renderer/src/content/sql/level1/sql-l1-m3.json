@@ -26,7 +26,8 @@
       "title": "Trier par salaire décroissant",
       "instructions": "Affichez tous les employés triés du **salaire le plus élevé au plus bas**.",
       "requiredKeywords": ["select", "from", "employees", "order by", "salary", "desc"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
       "correction": "SELECT * FROM employees ORDER BY salary DESC;",
       "explanation": "`ORDER BY salary DESC` trie de la valeur la plus haute à la plus basse. `DESC` = descending (décroissant). Sans `DESC`, le tri serait croissant (`ASC`)."
     },
@@ -36,7 +37,8 @@
       "title": "Top 3 des mieux payés",
       "instructions": "Affichez les **3 employés les mieux payés** (nom et salaire).",
       "requiredKeywords": ["select", "name", "salary", "from", "employees", "order by", "desc", "limit", "3"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
       "correction": "SELECT name, salary FROM employees ORDER BY salary DESC LIMIT 3;",
       "explanation": "Le duo `ORDER BY ... DESC LIMIT n` est le pattern classique pour les \"top N\". L'ordre de tri est appliqué avant la limitation — on trie tout, puis on garde les 3 premiers."
     },
@@ -46,7 +48,7 @@
       "title": "Recherche par préfixe",
       "instructions": "Sélectionnez les employés dont le **nom commence par 'A'**.",
       "requiredKeywords": ["select", "from", "employees", "where", "name", "like", "a%"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE name LIKE 'A%';",
       "explanation": "`LIKE 'A%'` correspond à tout nom commençant par A, suivi de n'importe quoi. Le `%` est le joker pour \"zéro ou plusieurs caractères\"."
     },
@@ -56,7 +58,7 @@
       "title": "Recherche de texte partiel",
       "instructions": "Sélectionnez les employés dont le nom **contient 'son'** (n'importe où dans le nom).",
       "requiredKeywords": ["select", "from", "employees", "where", "name", "like", "%son%"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees WHERE name LIKE '%son%';",
       "explanation": "`LIKE '%son%'` — le `%` de chaque côté signifie que 'son' peut apparaître n'importe où : 'Jason', 'Anderson', 'Wilson', etc."
     },
@@ -66,7 +68,8 @@
       "title": "Tri multi-colonnes",
       "instructions": "Affichez les employés triés par **département (A→Z)** puis par **salaire décroissant** au sein de chaque département.",
       "requiredKeywords": ["select", "from", "employees", "order by", "department", "asc", "salary", "desc"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
       "correction": "SELECT * FROM employees ORDER BY department ASC, salary DESC;",
       "explanation": "Le tri multi-colonnes s'applique dans l'ordre : d'abord par `department` (alphabétique), puis par `salary DESC` pour les lignes ayant le même département."
     }

@@ -26,7 +26,7 @@
       "title": "EXISTS — clients avec commandes",
       "instructions": "Sélectionnez les **clients qui ont passé au moins une commande**.\n\nUtilisez `EXISTS` avec une sous-requête sur la table `orders`.",
       "requiredKeywords": ["select", "from", "customers", "where", "exists", "select", "from", "orders", "where", "customer_id"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
       "explanation": "`EXISTS` retourne vrai dès qu'une ligne est trouvée dans la sous-requête — il n'a pas besoin de tout parcourir. `SELECT 1` est une convention : la valeur sélectionnée n'a pas d'importance."
     },
@@ -36,7 +36,7 @@
       "title": "NOT EXISTS — sans correspondance",
       "instructions": "Sélectionnez les **clients sans aucune commande** avec `NOT EXISTS`.",
       "requiredKeywords": ["select", "from", "customers", "where", "not exists", "select", "from", "orders", "where", "customer_id"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
       "explanation": "`NOT EXISTS` s'inverse : vrai si la sous-requête ne retourne aucune ligne. C'est souvent plus clair que `LEFT JOIN ... WHERE IS NULL` pour les débutants."
     },
@@ -46,7 +46,7 @@
       "title": "UNION de deux listes",
       "instructions": "Combinez avec `UNION` les noms des employés IT et les noms des employés Dev en **une seule liste sans doublons**.",
       "requiredKeywords": ["select", "name", "from", "employees", "where", "department", "it", "union", "select", "name", "from", "employees", "where", "department", "dev"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name FROM employees WHERE department = 'IT' UNION SELECT name FROM employees WHERE department = 'Dev';",
       "explanation": "`UNION` combine les résultats et supprime les doublons. Si un employé apparaissait dans les deux (impossible ici mais pas en général), il ne serait affiché qu'une fois."
     },
@@ -56,7 +56,7 @@
       "title": "UNION ALL — garder les doublons",
       "instructions": "Listez tous les emails des tables `customers` et `leads` avec `UNION ALL` (conserver les doublons).",
       "requiredKeywords": ["select", "email", "from", "customers", "union all", "select", "email", "from", "leads"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT email FROM customers UNION ALL SELECT email FROM leads;",
       "explanation": "`UNION ALL` est plus rapide que `UNION` car il ne vérifie pas les doublons. Préférer `UNION ALL` quand les doublons sont impossibles ou intentionnels."
     },
@@ -66,7 +66,7 @@
       "title": "EXCEPT — différence",
       "instructions": "Trouvez les emails présents dans `customers` mais **absents** de `unsubscribed`.",
       "requiredKeywords": ["select", "email", "from", "customers", "except", "select", "email", "from", "unsubscribed"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT email FROM customers EXCEPT SELECT email FROM unsubscribed;",
       "explanation": "`EXCEPT` retourne les lignes du premier SELECT qui n'ont pas de correspondance dans le second. Idéal pour les exclusions — équivalent à `WHERE email NOT IN (SELECT email FROM unsubscribed)`."
     }

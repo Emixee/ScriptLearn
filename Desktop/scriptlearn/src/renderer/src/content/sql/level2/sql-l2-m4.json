@@ -26,7 +26,7 @@
       "title": "LEFT JOIN — tous les employés",
       "instructions": "Affichez **tous les employés** avec leur département si disponible, sinon NULL.\n\nUtilisez `LEFT JOIN` entre `employees` et `departments`.",
       "requiredKeywords": ["select", "from", "employees", "left join", "departments", "on"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT e.name, d.name AS dept FROM employees e LEFT JOIN departments d ON e.dept_id = d.id;",
       "explanation": "`LEFT JOIN` garantit que toutes les lignes de `employees` (gauche) apparaissent, même si `dept_id` ne correspond à rien dans `departments`. La colonne `dept` sera NULL pour ces lignes."
     },
@@ -36,7 +36,7 @@
       "title": "Trouver les orphelins",
       "instructions": "Trouvez les **employés sans département** assigné (avec `LEFT JOIN` + `WHERE ... IS NULL`).",
       "requiredKeywords": ["select", "from", "employees", "left join", "departments", "on", "where", "is null"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT e.name FROM employees e LEFT JOIN departments d ON e.dept_id = d.id WHERE d.id IS NULL;",
       "explanation": "Pattern classique : `LEFT JOIN ... WHERE right_table.id IS NULL` détecte les lignes sans correspondance. La condition `WHERE d.id IS NULL` filtre uniquement les employés qui n'ont pas de département."
     },
@@ -46,7 +46,7 @@
       "title": "Tous les départements",
       "instructions": "Affichez **tous les départements** avec le nombre d'employés qu'ils contiennent (0 si vide).\n\nIndice : utilisez `RIGHT JOIN` ou `LEFT JOIN` en inversant les tables.",
       "requiredKeywords": ["select", "d.name", "count", "from", "departments", "left join", "employees", "on", "group by"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT d.name, COUNT(e.id) AS nb_employes FROM departments d LEFT JOIN employees e ON d.id = e.dept_id GROUP BY d.name;",
       "explanation": "`COUNT(e.id)` (et non `COUNT(*)`) compte les non-NULL dans `e.id`. Pour un département vide, `e.id` est NULL donc `COUNT(e.id) = 0`. `COUNT(*)` retournerait 1 (une ligne avec NULL)."
     },
@@ -56,7 +56,8 @@
       "title": "Comparer INNER vs LEFT JOIN",
       "instructions": "Écrivez une requête avec `LEFT JOIN` entre `orders` et `customers` pour afficher **toutes les commandes** même celles sans client associé (`customer_id` peut être NULL).",
       "requiredKeywords": ["select", "from", "orders", "left join", "customers", "on", "customer_id"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlCheckColumns": true,
       "correction": "SELECT o.id, o.total, c.name AS client FROM orders o LEFT JOIN customers c ON o.customer_id = c.id;",
       "explanation": "Avec `INNER JOIN`, les commandes sans client seraient perdues. Avec `LEFT JOIN`, elles apparaissent avec `NULL` comme nom de client — utile pour auditer des incohérences de données."
     },

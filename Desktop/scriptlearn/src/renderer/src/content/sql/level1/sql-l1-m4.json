@@ -26,7 +26,7 @@
       "title": "Insérer un employé",
       "instructions": "Insérez un nouvel employé dans `employees` : nom `'David Luc'`, département `'IT'`, salaire `65000`.",
       "requiredKeywords": ["insert into", "employees", "values", "david luc", "it", "65000"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "INSERT INTO employees (name, department, salary) VALUES ('David Luc', 'IT', 65000);",
       "explanation": "Il est indispensable de préciser les colonnes `(name, department, salary)` pour que la requête soit robuste si la table change de structure. Les chaînes vont entre guillemets simples, les nombres sans guillemets."
     },
@@ -36,7 +36,7 @@
       "title": "Mettre à jour un salaire",
       "instructions": "Augmentez le salaire de l'employé ayant l'`id = 3` à `90000`.",
       "requiredKeywords": ["update", "employees", "set", "salary", "90000", "where", "id", "3"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "UPDATE employees SET salary = 90000 WHERE id = 3;",
       "explanation": "`SET salary = 90000` définit la nouvelle valeur. `WHERE id = 3` cible uniquement cet employé. Sans le `WHERE`, tous les employés auraient leur salaire mis à 90000 — une erreur irréversible sans transaction."
     },
@@ -46,7 +46,7 @@
       "title": "Augmentation collective",
       "instructions": "Augmentez de **10%** le salaire de tous les employés du département `'Dev'`.",
       "requiredKeywords": ["update", "employees", "set", "salary", "salary", "1.1", "where", "department", "dev"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "UPDATE employees SET salary = salary * 1.10 WHERE department = 'Dev';",
       "explanation": "`salary * 1.10` calcule 110% du salaire actuel — une augmentation de 10%. On peut référencer la valeur actuelle d'une colonne dans le calcul de la mise à jour."
     },
@@ -56,7 +56,7 @@
       "title": "Supprimer un employé",
       "instructions": "Supprimez l'employé ayant l'`id = 7`.",
       "requiredKeywords": ["delete from", "employees", "where", "id", "7"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "DELETE FROM employees WHERE id = 7;",
       "explanation": "`DELETE FROM` supprime les lignes correspondant au `WHERE`. Sans `WHERE`, toute la table est vidée. Bonne pratique : toujours vérifier avec un `SELECT` identique avant le `DELETE`."
     },
@@ -66,7 +66,7 @@
       "title": "Supprimer par condition",
       "instructions": "Supprimez tous les employés dont le `salary` est inférieur à `30000`.",
       "requiredKeywords": ["delete from", "employees", "where", "salary", "30000"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "DELETE FROM employees WHERE salary < 30000;",
       "explanation": "Le `WHERE` avec une condition numérique fonctionne exactement comme dans un `SELECT`. Avant d'exécuter, toujours faire `SELECT * FROM employees WHERE salary < 30000` pour voir ce qui sera supprimé."
     }

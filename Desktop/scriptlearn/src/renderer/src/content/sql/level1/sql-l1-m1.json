@@ -26,7 +26,7 @@
       "title": "Sélectionner toutes les colonnes",
       "instructions": "Récupérez **toutes les données** de la table `employees`.",
       "requiredKeywords": ["select", "*", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees;",
       "explanation": "`SELECT *` sélectionne toutes les colonnes. `FROM employees` indique la table source. C'est la requête SQL la plus simple — à utiliser avec `LIMIT` sur les grandes tables pour ne pas charger des millions de lignes."
     },
@@ -36,7 +36,7 @@
       "title": "Sélectionner des colonnes précises",
       "instructions": "Récupérez uniquement les colonnes `name` et `salary` de la table `employees`.",
       "requiredKeywords": ["select", "name", "salary", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name, salary FROM employees;",
       "explanation": "Lister les colonnes séparées par des virgules permet de ne récupérer que ce dont on a besoin — économise de la bande passante et améliore la lisibilité. Évitez `SELECT *` en production."
     },
@@ -46,7 +46,8 @@
       "title": "Renommer des colonnes avec AS",
       "instructions": "Sélectionnez `name` et `salary` depuis `employees`, en renommant `name` en `nom` et `salary` en `salaire`.",
       "requiredKeywords": ["select", "name", "as", "salary", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlCheckColumns": true,
       "correction": "SELECT name AS nom, salary AS salaire FROM employees;",
       "explanation": "Le mot-clé `AS` crée un **alias** — le résultat affiche le nouveau nom de colonne. Utile pour des rapports lisibles ou des interfaces utilisateur. On peut omettre `AS` (`SELECT name nom`) mais c'est moins lisible."
     },
@@ -56,7 +57,7 @@
       "title": "Valeurs distinctes",
       "instructions": "Obtenez la liste des **valeurs uniques** de la colonne `department` dans `employees`.",
       "requiredKeywords": ["select", "distinct", "department", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT DISTINCT department FROM employees;",
       "explanation": "`DISTINCT` élimine les doublons. Sans lui, chaque ligne retourne son département même si répété 100 fois. Idéal pour explorer les valeurs possibles d'une colonne."
     },
@@ -66,7 +67,7 @@
       "title": "Limiter les résultats",
       "instructions": "Récupérez les **5 premiers employés** de la table `employees`.",
       "requiredKeywords": ["select", "*", "from", "employees", "limit", "5"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM employees LIMIT 5;",
       "explanation": "`LIMIT n` restreint le nombre de lignes retournées. Indispensable sur les grandes tables pour éviter de surcharger l'application ou de télécharger inutilement des millions de lignes."
     }

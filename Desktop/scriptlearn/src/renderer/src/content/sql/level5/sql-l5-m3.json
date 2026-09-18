@@ -26,7 +26,7 @@
       "title": "Identifier une violation de 1NF",
       "instructions": "Une colonne `tags` contient `'sql,python,data'`. Quelle action corrige la violation de 1NF ?\n\nÉcrivez la clause SQL pour créer une table `user_tags` avec `user_id` et `tag`.",
       "requiredKeywords": ["create table", "user_tags", "user_id", "tag"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE TABLE user_tags (user_id INTEGER REFERENCES users(id), tag TEXT, PRIMARY KEY (user_id, tag));",
       "explanation": "1NF interdit les listes dans une cellule. La solution : une table de jonction `user_tags` avec une ligne par combinaison (utilisateur, tag). La clé primaire composite `(user_id, tag)` évite les doublons."
     },
@@ -36,7 +36,7 @@
       "title": "Clé primaire composite",
       "instructions": "Créez une table de liaison `project_members` avec les colonnes `project_id` et `employee_id`, dont la **clé primaire est composite** (les deux colonnes ensemble).",
       "requiredKeywords": ["create table", "project_members", "project_id", "employee_id", "primary key", "project_id", "employee_id"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE TABLE project_members (project_id INTEGER REFERENCES projects(id), employee_id INTEGER REFERENCES employees(id), PRIMARY KEY (project_id, employee_id));",
       "explanation": "La clé primaire composite garantit qu'un employé ne peut être ajouté qu'une seule fois à un projet. C'est le pattern standard pour les relations many-to-many."
     },
@@ -46,7 +46,9 @@
       "title": "Requête sur schéma en étoile",
       "instructions": "Calculez le **chiffre d'affaires total par catégorie de produit** en joignant `fact_sales`, `dim_product` (via `product_id`) et en groupant par `dim_product.category`.",
       "requiredKeywords": ["select", "category", "sum", "revenue", "from", "fact_sales", "join", "dim_product", "on", "product_id", "group by", "category"],
-      "validationType": "keywords",
+      "validationType": "sql",
+      "sqlOrdered": true,
+      "sqlCheckColumns": true,
       "correction": "SELECT p.category, SUM(f.revenue) AS ca FROM fact_sales f JOIN dim_product p ON f.product_id = p.id GROUP BY p.category ORDER BY ca DESC;",
       "explanation": "Dans un schéma en étoile, les requêtes analytiques joignent la table de faits avec les dimensions. `SUM(revenue)` agrège les mesures, `GROUP BY category` regroupe selon la dimension."
     },
@@ -56,7 +58,7 @@
       "title": "Dénormaliser pour la performance",
       "instructions": "Créez une vue matérialisée (simulée avec une table) `monthly_sales` pré-calculant `SUM(revenue)` groupé par `month` depuis `fact_sales`.",
       "requiredKeywords": ["create table", "monthly_sales", "as", "select", "month", "sum", "revenue", "from", "fact_sales", "group by", "month"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE TABLE monthly_sales AS SELECT month, SUM(revenue) AS total FROM fact_sales GROUP BY month;",
       "explanation": "`CREATE TABLE ... AS SELECT ...` crée une table pré-calculée. En OLAP, recalculer ce résultat à chaque requête sur des milliards de lignes est trop coûteux. Cette table dénormalisée est rafraîchie périodiquement."
     },

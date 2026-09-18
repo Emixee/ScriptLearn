@@ -26,7 +26,7 @@
       "title": "Au-dessus de la moyenne",
       "instructions": "Sélectionnez les employés dont le salaire est **supérieur à la moyenne** de tous les salaires.",
       "requiredKeywords": ["select", "from", "employees", "where", "salary", ">", "select", "avg", "salary", "from", "employees"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name, salary FROM employees WHERE salary > (SELECT AVG(salary) FROM employees);",
       "explanation": "La sous-requête `(SELECT AVG(salary) FROM employees)` calcule la moyenne globale. Ce scalaire est ensuite utilisé comme seuil dans le `WHERE`. C'est plus dynamique qu'une valeur codée en dur."
     },
@@ -36,7 +36,7 @@
       "title": "L'employé le mieux payé",
       "instructions": "Trouvez le nom de l'employé avec le **salaire maximum** (sans utiliser `ORDER BY LIMIT`).",
       "requiredKeywords": ["select", "name", "from", "employees", "where", "salary", "=", "select", "max", "salary"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name FROM employees WHERE salary = (SELECT MAX(salary) FROM employees);",
       "explanation": "La sous-requête retourne le salaire max, puis le `WHERE` filtre l'employé qui a exactement ce salaire. Avantage sur `ORDER BY LIMIT 1` : retourne tous les ex-æquo."
     },
@@ -46,7 +46,7 @@
       "title": "Employés dans des départements parisiens",
       "instructions": "Sélectionnez les employés dont le département est basé à `'Paris'`.\n\nUtilisez une sous-requête avec `IN` sur la table `departments`.",
       "requiredKeywords": ["select", "from", "employees", "where", "dept_id", "in", "select", "id", "from", "departments", "where", "city", "paris"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT name FROM employees WHERE dept_id IN (SELECT id FROM departments WHERE city = 'Paris');",
       "explanation": "La sous-requête retourne la liste des `id` des départements parisiens. Le `IN` teste si `dept_id` de l'employé est dans cette liste. Équivalent à un `INNER JOIN` mais parfois plus lisible."
     },
@@ -56,7 +56,7 @@
       "title": "Table dérivée",
       "instructions": "En utilisant une sous-requête dans `FROM`, listez les départements dont le **salaire moyen dépasse 60 000**.\n\nDonnez l'alias `stats` à la table dérivée.",
       "requiredKeywords": ["select", "from", "select", "avg", "salary", "from", "employees", "group by", "as", "stats", "where", "60000"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT dept, moy FROM (SELECT department AS dept, AVG(salary) AS moy FROM employees GROUP BY department) AS stats WHERE moy > 60000;",
       "explanation": "Une table dérivée (sous-requête dans `FROM`) est traitée comme une table temporaire. L'alias `AS stats` est obligatoire. Utilisée quand on veut filtrer sur un agrégat sans `HAVING`."
     },
@@ -66,7 +66,7 @@
       "title": "Sous-requête corrélée",
       "instructions": "Sélectionnez les employés qui gagnent **plus que la moyenne de leur propre département**.\n\nUtilisez deux alias `e1` et `e2` pour la même table.",
       "requiredKeywords": ["select", "e1", "from", "employees e1", "where", "e1.salary", ">", "select", "avg", "e2.salary", "from", "employees e2", "where", "e2.department", "=", "e1.department"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT e1.name, e1.department, e1.salary FROM employees e1 WHERE e1.salary > (SELECT AVG(e2.salary) FROM employees e2 WHERE e2.department = e1.department);",
       "explanation": "La sous-requête corrélée référence `e1.department` (table externe). Elle est réévaluée pour chaque ligne de `e1`. Très expressif mais potentiellement lent — pour les grandes tables, préférer les fonctions de fenêtre."
     }

@@ -36,7 +36,7 @@
       "title": "Utiliser une vue",
       "instructions": "Sélectionnez **tous les enregistrements** de la vue `v_high_salaries`.",
       "requiredKeywords": ["select", "*", "from", "v_high_salaries"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "SELECT * FROM v_high_salaries;",
       "explanation": "Une vue s'utilise exactement comme une table. On peut y ajouter un `WHERE`, `ORDER BY`, `LIMIT` — la vue sera imbriquée dans une sous-requête implicitement."
     },
@@ -46,7 +46,7 @@
       "title": "Vue avec jointure",
       "instructions": "Créez une vue `v_emp_dept` qui affiche le `name` de l'employé (`employees`) et le `name` du département (`departments`) avec un `INNER JOIN`.",
       "requiredKeywords": ["create view", "v_emp_dept", "as", "select", "from", "employees", "inner join", "departments", "on"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "CREATE VIEW v_emp_dept AS SELECT e.name, d.name AS dept FROM employees e INNER JOIN departments d ON e.dept_id = d.id;",
       "explanation": "Une vue peut encapsuler une jointure complexe. Les utilisateurs de la vue n'ont pas besoin de connaître la structure des tables sous-jacentes — ils voient simplement `name` et `dept`."
     },
@@ -66,7 +66,7 @@
       "title": "Supprimer une vue",
       "instructions": "Supprimez la vue `v_high_salaries` **sans générer d'erreur** si elle n'existe pas.",
       "requiredKeywords": ["drop view", "if exists", "v_high_salaries"],
-      "validationType": "keywords",
+      "validationType": "sql",
       "correction": "DROP VIEW IF EXISTS v_high_salaries;",
       "explanation": "`IF EXISTS` évite une erreur si la vue n'existe pas — utile dans les scripts de migration où on ne sait pas toujours l'état de la base."
     }
