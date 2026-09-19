@@ -43,7 +43,7 @@ function Sidebar({ onSearch }) {
             </div>
             {/* Tagline commentaire — clin d'œil au code source, ton authentique */}
             <div className="text-[#3d3a34] text-[10px] leading-none mt-0.5 tracking-wide">
-              // scripting
+              {'// scripting'}
             </div>
           </div>
         </div>

@@ -138,7 +138,7 @@ ou séparément :
 
 | Commande | Rôle |
 |---|---|
-| `npm run lint` | ESLint + `react-hooks` (`eslint.config.js`) |
+| `npm run lint` | ESLint + `react-hooks` (`eslint.config.mjs`) |
 | `npm test` | Vitest (validateurs) |
 | `npm run content:check` | intégrité du contenu pédagogique (`scripts/check-content.mjs`) |
 | `npm run build` | build electron-vite |

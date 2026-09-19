@@ -61,6 +61,11 @@ function isSafeHref(value) {
   // On normalise avant de tester : « JaVaScRiPt: », les espaces et les
   // caractères de contrôle (\t, \n) sont ignorés par les navigateurs dans une
   // URL, donc un simple startsWith('javascript:') se contourne.
+  // La plage \u0000-\u0020 (caractères de contrôle + espace) est exactement ce
+  // qu'on doit retirer : c'est ce que les navigateurs ignorent dans une URL, donc
+  // le vecteur de contournement à neutraliser. D'où la désactivation de la règle
+  // sur la ligne suivante (elle doit la précéder IMMÉDIATEMENT).
+  // eslint-disable-next-line no-control-regex
   const v = String(value).replace(/[\u0000- ]/g, '').toLowerCase()
   return v.startsWith('http://') || v.startsWith('https://') || v.startsWith('mailto:') || v.startsWith('#')
 }

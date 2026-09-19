@@ -20,7 +20,7 @@
  * (Inspiré de l'implémentation Analyst SOC Training qui a résolu ce même problème.)
  */
 
-import { ipcMain, BrowserWindow }  from 'electron'
+import { ipcMain }  from 'electron'
 import { request as httpRequest }  from 'http'
 import { request as httpsRequest } from 'https'
 

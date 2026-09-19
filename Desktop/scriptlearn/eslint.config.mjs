@@ -72,6 +72,12 @@ export default [
       // Le contenu pédagogique local est rendu en HTML après désinfection
       // (utils/sanitizeHtml.js) : la règle ne saurait pas le voir.
       'react/no-danger': 'off',
+      // POURQUOI désactivée : l'application est ENTIÈREMENT en français, donc
+      // l'apostrophe est partout (« l'élève », « n'est pas »). La règle produisait
+      // 30 erreurs sur du texte parfaitement correct. Elle existe pour attraper des
+      // `>` ou `"` égarés qui casseraient le JSX — mais React échappe déjà les
+      // nœuds de texte, il n'y a donc aucun risque de sécurité ni de rendu ici.
+      'react/no-unescaped-entities': 'off',
       // LES DEUX RÈGLES QUI COMPTENT ICI.
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',

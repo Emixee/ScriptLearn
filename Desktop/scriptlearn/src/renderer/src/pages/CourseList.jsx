@@ -338,7 +338,6 @@ export default function CourseList() {
               const isActive = selectedTrack === trackKey
               const isExpanded = expandedTracks[trackKey]
               // Couleur du track depuis LANG_COLORS
-              const trackColor = LANG_COLORS[trackKey]?.badge ?? 'text-[#d97706]'
 
               return (
                 <div key={trackKey}>

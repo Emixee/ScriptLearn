@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
-import { moduleScore, levelMasteryScore } from '../utils/score'
+import { levelMasteryScore } from '../utils/score'
 import { computeTotalXP, xpLevelInfo } from '../utils/xp'
 import { computeStats, getUnlockedBadges, computeStreak, BADGE_DEFS } from '../utils/badges'
 // Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de

@@ -46,11 +46,16 @@ export const PROMPT_MARKER = '__SLPROMPTMARK__'
 //             sortie comparée par matchesExpected et dans l'aperçu PHP.
 //   3. deux caractères : \x1b(B → jeu de caractères, émis par certains programmes.
 export function stripAnsi(str) {
+  // eslint-disable no-control-regex : les caractères de contrôle sont ICI l'objet
+  // même de la fonction — \x1b (ESC) ouvre toute séquence ANSI, \x07 (BEL) ferme
+  // une séquence OSC. Les écrire autrement rendrait le code illisible.
+  /* eslint-disable no-control-regex */
   return String(str)
     .replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '')
     .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
     .replace(/\x1b[()][0-9A-Za-z]/g, '')
     .replace(/\r/g, '')
+  /* eslint-enable no-control-regex */
 }
 
 // LANG_META : description de chaque langage.

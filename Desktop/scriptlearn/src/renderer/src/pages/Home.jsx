@@ -110,7 +110,7 @@ export default function Home() {
                   ScriptLearn
                 </div>
                 <div className="text-[#3d3a34] text-xs mt-0.5 tracking-wide">
-                  // apprentissage du scripting
+                  {'// apprentissage du scripting'}
                 </div>
               </div>
             </div>

@@ -59,7 +59,6 @@ export default function Missions() {
         {/* Échelle des paliers — visualise la montée débutant → expert */}
         <div className="flex items-center gap-1 mb-2">
           {TIER_ORDER.map((t, i) => {
-            const reached = tier === 'done' || TIER_ORDER.indexOf(tier) > i || (TIER_ORDER.indexOf(tier) === i)
             const passed = tier === 'done' || TIER_ORDER.indexOf(tier) > i
             return (
               <div key={t} className="flex-1 flex flex-col gap-1">

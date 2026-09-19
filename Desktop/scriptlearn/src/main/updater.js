@@ -179,7 +179,7 @@ export function setupUpdaterIPC() {
     try { if (existsSync(destPath)) unlinkSync(destPath) } catch { /* fichier verrouillé : le téléchargement écrasera */ }
     try {
       const sender = event.sender
-      const { total, received } = await downloadFile(downloadUrl, destPath, p => {
+      const { total } = await downloadFile(downloadUrl, destPath, p => {
         if (!sender.isDestroyed()) sender.send('update:progress', p)
       })
 

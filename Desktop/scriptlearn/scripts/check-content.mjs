@@ -128,7 +128,7 @@ const norm = (s) => String(s).toLowerCase().replace(/\s+/g, ' ').trim()
 
 let exCount = 0
 let engineCount = 0
-for (const { mod, path } of modulesById.values()) {
+for (const { mod } of modulesById.values()) {
   const lang = mod.lang ?? 'bash'
   if (!Array.isArray(mod.exercises) || mod.exercises.length === 0) {
     warn(`${mod.id} : aucun exercice.`)

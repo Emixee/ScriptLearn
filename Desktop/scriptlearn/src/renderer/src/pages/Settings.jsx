@@ -72,7 +72,6 @@ function Settings() {
   const [exportState, setExportState] = useState(null)
   const [remindersEnabled, setRemindersEnabled] = useState(false)
   const [reminderTime,     setReminderTime]     = useState('20:00')
-  const [weeklyGoal,       setWeeklyGoal]       = useState(10)
   const [weeklyGoalInput,  setWeeklyGoalInput]  = useState('10')
   const [importState,      setImportState]      = useState(null)
 
@@ -177,7 +176,6 @@ function Settings() {
     if (!profile) return
     window.electronAPI.store.getWeeklyGoal(profile.id).then(g => {
       const v = g ?? 10
-      setWeeklyGoal(v)
       setWeeklyGoalInput(String(v))
     })
   }, [profile?.id])
@@ -225,7 +223,6 @@ function Settings() {
 
   const handleWeeklyGoalBlur = async () => {
     const n = Math.max(1, Math.min(MAX_WEEKLY_GOAL, parseInt(weeklyGoalInput, 10) || 10))
-    setWeeklyGoal(n)
     setWeeklyGoalInput(String(n))
     if (profile) await window.electronAPI.store.setWeeklyGoal(profile.id, n)
   }
@@ -289,7 +286,7 @@ function Settings() {
     // les abonnements en place.
     try {
       await window.electronAPI.ollama.pull({ url: aiUrl, model: aiModel })
-    } catch (e) {
+    } catch {
       clearSubs()
       setPullState('error')
     }

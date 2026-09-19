@@ -34,20 +34,8 @@ function StatCard({ label, value, sub, color }) {
   )
 }
 
-function Bar({ label, value, max, color }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-stone-400 text-sm w-24 flex-shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-[#0a0a09] rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
-      </div>
-      <span className="text-stone-300 text-sm w-8 text-right flex-shrink-0">{value}</span>
-    </div>
-  )
-}
-
-export default function Stats() {  const navigate = useNavigate()
+export default function Stats() {
+  const navigate = useNavigate()
   const { progress, activity } = useProgress(true)
 
   const stats   = useMemo(() => computeStats(progress, activity), [progress, activity])

@@ -99,7 +99,6 @@ export default function Course() {
   const isFirst = activeSection === 0
   const isLast = activeSection === sections.length - 1
   const isStaticLang = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml'].includes(lang)
-  const isKQL = lang === 'kql'
 
   // Couleurs/labels centralisés (lib/langs) — incluent html, php et les langages
   // compilés C/C++/C#/Java, contrairement aux anciennes tables locales.
