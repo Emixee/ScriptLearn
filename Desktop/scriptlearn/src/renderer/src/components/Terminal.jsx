@@ -265,12 +265,27 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
       // s'abonner tôt est donc sans risque.
       const res = await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
 
-      // Démontage pendant le create : on referme immédiatement ce qu'on vient
-      // d'ouvrir. L'abonnement existe déjà cette fois-ci : le cleanup s'en charge.
-      if (!alive) {
-        window.electronAPI.terminal.kill({ id })
-        return
-      }
+      // Démontage survenu PENDANT le create : on abandonne, sans rien tuer.
+      //
+      // POURQUOI surtout PAS de kill ici — c'était LE bug du terminal muet.
+      // `id` est partagé par tous les montages successifs du composant (il vient
+      // de useId() côté page, et handleRun/useCodeRunner écrivent dans ce même
+      // id) : un kill par id ne tue donc pas « ma » session, il tue CELLE QUI
+      // PORTE CET ID AU MOMENT DE L'APPEL. Or React StrictMode monte, démonte,
+      // remonte, ce qui produit exactement ceci :
+      //
+      //   run #1 : create ──────────────────────(await)──────────► reprise
+      //   cleanup #1 :        alive=false, kill  ← tue la session #1 (correct)
+      //   run #2 :                   create + spawn session #2
+      //   run #1 reprend :                              kill  ← TUE LA #2 ✗
+      //
+      // Deux create, deux kill : il ne restait aucune session, et comme xterm ne
+      // fait aucun écho local, taper ne produisait plus rien. Le cleanup appelle
+      // déjà kill({ id }) de façon inconditionnelle, et la file d'attente côté
+      // main (enqueue dans src/main/terminal.js) garantit que ce kill s'exécute
+      // AVANT le create suivant. Ce kill-ci était donc non seulement inutile,
+      // mais destructeur.
+      if (!alive) return
       if (res && res.ok === false) {
         term.writeln(`\x1b[31m# Terminal indisponible : ${res.error ?? 'erreur inconnue'}\x1b[0m`)
         term.writeln('\x1b[33m#   Toolchain manquante ? Lance « npm run toolchains » puis relance l\u2019app.\x1b[0m')

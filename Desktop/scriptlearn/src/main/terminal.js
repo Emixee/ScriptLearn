@@ -99,9 +99,16 @@ function enqueue(id, fn) {
   return next
 }
 
-// ids dont la fermeture est VOLONTAIRE (kill explicite). Sert uniquement à ne pas
-// afficher « le shell s'est arrêté » quand c'est nous qui l'avons tué.
-const killed = new Set()
+// Processus dont la fermeture est VOLONTAIRE (kill explicite). Sert uniquement à
+// ne pas afficher « le shell s'est arrêté » quand c'est nous qui l'avons tué.
+//
+// POURQUOI un WeakSet de PROCESSUS et non un Set d'ids : plusieurs sessions
+// peuvent se succéder sur le même id (StrictMode, changement d'acte). Avec des
+// ids, le premier `exit` consommait la marque et le second était signalé « NON
+// demandé » — un message d'erreur rouge affiché à l'élève pour une fermeture
+// parfaitement normale. La marque suit désormais l'objet tué, sans ambiguïté
+// possible, et le WeakSet n'empêche pas sa libération mémoire.
+const killedProcs = new WeakSet()
 
 // Marqueur de PROMPT émis par le shell AVANT chaque invite (mode terminal-auto).
 // Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js (main ESM et
@@ -284,13 +291,13 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
   })
   proc.onExit(({ exitCode, signal } = {}) => {
     sessions.delete(id)
-    trace(id, 'EXIT code', exitCode, signal ? 'signal ' + signal : '', killed.has(id) ? '(kill demande par nous)' : '(NON demande)')
+    trace(id, 'EXIT code', exitCode, signal ? 'signal ' + signal : '', killedProcs.has(proc) ? '(kill demande par nous)' : '(NON demande)')
     // Sortie NON demandée (le shell est mort tout seul : binaire corrompu, DLL
     // manquante, `exit` tapé par l'élève) → on le DIT dans le terminal. Sans ça,
     // le panneau se figeait sans explication et paraissait « bloqué ».
-    // `killed` distingue ce cas d'un kill volontaire (changement d'exercice,
+    // `killedProcs` distingue ce cas d'un kill volontaire (changement d'exercice,
     // fermeture de l'app), qui ne doit évidemment rien afficher.
-    if (killed.delete(id)) return
+    if (killedProcs.has(proc)) return
     if (webContents && !webContents.isDestroyed()) {
       const why = signal ? `signal ${signal}` : `code ${exitCode ?? '?'}`
       webContents.send('terminal:data', {
@@ -308,7 +315,7 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
 // la mise à jour, qui doit écraser ces binaires).
 export function killAllSessions() {
   for (const [id, proc] of sessions) {
-    killed.add(id)
+    killedProcs.add(proc)
     try { proc.kill() } catch { /* déjà mort */ }
     sessions.delete(id)
   }
@@ -691,10 +698,10 @@ export function setupTerminalIPC() {
       const proc = sessions.get(id)
       trace(id, 'kill demande | session presente ?', Boolean(proc))
       if (proc) {
-        // killed AVANT le kill : onExit peut se déclencher immédiatement, et il
+        // Marquage AVANT le kill : onExit peut se déclencher immédiatement, et il
         // ne doit pas afficher « le shell s'est arrêté » pour une fermeture
         // que nous avons nous-mêmes demandée.
-        killed.add(id)
+        killedProcs.add(proc)
         try { proc.kill() } catch { /* déjà mort */ }
       }
       sessions.delete(id)
