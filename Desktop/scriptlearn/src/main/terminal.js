@@ -10,13 +10,46 @@ import { randomBytes } from 'crypto'
 // (@electron/rebuild) et embarqué via asarUnpack (binaires .node hors de l'asar).
 import nodePty from 'node-pty'
 
+// ── Diagnostic d'installation ────────────────────────────────────────────────
 // Installateur « Tout-en-un » : tous les interpréteurs/compilateurs sont EMBARQUÉS
-// dans l'app — aucun n'exige WSL ni installation utilisateur. Ces vérifications
-// renvoient donc « disponible » (les bannières d'avertissement sont désactivées).
-function checkBashAvailable() { return true }
-function checkPythonAvailable() { return true }
-function checkPhpAvailable() { return true }
-function checkToolAvailable() { return true }
+// dans l'app (resources/). Ces fonctions ne testent donc pas une installation
+// utilisateur, mais la PRÉSENCE RÉELLE du binaire embarqué.
+//
+// POURQUOI ce n'est pas `return true` : c'était le cas avant, et la bannière
+// d'avertissement du renderer (ToolchainBanner) ne pouvait donc plus jamais
+// s'afficher. Une installation peut pourtant être incomplète (~2,6 Go extraits,
+// antivirus qui met un binaire en quarantaine, dossier resources/ déplacé) — et
+// l'élève n'avait alors qu'un « command not found » au milieu du terminal.
+function checkBashAvailable()   { return existsSync(bashBin()) }
+function checkPythonAvailable() { return existsSync(pyBin()) }
+function checkPhpAvailable()    { return existsSync(phpBin()) }
+
+// Chemin du binaire embarqué attendu, par nom d'outil (cf. TOOLCHAINS dans
+// src/renderer/src/lib/langs.js — les deux listes doivent rester cohérentes).
+function toolPathFor(tool) {
+  switch (tool) {
+    case 'gcc':    return gccBin()
+    case 'g++':    return gppBin()
+    case 'javac':  return javacBin()
+    case 'java':   return javaBin()
+    case 'go':     return join(goRoot(), 'bin', 'go.exe')
+    case 'rustc':  return rustcBin()
+    case 'php':    return phpBin()
+    case 'python': return pyBin()
+    case 'node':   return nodeBin()
+    case 'bash':   return bashBin()
+    // csc est fourni par Windows (.NET Framework), pas embarqué.
+    case 'csc':    return cscBin()
+    default:       return null
+  }
+}
+
+function checkToolAvailable(tool) {
+  const p = toolPathFor(tool)
+  // Outil inconnu : on ne prétend PAS qu'il manque (pas de fausse alerte).
+  if (!p) return true
+  return existsSync(p)
+}
 
 // id de session → { proc, webContents } : on retient le destinataire pour lui
 // renvoyer les données. POURQUOI pas un EventEmitter global monkey-patché comme

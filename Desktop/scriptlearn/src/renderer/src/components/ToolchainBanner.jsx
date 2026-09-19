@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { TOOLCHAINS } from '../lib/langs'
 
-// ToolchainBanner — affiche un avertissement si la toolchain WSL nécessaire à un
-// langage compilé (gcc, g++, javac, mono) est absente. Sans ça, l'étudiant verrait
-// seulement un cryptique « command not found » dans le terminal sans comprendre
-// quoi installer. On vérifie côté main process (terminal.toolAvailable) car le
-// renderer ne peut pas exécuter de commande WSL lui-même.
+// ToolchainBanner — avertit quand un outil nécessaire au langage courant est
+// INTROUVABLE dans l'installation.
+//
+// Les outils sont EMBARQUÉS dans l'app (resources/) depuis la v0.18.0 : il n'y a
+// donc plus rien à installer, et cette bannière ne signale plus une dépendance
+// manquante mais une INSTALLATION INCOMPLÈTE (extraction interrompue, binaire mis
+// en quarantaine par un antivirus, dossier resources/ déplacé). Sans elle,
+// l'élève n'a qu'un « command not found » au milieu du terminal.
+// La vérification est faite côté processus principal (terminal.toolAvailable →
+// existsSync sur le binaire attendu) : le renderer n'a pas accès au disque.
 export default function ToolchainBanner({ lang }) {
   const tc = TOOLCHAINS[lang]
   const [missing, setMissing] = useState(false)
@@ -25,8 +30,10 @@ export default function ToolchainBanner({ lang }) {
     <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-xs flex items-center gap-2 flex-shrink-0">
       <span>⚠</span>
       <span className="flex-1">
-        Outils requis absents dans WSL pour exécuter ce langage. Installe-les avec&nbsp;:
-        <code className="ml-1 px-1.5 py-0.5 bg-[#1c1c1a] rounded-sm text-amber-200 select-text">{tc.install}</code>
+        <strong>{tc.label}</strong> introuvable dans l'installation : l'exécution de ce
+        langage va échouer. Réinstalle ScriptLearn (l'installateur embarque cet outil)
+        ou vérifie que le dossier <code className="px-1 bg-[#1c1c1a] rounded-sm text-amber-200 select-text">resources</code> de
+        l'application n'a pas été supprimé ou mis en quarantaine par un antivirus.
       </span>
     </div>
   )

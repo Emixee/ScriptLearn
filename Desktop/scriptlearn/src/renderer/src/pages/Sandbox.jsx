@@ -7,19 +7,16 @@ import PreviewPane from '../components/PreviewPane'
 import ToolchainBanner from '../components/ToolchainBanner'
 // Métadonnées langages centralisées — partagées avec Exercise et MissionPlay.
 import { LANG_COLORS, LANG_LABELS, STATIC_LANGS, getLangExtension, buildRunData, termShellFor, stripAnsi, PROMPT_MARKER } from '../lib/langs'
+// Fiches de référence partagées avec la page Exercice.
+// POURQUOI : cette page avait sa PROPRE table de références, plus courte et déjà
+// divergente de celle d'Exercise.jsx (deux textes différents pour le même
+// langage). Source unique désormais : content/references.json.
+import references from '../content/references.json'
 
 // Borne du tampon de sortie : il n'était vidé qu'à l'exécution suivante, donc une
 // commande bavarde laissée tourner faisait croître la mémoire du renderer sans fin.
 const MAX_OUTPUT_BUFFER = 256 * 1024
 
-const REFERENCE = {
-  kql: `Tables : SecurityEvent · SigninLogs · Syslog · DnsEvents · AuditLogs · SecurityAlert\n\nStructure :\nTable\n| where TimeGenerated > ago(24h)\n| project Col1, Col2\n| summarize Count=count() by IpAddress\n| sort by Count desc\n| take 100`,
-  sql: `SELECT col1, col2 FROM table;\nSELECT * FROM table WHERE col > 100;\nSELECT col, COUNT(*) FROM t GROUP BY col HAVING COUNT(*) > 5;\nINNER JOIN t2 ON t1.id = t2.fk\nLEFT JOIN  / RIGHT JOIN\nWHERE col LIKE 'A%' | IN ('a','b') | IS NULL\nORDER BY col ASC / DESC\nCREATE VIEW v AS SELECT ...`,
-  regex: `. \\d \\w \\s  —  classes de base\n[abc] [a-z] [^abc]\n* + ? {n,m}  —  quantificateurs\n*? +?  —  lazy\n^ $ \\b  —  ancres\n(...) (?:...) (?P<n>...)  —  groupes\n(?=...) (?!...)  —  lookahead`,
-  git: `git init / clone URL / status / log --oneline\ngit add . / commit -m "msg"\ngit branch nom / switch nom / switch -c nom\ngit merge branche / rebase main\ngit remote -v / push / pull / fetch\ngit stash / stash pop\ngit tag -a v1.0 -m "" / revert abc123`,
-  spl: `index=security EventCode=4625\n| head 10 | fields host, user\n| where EventCode=4625\n| eval f = if(code<400,"OK","ERR")\n| stats count BY user\n| top 10 src_ip\n| timechart span=1h count`,
-  yaml: `clé: valeur  |  actif: true  |  port: 8080  |  vide: null\n\nListe :\nitems:\n  - nginx\n  - redis\n\nImbriqué :\nserver:\n  host: localhost\n  port: 8080\n\nAncre & Alias :\ndefaults: &defaults\n  timeout: 30\nprod:\n  <<: *defaults\n  timeout: 5\n\n--- # séparateur multi-documents`,
-}
 
 const cmTheme = EditorView.theme({
   '&': { fontSize: '13px', backgroundColor: '#080807' },
@@ -241,7 +238,7 @@ export default function Sandbox() {
               <div className="flex-1 overflow-hidden bg-[#080807]">
                 {isStatic ? (
                   <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre-wrap">
-                    {REFERENCE[lang] ?? ''}
+                    {references[lang] ?? ''}
                   </pre>
                 ) : (
                   // termShellFor : C/C++/C#/Java passent par bash WSL (compilation) ;

@@ -13,6 +13,13 @@ import { parseMarkdown } from '../utils/markdown'
 import { useProfile } from '../contexts/ProfileContext'
 import { askOllama } from '../utils/ollama'
 import contentIndex from '../content/index.json'
+// Fiches de référence (KQL, SQL, Regex, Git, SPL, YAML, HTML) affichées dans le
+// panneau droit des langages sans terminal.
+// POURQUOI dans content/ : c'était 342 lignes de CONTENU pédagogique écrites en
+// dur au milieu de cette page (qui en compte déjà 1200), et une SECONDE version,
+// plus courte et divergente, vivait dans Sandbox.jsx. Les deux pages lisent
+// maintenant le même fichier.
+import references from '../content/references.json'
 // Métadonnées langages centralisées (couleurs, labels, exécution, coloration).
 // Avant, ces tables étaient dupliquées ici ET dans Sandbox — voir lib/langs.js.
 import {
@@ -26,373 +33,6 @@ import {
 import { useCodeRunner, matchesExpected } from '../lib/useCodeRunner'
 
 const STATUS = { idle: 'idle', running: 'running', success: 'success', error: 'error' }
-
-const KQL_REFERENCE = `Tables fréquentes
-─────────────────
-SecurityEvent   → logs Windows (EventID 4625, 4624…)
-SigninLogs      → connexions Azure AD
-Syslog          → logs Linux (auth, daemon…)
-DnsEvents       → requêtes DNS
-AuditLogs       → Azure AD audit
-SecurityAlert   → alertes Defender / Sentinel
-
-Structure
-─────────────────
-Table
-| where TimeGenerated > ago(24h)
-| where EventID == 4625
-| project TimeGenerated, Computer, Account
-| extend Col = expression
-| summarize Count=count() by IpAddress
-| sort by Count desc
-| take 100
-
-Fonctions utiles
-─────────────────
-ago(1h) / ago(7d) / ago(30m)
-bin(TimeGenerated, 1h)        regrouper par intervalles
-hourofday(TimeGenerated)       heure 0-23
-dayofweek(TimeGenerated)       jour 0-6
-strlen(col) / extract(regex, n, col)
-make_set(col)                 liste unique
-dcount(col)                   nb valeurs distinctes
-has  / has_any / !in / contains
-
-let threshold = 10;           variable réutilisable
-join kind=inner (...)         jointure entre tables
-  on $left.Col == $right.Col
-render timechart               graphique temporel`
-
-const SQL_REFERENCE = `Syntaxe de base
-─────────────────
-SELECT col1, col2 FROM table;
-SELECT * FROM table;
-SELECT DISTINCT col FROM table;
-SELECT col AS alias FROM table;
-SELECT * FROM table LIMIT 10;
-
-Filtrage & Tri
-─────────────────
-WHERE col = 'valeur'
-WHERE col > 100 AND col2 = 'x'
-WHERE col BETWEEN 10 AND 50
-WHERE col LIKE 'A%'          % = joker
-WHERE col IN ('a', 'b', 'c')
-WHERE col IS NULL
-ORDER BY col ASC / DESC
-
-Agrégations
-─────────────────
-COUNT(*)        nb de lignes
-SUM(col)        somme
-AVG(col)        moyenne
-MAX(col) / MIN(col)
-GROUP BY col
-HAVING COUNT(*) > 5    (filtre sur groupe)
-
-Jointures
-─────────────────
-INNER JOIN table2 ON t1.id = t2.fk
-LEFT JOIN  → toutes les lignes de gauche
-RIGHT JOIN → toutes les lignes de droite
-
-Sous-requêtes & Vues
-─────────────────
-WHERE salary > (SELECT AVG(salary) FROM ...)
-WHERE id IN (SELECT id FROM ...)
-WHERE EXISTS (SELECT 1 FROM ... WHERE ...)
-CREATE VIEW vue AS SELECT ...`
-
-const REGEX_REFERENCE = `Métacaractères
-─────────────────
-.       n'importe quel caractère
-\\d      chiffre  [0-9]
-\\w      mot      [a-zA-Z0-9_]
-\\s      espace blanc
-\\D \\W \\S   inverses des précédents
-[abc]   a, b ou c
-[a-z]   minuscule
-[^abc]  tout sauf a, b, c
-
-Quantificateurs
-─────────────────
-*       0 ou plus (greedy)
-+       1 ou plus
-?       0 ou 1 (optionnel)
-{n}     exactement n fois
-{n,m}   entre n et m fois
-*? +?   lazy (minimum)
-
-Ancres
-─────────────────
-^       début de chaîne
-$       fin de chaîne
-\\b      word boundary
-
-Groupes
-─────────────────
-(...)         groupe capturant
-(?:...)       non-capturant
-(?P<nom>...)  groupe nommé
-(?=...)       lookahead positif
-(?!...)       lookahead négatif
-(?<=...)      lookbehind positif
-
-Fonctions Python re
-─────────────────
-re.search(r'pat', s)     1er match
-re.findall(r'pat', s)    liste des matchs
-re.sub(r'pat', repl, s)  remplacer
-re.split(r'pat', s)      découper
-re.fullmatch(r'pat', s)  match total
-re.compile(r'pat')       compiler`
-
-const GIT_REFERENCE = `Dépôt local
-─────────────────
-git init                 initialiser
-git status               état des fichiers
-git add .               tout stager
-git add fichier.txt      stager un fichier
-git commit -m "msg"      commiter
-git log --oneline        historique court
-git diff                 changements non stagés
-
-Branches
-─────────────────
-git branch               lister
-git branch nom           créer
-git switch nom           basculer
-git switch -c nom        créer + basculer
-git merge branche        fusionner
-git branch -d nom        supprimer (fusionnée)
-git log --graph --all    graphe des branches
-
-Remote
-─────────────────
-git clone URL            cloner
-git remote -v            voir les remotes
-git push origin main     pousser
-git push -u origin nom   push + tracking
-git pull                 récupérer + merge
-git fetch origin         récupérer seulement
-git push origin --delete nom  supprimer remote
-
-Avancé
-─────────────────
-git stash               mettre en pause
-git stash pop           restaurer
-git tag -a v1.0 -m ""   créer un tag
-git rebase main         rebaser
-git reset --soft HEAD~1  annuler commit (keep)
-git reset --hard HEAD~1  annuler (DESTRUCTIF)
-git revert abc123        annuler proprement
-git cherry-pick abc123   copier un commit`
-
-const SPL_REFERENCE = `Recherche de base
-─────────────────
-index=main
-index=security sourcetype=wineventlog
-index=web host=server01 status=404
-
-Commandes fondamentales
-─────────────────
-| head 10 / | tail 10
-| fields host, user, EventCode
-| fields -_raw              (exclure)
-| table col1, col2
-| rename EventCode AS code
-| sort -count               (décroissant)
-| dedup user                (dédoublonner)
-
-Filtrage
-─────────────────
-| where EventCode=4625
-| where user!="SYSTEM"
-| search "error" OR "failed"
-
-Transformation
-─────────────────
-| eval statut = if(code<400, "OK", "ERR")
-| eval ts = strftime(_time, "%Y-%m-%d")
-| rex field=_raw "src=(?P<ip>[\\d.]+)"
-
-Statistiques
-─────────────────
-| stats count BY user
-| stats count, dc(host) AS hotes
-| stats avg(duration) BY host
-| top 10 src_ip
-| rare user
-| timechart span=1h count
-| chart count BY host, EventCode
-
-EventCodes Windows
-─────────────────
-4624  Connexion réussie
-4625  Échec de connexion
-4648  Connexion avec credentials explicites
-4768  Ticket Kerberos TGT demandé
-4769  Ticket Kerberos service demandé
-4776  Auth NTLM tentée`
-
-const YAML_REFERENCE = `Syntaxe de base
-─────────────────
-clé: valeur
-nom: Alice
-age: 30
-actif: true
-prix: 19.99
-vide: null
-# commentaire
-
-Listes
-─────────────────
-items:
-  - nginx
-  - postgresql
-  - redis
-# inline
-tags: [web, api, v2]
-
-Mappings imbriqués
-─────────────────
-server:
-  host: localhost
-  port: 8080
-  tls:
-    enabled: true
-
-Listes de mappings
-─────────────────
-services:
-  - name: web
-    port: 80
-  - name: db
-    port: 5432
-
-Chaînes multi-lignes
-─────────────────
-# Littéral | — conserve les sauts de ligne
-script: |
-  apt update
-  apt install nginx
-
-# Replié > — fusionne les lignes
-description: >
-  Texte long sur
-  plusieurs lignes.
-
-Ancres & Alias
-─────────────────
-defaults: &defaults
-  timeout: 30
-  retries: 3
-
-production:
-  <<: *defaults    # merge key
-  timeout: 5       # override
-
-Multi-documents
-─────────────────
----
-kind: ConfigMap
-metadata:
-  name: app-config
----
-kind: Service
-metadata:
-  name: app-svc
-
-Types explicites
-─────────────────
-port: !!int "8080"
-version: !!str 1.0
-enabled: "true"    # string
-version: "3.9"     # string`
-
-const HTML_REFERENCE = `Structure de base
-─────────────────
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width">
-  <title>Titre de la page</title>
-</head>
-<body>
-  <!-- Contenu ici -->
-</body>
-</html>
-
-Balises texte
-─────────────────
-<h1>–<h6>   Titres (h1 = principal)
-<p>          Paragraphe
-<strong>     Gras sémantique
-<em>         Italique sémantique
-<br>         Saut de ligne
-<hr>         Ligne horizontale
-<span>       Conteneur inline
-<div>        Conteneur bloc
-
-Liens & médias
-─────────────────
-<a href="url">texte</a>
-<a href="url" target="_blank">  nouvel onglet
-<img src="url" alt="desc">
-<img src="img.png" width="300">
-
-Listes
-─────────────────
-<ul>  liste non ordonnée
-  <li>élément</li>
-</ul>
-<ol>  liste ordonnée (1, 2, 3…)
-  <li>élément</li>
-</ol>
-
-Tableaux
-─────────────────
-<table>
-  <thead><tr><th>Col 1</th></tr></thead>
-  <tbody><tr><td>val</td></tr></tbody>
-</table>
-
-Formulaires
-─────────────────
-<form action="/submit" method="POST">
-  <label for="nom">Nom :</label>
-  <input type="text" id="nom" name="nom">
-  <input type="email" name="email">
-  <input type="password" name="pwd">
-  <input type="checkbox" name="ok">
-  <select name="pays">
-    <option value="fr">France</option>
-  </select>
-  <textarea name="msg"></textarea>
-  <button type="submit">Envoyer</button>
-</form>
-
-Sémantique HTML5
-─────────────────
-<header>  en-tête de page
-<nav>     navigation
-<main>    contenu principal
-<section> section thématique
-<article> contenu autonome
-<aside>   contenu latéral
-<footer>  pied de page`
-
-function getStaticReference(lang) {
-  if (lang === 'kql')  return KQL_REFERENCE
-  if (lang === 'sql')  return SQL_REFERENCE
-  if (lang === 'regex') return REGEX_REFERENCE
-  if (lang === 'git')  return GIT_REFERENCE
-  if (lang === 'spl')  return SPL_REFERENCE
-  if (lang === 'yaml') return YAML_REFERENCE
-  if (lang === 'html') return HTML_REFERENCE
-  return ''
-}
 
 // Module suivant, pour le bouton « Module suivant » de l'écran de complétion.
 //
@@ -457,11 +97,11 @@ export default function Exercise() {
   const { profile, settings } = useProfile()
   const isKQL = lang === 'kql'
   const isStaticLang = STATIC_LANGS.includes(lang)
+  // Session PTY prête ? (Terminal.onReady) — « ▶ Exécuter » écrivait sinon dans une
+  // session parfois inexistante, et l'ordre était jeté EN SILENCE côté main.
   const [termReady, setTermReady] = useState(false)
   // Validation partagée avec MissionPlay (six moteurs réels + repli mots-clés).
   const { validate: runnerValidate } = useCodeRunner(termId, lang)
-  // Session PTY prête ? (Terminal.onReady) — « ▶ Exécuter » écrivait sinon dans une
-  // session parfois inexistante, et l'ordre était jeté EN SILENCE côté main.
 
   const [code, setCode] = useState('')
   // Garde anti-double-validation (mode terminal-auto) : les blocs de sortie
@@ -482,6 +122,9 @@ export default function Exercise() {
   // Pour HTML, le srcDoc est directement `code` (temps réel), pas cet état
   // Pour PHP, cet état est mis à jour après l'exécution (sortie terminal stripée)
   const [previewSrc, setPreviewSrc] = useState('')
+  // Aperçu HTML DÉBOUNCÉ : `srcDoc={code}` rechargeait l'iframe à chaque caractère
+  // tapé (scripts de l'élève réexécutés en boucle, état du rendu perdu).
+  const [htmlPreview, setHtmlPreview] = useState('')
 
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
@@ -617,6 +260,13 @@ export default function Exercise() {
     const p = pendingNote.current
     if (p && profile) window.electronAPI.store.saveNote(profile.id, p.key, p.text).catch(() => {})
   }, [profile?.id])
+
+  // 300 ms de calme dans la frappe avant de recharger l'aperçu HTML.
+  useEffect(() => {
+    if (lang !== 'html') return
+    const t = setTimeout(() => setHtmlPreview(code), 300)
+    return () => clearTimeout(t)
+  }, [code, lang])
 
   // Raccourcis clavier globaux.
   //
@@ -1170,7 +820,7 @@ export default function Exercise() {
             {lang === 'html' ? (
               // HTML : l'aperçu occupe tout le panneau — le code est le srcdoc direct
               // (mise à jour en temps réel à chaque frappe sans délai)
-              <PreviewPane srcDoc={code} label="HTML" langColor={langAccent} />
+              <PreviewPane srcDoc={htmlPreview} label="HTML" langColor={langAccent} />
             ) : lang === 'php' ? (
               // PHP : terminal bash WSL en haut (60 %) + aperçu HTML en bas (40 %)
               // Le terminal montre la sortie brute + les erreurs PHP
@@ -1184,7 +834,7 @@ export default function Exercise() {
                 </div>
               </div>
             ) : isStaticLang ? (
-              <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre">{getStaticReference(lang)}</pre>
+              <pre className="h-full overflow-y-auto p-5 text-xs font-mono text-stone-400 leading-relaxed whitespace-pre">{references[lang] ?? ''}</pre>
             ) : (
               // termShellFor : bash/python/powershell gardent leur interpréteur ;
               // C/C++/C#/Java passent par la session bash embarquée (compilation + run).

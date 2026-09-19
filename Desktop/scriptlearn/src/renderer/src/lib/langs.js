@@ -187,10 +187,29 @@ export function sentinelCommand(lang, sentinel) {
   return `echo "${sentinel}"`
 }
 
-// Installateur « Tout-en-un » : toutes les toolchains sont EMBARQUÉES dans l'app
-// (resources/). Plus aucune installation externe requise → table vide, la
-// bannière « toolchain manquante » (ToolchainBanner) ne s'affiche jamais.
-export const TOOLCHAINS = {}
+// Outils NÉCESSAIRES par langage, pour le diagnostic d'installation.
+//
+// POURQUOI cette table est de nouveau remplie : depuis que les toolchains sont
+// EMBARQUÉES (installateur « Tout-en-un »), elle avait été vidée et
+// `terminal.toolAvailable` renvoyait `true` en dur — la bannière
+// (components/ToolchainBanner.jsx) ne pouvait donc PLUS JAMAIS s'afficher. Or une
+// installation peut être incomplète : ~2,6 Go extraits, un antivirus qui met un
+// binaire en quarantaine, un dossier `resources/` déplacé. Dans ce cas, l'élève
+// n'avait qu'un « command not found » incompréhensible au milieu du terminal.
+// Le processus principal vérifie maintenant la PRÉSENCE RÉELLE du binaire embarqué
+// (voir checkToolAvailable dans src/main/terminal.js).
+export const TOOLCHAINS = {
+  c:      { tools: ['gcc'],           label: 'compilateur C (MinGW)' },
+  cpp:    { tools: ['g++'],           label: 'compilateur C++ (MinGW)' },
+  java:   { tools: ['javac', 'java'], label: 'JDK (Java)' },
+  csharp: { tools: ['csc'],           label: 'compilateur C# (.NET Framework, fourni par Windows)' },
+  go:     { tools: ['go'],            label: 'SDK Go' },
+  rust:   { tools: ['rustc'],         label: 'compilateur Rust' },
+  php:    { tools: ['php'],           label: 'interpréteur PHP' },
+  python: { tools: ['python'],        label: 'interpréteur Python' },
+  js:     { tools: ['node'],          label: 'runtime Node.js' },
+  ts:     { tools: ['node'],          label: 'runtime Node.js' },
+}
 
 // ── Mode « nano » : composer un vrai fichier script puis le lancer ────────────
 // Les actes Expert (fonctions, classes, boucles/conditions, scripts complets) ne

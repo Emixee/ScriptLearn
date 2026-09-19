@@ -54,7 +54,11 @@ function ScoreBadge({ score, started }) {
 // ATTENTION : ne pas utiliser "ref" comme nom de prop — c'est un mot réservé React
 // qui est intercepté par le framework et jamais transmis au composant.
 // On utilise "modRef" à la place.
-function ModuleCard({ modRef, lang, levelId, navigate, progress }) {
+// `badgeLabel` : libellé du badge en haut de carte. Les deux vues (niveaux
+// standard et parcours complémentaires) l'affichent différemment — c'est la SEULE
+// différence qui justifiait la copie en ligne de ce composant dans la vue
+// standard (~90 lignes dupliquées, déjà divergentes).
+function ModuleCard({ modRef, lang, levelId, navigate, progress, badgeLabel }) {
   const mod = getModule(modRef.id)
   const exercises = mod?.exercises ?? []
   const { score, completed, total, stars } = moduleScore(exercises, progress)
@@ -77,7 +81,7 @@ function ModuleCard({ modRef, lang, levelId, navigate, progress }) {
       {/* En-tête carte */}
       <div className="flex items-start justify-between mb-3">
         <span className={`text-xs font-medium px-2 py-0.5 rounded ${langColor.badge} bg-current/10`}>
-          {LANG_LABELS[lang]} · M{modRef.order}
+          {badgeLabel ?? `${LANG_LABELS[lang]} · M${modRef.order}`}
         </span>
         <div className="flex items-center gap-2">
           {isTheory ? (
@@ -94,11 +98,17 @@ function ModuleCard({ modRef, lang, levelId, navigate, progress }) {
       </div>
 
       {/* Titre */}
-      <h3
-        className="text-white font-medium mb-1 group-hover:text-[#d97706] transition-colors cursor-pointer leading-snug"
-        onClick={() => navigate(`/course/${lang}/${levelId}/${modRef.id}`)}
-      >
-        {modRef.title}
+      {/* Titre cliquable : <button> et non <h3 onClick>. POURQUOI : un titre
+          cliquable n'est ni focusable ni activable au clavier, donc inatteignable
+          pour qui n'utilise pas la souris. */}
+      <h3 className="mb-1 leading-snug">
+        <button
+          type="button"
+          className="text-left text-white font-medium group-hover:text-[#d97706] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d97706]"
+          onClick={() => navigate(`/course/${lang}/${levelId}/${modRef.id}`)}
+        >
+          {modRef.title}
+        </button>
       </h3>
       <p className="text-stone-500 text-xs">
         {LANG_LABELS[lang]} · {isTheory ? 'Cours théorique' : `${total} exercices`} · {modRef.estimatedMinutes} min
@@ -447,97 +457,21 @@ export default function CourseList() {
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 {moduleRefs.map((ref) => {
+                  // realIndex : position du module dans le niveau COMPLET (et non
+                  // dans la liste filtrée par la recherche) — c'est ce numéro que
+                  // le badge affiche.
                   const allRefs = levelData?.languages?.[lang] ?? []
                   const realIndex = allRefs.findIndex(r => r.id === ref.id)
-                  const mod = getModule(ref.id)
-                  const exercises = mod?.exercises ?? []
-                  const { score, completed, total, stars } = moduleScore(exercises, progress)
-
-                  const getResume = () => {
-                    if (!mod) return null
-                    const idx = mod.exercises.findIndex(ex => !progress[ex.id]?.completed)
-                    return idx === -1 ? null : idx + 1
-                  }
-                  const resumeIdx = mod ? getResume() : null
-                  const isComplete = completed === total && total > 0
-                  const isStarted = completed > 0 && !isComplete
-                  const completionPct = total > 0 ? Math.round((completed / total) * 100) : 0
-                  const isTheory = total === 0
-                  const langColor = LANG_COLORS[lang]
-
                   return (
-                    <div
+                    <ModuleCard
                       key={ref.id}
-                      className="bg-[#111110] border border-[#2e2b26] rounded-sm p-5 hover:border-[#d97706] transition-colors group"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${langColor.badge} bg-current/10`}>
-                          Module {realIndex + 1}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {isTheory ? (
-                            <span className="text-xs text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded font-medium">Cours</span>
-                          ) : isStarted || isComplete ? (
-                            <>
-                              <Stars count={stars} />
-                              <ScoreBadge score={score} started={isStarted || isComplete} />
-                            </>
-                          ) : (
-                            <span className="text-xs text-stone-500">Non commencé</span>
-                          )}
-                        </div>
-                      </div>
-                      <h3
-                        className="text-white font-medium mb-1 group-hover:text-[#d97706] transition-colors cursor-pointer leading-snug"
-                        onClick={() => navigate(`/course/${lang}/${selectedLevel}/${ref.id}`)}
-                      >
-                        {ref.title}
-                      </h3>
-                      <p className="text-stone-500 text-xs">
-                        {LANG_LABELS[lang]} · {isTheory ? 'Cours théorique' : `${total} exercices`} · {ref.estimatedMinutes} min
-                      </p>
-                      {!isTheory && (
-                        <>
-                          <div className="mt-3 h-1 bg-[#0a0a09] rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${isComplete ? 'bg-[#86efac]' : 'bg-[#d97706]'}`}
-                              style={{ width: `${completionPct}%` }}
-                            />
-                          </div>
-                          {isStarted && <p className="text-stone-600 text-xs mt-1">{completed}/{total} exercices complétés</p>}
-                          {isComplete && <p className="text-[#86efac]/70 text-xs mt-1">✓ Module terminé</p>}
-                        </>
-                      )}
-                      <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={() => navigate(`/course/${lang}/${selectedLevel}/${ref.id}`)}
-                          className="flex-1 bg-[#1c1c1a] hover:bg-[#252520] text-stone-300 text-xs py-1.5 rounded-sm transition-colors"
-                        >
-                          {isTheory ? '📖 Lire le cours' : 'Cours'}
-                        </button>
-                        {!isTheory && (
-                          <button
-                            onClick={() => {
-                              if (!isStarted && !isComplete) {
-                                navigate(`/course/${lang}/${selectedLevel}/${ref.id}`)
-                              } else {
-                                const idx = resumeIdx ?? 1
-                                navigate(`/exercise/${lang}/${selectedLevel}/${ref.id}/${idx}`)
-                              }
-                            }}
-                            className={`flex-1 text-xs py-1.5 rounded-sm transition-colors font-medium ${
-                              isComplete
-                                ? 'bg-[#86efac]/10 text-[#86efac] hover:bg-[#86efac]/20'
-                                : isStarted
-                                ? 'bg-[#d97706] text-[#0a0a09] hover:bg-[#b45309]'
-                                : 'bg-[#d97706]/20 text-[#d97706] hover:bg-[#d97706]/30'
-                            }`}
-                          >
-                            {isComplete ? '↺ Revoir' : isStarted ? '▶ Continuer' : '📖 Commencer'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                      modRef={ref}
+                      lang={lang}
+                      levelId={selectedLevel}
+                      navigate={navigate}
+                      progress={progress}
+                      badgeLabel={`Module ${realIndex + 1}`}
+                    />
                   )
                 })}
               </div>
