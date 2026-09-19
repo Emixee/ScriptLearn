@@ -50,6 +50,13 @@ function checkToolAvailable(tool) {
   if (!p) return true
   return existsSync(p)
 }
+// id de session → processus PTY. POURQUOI pas un EventEmitter global
+// monkey-patché comme avant : le patch de `emitter.emit` capturait la fenêtre du
+// moment dans une closure, donc une fenêtre recréée (macOS « activate »)
+// recevait… l'ancienne référence, détruite. Ici le destinataire est celui qui a
+// demandé la session (webContents passé à createSession).
+const sessions = new Map()
+
 // ── Sérialisation des opérations par terminal ────────────────────────────────
 // Toutes les opérations d'un MÊME id (create / kill) sont enchaînées dans une
 // file d'attente. POURQUOI cette file plutôt qu'un simple drapeau « création en
