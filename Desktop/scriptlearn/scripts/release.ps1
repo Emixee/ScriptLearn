@@ -48,7 +48,14 @@ $remote = (git -C $Root remote get-url origin)
 if ($remote -notmatch 'Emixee/ScriptLearn(\.git)?$') {
   throw "Le remote origin ne pointe pas sur Emixee/ScriptLearn : $remote"
 }
-Ok "ISCC, gh et remote origin verifies"
+# La branche compte autant que le remote : l'etape 5 fait `git push origin main`.
+# Lance depuis une branche de travail, ce push publiait le main LOCAL (souvent en
+# retard) sans que rien ne le signale.
+$branch = (git -C $Root rev-parse --abbrev-ref HEAD).Trim()
+if ($branch -ne 'main') {
+  throw "Branche courante : $branch. Fusionne d'abord dans main : cette procedure tague et pousse main."
+}
+Ok "ISCC, gh, remote origin et branche main verifies"
 
 # ── 1. Lire et incrémenter la version ────────────────────────────────────────
 Step "Lecture de package.json"
@@ -80,12 +87,12 @@ if ($LASTEXITCODE -ne 0) { throw "npm version a échoué" }
 Ok "package.json mis à jour"
 
 # ── 3. Build + package Electron ──────────────────────────────────────────────
-Step "Build Electron"
-Set-Location $Root
-npm run build
-if ($LASTEXITCODE -ne 0) { throw "npm run build a échoué" }
-
-Step "Package Electron"
+# `npm run package` = electron-vite build && electron-builder : l'appel a
+# `npm run build` qui precedait refaisait donc le build complet pour rien.
+# electron-builder produit maintenant la cible `dir` (dist\win-unpacked) et non
+# plus un installateur NSIS que personne ne publiait — les installateurs sont
+# ceux d'Inno Setup, compiles juste apres.
+Step "Package Electron (dist\win-unpacked)"
 npm run package
 if ($LASTEXITCODE -ne 0) { throw "npm run package a échoué" }
 Ok "Electron packagé"
@@ -112,10 +119,14 @@ Ok "Poussé sur GitHub (main + tag v$new)"
 
 # ── 6. Créer la release GitHub ───────────────────────────────────────────────
 Step "Création de la release GitHub v$new"
-$hybrid  = Join-Path $Root 'installer\output\ScriptLearn-Setup-Hybrid.exe'
-$offline = Join-Path $Root 'installer\output\ScriptLearn-Setup-Offline.exe'
-
+$hybrid = Join-Path $Root 'installer\output\ScriptLearn-Setup-Hybrid.exe'
 if (-not (Test-Path $hybrid)) { throw "Installateur Hybrid introuvable : $hybrid" }
+
+# L'Offline est decoupe en tranches (DiskSpanning) : un .exe lanceur + un ou
+# plusieurs .bin de donnees. POURQUOI les lister toutes : l'ancienne version ne
+# televersait que le .exe. L'utilisateur telechargeait donc un lanceur sans ses
+# donnees, et l'installation echouait en reclamant un fichier absent.
+$offlineParts = @(Get-ChildItem (Join-Path $Root 'installer\output') -Filter 'ScriptLearn-Setup-Offline*' -File -ErrorAction SilentlyContinue)
 
 # ── latest.yml : empreinte de l'installateur, LUE PAR L'APPLICATION ──────────
 # POURQUOI ce fichier : src/main/updater.js télécharge l'installateur puis
@@ -146,7 +157,13 @@ Ok "latest.yml genere (sha512 $($hashB64.Substring(0,12))...)"
 # L'ordre des assets compte peu depuis que l'updater choisit explicitement
 # l'installateur « Hybrid », mais on le garde en premier par lisibilite.
 $assets = @($hybrid, $latestYml)
-if (Test-Path $offline) { $assets += $offline }
+if ($offlineParts.Count -gt 0) {
+  $assets += $offlineParts.FullName
+  Ok "Offline : $($offlineParts.Count) fichier(s) a televerser ($($offlineParts.Name -join ', '))"
+} else {
+  Warn "Aucun ScriptLearn-Setup-Offline* dans installer\output — release publiee sans la variante hors-ligne."
+  Warn "Pour la produire : .\installer\build-offline.ps1 (necessite installer\assets\OllamaSetup.exe et ollama-models.zip)."
+}
 
 # ATTENTION : latest.yml DOIT être téléversé par le CLI gh — l'interface web de
 # GitHub refuse les .yml.

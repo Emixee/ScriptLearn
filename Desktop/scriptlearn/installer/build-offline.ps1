@@ -2,10 +2,15 @@
 # Prepares assets and builds the ScriptLearn offline installer (100% hors-ligne).
 #
 # Step 1: Download OllamaSetup.exe
-# Step 2: Pull llama3.2:3b + zip les blobs du modèle
-# Step 3: Exporter Ubuntu-24.04 depuis WSL (doit être installé sur cette machine)
-# Step 4: Build l'app Electron
-# Step 5: Compiler Inno Setup → ScriptLearn-Setup-Offline.exe (~5 Go)
+# Step 2: Pull llama3.2:3b puis zip UNIQUEMENT les blobs de ce modele
+# Step 3: Build l'app Electron (electron-builder produit dist\win-unpacked)
+# Step 4: Compiler Inno Setup -> ScriptLearn-Setup-Offline.exe + tranches .bin
+#
+# POURQUOI l'export WSL a disparu : depuis la v0.18.0 toutes les toolchains sont
+# embarquees dans resources/ (npm run toolchains) et l'application n'appelle plus
+# WSL. Exporter une Ubuntu de ~2 Go pour la livrer a l'utilisateur ne servait
+# donc plus a rien -- et cette etape exigeait qu'Ubuntu-24.04 soit installe sur
+# la machine de build, ce qui faisait echouer le script partout ailleurs.
 #
 # Run from the installer\ directory or provide -ProjectRoot.
 
@@ -26,19 +31,19 @@ Write-Host "Assets dir   : $AssetsDir"
 # ── Step 1: Download OllamaSetup.exe ─────────────────────────────────────────
 $ollamaInstaller = Join-Path $AssetsDir "OllamaSetup.exe"
 if (-not (Test-Path $ollamaInstaller)) {
-    Write-Host "`n[1/5] Downloading OllamaSetup.exe..." -ForegroundColor Yellow
+    Write-Host "`n[1/4] Downloading OllamaSetup.exe..." -ForegroundColor Yellow
     $url = "https://ollama.com/download/OllamaSetup.exe"
     $wc = New-Object System.Net.WebClient
     $wc.DownloadFile($url, $ollamaInstaller)
     Write-Host "Downloaded: $ollamaInstaller" -ForegroundColor Green
 } else {
-    Write-Host "[1/5] OllamaSetup.exe already present, skipping download."
+    Write-Host "[1/4] OllamaSetup.exe already present, skipping download."
 }
 
 # ── Step 2: Ensure Ollama is installed on this machine and pull the model ────
 $ollamaExe = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
 if (-not (Test-Path $ollamaExe)) {
-    Write-Host "`n[2/5] Installing Ollama locally to pull model blobs..." -ForegroundColor Yellow
+    Write-Host "`n[2/4] Installing Ollama locally to pull model blobs..." -ForegroundColor Yellow
     $proc = Start-Process -FilePath $ollamaInstaller -ArgumentList "/S" -Wait -PassThru
     Start-Sleep -Seconds 8
 }
@@ -56,7 +61,7 @@ if (-not $running) {
     Start-Sleep -Seconds 6
 }
 
-Write-Host "`n[2/5] Pulling model $Model (this will take several minutes)..." -ForegroundColor Yellow
+Write-Host "`n[2/4] Pulling model $Model (this will take several minutes)..." -ForegroundColor Yellow
 & $ollamaExe pull $Model
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to pull model $Model"
@@ -67,10 +72,14 @@ Write-Host "Model $Model ready." -ForegroundColor Green
 # ── Step 3a: Zip les blobs du modèle spécifique seulement ────────────────────
 $modelZip = Join-Path $AssetsDir "ollama-models.zip"
 if (-not (Test-Path $modelZip)) {
-    Write-Host "`n[3/5] Identification et zip des blobs de $Model ..." -ForegroundColor Yellow
+    Write-Host "`n[2/4] modele : Identification et zip des blobs de $Model ..." -ForegroundColor Yellow
     $manifestBase = "$env:USERPROFILE\.ollama\models\manifests\registry.ollama.ai\library"
     $modelName    = ($Model -split ":")[0]
-    $modelTag     = if ($Model -contains ":") { ($Model -split ":")[1] } else { "latest" }
+    # -like "*:*" et non -contains : `-contains` teste l'appartenance a une
+    # COLLECTION et renvoie toujours $false sur une chaine. Le tag valait donc
+    # TOUJOURS "latest" et le manifeste cherche etait .../llama3.2/latest au lieu
+    # de .../llama3.2/3b -> "Manifest introuvable" pour tout modele tague.
+    $modelTag     = if ($Model -like "*:*") { ($Model -split ":")[1] } else { "latest" }
     $manifestPath = "$manifestBase\$modelName\$modelTag"
 
     if (-not (Test-Path $manifestPath)) {
@@ -104,27 +113,11 @@ if (-not (Test-Path $modelZip)) {
     $zipSize = [math]::Round((Get-Item $modelZip).Length / 1MB, 0)
     Write-Host "Created: $modelZip ($zipSize MB)" -ForegroundColor Green
 } else {
-    Write-Host "[3/5] ollama-models.zip already present, skipping."
+    Write-Host "[2/4] modele : ollama-models.zip already present, skipping."
 }
 
-# ── Step 3b: Exporter Ubuntu-24.04 depuis WSL ────────────────────────────────
-$ubuntuTar = Join-Path $AssetsDir "ubuntu-24.04-wsl.tar"
-if (-not (Test-Path $ubuntuTar)) {
-    Write-Host "`n[3b/5] Export Ubuntu-24.04 depuis WSL..." -ForegroundColor Yellow
-    $distros = wsl --list --quiet 2>$null | Out-String
-    if ($distros -notmatch "Ubuntu-24.04") {
-        Write-Error "Ubuntu-24.04 n'est pas installé dans WSL sur cette machine.`nInstallez-le d'abord avec : wsl --install -d Ubuntu-24.04"
-        exit 1
-    }
-    wsl --export Ubuntu-24.04 $ubuntuTar 2>&1
-    $tarSize = [math]::Round((Get-Item $ubuntuTar).Length / 1MB, 0)
-    Write-Host "Ubuntu-24.04 exporté : $ubuntuTar ($tarSize MB)" -ForegroundColor Green
-} else {
-    Write-Host "[3b/5] ubuntu-24.04-wsl.tar already present, skipping."
-}
-
-# ── Step 4: Build Electron app ────────────────────────────────────────────────
-Write-Host "`n[4/5] Building Electron app..." -ForegroundColor Yellow
+# ── Step 3: Build Electron app ────────────────────────────────────────────────
+Write-Host "`n[3/4] Building Electron app..." -ForegroundColor Yellow
 Set-Location $ProjectRoot
 npm run package
 if ($LASTEXITCODE -ne 0) {
@@ -133,8 +126,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "App built." -ForegroundColor Green
 
-# ── Step 5: Compile Inno Setup ────────────────────────────────────────────────
-Write-Host "`n[5/5] Compiling offline installer..." -ForegroundColor Yellow
+# ── Step 4: Compile Inno Setup ────────────────────────────────────────────────
+Write-Host "`n[4/4] Compiling offline installer..." -ForegroundColor Yellow
 if (-not (Test-Path $InnoCompiler)) {
     Write-Error "Inno Setup not found at: $InnoCompiler"
     exit 1

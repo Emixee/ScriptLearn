@@ -1,6 +1,14 @@
 ; ScriptLearn-Hybrid.iss — Version silencieuse
 ; Seule interaction : choix du modèle Ollama.
-; WSL + Ollama + modèle téléchargés pendant l'installation.
+; Ollama + modèle téléchargés pendant l'installation ; tous les interpréteurs et
+; compilateurs (Node, Python, PHP, MinGW, JDK, Go, Rust, Git/Bash) sont EMBARQUÉS
+; dans dist\win-unpacked\resources (~2,6 Go) : aucun téléchargement pour eux.
+;
+; POURQUOI plus aucune trace de WSL : depuis la v0.18.0 les toolchains sont
+; embarquées et l'application n'appelle plus WSL (cf. src/main/terminal.js).
+; L'installateur activait pourtant encore WSL2 + Ubuntu — plusieurs minutes, un
+; redémarrage de Windows imposé et un risque d'échec, pour une fonctionnalité que
+; le logiciel n'utilise plus.
 ;
 ; Prérequis :
 ;   1. npm run package  (produit dist\win-unpacked\)
@@ -47,7 +55,6 @@ Name: "startmenuicon"; Description: "Raccourci Menu Démarrer"
 
 [Files]
 Source: "{#AppSrcDir}\*";              DestDir: "{app}";    Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "scripts\install-wsl.ps1";    DestDir: "{tmp}";    Flags: deleteafterinstall
 Source: "scripts\install-ollama-online.ps1"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
@@ -56,7 +63,10 @@ Name: "{group}\{#AppName}";              Filename: "{app}\{#AppExeName}"; Tasks:
 Name: "{group}\Désinstaller {#AppName}"; Filename: "{uninstallexe}"
 
 [UninstallRun]
-; Supprimer la clé RunOnce créée pour l'import WSL au redémarrage
+; Nettoyage HÉRITÉ : cette clé RunOnce était créée par les installateurs
+; antérieurs à la v0.18.0 pour finir l'import WSL après redémarrage. On continue
+; de la supprimer, sinon une machine mise à jour depuis une de ces versions
+; garderait une tâche au démarrage pointant sur un script disparu.
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Remove-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'ScriptLearn-WSL-Import' -ErrorAction SilentlyContinue"""; \
   Flags: runhidden
@@ -64,19 +74,13 @@ Filename: "powershell.exe"; \
 [UninstallDelete]
 ; Données utilisateur : profils, progression, paramètres (electron-store)
 Type: filesandordirs; Name: "{userappdata}\ScriptLearn"
-; Fichier tar Ubuntu et dossier temporaire (installeur offline uniquement)
+; Dossier temporaire des anciennes installations (tar Ubuntu de l'ère WSL)
 Type: filesandordirs; Name: "{localappdata}\ScriptLearn"
 ; Fichiers de log et flags laissés par l'installation
 Type: files; Name: "{%TEMP}\ScriptLearn-install.log"
 Type: files; Name: "{%TEMP}\sl-wsl-restart.flag"
 
 [Run]
-; WSL2 + Ubuntu 22.04
-Filename: "powershell.exe"; \
-  Parameters: "-ExecutionPolicy Bypass -NonInteractive -File ""{tmp}\install-wsl.ps1"""; \
-  Flags: runhidden waituntilterminated; \
-  StatusMsg: "Installation de WSL2 + Ubuntu 22.04..."
-
 ; Ollama + modèle choisi
 Filename: "powershell.exe"; \
   Parameters: "-ExecutionPolicy Bypass -NonInteractive -File ""{tmp}\install-ollama-online.ps1"" -Model ""{code:GetSelectedModel}"""; \
@@ -92,12 +96,14 @@ var
 
 // ── Vérification des prérequis AVANT l'affichage du wizard ───────────────────
 // MinVersion=10.0.18362 dans [Setup] bloque déjà les Windows trop anciens.
-// On vérifie uniquement les droits admin ici.
+// Les droits admin restent nécessaires — non plus pour WSL, mais parce que
+// l'installation écrit dans {autopf} (Program Files) et installe Ollama pour
+// toute la machine.
 function InitializeSetup(): Boolean;
 begin
   Result := True;
   if not IsAdminInstallMode then begin
-    MsgBox('ScriptLearn doit être installé en tant qu''Administrateur pour activer WSL2.' + #13#10 +
+    MsgBox('ScriptLearn doit être installé en tant qu''Administrateur : l''installation écrit dans Program Files.' + #13#10 +
            'Relancez l''installeur avec un clic droit → "Exécuter en tant qu''administrateur".',
            mbError, MB_OK);
     Result := False;
@@ -157,30 +163,4 @@ begin
   if (PageID = wpSelectTasks)         then Result := True;
   if (PageID = wpReady)               then Result := True;
   if (PageID = wpFinished)            then Result := True;
-end;
-
-// ── Popup redémarrage WSL — s'exécute après les entrées [Run] ────────────────
-// ssDone est appelé après que toutes les entrées [Run] ont terminé.
-// install-wsl.ps1 crée %TEMP%\sl-wsl-restart.flag si un redémarrage est requis.
-procedure CurStepChanged(CurStep: TSetupStep);
-var
-  ResultCode: Integer;
-  FlagFile: String;
-begin
-  if CurStep = ssDone then begin
-    FlagFile := GetEnv('TEMP') + '\sl-wsl-restart.flag';
-    if FileExists(FlagFile) then begin
-      DeleteFile(FlagFile);
-      if MsgBox(
-        'WSL2 a été activé, mais un redémarrage de Windows est nécessaire' + #13#10 +
-        'pour finaliser l''installation d''Ubuntu 22.04.' + #13#10 + #13#10 +
-        'Le terminal Bash ne sera pas disponible dans ScriptLearn' + #13#10 +
-        'tant que le redémarrage n''aura pas été effectué.' + #13#10 + #13#10 +
-        'Voulez-vous redémarrer maintenant ?',
-        mbConfirmation,
-        MB_YESNO
-      ) = IDYES then
-        ShellExec('', ExpandConstant('{sys}') + '\shutdown.exe', '/r /t 5', '', SW_HIDE, ewNoWait, ResultCode);
-    end;
-  end;
 end;

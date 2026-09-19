@@ -65,6 +65,116 @@ toolchains) : la release reste manuelle via `scripts/release.ps1`.
 
 ---
 
+## Mise en route locale, terminal et chaîne d'installation — 19/09/2026 (branche `audit/corrections-2026-09`)
+
+Suite de l'audit, sur un deuxième poste (clone `C:\Users\guill\ScriptLearn`).
+Tout ce qui suit est **committé sur la branche, non fusionné dans `main`**.
+
+### Terminal muet — trois causes, trois correctifs
+
+Symptôme : l'app démarre, le panneau terminal s'affiche, taper dedans ne produit
+rien. Piège central : **xterm ne fait aucun écho local** — chaque caractère
+affiché vient du shell. Un shell absent ou mort donne donc exactement l'image
+d'un clavier ignoré.
+
+1. **Course `create` / `kill` (cause racine).** Les deux handlers IPC étaient
+   asynchrones et s'entrelaçaient. React StrictMode (actif en dev) produit
+   `create(A) → kill(A) → create(A)` : le `kill` faisait `await` et rendait la
+   main, le second `create` voyait la session encore dans la Map et répondait
+   « elle existe déjà » sans rien créer, puis le `kill` la tuait. Le renderer
+   croyait avoir un terminal opérationnel sur un shell mort. Code de sortie
+   observé : `-1073741510` = `0xC000013A` (STATUS_CONTROL_C_EXIT, signature d'un
+   ConPTY fermé sous le processus). Correctif : **une file d'attente par id**
+   (`enqueue` dans `src/main/terminal.js`) sérialise toutes les opérations d'un
+   même terminal ; `creating` a disparu. En production la même course existait,
+   simplement plus rare (changement rapide d'exercice).
+2. **Abonnement posé après la création.** `terminal:create` ne rend la main
+   qu'une fois le shell lancé — et en mission qu'après le `setup`, jusqu'à 15 s.
+   Or bash écrit sa bannière et sa première invite avant. Ces octets étaient
+   jetés. Le renderer s'abonne désormais **avant** l'appel (l'écouteur filtre par
+   id, donc sans risque).
+3. **Silence en cas d'échec.** node-pty passe par ConPTY, qui crée le
+   pseudo-terminal puis tente le processus : binaire absent = session « vivante »
+   sur un shell inexistant, sans exception. Ajout d'un `existsSync` avant
+   `spawn`, et d'un message rouge dans le terminal quand le shell s'arrête sans
+   qu'on l'ait tué (un `Set killed` distingue les fermetures volontaires).
+   Bonus : `onMouseDown` refocalise xterm, dont la zone exclut les 8 px de
+   padding du conteneur.
+
+`npm run diag` (`scripts/diag-terminal.mjs`) lance chaque shell via node-pty
+**hors Electron** : sépare « binaire manquant », « ConPTY/Windows » et
+« l'application » au lieu de deviner.
+
+### Outillage de build
+
+- **`scripts/fetch-toolchains.mjs`** : l'URL de PHP était figée, or
+  windows.php.net déplace chaque correctif vers `/releases/archives/` dès qu'un
+  nouveau sort → HTTP 404. La version courante de la branche est maintenant
+  résolue depuis `sha256sum.txt` (qui fournit aussi l'empreinte, donc
+  vérification gratuite), avec repli sur l'URL figée puis sur `/archives/`. De
+  plus un seul lien mort interrompait **tout** le script : chaque toolchain est
+  désormais isolée, les échecs sont récapitulés et le script sort en code 1.
+- **`package-lock.json`** resynchronisé : eslint et vitest étaient déclarés dans
+  `package.json` mais absents du lock → le `npm ci` de la CI échouait.
+- **`postcss.config.js` / `tailwind.config.js` → `.mjs`** : supprime
+  l'avertissement `MODULE_TYPELESS_PACKAGE_JSON` à chaque build.
+- **Binaire Electron** : une installation faite avec `--ignore-scripts` ne le
+  télécharge pas (`Error: Electron uninstall`). Réparation :
+  `node node_modules\electron\install.js` — ou, si son extraction échoue en
+  silence, réextraction manuelle du zip officiel (empreinte vérifiée contre
+  `node_modules/electron/checksums.json`).
+
+### Chaîne d'installation : WSL retiré, publication réparée
+
+WSL avait été abandonné en v0.18.0 au profit des toolchains embarquées, mais les
+installateurs l'activaient toujours : plusieurs minutes, un redémarrage de
+Windows imposé et un risque d'échec pour une fonctionnalité morte.
+
+- `ScriptLearn-Hybrid.iss` / `ScriptLearn-Offline.iss` : suppression des entrées
+  `[Run]` WSL, des sources associées, de l'export Ubuntu et du popup de
+  redémarrage. Seul subsiste le nettoyage d'une clé `RunOnce` héritée (machines
+  mises à jour depuis une version de l'ère WSL). Message « admin requis »
+  reformulé : c'est l'écriture dans Program Files qui l'exige.
+- Fichiers morts supprimés : `installer/scripts/install-wsl.ps1`,
+  `install-wsl-offline.ps1`, `check-requirements.ps1`, `installer/custom.nsh`.
+- **`build.win.target` : `nsis` → `dir`.** electron-builder produisait un
+  installateur NSIS que personne ne publiait (les installateurs distribués sont
+  ceux d'Inno Setup), en recompressant ~2,6 Go à chaque release et en dupliquant
+  la configuration d'Ollama dans `custom.nsh`.
+- **`DiskSliceSize` 3,9 Go → 1,9 Go** dans l'Offline : une release GitHub refuse
+  tout fichier de plus de 2 Gio. Et `release.ps1` ne téléversait que le `.exe`
+  lanceur, laissant les `.bin` de données derrière → installateur inutilisable
+  côté utilisateur. Il téléverse maintenant **toutes** les tranches.
+- `release.ps1` : garde-fou de branche (la procédure tague et pousse `main`,
+  elle refuse de tourner ailleurs) ; suppression d'un `npm run build` en double
+  (`npm run package` fait déjà `electron-vite build`).
+- `build-offline.ps1` : étape d'export WSL supprimée ; correction d'un bug —
+  `$Model -contains ":"` teste l'appartenance à une **collection** et vaut
+  toujours `$false` sur une chaîne, donc le tag valait toujours `latest` et le
+  manifeste cherché était `.../llama3.2/latest` au lieu de `.../llama3.2/3b`
+  (« Manifest introuvable » pour tout modèle tagué).
+
+### Décision produit
+
+Les deux variantes sont conservées, avec des rôles distincts :
+**Hybrid** reste un fichier unique — c'est la seule variante exploitable par la
+mise à jour automatique (`updater.js` télécharge un asset et vérifie son sha512),
+et elle ne télécharge chez l'utilisateur que Ollama + le modèle IA.
+**Offline** embarque en plus `OllamaSetup.exe` et les blobs du modèle : plus rien
+à télécharger, au prix d'un paquet découpé en tranches de 1,9 Go.
+
+### Reste à faire
+
+- Vérifier l'app sur la branche (exercices, missions, terminal, paramètres),
+  puis fusionner dans `main`.
+- Aucune **signature de code** : SmartScreen affiche « éditeur inconnu » à chaque
+  installation et à chaque mise à jour. C'est le dernier écart notable de la
+  chaîne de distribution.
+- `installer/assets/` (OllamaSetup.exe + ollama-models.zip) doit être produit par
+  `build-offline.ps1` avant toute release incluant la variante Offline.
+
+---
+
 ## Audit de code et corrections — 18-19/09/2026 (branche `audit/corrections-2026-09`, non publiée)
 
 Audit complet du dépôt (rapport détaillé : `docs/AUDIT-CODE-2026-09-18.md`), puis

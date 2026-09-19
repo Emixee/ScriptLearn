@@ -6,7 +6,6 @@
 ;   2. Exécuter  installer\build-offline.ps1  pour générer :
 ;        assets\OllamaSetup.exe
 ;        assets\ollama-models.zip
-;        assets\ubuntu-24.04-wsl.tar  (wsl --export Ubuntu-24.04)
 ;   3. Inno Setup 6+ puis compiler ce script.
 
 #define AppName    "ScriptLearn"
@@ -29,11 +28,17 @@ OutputBaseFilename=ScriptLearn-Setup-Offline
 ; SetupIconFile=..\src\renderer\src\assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
-; Taille > 4,2 Go → disk spanning obligatoire (limite PE Windows)
-; Produit : ScriptLearn-Setup-Offline.exe + ScriptLearn-Setup-Offline-001.bin
-; Les deux fichiers doivent être dans le même dossier.
+; ── Découpage en tranches ────────────────────────────────────────────────────
+; Le paquet embarque TOUT (app + toolchains ~2,6 Go + Ollama + modèle) : il
+; dépasse la limite de 4,2 Go d'un .exe Windows, d'où DiskSpanning.
+; POURQUOI 1,9 Go et non 3,9 : une release GitHub REFUSE tout fichier de plus de
+; 2 Gio. Avec des tranches de 3,9 Go le paquet se compilait mais ne pouvait pas
+; être publié — et release.ps1 ne téléversait de toute façon que le .exe, laissant
+; les .bin derrière : l'utilisateur récupérait un installateur inutilisable.
+; À 1,9 Go chaque tranche passe, et release.ps1 les téléverse TOUTES.
+; Les fichiers doivent rester dans le MÊME dossier à l'installation.
 DiskSpanning=yes
-DiskSliceSize=3900000000
+DiskSliceSize=1900000000
 WizardStyle=modern
 PrivilegesRequired=admin
 MinVersion=10.0.18362
@@ -56,11 +61,9 @@ Name: "startmenuicon"; Description: "Raccourci Menu Démarrer"
 
 [Files]
 Source: "{#AppSrcDir}\*";                       DestDir: "{app}";        Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "scripts\install-wsl-offline.ps1";      DestDir: "{tmp}";        Flags: deleteafterinstall
 Source: "scripts\install-ollama-offline.ps1";   DestDir: "{tmp}";        Flags: deleteafterinstall
 Source: "{#AssetsDir}\OllamaSetup.exe";         DestDir: "{tmp}\assets"; Flags: deleteafterinstall
 Source: "{#AssetsDir}\ollama-models.zip";       DestDir: "{tmp}\assets"; Flags: deleteafterinstall
-Source: "{#AssetsDir}\ubuntu-24.04-wsl.tar";    DestDir: "{tmp}\assets"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{autodesktop}\{#AppName}";        Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
@@ -83,13 +86,8 @@ Type: files; Name: "{%TEMP}\ScriptLearn-install.log"
 Type: files; Name: "{%TEMP}\sl-wsl-restart.flag"
 
 [Run]
-; WSL2 + Ubuntu 24.04 (hors-ligne via wsl --import)
-Filename: "powershell.exe"; \
-  Parameters: "-ExecutionPolicy Bypass -NonInteractive -File ""{tmp}\install-wsl-offline.ps1"" -UbuntuTar ""{tmp}\assets\ubuntu-24.04-wsl.tar"""; \
-  Flags: runhidden waituntilterminated; \
-  StatusMsg: "Installation de WSL2 + Ubuntu 24.04 (hors-ligne)..."
-
-; Ollama + modèle embarqué
+; Ollama + modèle embarqué — AUCUN téléchargement pendant l'installation :
+; l'installateur d'Ollama et les blobs du modèle voyagent dans le paquet.
 Filename: "powershell.exe"; \
   Parameters: "-ExecutionPolicy Bypass -NonInteractive -File ""{tmp}\install-ollama-offline.ps1"" -AssetsDir ""{tmp}\assets"""; \
   Flags: runhidden waituntilterminated; \
@@ -105,7 +103,7 @@ function InitializeSetup(): Boolean;
 begin
   Result := True;
   if not IsAdminInstallMode then begin
-    MsgBox('ScriptLearn doit être installé en Administrateur pour activer WSL2.' + #13#10 +
+    MsgBox('ScriptLearn doit être installé en Administrateur : l''installation écrit dans Program Files.' + #13#10 +
            'Clic droit → "Exécuter en tant qu''administrateur".',
            mbError, MB_OK);
     Result := False;
@@ -119,28 +117,4 @@ begin
   // Garder wpPreparing et wpInstalling pour la barre de progression
   if (PageID = wpPreparing)  then Result := False;
   if (PageID = wpInstalling) then Result := False;
-end;
-
-// ── Popup redémarrage WSL — s'exécute après les entrées [Run] ────────────────
-procedure CurStepChanged(CurStep: TSetupStep);
-var
-  ResultCode: Integer;
-  FlagFile: String;
-begin
-  if CurStep = ssDone then begin
-    FlagFile := GetEnv('TEMP') + '\sl-wsl-restart.flag';
-    if FileExists(FlagFile) then begin
-      DeleteFile(FlagFile);
-      if MsgBox(
-        'WSL2 a été activé, mais un redémarrage de Windows est nécessaire' + #13#10 +
-        'pour finaliser l''installation d''Ubuntu 22.04.' + #13#10 + #13#10 +
-        'Le terminal Bash ne sera pas disponible dans ScriptLearn' + #13#10 +
-        'tant que le redémarrage n''aura pas été effectué.' + #13#10 + #13#10 +
-        'Voulez-vous redémarrer maintenant ?',
-        mbConfirmation,
-        MB_YESNO
-      ) = IDYES then
-        ShellExec('', ExpandConstant('{sys}') + '\shutdown.exe', '/r /t 5', '', SW_HIDE, ewNoWait, ResultCode);
-    end;
-  end;
 end;
