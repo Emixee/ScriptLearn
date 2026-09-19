@@ -149,22 +149,6 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
       fitRef.current = fitAddon
       lastSize = { cols: term.cols, rows: term.rows }
 
-      // Créer la session côté main process avec la taille initiale (cols/rows) —
-      // le PTY en a besoin pour le retour à la ligne et l'alignement de la complétion.
-      const res = await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
-
-      // Démontage pendant le create : on referme immédiatement ce qu'on vient
-      // d'ouvrir et on n'installe AUCUN abonnement.
-      if (!alive) {
-        window.electronAPI.terminal.kill({ id })
-        return
-      }
-      if (res && res.ok === false) {
-        term.writeln(`\x1b[31m# Terminal indisponible : ${res.error ?? 'erreur inconnue'}\x1b[0m`)
-        onReadyRef.current?.(false)
-        return
-      }
-
       // ── Affichage + isolation de la sortie pour la validation terminal-auto ──────
       // Le shell émet un MARQUEUR invisible (PROMPT_MARKER) avant chaque invite. On
       // s'en sert pour : (a) le RETIRER de l'affichage (sinon des caractères de contrôle
@@ -271,6 +255,28 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
       const label = shell === 'powershell' ? 'PowerShell' : 'Bash'
       term.writeln(`\x1b[36m# Terminal ${label} — ScriptLearn\x1b[0m`)
       term.writeln('')
+      // ── Création de la session PTY, APRÈS l'installation des écouteurs ────────
+      // POURQUOI dans cet ordre : `terminal:create` ne rend la main qu'une fois le
+      // shell lancé (et, en mission, une fois le `setup` exécuté — jusqu'à 15 s).
+      // Or le shell écrit sa bannière et sa PREMIÈRE INVITE dès qu'il démarre, donc
+      // AVANT que cette promesse ne se résolve. En s'abonnant après, on jetait ces
+      // premiers octets : le panneau restait vide, sans invite, et l'élève croyait
+      // le terminal mort alors qu'il fonctionnait. L'écouteur filtre déjà par id,
+      // s'abonner tôt est donc sans risque.
+      const res = await window.electronAPI.terminal.create({ id, shell, cols: term.cols, rows: term.rows, setup })
+
+      // Démontage pendant le create : on referme immédiatement ce qu'on vient
+      // d'ouvrir. L'abonnement existe déjà cette fois-ci : le cleanup s'en charge.
+      if (!alive) {
+        window.electronAPI.terminal.kill({ id })
+        return
+      }
+      if (res && res.ok === false) {
+        term.writeln(`\x1b[31m# Terminal indisponible : ${res.error ?? 'erreur inconnue'}\x1b[0m`)
+        term.writeln('\x1b[33m#   Toolchain manquante ? Lance « npm run toolchains » puis relance l\u2019app.\x1b[0m')
+        onReadyRef.current?.(false)
+        return
+      }
       onReadyRef.current?.(true)
     }
 
@@ -297,10 +303,16 @@ export default function Terminal({ id, shell = 'powershell', className = '', onO
   }, [id, shell, setup])
 
   return (
+    // onMouseDown : xterm ne reçoit les frappes que si son textarea caché a le
+    // focus, et il ne le prend que sur un clic tombant DANS sa propre zone. Les
+    // 8 px de padding de ce conteneur ne lui appartiennent pas : un clic sur le
+    // bord ne focalisait rien et l'élève tapait dans le vide. On refocalise donc
+    // explicitement sur tout clic dans le conteneur.
     <div
       ref={containerRef}
       className={`w-full h-full ${className}`}
       style={{ padding: '8px' }}
+      onMouseDown={() => xtermRef.current?.focus()}
     />
   )
 }

@@ -61,6 +61,10 @@ const sessions = new Map()
 // n'existe réellement (voir le handler terminal:create).
 const creating = new Map()
 
+// ids dont la fermeture est VOLONTAIRE (kill explicite). Sert uniquement à ne pas
+// afficher « le shell s'est arrêté » quand c'est nous qui l'avons tué.
+const killed = new Set()
+
 // Marqueur de PROMPT émis par le shell AVANT chaque invite (mode terminal-auto).
 // Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js (main ESM et
 // renderer ne peuvent pas s'importer mutuellement → constante dupliquée).
@@ -207,6 +211,20 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
     embedRoot('php'), embedRoot('node'), embedRoot('python'),
   ].join(';')
 
+  // Le binaire existe-t-il VRAIMENT avant de lancer le PTY ?
+  // POURQUOI ce garde-fou : node-pty sous Windows passe par ConPTY, qui CRÉE le
+  // pseudo-terminal puis tente la création du processus. Si le .exe est absent
+  // (installation incomplète, resources/ pas encore téléchargé, binaire en
+  // quarantaine antivirus), l'échec ne remonte pas toujours sous forme
+  // d'exception : on obtient une session « vivante » sur un shell mort. Symptôme
+  // côté élève : un terminal noir où RIEN ne s'affiche quand il tape — car c'est
+  // le shell, pas xterm, qui fait l'écho des caractères. Un existsSync ici
+  // transforme ce silence en message explicite affiché dans le terminal.
+  // powershell.exe est natif Windows et résolu via le PATH : on ne le teste pas.
+  if (file !== 'powershell.exe' && !existsSync(file)) {
+    throw new Error(`interpréteur introuvable : ${file}`)
+  }
+
   const proc = nodePty.spawn(file, args, {
     name: 'xterm-256color',
     cols, rows,
@@ -223,7 +241,22 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
       webContents.send('terminal:data', { id, chunk: data })
     }
   })
-  proc.onExit(() => { sessions.delete(id) })
+  proc.onExit(({ exitCode, signal } = {}) => {
+    sessions.delete(id)
+    // Sortie NON demandée (le shell est mort tout seul : binaire corrompu, DLL
+    // manquante, `exit` tapé par l'élève) → on le DIT dans le terminal. Sans ça,
+    // le panneau se figeait sans explication et paraissait « bloqué ».
+    // `killed` distingue ce cas d'un kill volontaire (changement d'exercice,
+    // fermeture de l'app), qui ne doit évidemment rien afficher.
+    if (killed.delete(id)) return
+    if (webContents && !webContents.isDestroyed()) {
+      const why = signal ? `signal ${signal}` : `code ${exitCode ?? '?'}`
+      webContents.send('terminal:data', {
+        id,
+        chunk: `\r\n\x1b[31m# Le shell s'est arrêté (${why}). Recharge l'exercice pour repartir.\x1b[0m\r\n`,
+      })
+    }
+  })
   return proc
 }
 
@@ -233,6 +266,7 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
 // la mise à jour, qui doit écraser ces binaires).
 export function killAllSessions() {
   for (const [id, proc] of sessions) {
+    killed.add(id)
     try { proc.kill() } catch { /* déjà mort */ }
     sessions.delete(id)
   }
@@ -626,7 +660,10 @@ export function setupTerminalIPC() {
     const pending = creating.get(id)
     if (pending) { try { await pending } catch { /* ignore */ } }
     const proc = sessions.get(id)
-    if (proc) { try { proc.kill() } catch { /* déjà mort */ } }
+    if (proc) {
+      killed.add(id)                 // avant le kill : onExit est synchrone sous ConPTY
+      try { proc.kill() } catch { /* déjà mort */ }
+    }
     sessions.delete(id)
   })
 }
