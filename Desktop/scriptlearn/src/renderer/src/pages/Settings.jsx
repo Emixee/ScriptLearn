@@ -3,9 +3,12 @@ import { useProfile } from '../contexts/ProfileContext'
 import { checkOllama } from '../utils/ollama'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_LABELS } from '../lib/langs'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML' }
 
 const UPDATE_STATUS = { idle: 'idle', checking: 'checking', uptodate: 'uptodate', available: 'available', downloading: 'downloading', ready: 'ready', error: 'error' }
 

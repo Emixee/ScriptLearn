@@ -394,7 +394,35 @@ function getStaticReference(lang) {
   return ''
 }
 
+// Module suivant, pour le bouton « Module suivant » de l'écran de complétion.
+//
+// POURQUOI deux branches : les niveaux STANDARD ont un id numérique (1…6) et
+// regroupent plusieurs langues (`level.languages[lang]`), alors que les 12
+// PARCOURS complémentaires ont des ids textuels (`sql-l1`, `java-l1`) et une
+// structure différente (`complementary.tracks[lang].levels[].modules`).
+// L'ancienne version ne gérait que la première : `parseInt('sql-l1')` valant NaN,
+// elle renvoyait toujours null et le bouton ne s'affichait JAMAIS pour SQL, Git,
+// KQL, SPL, YAML, HTML, PHP, C, C++, C#, Java — c'est-à-dire la majorité du contenu.
 function findNextModule(currentLang, currentLevelId, currentModuleId) {
+  // ── Parcours complémentaire : id de niveau de la forme « <track>-l<n> » ──
+  if (/-l\d+$/.test(String(currentLevelId))) {
+    const track = contentIndex.complementary?.tracks?.[currentLang]
+    if (!track) return null
+    const levels = track.levels ?? []
+    const li = levels.findIndex(l => l.id === currentLevelId)
+    if (li === -1) return null
+    const mods = levels[li].modules ?? []
+    const mi = mods.findIndex(m => m.id === currentModuleId)
+    if (mi === -1) return null
+    if (mi < mods.length - 1) {
+      return { lang: currentLang, levelId: currentLevelId, ref: mods[mi + 1], sameLevel: true }
+    }
+    const nextLevel = levels[li + 1]
+    if (!nextLevel || !(nextLevel.modules ?? []).length) return null
+    return { lang: currentLang, levelId: nextLevel.id, ref: nextLevel.modules[0], sameLevel: false }
+  }
+
+  // ── Niveaux standard (ids numériques) ──
   const level = contentIndex.levels.find(l => l.id === parseInt(currentLevelId))
   if (!level) return null
   const refs = level.languages[currentLang] ?? []
@@ -486,28 +514,51 @@ export default function Exercise() {
   // Charger le brouillon au montage de l'exercice
   useEffect(() => {
     if (!profile || !exercise) return
-    window.electronAPI.store.getDraft(profile.id, draftKey).then(draft => {
-      if (draft) {
-        setCode(draft)
-      } else if (isDebug && exercise.buggyCode) {
-        setCode(exercise.buggyCode)
-      }
-      setDraftLoaded(true)
-    })
+    // `cancelled` : la réponse d'un exercice qu'on a quitté ne doit pas écrire son
+    // brouillon dans l'exercice suivant (le debounce de sauvegarde le
+    // réenregistrerait alors sous la NOUVELLE clé).
+    // .catch : sans lui, un rejet laissait draftLoaded à false — plus aucune
+    // sauvegarde pour le reste de la session — et une « unhandled rejection ».
+    let cancelled = false
+    window.electronAPI.store.getDraft(profile.id, draftKey)
+      .then(draft => {
+        if (cancelled) return
+        if (draft) {
+          setCode(draft)
+        } else if (isDebug && exercise.buggyCode) {
+          setCode(exercise.buggyCode)
+        }
+        setDraftLoaded(true)
+      })
+      .catch(() => { if (!cancelled) setDraftLoaded(true) })
+    return () => { cancelled = true }
   }, [profile?.id, moduleId, exerciseIndex])
 
   // Sauvegarder le brouillon à chaque modification (avec debounce)
   const saveTimeout = useRef(null)
+  // Brouillon en attente d'écriture, lu par le nettoyage de démontage.
+  const pendingDraft = useRef(null)
   useEffect(() => {
     if (!profile || !draftLoaded || status === STATUS.success) return
     clearTimeout(saveTimeout.current)
+    pendingDraft.current = code.trim() ? { key: draftKey, code } : null
     saveTimeout.current = setTimeout(() => {
+      pendingDraft.current = null
       if (code.trim()) {
-        window.electronAPI.store.saveDraft(profile.id, draftKey, code)
+        window.electronAPI.store.saveDraft(profile.id, draftKey, code).catch(() => {})
       }
     }, 800)
     return () => clearTimeout(saveTimeout.current)
   }, [code, profile?.id, draftLoaded, status])
+
+  // Écrire le brouillon en attente au DÉMONTAGE.
+  // POURQUOI : le cleanup du debounce se contentait d'annuler le minuteur — du
+  // code tapé puis suivi d'une navigation en moins de 800 ms était perdu sans
+  // aucun signal à l'élève.
+  useEffect(() => () => {
+    const p = pendingDraft.current
+    if (p && profile) window.electronAPI.store.saveDraft(profile.id, p.key, p.code).catch(() => {})
+  }, [profile?.id])
 
   // Charger le score du module pour l'écran de complétion
   useEffect(() => {
@@ -534,60 +585,113 @@ export default function Exercise() {
   }, [moduleId, exerciseIndex])
 
   // Charger la note
+  const [noteLoaded, setNoteLoaded] = useState(false)
   useEffect(() => {
     if (!profile || !noteKey) return
-    window.electronAPI.store.getNote(profile.id, noteKey).then(n => setNoteText(n ?? ''))
+    let cancelled = false
+    setNoteLoaded(false)
+    window.electronAPI.store.getNote(profile.id, noteKey)
+      .then(n => { if (!cancelled) { setNoteText(n ?? ''); setNoteLoaded(true) } })
+      .catch(() => { if (!cancelled) setNoteLoaded(true) })
+    return () => { cancelled = true }
   }, [profile?.id, noteKey])
 
-  // Sauvegarder la note (debounce)
+  // Sauvegarder la note (debounce).
+  // `noteLoaded` évite d'écrire l'ANCIENNE note sous la NOUVELLE clé quand la
+  // lecture IPC prend plus de 800 ms (même problème que pour les brouillons).
   const noteTimeout = useRef(null)
+  const pendingNote = useRef(null)
   useEffect(() => {
-    if (!profile || !noteKey) return
+    if (!profile || !noteKey || !noteLoaded) return
     clearTimeout(noteTimeout.current)
+    pendingNote.current = { key: noteKey, text: noteText }
     noteTimeout.current = setTimeout(() => {
-      window.electronAPI.store.saveNote(profile.id, noteKey, noteText)
+      pendingNote.current = null
+      window.electronAPI.store.saveNote(profile.id, noteKey, noteText).catch(() => {})
     }, 800)
     return () => clearTimeout(noteTimeout.current)
-  }, [noteText, profile?.id, noteKey])
+  }, [noteText, profile?.id, noteKey, noteLoaded])
 
-  // Raccourcis clavier globaux
+  // Écrire la note en attente au démontage (même raison que pour le brouillon).
+  useEffect(() => () => {
+    const p = pendingNote.current
+    if (p && profile) window.electronAPI.store.saveNote(profile.id, p.key, p.text).catch(() => {})
+  }, [profile?.id])
+
+  // Raccourcis clavier globaux.
+  //
+  // Deux corrections par rapport à la version d'origine :
+  //  1. L'effet n'avait AUCUN tableau de dépendances : il se ré-exécutait après
+  //     chaque rendu, donc retirait puis réattachait l'écouteur à chaque frappe
+  //     dans CodeMirror. Les handlers passent par un ref, l'écouteur n'est posé
+  //     qu'une fois.
+  //  2. Ctrl+R était intercepté avec preventDefault() MÊME quand le focus était
+  //     dans le terminal — ce qui volait la recherche d'historique (reverse-i-search)
+  //     de bash et de PowerShell, essentielle en mode terminal-auto.
+  const shortcutRef = useRef({ handleRun, handleValidate, reset })
+  shortcutRef.current = { handleRun, handleValidate, reset }
   useEffect(() => {
     const handler = (e) => {
+      // Le terminal xterm gère lui-même ses raccourcis : on ne lui prend rien.
+      const inTerminal = e.target instanceof Element && e.target.closest('.xterm')
+      if (inTerminal) return
       if (e.ctrlKey && e.key === 'Enter') {
         e.preventDefault()
-        if (e.shiftKey) { handleValidate() } else { handleRun() }
+        if (e.shiftKey) { shortcutRef.current.handleValidate() } else { shortcutRef.current.handleRun() }
       }
       if (e.ctrlKey && e.key === 'r') {
         e.preventDefault()
-        reset()
+        shortcutRef.current.reset()
+      }
+      // Ctrl+I : ouverture/fermeture de l'assistant IA. Le bouton annonçait déjà ce
+      // raccourci dans son title alors qu'aucun handler ne l'implémentait.
+      if (e.ctrlKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault()
+        setShowAI(v => !v)
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  })
+  }, [])
 
-  // Resize du panneau gauche
+  // ── Redimensionnement du panneau gauche ──────────────────────────────────
+  // Les écouteurs ne sont posés que PENDANT le glisser, et retirés dès le relâché.
+  // POURQUOI : avant, mousemove/mouseup étaient attachés en permanence et le
+  // handler s'exécutait à chaque mouvement de souris n'importe où dans la fenêtre.
+  // Le nettoyage à la fin du drag est fait par le handler lui-même.
+  const dragCleanup = useRef(null)
+
   const startDrag = useCallback((e) => {
     isDragging.current = true
     dragStartX.current = e.clientX
     dragStartW.current = panelWidth
     e.preventDefault()
-  }, [panelWidth])
 
-  useEffect(() => {
-    const onMove = (e) => {
+    const onMove = (ev) => {
       if (!isDragging.current) return
-      const delta = e.clientX - dragStartX.current
+      const delta = ev.clientX - dragStartX.current
       const newW = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, dragStartW.current + delta))
       setPanelWidth(newW)
     }
-    const onUp = () => { isDragging.current = false }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    return () => {
+    const stop = () => {
+      isDragging.current = false
       window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('mouseup', stop)
+      dragCleanup.current = null
     }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', stop)
+    dragCleanup.current = stop
+  }, [panelWidth])
+
+  // Filet de sécurité : si le composant est démonté en plein glisser, les
+  // écouteurs globaux doivent tout de même partir.
+  useEffect(() => () => { dragCleanup.current?.() }, [])
+
+  // Redimensionnement au CLAVIER : le séparateur est un simple <div>, donc
+  // inatteignable autrement. Flèches ←/→ par pas de 20 px.
+  const nudgePanel = useCallback((delta) => {
+    setPanelWidth(w => Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, w + delta)))
   }, [])
 
   if (!module || !exercise) {
@@ -1016,11 +1120,24 @@ export default function Exercise() {
           </div>
         </div>
 
-        {/* Séparateur draggable */}
+        {/* Séparateur draggable — accessible au clavier.
+            role="separator" + aria-valuenow décrivent la poignée aux lecteurs
+            d'écran ; tabIndex + flèches permettent de la manipuler sans souris. */}
         <div
           onMouseDown={startDrag}
-          className="w-1 bg-[#2e2b26] hover:bg-[#d97706] cursor-col-resize flex-shrink-0 transition-colors"
-          title="Redimensionner"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); nudgePanel(-20) }
+            if (e.key === 'ArrowRight') { e.preventDefault(); nudgePanel(20) }
+          }}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Redimensionner le panneau de l'énoncé"
+          aria-valuenow={panelWidth}
+          aria-valuemin={MIN_PANEL_WIDTH}
+          aria-valuemax={MAX_PANEL_WIDTH}
+          tabIndex={0}
+          className="w-1 bg-[#2e2b26] hover:bg-[#d97706] focus-visible:bg-[#d97706] focus:outline-none cursor-col-resize flex-shrink-0 transition-colors"
+          title="Redimensionner (← / → au clavier)"
         />
 
         {/* Panneau droit : terminal, référence ou aperçu selon le langage

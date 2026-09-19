@@ -2,20 +2,33 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 
-// Construire l'index de recherche une seule fois au chargement du module
-// L'index couvre TOUS les contenus : niveaux standard + langages complémentaires
-const SEARCH_INDEX = []
+// ── Index de recherche, construit PARESSEUSEMENT ──────────────────────────────
+// POURQUOI paresseusement : l'index (~1 000 entrées, construit en parcourant les
+// 213 modules et leurs exercices) était bâti au CHARGEMENT DU MODULE. Comme
+// AppLayout importe ce fichier statiquement, ce travail était fait au démarrage de
+// l'application, pour une fonctionnalité que l'utilisateur n'ouvre peut-être
+// jamais. `titleLower`/`levelLower` sont pré-calculés : le filtre appelait
+// toLowerCase() deux fois par entrée À CHAQUE FRAPPE.
+let SEARCH_INDEX = null
+
+function buildSearchIndex() {
+  const index = []
+  const push = (item) => {
+    index.push({ ...item, titleLower: item.title.toLowerCase(), levelLower: item.levelName.toLowerCase() })
+  }
 
 // ── Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6) ──────────────
 for (const level of contentIndex.levels) {
   for (const lang of ALL_LANGS) {
     for (const ref of (level.languages[lang] ?? [])) {
-      SEARCH_INDEX.push({
+      push({
         type: 'module',
         id: ref.id,
         title: ref.title,
@@ -28,7 +41,7 @@ for (const level of contentIndex.levels) {
       if (mod) {
         for (let i = 0; i < mod.exercises.length; i++) {
           const ex = mod.exercises[i]
-          SEARCH_INDEX.push({
+          push({
             type: 'exercise',
             id: ex.id,
             title: ex.title,
@@ -51,7 +64,7 @@ for (const [trackKey, track] of Object.entries(compTracks)) {
   for (const level of track.levels) {
     const levelName = `${track.name} — ${level.name}`
     for (const modRef of level.modules) {
-      SEARCH_INDEX.push({
+      push({
         type: 'module',
         id: modRef.id,
         title: modRef.title,
@@ -64,7 +77,7 @@ for (const [trackKey, track] of Object.entries(compTracks)) {
       if (mod) {
         for (let i = 0; i < mod.exercises.length; i++) {
           const ex = mod.exercises[i]
-          SEARCH_INDEX.push({
+          push({
             type: 'exercise',
             id: ex.id,
             title: ex.title,
@@ -80,9 +93,20 @@ for (const [trackKey, track] of Object.entries(compTracks)) {
   }
 }
 
+  return index
+}
+
+function getSearchIndex() {
+  if (!SEARCH_INDEX) SEARCH_INDEX = buildSearchIndex()
+  return SEARCH_INDEX
+}
+
 export default function GlobalSearch({ onClose }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  // Requête DÉBOUNCÉE : le filtre parcourt ~1 000 entrées ; sans ce délai il
+  // tournait à chaque caractère tapé.
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const inputRef = useRef(null)
   const listRef = useRef(null)
@@ -91,13 +115,18 @@ export default function GlobalSearch({ onClose }) {
     inputRef.current?.focus()
   }, [])
 
-  const results = useMemo(() => {
-    if (!query.trim()) return []
-    const q = query.toLowerCase()
-    return SEARCH_INDEX
-      .filter(item => item.title.toLowerCase().includes(q) || item.levelName.toLowerCase().includes(q))
-      .slice(0, 12)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 120)
+    return () => clearTimeout(t)
   }, [query])
+
+  const results = useMemo(() => {
+    if (!debouncedQuery.trim()) return []
+    const q = debouncedQuery.toLowerCase()
+    return getSearchIndex()
+      .filter(item => item.titleLower.includes(q) || item.levelLower.includes(q))
+      .slice(0, 12)
+  }, [debouncedQuery])
 
   useEffect(() => { setSelected(0) }, [results])
 
@@ -112,6 +141,15 @@ export default function GlobalSearch({ onClose }) {
     if (e.key === 'Enter' && results[selected]) go(results[selected])
     if (e.key === 'Escape') onClose()
   }
+
+  // Échap au niveau du DOCUMENT : le handler n'était posé que sur l'input, donc
+  // dès que le focus passait sur un résultat (flèches + scrollIntoView), Échap ne
+  // fermait plus rien.
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
 
   // Scroll l'élément sélectionné dans la vue
   useEffect(() => {
@@ -145,7 +183,7 @@ export default function GlobalSearch({ onClose }) {
         {/* Résultats */}
         {query.trim() === '' ? (
           <div className="px-4 py-8 text-center text-stone-500 text-sm">
-            Tapez pour rechercher dans {SEARCH_INDEX.length} éléments…
+            Tapez pour rechercher dans {getSearchIndex().length} éléments…
           </div>
         ) : results.length === 0 ? (
           <div className="px-4 py-8 text-center text-stone-500 text-sm">

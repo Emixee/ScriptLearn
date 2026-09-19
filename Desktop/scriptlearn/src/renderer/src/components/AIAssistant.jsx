@@ -15,27 +15,54 @@ export default function AIAssistant({ context = '', onClose }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
+  // Le composant est-il toujours monté ?
+  // POURQUOI ce garde-fou : une requête Ollama peut durer jusqu'à 60 s
+  // (AI_TIMEOUT_MS côté main). Fermer le panneau pendant ce temps provoquait des
+  // setState sur un composant démonté. Il n'existe pas d'annulation côté IPC, on
+  // ignore donc simplement la réponse tardive.
+  const mounted = useRef(true)
+  useEffect(() => () => { mounted.current = false }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  // Nombre de tours d'historique transmis au modèle.
+  // POURQUOI : le prompt ne contenait que la DERNIÈRE question. L'interface
+  // ressemblait à un chat, mais toute question de suivi (« et pourquoi ? »)
+  // partait sans contexte, donc la réponse était incohérente. On borne à 6 tours
+  // pour ne pas faire exploser la taille du prompt (et le temps de réponse).
+  const HISTORY_TURNS = 6
+
   const send = async () => {
     if (!input.trim() || loading || !settings?.aiEnabled) return
     const text = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', text }])
+    const history = [...messages, { role: 'user', text }]
+    setMessages(history)
     setLoading(true)
 
     const ctx = context ? `Contexte pédagogique :\n${context}\n\n` : ''
-    const prompt = `${ctx}Tu es un assistant pédagogique pour apprendre le scripting. Réponds en français de manière concise (2-3 phrases max).\n\nQuestion : ${text}`
+    // On saute le message d'accueil (index 0) et on ne garde que les derniers tours.
+    const transcript = history
+      .slice(1)
+      .slice(-HISTORY_TURNS * 2)
+      .map(m => `${m.role === 'user' ? 'Élève' : 'Assistant'} : ${m.text}`)
+      .join('\n')
+    const prompt = `${ctx}Tu es un assistant pédagogique pour apprendre le scripting. Réponds en français de manière concise (2-3 phrases max).\n\nConversation :\n${transcript}\n\nAssistant :`
 
-    const response = await chatOllama({
-      url:   settings.aiUrl   ?? 'http://localhost:11434',
-      model: settings.aiModel ?? 'llama3.2',
-      prompt
-    })
+    let response = null
+    try {
+      response = await chatOllama({
+        url:   settings.aiUrl   ?? 'http://localhost:11434',
+        model: settings.aiModel ?? 'llama3.2',
+        prompt
+      })
+    } catch {
+      response = null
+    }
 
+    if (!mounted.current) return
     setLoading(false)
     setMessages(prev => [...prev, {
       role: 'assistant',

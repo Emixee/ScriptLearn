@@ -6,10 +6,12 @@ import { getModule } from '../content/loader'
 import { moduleScore, levelMasteryScore } from '../utils/score'
 import { computeTotalXP, xpLevelInfo } from '../utils/xp'
 import { computeStats, getUnlockedBadges, computeStreak, BADGE_DEFS } from '../utils/badges'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
 
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
 
 function getLevelExercises(levelId, lang) {
   const level = contentIndex.levels.find(l => l.id === levelId)
@@ -117,6 +119,14 @@ function MasteryBar({ score }) {
 }
 
 // Calendrier de chaleur (52 semaines)
+// Clé de date LOCALE (AAAA-MM-JJ) — même format que src/main/store.js (todayISO).
+// Les deux doivent rester identiques : le store écrit les dates d'activité, cette
+// page les relit pour allumer les cases du calendrier.
+function localDateKey(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 function ActivityCalendar({ dates }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -128,7 +138,12 @@ function ActivityCalendar({ dates }) {
   for (let i = 364; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
-    const iso = d.toISOString().slice(0, 10)
+    // Date LOCALE, comme le store (src/main/store.js todayISO).
+    // POURQUOI : les cases sont construites à partir de minuit LOCAL, mais la clé
+    // était calculée avec toISOString() (donc en UTC). En France (UTC+1/+2),
+    // minuit local = 22 h ou 23 h la veille en UTC : toutes les cases étaient
+    // décalées d'un jour et celle du jour ne s'allumait jamais.
+    const iso = localDateKey(d)
     const active = dateSet.has(iso)
     week.push({ iso, active, day: d.getDay() })
     if (week.length === 7 || i === 0) {
@@ -179,9 +194,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
-    window.electronAPI.store.getActivity(profile.id).then(setActivity)
-    window.electronAPI.store.getWeeklyGoal(profile.id).then(g => setWeeklyGoal(g ?? 10))
+    // `cancelled` + .catch : une réponse arrivant après un changement de profil
+    // écrasait les données du nouveau, et un rejet IPC produisait une « unhandled
+    // rejection » en laissant la page sur des compteurs à zéro sans explication.
+    let cancelled = false
+    const guard = (fn) => (v) => { if (!cancelled) fn(v) }
+    window.electronAPI.store.getProgress(profile.id).then(guard(setProgress)).catch(() => {})
+    window.electronAPI.store.getActivity(profile.id).then(guard(setActivity)).catch(() => {})
+    window.electronAPI.store.getWeeklyGoal(profile.id).then(guard(g => setWeeklyGoal(g ?? 10))).catch(() => {})
+    return () => { cancelled = true }
   }, [profile])
 
   useEffect(() => {
@@ -198,8 +219,18 @@ export default function Dashboard() {
   const xpLevel      = useMemo(() => xpLevelInfo(xpInfo), [xpInfo])
   const badges       = useMemo(() => getUnlockedBadges(stats), [stats])
 
-  // totalDone compte TOUS les exercices complétés dans la store (standard + complémentaires)
-  const totalDone = Object.values(progress).filter(p => p.completed).length
+  // totalDone = exercices de COURS complétés (niveaux standard + parcours
+  // complémentaires).
+  // POURQUOI le filtre sur les clés : les missions et les labs écrivent leur
+  // progression dans le MÊME dictionnaire, sous des clés composites
+  // `<campagne>:<acte>` (voir MissionPlay/MissionLab → markExerciseDone). Sans
+  // filtre, les actes de mission étaient comptés comme des exercices : « X
+  // exercices réussis » gonflé, pourcentage global pouvant dépasser 100 %,
+  // objectif hebdomadaire validé par des chapitres de mission — et contradiction
+  // avec la page Stats, qui compte en parcourant le contenu.
+  const totalDone = Object.entries(progress)
+    .filter(([key, p]) => p?.completed && !key.includes(':'))
+    .length
 
   // Total exercices = niveaux standard + langages complémentaires
   // On sépare les deux pour pouvoir afficher "X / Y exercices" correctement
@@ -257,8 +288,11 @@ export default function Dashboard() {
 
   const weeklyDone = useMemo(() => {
     const { monday, sunday } = getWeekDates()
-    return Object.values(progress).filter(e => {
-      if (!e.completed || !e.completedAt) return false
+    // Même filtre que totalDone : l'objectif est exprimé en EXERCICES, il ne doit
+    // pas être atteint par des actes de mission (clés `<campagne>:<acte>`).
+    return Object.entries(progress).filter(([key, e]) => {
+      if (key.includes(':')) return false
+      if (!e?.completed || !e.completedAt) return false
       const d = new Date(e.completedAt)
       return d >= monday && d <= sunday
     }).length

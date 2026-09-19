@@ -5,9 +5,10 @@ import { getModule } from '../content/loader'
 import contentIndex from '../content/index.json'
 import { parseMarkdown } from '../utils/markdown'
 
-const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
+// Couleurs et libellés viennent de lib/langs : ils étaient redéclarés ici et
+// avaient déjà divergé (c, cpp, csharp, java, js, ts, go, rust manquaient, donc une
+// carte Java s'affichait avec le libellé brut « java » et la couleur de repli).
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
 
 const FILTERS = [
   { id: 'difficult',  label: 'Difficiles',    desc: '3+ tentatives' },
@@ -16,19 +17,24 @@ const FILTERS = [
   { id: 'all',        label: 'Tous',           desc: 'Tous les exercices' },
 ]
 
-function buildFlashcards(progress) {
+// Index des cartes, construit UNE SEULE FOIS, sans la progression.
+// POURQUOI : buildFlashcards parcourait les 213 modules et aplatissait leurs ~800
+// exercices à CHAQUE changement de `progress` — donc deux fois au montage (une
+// fois avec {} puis une fois quand getProgress répond), de façon synchrone dans le
+// rendu. La progression est désormais greffée au moment du filtrage.
+function buildCardIndex() {
   const cards = []
 
-  // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)
+  // Niveaux standard — on itère les langues DÉCLARÉES par le niveau plutôt qu'une
+  // liste codée en dur : ajouter une langue au contenu suffit désormais.
   for (const level of contentIndex.levels) {
-    for (const lang of ALL_LANGS) {
-      for (const ref of (level.languages[lang] ?? [])) {
+    for (const [lang, refs] of Object.entries(level.languages ?? {})) {
+      for (const ref of (refs ?? [])) {
         const mod = getModule(ref.id)
         if (!mod) continue
         for (const ex of mod.exercises) {
-          const entry = progress[ex.id] ?? {}
           // levelId numérique (ex : 1, 2) pour les modules standard
-          cards.push({ ex, lang, levelId: level.id, moduleId: ref.id, entry })
+          cards.push({ ex, lang, levelId: level.id, moduleId: ref.id })
         }
       }
     }
@@ -43,8 +49,7 @@ function buildFlashcards(progress) {
         const mod = getModule(modRef.id)
         if (!mod) continue
         for (const ex of mod.exercises) {
-          const entry = progress[ex.id] ?? {}
-          cards.push({ ex, lang: trackKey, levelId: level.id, moduleId: modRef.id, entry })
+          cards.push({ ex, lang: trackKey, levelId: level.id, moduleId: modRef.id })
         }
       }
     }
@@ -52,6 +57,14 @@ function buildFlashcards(progress) {
 
   return cards
 }
+
+// Construit au premier import du module (une seule fois pour toute la session).
+const CARD_INDEX = buildCardIndex()
+// Langages RÉELLEMENT présents dans les cartes, dérivés du contenu.
+// POURQUOI : la barre de filtres affichait une liste codée en dur de 9 langages —
+// 6 n'avaient aucune carte, et html/php/c/cpp/csharp/java, qui en ont, étaient
+// impossibles à filtrer.
+const CARD_LANGS = [...new Set(CARD_INDEX.map(c => c.lang))]
 
 export default function Flashcards() {
   const navigate = useNavigate()
@@ -64,19 +77,23 @@ export default function Flashcards() {
 
   useEffect(() => {
     if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
+    let cancelled = false
+    window.electronAPI.store.getProgress(profile.id)
+      .then(p => { if (!cancelled) setProgress(p ?? {}) })
+      .catch(() => {})
+    return () => { cancelled = true }
   }, [profile?.id])
 
-  const allCards = useMemo(() => buildFlashcards(progress), [progress])
-
   const filteredCards = useMemo(() => {
-    let cards = allCards
+    let cards = CARD_INDEX
     if (langFilter) cards = cards.filter(c => c.lang === langFilter)
+    // `entry` est greffé ici : seul le sous-ensemble filtré en a besoin.
+    cards = cards.map(c => ({ ...c, entry: progress[c.ex.id] ?? {} }))
     if (filter === 'difficult') cards = cards.filter(c => (c.entry.attempts ?? 0) >= 3)
     else if (filter === 'pending') cards = cards.filter(c => !c.entry.completed)
     else if (filter === 'completed') cards = cards.filter(c => c.entry.completed)
     return cards
-  }, [allCards, filter, langFilter])
+  }, [progress, filter, langFilter])
 
   useEffect(() => {
     setCardIdx(0)
@@ -96,6 +113,20 @@ export default function Flashcards() {
     setTimeout(() => setCardIdx(i => Math.max(i - 1, 0)), 150)
   }
   const flipCard = () => setFlipped(v => !v)
+
+  // Navigation au CLAVIER : c'est l'interaction centrale d'une appli de flashcards
+  // et elle n'existait qu'à la souris (la carte était un <div onClick>).
+  useEffect(() => {
+    const onKey = (e) => {
+      // On ne détourne pas les flèches quand l'utilisateur est dans un champ.
+      if (e.target instanceof Element && e.target.closest('input, textarea')) return
+      if (e.key === 'ArrowRight') { e.preventDefault(); goNext() }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
+      else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [filteredCards.length])
 
   return (
     <div className="p-8 overflow-y-auto h-full flex flex-col">
@@ -127,7 +158,7 @@ export default function Flashcards() {
           </button>
         ))}
         <div className="ml-auto flex gap-2 flex-wrap">
-          {ALL_LANGS.map(lang => (
+          {CARD_LANGS.map(lang => (
             <button
               key={lang}
               onClick={() => setLangFilter(langFilter === lang ? null : lang)}
@@ -159,24 +190,46 @@ export default function Flashcards() {
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-6">
           {/* Counter */}
+          {/* Indicateur de position : FENÊTRE de 11 points autour de la carte
+              courante. Avant, il y avait un bouton par carte — plus de mille
+              éléments dans le DOM avec le filtre « Tous », tous vides (donc
+              inutilisables au lecteur d'écran). */}
           <div className="flex items-center gap-2">
-            {filteredCards.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => { setFlipped(false); setCardIdx(i) }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === cardIdx ? 'bg-white scale-125' : 'bg-[#2e2b26] hover:bg-stone-400'
-                }`}
-              />
-            ))}
+            {(() => {
+              const span = 5
+              const start = Math.max(0, Math.min(cardIdx - span, filteredCards.length - (span * 2 + 1)))
+              const end = Math.min(filteredCards.length, Math.max(start + span * 2 + 1, span * 2 + 1))
+              return filteredCards.slice(start, end).map((_, k) => {
+                const i = start + k
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { setFlipped(false); setCardIdx(i) }}
+                    aria-label={`Aller à la carte ${i + 1}`}
+                    aria-current={i === cardIdx ? 'true' : undefined}
+                    className={`w-2 h-2 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-[#d97706] ${
+                      i === cardIdx ? 'bg-white scale-125' : 'bg-[#2e2b26] hover:bg-stone-400'
+                    }`}
+                  />
+                )
+              })
+            })()}
           </div>
           <p className="text-stone-500 text-xs">{cardIdx + 1} / {filteredCards.length}</p>
 
           {/* Card */}
+          {/* role/tabIndex/onKeyDown : la carte est un div (le retournement 3D
+              impose cette structure), on lui rend donc explicitement le
+              comportement d'un bouton. */}
           <div
-            className="w-full max-w-2xl cursor-pointer"
+            className="w-full max-w-2xl cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d97706]"
             style={{ perspective: '1000px' }}
             onClick={flipCard}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flipCard() } }}
+            role="button"
+            tabIndex={0}
+            aria-pressed={flipped}
+            aria-label={flipped ? 'Voir la question' : 'Voir la réponse'}
           >
             <div
               className="relative transition-transform duration-500"

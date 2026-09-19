@@ -34,10 +34,11 @@ export function moduleScore(exercises, progress) {
  * Score moyen de maîtrise d'un niveau (toutes langues, tous modules).
  */
 export function levelMasteryScore(levelRef, progress, getModule) {
-  const refs = [
-    ...(levelRef.languages.bash ?? []),
-    ...(levelRef.languages.powershell ?? [])
-  ]
+  // TOUTES les langues du niveau, et pas seulement bash/powershell.
+  // POURQUOI : la liste était codée en dur et Python — 6 modules par niveau — en
+  // était absent, donc la barre « maîtrise X % » du Dashboard était fausse pour
+  // tout apprenant Python (ses exercices ne comptaient simplement pas).
+  const refs = Object.values(levelRef.languages ?? {}).flat()
   if (refs.length === 0) return 0
   const allExercises = refs.flatMap(r => getModule(r.id)?.exercises ?? [])
   if (allExercises.length === 0) return 0

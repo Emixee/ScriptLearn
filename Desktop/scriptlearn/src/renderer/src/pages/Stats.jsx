@@ -1,14 +1,28 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useProfile } from '../contexts/ProfileContext'
+import { useMemo } from 'react'
+import { useProgress } from '../lib/useProgress'
 import { useNavigate } from 'react-router-dom'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
 import { computeTotalXP, xpLevelInfo } from '../utils/xp'
 import { computeStats, BADGE_DEFS, getUnlockedBadges } from '../utils/badges'
 
-const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS  = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-const LANG_COLORS  = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
+// Libellés/couleurs centralisés (lib/langs) : les tables locales ne connaissaient
+// pas c/cpp/csharp/java, pourtant présents dans le contenu.
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
+
+// Langages RÉELLEMENT présents dans le contenu, calculés une fois.
+// POURQUOI : la liste était codée en dur (9 langages). « Progression par langage »
+// n'affichait donc jamais les parcours html/php/c/cpp/csharp/java, alors que le
+// « Taux global » comptait bien LEURS exercices — les barres ne totalisaient
+// jamais le taux affiché au-dessus.
+const CONTENT_LANGS = (() => {
+  const set = new Set()
+  for (const level of contentIndex.levels ?? []) {
+    for (const lang of Object.keys(level.languages ?? {})) set.add(lang)
+  }
+  for (const key of Object.keys(contentIndex.complementary?.tracks ?? {})) set.add(key)
+  return [...set]
+})()
 
 function StatCard({ label, value, sub, color }) {
   return (
@@ -33,17 +47,8 @@ function Bar({ label, value, max, color }) {
   )
 }
 
-export default function Stats() {
-  const { profile } = useProfile()
-  const navigate = useNavigate()
-  const [progress, setProgress] = useState({})
-  const [activity, setActivity] = useState([])
-
-  useEffect(() => {
-    if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
-    window.electronAPI.store.getActivity(profile.id).then(setActivity)
-  }, [profile])
+export default function Stats() {  const navigate = useNavigate()
+  const { progress, activity } = useProgress(true)
 
   const stats   = useMemo(() => computeStats(progress, activity), [progress, activity])
   const xpTotal = useMemo(() => computeTotalXP(progress, contentIndex, getModule), [progress])
@@ -53,11 +58,11 @@ export default function Stats() {
   // Exercices par langage totaux (niveaux standard + langages complémentaires)
   const exByLang = useMemo(() => {
     // Initialiser tous les langages à 0 pour éviter les undefined dans rateByLang
-    const res = Object.fromEntries(ALL_LANGS.map(l => [l, 0]))
+    const res = Object.fromEntries(CONTENT_LANGS.map(l => [l, 0]))
 
     // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)
     for (const level of contentIndex.levels) {
-      for (const lang of ALL_LANGS) {
+      for (const lang of CONTENT_LANGS) {
         for (const ref of (level.languages[lang] ?? [])) {
           const mod = getModule(ref.id)
           if (mod) res[lang] += mod.exercises.length
@@ -85,7 +90,7 @@ export default function Stats() {
   // Taux de réussite par langage
   const rateByLang = useMemo(() => {
     const res = {}
-    for (const lang of ALL_LANGS) {
+    for (const lang of CONTENT_LANGS) {
       const done = stats.completedByLang[lang] ?? 0
       const total = exByLang[lang]
       res[lang] = { done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 }
@@ -99,7 +104,7 @@ export default function Stats() {
 
     // Niveaux standard
     for (const level of contentIndex.levels) {
-      for (const lang of ALL_LANGS) {
+      for (const lang of CONTENT_LANGS) {
         for (const ref of (level.languages[lang] ?? [])) {
           const mod = getModule(ref.id)
           if (!mod) continue
@@ -177,15 +182,15 @@ export default function Stats() {
       <div className="bg-[#111110] rounded p-6 border border-[#2e2b26] mb-6">
         <h2 className="text-white font-semibold mb-4">Progression par langage</h2>
         <div className="space-y-4">
-          {ALL_LANGS.map(lang => (
+          {CONTENT_LANGS.map(lang => (
             <div key={lang}>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium" style={{ color: LANG_COLORS[lang] }}>{LANG_LABELS[lang]}</span>
-                <span className="text-stone-400 text-xs">{rateByLang[lang].done} / {rateByLang[lang].total} — {rateByLang[lang].pct}%</span>
+                <span className="text-stone-400 text-xs">{rateByLang[lang]?.done ?? 0} / {rateByLang[lang]?.total ?? 0} — {rateByLang[lang]?.pct ?? 0}%</span>
               </div>
               <div className="h-2 bg-[#0a0a09] rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${rateByLang[lang].pct}%`, backgroundColor: LANG_COLORS[lang] }} />
+                  style={{ width: `${rateByLang[lang]?.pct ?? 0}%`, backgroundColor: LANG_COLORS[lang] }} />
               </div>
             </div>
           ))}

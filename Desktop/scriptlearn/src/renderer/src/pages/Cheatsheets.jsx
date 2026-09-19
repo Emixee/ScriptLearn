@@ -1,6 +1,9 @@
 import { useState } from 'react'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_COLORS } from '../lib/langs'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15' }
 
 const SHEETS = {
   bash: {

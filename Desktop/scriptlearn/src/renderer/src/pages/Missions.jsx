@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProfile } from '../contexts/ProfileContext'
+import { useProgress } from '../lib/useProgress'
 import { listCampaigns } from '../content/missions'
 import { LANG_LABELS } from '../lib/langs'
 
@@ -14,18 +13,12 @@ const TIER_ORDER = ['debutant', 'intermediaire', 'avance', 'expert']
 
 export default function Missions() {
   const navigate = useNavigate()
-  const { profile } = useProfile()
   const campaigns = listCampaigns()
   const labs = campaigns.filter(c => c.kind === 'lab')
   const voies = campaigns.filter(c => c.kind === 'voie')
   const scenarios = campaigns.filter(c => c.kind === 'scenario' || !c.kind)
   // Progression brute (clé = "<campagne>:<chapitre>") pour calculer l'avancement.
-  const [progress, setProgress] = useState({})
-
-  useEffect(() => {
-    if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(p => setProgress(p ?? {}))
-  }, [profile?.id])
+  const { progress } = useProgress()
 
   const campaignProgress = (c) => {
     const done = c.chapters.filter(ch => progress[`${c.id}:${ch.id}`]?.completed).length

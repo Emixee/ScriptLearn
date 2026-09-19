@@ -54,11 +54,18 @@ export function computeStats(progress, activityDates = []) {
         langsSet.add(lang)
         if (entry.firstAttemptSuccess) firstTryCount++
         if ((entry.attempts ?? 0) > maxAttempts) maxAttempts = entry.attempts
-        completedByLang[lang] = (completedByLang[lang] ?? 0) + 1
       }
       if (!entry?.firstAttemptSuccess) modPerfect = false
     }
-    if (modTotal > 0 && modDone === modTotal && modPerfect) perfectModules++
+    // completedByLang compte des MODULES TERMINÉS, pas des exercices.
+    // POURQUOI ce déplacement : le compteur était incrémenté à chaque exercice
+    // réussi alors que tous les badges l'interprètent comme un nombre de modules
+    // (« Finir 3 modules Bash ») — le badge tombait donc dès 3 exercices, et
+    // toute la gamification par langage était déréglée.
+    if (modTotal > 0 && modDone === modTotal) {
+      completedByLang[lang] = (completedByLang[lang] ?? 0) + 1
+      if (modPerfect) perfectModules++
+    }
   }
 
   // Niveaux standard (Bash, Python, PowerShell — niveaux 1 à 6)

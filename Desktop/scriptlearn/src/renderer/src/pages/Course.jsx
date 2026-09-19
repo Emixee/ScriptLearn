@@ -21,22 +21,57 @@ export default function Course() {
   const [noteText, setNoteText] = useState('')
   const [showNote, setShowNote] = useState(false)
   const noteKey = `course:${moduleId}:${activeSection}`
+  // La note du couple (module, section) est-elle chargée ?
+  // POURQUOI ce drapeau : au changement de section, l'effet de sauvegarde partait
+  // immédiatement avec l'ANCIEN texte mais la NOUVELLE clé. Si l'IPC de lecture
+  // dépassait 800 ms, la note de la section précédente était écrite dans la
+  // section courante.
+  const [noteLoaded, setNoteLoaded] = useState(false)
+
+  // Remise à zéro de la section quand on change de module.
+  // POURQUOI : la route /course/:lang/:level/:moduleId est unique, React réutilise
+  // donc la même instance. En passant d'un module à 5 sections (activeSection = 4)
+  // à un module à 2 sections, `sections[4]` valait undefined et l'accès à
+  // `section.title` faisait un écran blanc — exactement le trajet du bouton
+  // « Module suivant » de la page Exercice.
+  useEffect(() => {
+    setActiveSection(0)
+  }, [moduleId])
 
   useEffect(() => {
     if (!profile) return
-    window.electronAPI.store.getNote(profile.id, noteKey).then(n => setNoteText(n ?? ''))
+    let cancelled = false
+    setNoteLoaded(false)
+    window.electronAPI.store.getNote(profile.id, noteKey)
+      .then(n => { if (!cancelled) { setNoteText(n ?? ''); setNoteLoaded(true) } })
+      .catch(() => { if (!cancelled) setNoteLoaded(true) })
     setShowNote(false)
+    return () => { cancelled = true }
   }, [profile?.id, moduleId, activeSection])
 
   const noteTimeout = useRef(null)
+  // Miroir du texte à sauvegarder : lu par le nettoyage pour ÉCRIRE au démontage
+  // au lieu de jeter la sauvegarde en attente (voir plus bas).
+  const pendingNote = useRef(null)
   useEffect(() => {
-    if (!profile) return
+    if (!profile || !noteLoaded) return
     clearTimeout(noteTimeout.current)
+    pendingNote.current = { key: noteKey, text: noteText }
     noteTimeout.current = setTimeout(() => {
-      window.electronAPI.store.saveNote(profile.id, noteKey, noteText)
+      pendingNote.current = null
+      window.electronAPI.store.saveNote(profile.id, noteKey, noteText).catch(() => {})
     }, 800)
     return () => clearTimeout(noteTimeout.current)
-  }, [noteText, profile?.id, noteKey])
+  }, [noteText, profile?.id, noteKey, noteLoaded])
+
+  // Écriture de la note en attente au DÉMONTAGE.
+  // POURQUOI : le cleanup du debounce ne faisait que `clearTimeout`, donc une note
+  // tapée puis suivie d'une navigation en moins de 800 ms était définitivement
+  // perdue, sans aucun signal.
+  useEffect(() => () => {
+    const p = pendingNote.current
+    if (p && profile) window.electronAPI.store.saveNote(profile.id, p.key, p.text).catch(() => {})
+  }, [profile?.id])
 
   if (!module) {
     return (
@@ -46,8 +81,21 @@ export default function Course() {
     )
   }
 
-  const sections = module.course
-  const section = sections[activeSection]
+  const sections = module.course ?? []
+  // Repli défensif : même avec la remise à zéro ci-dessus, un rendu peut survenir
+  // AVANT que l'effet ne s'exécute (React applique les effets après le rendu).
+  // Sans ce garde-fou, `section.title` lèverait et afficherait un écran blanc.
+  const section = sections[activeSection] ?? sections[0]
+  // Module sans cours (contenu incomplet) : message explicite plutôt qu'un plantage
+  // sur section.title.
+  if (!section) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a09]">
+        <p className="text-stone-400">Ce module n'a pas encore de cours : {moduleId}</p>
+      </div>
+    )
+  }
+
   const isFirst = activeSection === 0
   const isLast = activeSection === sections.length - 1
   const isStaticLang = ['kql', 'sql', 'spl', 'regex', 'git', 'yaml'].includes(lang)

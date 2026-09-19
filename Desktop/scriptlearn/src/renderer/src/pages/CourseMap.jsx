@@ -1,32 +1,29 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProfile } from '../contexts/ProfileContext'
+import { useProgress } from '../lib/useProgress'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
+// Libellés/couleurs centralisés (lib/langs) : cette page en avait sa propre copie,
+// avec des couleurs DIFFÉRENTES de celles des autres pages pour sql/regex/git/spl.
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
 
-const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
-const LANG_COLORS = {
-  bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706',
-  kql: '#e879f9', sql: '#3b82f6', regex: '#8b5cf6',
-  git: '#f97316', spl: '#10b981', yaml: '#f59e0b',
-  html: '#e34c26', php: '#8892bf'
-}
+// Langages des niveaux STANDARD, dérivés du contenu.
+// POURQUOI : la liste était codée en dur avec 9 langages alors que les niveaux
+// standard ne contiennent que bash/python/powershell — 6 boutons menaient donc à
+// un niveau affichant « Aucun module ». Les autres langages vivent dans la vue
+// « Complémentaires ».
+const STANDARD_LANGS = [...new Set(
+  (contentIndex.levels ?? []).flatMap(l => Object.keys(l.languages ?? {}))
+)]
 
 export default function CourseMap() {
   const navigate = useNavigate()
-  const { profile } = useProfile()
-  const [progress, setProgress] = useState({})
+  const { progress } = useProgress()
   const [selectedLang, setSelectedLang] = useState('bash')
   // Mode d'affichage : 'standard' (niveaux 1-6) ou 'complementary' (langages complémentaires)
   const [viewMode, setViewMode] = useState('standard')
   // Track complémentaire sélectionné pour la vue détaillée
   const [selectedTrack, setSelectedTrack] = useState(null)
-
-  useEffect(() => {
-    if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
-  }, [profile])
 
   // Données pour la vue standard — calcul du % de progression par module
   const langData = useMemo(() => {
@@ -105,7 +102,7 @@ export default function CourseMap() {
         {/* Sélecteur de langage (mode standard uniquement) */}
         {viewMode === 'standard' && (
           <div className="flex gap-2 flex-wrap">
-            {ALL_LANGS.map(lang => (
+            {STANDARD_LANGS.map(lang => (
               <button
                 key={lang}
                 onClick={() => setSelectedLang(lang)}

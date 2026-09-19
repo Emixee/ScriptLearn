@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import contentIndex from '../content/index.json'
 import { getModule } from '../content/loader'
 import { useProfile } from '../contexts/ProfileContext'
+import { useProgress } from '../lib/useProgress'
 import { moduleScore } from '../utils/score'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_LABELS } from '../lib/langs'
 
 // Langages standards (Bash, Python, PowerShell) sur les 6 niveaux
 const ALL_LANGS = ['bash', 'python', 'powershell', 'kql', 'sql', 'regex', 'git', 'spl', 'yaml']
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 const LANG_COLORS = {
   bash:       { active: 'bg-[#22d3ee] text-[#0a0a09]',  badge: 'text-[#22d3ee]' },
   python:     { active: 'bg-[#f59e0b] text-[#0a0a09]',  badge: 'text-[#f59e0b]' },
@@ -172,13 +176,10 @@ export default function CourseList() {
   const [selectedCompLevelId, setSelectedCompLevelId] = useState(null)
   const [expandedTracks, setExpandedTracks] = useState({})
 
-  const [progress, setProgress] = useState({})
+  // useProgress : lecture factorisée, avec gestion d'erreur et garde d'obsolescence
+  // (aucune des 11 pages qui lisaient la progression n'en avait — voir lib/useProgress.js).
+  const { progress } = useProgress()
   const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
-  }, [profile])
 
   const levels = contentIndex.levels
   const complementary = contentIndex.complementary

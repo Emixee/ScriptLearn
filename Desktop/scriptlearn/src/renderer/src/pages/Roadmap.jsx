@@ -1,11 +1,14 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
+import { useProgress } from '../lib/useProgress'
 import { getModule } from '../content/loader'
 import contentIndex from '../content/index.json'
+// Libellés/couleurs des langages : source unique dans lib/langs.js (dérivée de
+// LANG_META). Ces tables étaient dupliquées dans chaque page, avec des divergences
+// (langages manquants, couleurs différentes pour sql/regex/git/spl).
+import { LANG_COLORS, LANG_LABELS } from '../lib/langs'
 
-const LANG_COLORS = { bash: '#22d3ee', python: '#f59e0b', powershell: '#d97706', kql: '#e879f9', sql: '#34d399', regex: '#fb923c', git: '#60a5fa', spl: '#a78bfa', yaml: '#facc15', html: '#e34c26', php: '#8892bf' }
-const LANG_LABELS = { bash: 'Bash', python: 'Python', powershell: 'PowerShell', kql: 'KQL', sql: 'SQL', regex: 'Regex', git: 'Git', spl: 'SPL', yaml: 'YAML', html: 'HTML', php: 'PHP' }
 
 const CAREER_PATHS = {
   sysadmin: {
@@ -111,14 +114,9 @@ function findModuleMeta(moduleId) {
 export default function Roadmap() {
   const navigate = useNavigate()
   const { profile, refresh } = useProfile()
-  const [progress, setProgress] = useState({})
+  const { progress } = useProgress()
   const [changing, setChanging] = useState(false)
   const career = profile?.career ?? null
-
-  useEffect(() => {
-    if (!profile) return
-    window.electronAPI.store.getProgress(profile.id).then(setProgress)
-  }, [profile?.id])
 
   const selectCareer = async (key) => {
     await window.electronAPI.store.updateCareer(profile.id, key)
