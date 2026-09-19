@@ -148,6 +148,40 @@ trois lots de correctifs. Aucune montée de version : rien n'est publié.
 - Tables `LANG_COLORS`/`LANG_LABELS` dupliquées dans 8 fichiers → source unique
   dans `lib/langs.js`.
 
+### Relecture du diff (`b6fe476`)
+
+Le diff des cinq lots a été relu intégralement par un second passage, à la
+recherche de régressions. Six défauts introduits ont été corrigés, dont un
+**bloquant** :
+
+- `Exercise.jsx` : `useRef({ handleRun, … })` évaluait l'objet **immédiatement**
+  alors que ces `const` sont déclarés plus bas → « Cannot access 'handleRun' before
+  initialization » à chaque rendu, donc **écran blanc sur toute la page Exercice**.
+  (Même piège de zone morte temporelle que celui déjà documenté pour
+  `module`/`exercise`/`noteKey` dans ce fichier.)
+- `badges.js` / `Stats.jsx` : `completedByLang` compte désormais des **modules**
+  (pour les badges), mais Stats le divisait toujours par un nombre d'**exercices**
+  → « 3 / 210 — 1 % ». Compteur distinct `doneExercisesByLang` ajouté.
+- `computeStreak` comparait des dates **UTC** alors que le store écrit désormais en
+  heure locale : la série retombait à 0 entre minuit et 2 h du matin.
+- Contenu SQL : `sqlCheckColumns` retiré de **10** exercices dont la consigne ne
+  NOMME pas l'alias attendu (« la moyenne » n'est pas `moy`) — une réponse correcte
+  sans alias était refusée ; conservé sur les **7** où l'alias est donné entre
+  backticks. `sqlOrdered` retiré de **8** exercices dont la correction n'a pas
+  d'`ORDER BY` hors de `OVER (...)` (l'ordre n'était qu'un artefact du plan
+  d'exécution SQLite). Les 86 corrections se valident toujours elles-mêmes.
+- `terminal.js` : course « check-then-act » sur `terminal:create` (la session n'est
+  inscrite dans la Map qu'après le `setup`, jusqu'à 15 s plus tard) → un PTY pouvait
+  survivre hors de la Map, donc hors de portée de `kill`. L'id est maintenant
+  réservé de façon synchrone.
+- `Flashcards` : Espace/Entrée retournait la carte **deux** fois (écouteur global +
+  `onKeyDown`), donc pas du tout.
+
+Plus quatre points mineurs : garde-fou de délai dépassé qui ne résolvait pas sa
+promesse, réécriture du fichier de données après restauration depuis `.bak`, retrait
+d'un IPC mort (`store:maxWeeklyGoal`), variable de boucle masquant un utilitaire
+dans `validators/regex.js`.
+
 ### Lot 4 — outillage, build, documentation
 
 - **ESLint** (config plate, ESLint 9) avec `react-hooks` : les deux règles qui
