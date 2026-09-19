@@ -49,50 +49,73 @@ for (const [rel, label] of Object.entries(BINS)) {
 }
 if (missing) console.log(`\n  => ${missing} binaire(s) manquant(s) : lance « npm run toolchains ».`)
 
-// Lance un shell, attend sa première sortie, puis le referme proprement.
-// On n'utilise PAS de marqueur d'invite ici : on veut savoir si le PTY produit
-// des octets, pas valider un exercice.
+// Sonde un shell : on le lance, on attend son invite, PUIS ON TAPE DEDANS.
+// POURQUOI écrire dans le PTY : le symptôme à reproduire n'est pas « le shell
+// démarre-t-il » mais « taper produit-il quelque chose ». xterm ne fait aucun
+// écho local : dans l'application, chaque caractère affiché vient du shell. Un
+// shell qui affiche son invite puis ignore l'entrée donne exactement la même
+// image qu'un shell mort. Seule une écriture réelle départage les deux.
 function probe(name) {
   return new Promise((done) => {
     const { file, args } = SHELLS[name]
+    // Ligne imprimée AVANT toute tentative : ainsi aucun shell ne peut
+    // disparaître silencieusement du rapport (un `return` oublié suffisait).
+    process.stdout.write(`  ${name.padEnd(11)} ... `)
     if (file !== 'powershell.exe' && !existsSync(file)) {
-      console.log(`  ${name.padEnd(11)} IGNORÉ   binaire absent : ${file}`)
+      console.log(`IGNORÉ   binaire absent : ${file}`)
       return done()
     }
     let out = ''
+    let beforeWrite = -1
     let proc
+    let finished = false
+    // Déclarées AVANT finish()/onExit() qui les annulent : node-pty peut émettre
+    // `exit` immédiatement, et un `const` déclaré plus bas lèverait alors
+    // « Cannot access 't1' before initialization » au lieu du vrai diagnostic.
+    let t1 = null
+    let t2 = null
+    const finish = (verdict, detail) => {
+      if (finished) return
+      finished = true
+      clearTimeout(t1); clearTimeout(t2)
+      console.log(verdict + (detail ? '   ' + detail : ''))
+      try { proc.kill() } catch { /* déjà mort */ }
+      setTimeout(done, 150)
+    }
     try {
       proc = nodePty.spawn(file, args, { name: 'xterm-256color', cols: 80, rows: 24, cwd: ROOT, env: process.env })
     } catch (e) {
-      console.log(`  ${name.padEnd(11)} ÉCHEC    spawn a levé : ${e.message}`)
+      console.log(`ÉCHEC    spawn a levé : ${e.message}`)
       return done()
     }
-    // Temporisation : un shell sain écrit son invite en quelques dizaines de ms.
-    // 4 s laissent large même sur un disque lent ou avec un antivirus qui inspecte.
-    const timer = setTimeout(() => {
-      // ESC (\x1b) est PAR DEFINITION le caractere de controle qui ouvre une
-      // sequence ANSI : impossible de la retirer sans le nommer. Volontaire.
-      // NB : la directive doit etre la ligne JUSTE avant le code visé — un
-      // commentaire inséré entre les deux la rend inopérante.
-      // eslint-disable-next-line no-control-regex
-      const printable = out.replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '').replace(/[\r\n]+/g, ' ').trim()
-      if (printable) console.log(`  ${name.padEnd(11)} OK       ${printable.slice(0, 70)}`)
-      else console.log(`  ${name.padEnd(11)} MUET     aucun octet reçu en 4 s`)
-      try { proc.kill() } catch { /* déjà mort */ }
-      setTimeout(done, 150)
-    }, 4000)
     proc.onData((d) => { out += d })
     proc.onExit(({ exitCode, signal }) => {
-      clearTimeout(timer)
-      // 0xC000013A = STATUS_CONTROL_C_EXIT : code normal quand NOUS fermons le
-      // pseudo-terminal. Inattendu ici, il signale que quelque chose d'autre a
-      // fermé le ConPTY sous le shell.
-      const hex = exitCode === undefined ? '?' : `0x${(exitCode >>> 0).toString(16).toUpperCase()}`
+      if (finished) return
+      finished = true
+      clearTimeout(t1); clearTimeout(t2)
+      // 0xC000013A = STATUS_CONTROL_C_EXIT : code d'un processus dont le
+      // pseudo-terminal a été fermé. Inattendu ici, il désigne un tiers.
       const note = exitCode === -1073741510 ? ' (STATUS_CONTROL_C_EXIT — ConPTY fermé)' : ''
-      console.log(`  ${name.padEnd(11)} SORTIE   code ${exitCode} ${hex}${signal ? ` signal ${signal}` : ''}${note}`)
-      if (out.trim()) console.log(`              (avait écrit : ${JSON.stringify(out.slice(0, 120))})`)
+      const quand = beforeWrite === -1 ? 'avant toute frappe' : 'après la frappe'
+      console.log(`MORT     code ${exitCode}${signal ? ' signal ' + signal : ''}${note} — ${quand}`)
+      if (out.trim()) console.log(`              avait écrit : ${JSON.stringify(out.slice(0, 100))}`)
       done()
     })
+    // 1,2 s : le temps qu'un shell affiche son invite (bash MSYS est le plus lent).
+    t1 = setTimeout(() => {
+      if (finished) return
+      beforeWrite = out.length
+      // `echo` existe dans les quatre shells testés. Le \r est la touche Entrée.
+      proc.write('echo SL_DIAG_OK\r')
+    }, 1200)
+    t2 = setTimeout(() => {
+      // eslint-disable-next-line no-control-regex
+      const clean = out.replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '')
+      if (beforeWrite === -1) finish('MUET', 'aucune invite en 1,2 s')
+      else if (clean.includes('SL_DIAG_OK')) finish('OK', 'invite + écho de la frappe')
+      else if (out.length > beforeWrite) finish('PARTIEL', 'le shell répond mais sans écho de la commande')
+      else finish('SOURD', 'invite affichée, mais la frappe ne produit RIEN — symptôme reproduit hors Electron')
+    }, 3200)
   })
 }
 
@@ -103,6 +126,9 @@ for (const n of names) {
   if (!SHELLS[n]) { console.log(`  ${n} : shell inconnu`); continue }
   await probe(n)
 }
-console.log('\nLecture : « OK » = le PTY fonctionne hors Electron (le problème est dans l’app).')
-console.log('          « MUET » ou « SORTIE » = ConPTY/binaire en cause sur cette machine.')
+console.log('\nLecture :')
+console.log('  OK       le PTY fonctionne hors Electron -> le problème est dans l’application.')
+console.log('  SOURD    l’invite s’affiche mais la frappe ne produit rien -> ConPTY/le shell.')
+console.log('  MORT     le shell s’arrête seul -> le code de sortie dit qui l’a fermé.')
+console.log('  MUET     aucune invite -> binaire ou ConPTY en cause sur cette machine.')
 process.exit(0)

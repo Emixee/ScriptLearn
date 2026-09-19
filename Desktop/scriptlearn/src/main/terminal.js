@@ -57,6 +57,19 @@ function checkToolAvailable(tool) {
 // demandé la session (webContents passé à createSession).
 const sessions = new Map()
 
+// ── Trace du cycle de vie des sessions (DÉVELOPPEMENT UNIQUEMENT) ────────────
+// POURQUOI : quand le terminal reste muet, la seule question qui compte est
+// « qui a tué le shell, et dans quel ordre ? » — et c'est précisément ce que
+// l'interface ne montre pas. Ces lignes sortent dans la console du processus
+// PRINCIPAL, c'est-à-dire la fenêtre qui a lancé `npm run dev` : lisibles sans
+// ouvrir les DevTools, et absentes de l'application installée.
+// app.isPackaged est lu à CHAQUE appel et non une fois au chargement du module :
+// ce fichier est importé avant `app.whenReady()`, et figer la valeur trop tôt
+// est le genre de détail qui se retourne contre soi au premier refactoring.
+function trace(...args) {
+  if (!app.isPackaged) console.log('[terminal]', ...args)
+}
+
 // ── Sérialisation des opérations par terminal ────────────────────────────────
 // Toutes les opérations d'un MÊME id (create / kill) sont enchaînées dans une
 // file d'attente. POURQUOI cette file plutôt qu'un simple drapeau « création en
@@ -193,7 +206,9 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
   // setup est toujours du bash (mkdir/printf), quel que soit le shell de la session.
   // (Avant : execFileSync → l'app gelait jusqu'à 15 s à chaque ouverture d'acte.)
   if (setup) {
+    trace(id, 'setup en cours (bash, 15 s max)')
     await runProc(bashBin(), [], { input: setup, timeout: 15000 })
+    trace(id, 'setup termine')
   }
   let file, args
   // Variables d'env additionnelles (selon le shell) pour faire émettre le marqueur
@@ -258,6 +273,7 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
   })
 
   sessions.set(id, proc)
+  trace(id, 'spawn OK', shell, '->', file, '| pid', proc.pid, '|', cols + 'x' + rows)
   // node-pty fusionne stdout/stderr dans un seul flux onData. On renvoie les
   // données au webContents qui a demandé la session (et seulement s'il vit
   // encore : écrire dans un renderer détruit lève).
@@ -268,6 +284,7 @@ async function createSession(id, shell, cols = 80, rows = 24, setup, webContents
   })
   proc.onExit(({ exitCode, signal } = {}) => {
     sessions.delete(id)
+    trace(id, 'EXIT code', exitCode, signal ? 'signal ' + signal : '', killed.has(id) ? '(kill demande par nous)' : '(NON demande)')
     // Sortie NON demandée (le shell est mort tout seul : binaire corrompu, DLL
     // manquante, `exit` tapé par l'élève) → on le DIT dans le terminal. Sans ça,
     // le panneau se figeait sans explication et paraissait « bloqué ».
@@ -638,6 +655,7 @@ export function setupTerminalIPC() {
 
   ipcMain.handle('terminal:create', (event, { id, shell, cols, rows, setup }) =>
     enqueue(id, async () => {
+      trace(id, 'create demande |', shell, '| session existante ?', sessions.has(id))
       // Session déjà vivante : rien à faire. Ce test est désormais FIABLE — la
       // file garantit qu'aucun kill n'est en vol au moment où on le lit.
       if (sessions.has(id)) return { ok: true }
@@ -671,6 +689,7 @@ export function setupTerminalIPC() {
   ipcMain.handle('terminal:kill', (_, { id }) =>
     enqueue(id, () => {
       const proc = sessions.get(id)
+      trace(id, 'kill demande | session presente ?', Boolean(proc))
       if (proc) {
         // killed AVANT le kill : onExit peut se déclencher immédiatement, et il
         // ne doit pas afficher « le shell s'est arrêté » pour une fermeture
