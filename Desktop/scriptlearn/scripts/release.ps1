@@ -103,10 +103,25 @@ Step "Compilation de l'installeur Hybrid"
 if ($LASTEXITCODE -ne 0) { throw "Compilation Hybrid échouée" }
 Ok "ScriptLearn-Setup-Hybrid.exe compilé"
 
-Step "Compilation de l'installeur Offline"
-& $ISCC "/DAppVersion=$new" (Join-Path $Root 'installer\ScriptLearn-Offline.iss')
-if ($LASTEXITCODE -ne 0) { throw "Compilation Offline échouée" }
-Ok "ScriptLearn-Setup-Offline.exe compilé"
+# La variante Offline embarque OllamaSetup.exe et les blobs du modele : ces deux
+# fichiers ne sont PAS dans le depot (installer/assets/ est gitignore, ~2,7 Go) et
+# doivent etre produits par installer\build-offline.ps1.
+# POURQUOI on teste au lieu de compiler directement : ISCC echouait sur un Source
+# introuvable et release.ps1 mourait ici, APRES le build complet et la
+# compilation reussie du Hybrid — plusieurs minutes et un installateur utilisable
+# perdus pour une variante optionnelle. On previent et on continue.
+$assetsDir = Join-Path $Root 'installer\assets'
+$offlineReady = (Test-Path (Join-Path $assetsDir 'OllamaSetup.exe')) -and
+                (Test-Path (Join-Path $assetsDir 'ollama-models.zip'))
+if ($offlineReady) {
+  Step "Compilation de l'installeur Offline"
+  & $ISCC "/DAppVersion=$new" (Join-Path $Root 'installer\ScriptLearn-Offline.iss')
+  if ($LASTEXITCODE -ne 0) { throw "Compilation Offline échouée" }
+  Ok "ScriptLearn-Setup-Offline.exe compilé (tranches incluses)"
+} else {
+  Warn "installer\assets incomplet (OllamaSetup.exe et/ou ollama-models.zip absents)."
+  Warn "Variante Offline ignoree. Pour la produire : .\installer\build-offline.ps1"
+}
 
 # ── 5. Commit + tag git ──────────────────────────────────────────────────────
 Step "Commit et tag git v$new"
