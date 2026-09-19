@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "content:check": "node scripts/check-content.mjs",
+    "diag": "node scripts/diag-terminal.mjs",
     "toolchains": "node scripts/fetch-toolchains.mjs && node scripts/fetch-rust.mjs",
     "prepackage": "npm run toolchains",
     "package": "electron-vite build && electron-builder",

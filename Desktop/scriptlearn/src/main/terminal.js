@@ -50,16 +50,34 @@ function checkToolAvailable(tool) {
   if (!p) return true
   return existsSync(p)
 }
+// ── Sérialisation des opérations par terminal ────────────────────────────────
+// Toutes les opérations d'un MÊME id (create / kill) sont enchaînées dans une
+// file d'attente. POURQUOI cette file plutôt qu'un simple drapeau « création en
+// cours » : les deux handlers sont asynchrones, donc entrelaçables. Séquence
+// réelle en développement (React StrictMode monte, démonte, remonte chaque
+// composant) :
+//     create(A) -> kill(A) -> create(A)
+// Le kill faisait `await` (attente de la création en vol) et RENDAIT LA MAIN ;
+// le second create s'exécutait alors, voyait la session encore inscrite dans la
+// Map et répondait « ok, elle existe déjà » SANS rien créer ; puis le kill
+// reprenait et tuait cette session. Résultat : le renderer croyait avoir un
+// terminal opérationnel alors que son shell venait d'être tué — d'où un panneau
+// où taper ne produit rien, et un code de sortie 0xC000013A
+// (STATUS_CONTROL_C_EXIT, la signature d'un ConPTY fermé sous le processus).
+// Avec la file, kill(A) est TERMINÉ avant que create(A) ne commence : la course
+// n'existe plus par construction, sans dépendre d'un ordre d'arrivée.
+const queues = new Map()
 
-// id de session → { proc, webContents } : on retient le destinataire pour lui
-// renvoyer les données. POURQUOI pas un EventEmitter global monkey-patché comme
-// avant : le patch de `emitter.emit` capturait la fenêtre du moment dans une
-// closure, donc une fenêtre recréée (macOS « activate ») recevait… l'ancienne
-// référence, détruite. Ici le destinataire est celui qui a demandé la session.
-const sessions = new Map()
-// Créations EN COURS (id → promesse), pour réserver un id avant que la session
-// n'existe réellement (voir le handler terminal:create).
-const creating = new Map()
+function enqueue(id, fn) {
+  const prev = queues.get(id) ?? Promise.resolve()
+  // `.then(fn, fn)` : l'échec d'une opération ne doit pas bloquer la file pour
+  // toujours — l'opération suivante s'exécute dans les deux cas.
+  const next = prev.then(fn, fn)
+  // La file mémorise une version « qui ne rejette jamais », sinon un rejet non
+  // traité remonterait comme unhandledRejection au premier maillon en échec.
+  queues.set(id, next.then(() => {}, () => {}))
+  return next
+}
 
 // ids dont la fermeture est VOLONTAIRE (kill explicite). Sert uniquement à ne pas
 // afficher « le shell s'est arrêté » quand c'est nous qui l'avons tué.
@@ -611,31 +629,20 @@ export function setupTerminalIPC() {
     }
   })
 
-  ipcMain.handle('terminal:create', async (event, { id, shell, cols, rows, setup }) => {
-    if (sessions.has(id)) return { ok: true }
-    // Création DÉJÀ EN COURS pour cet id ? On attend la même promesse au lieu d'en
-    // lancer une seconde.
-    // POURQUOI : createSession est asynchrone et n'inscrit la session dans la Map
-    // qu'APRÈS avoir exécuté le `setup` (jusqu'à 15 s). Deux appels rapprochés sur
-    // le même id (StrictMode, changement d'acte rapide) passaient donc tous les
-    // deux le test `sessions.has(id)` : le second écrasait l'entrée du premier,
-    // dont le PTY survivait hors de la Map — donc hors de portée de kill() et de
-    // killAllSessions(). En réservant l'id de façon SYNCHRONE ici, la fenêtre de
-    // course disparaît.
-    const pending = creating.get(id)
-    if (pending) return pending
-    const promise = createSession(id, shell, cols, rows, setup, event.sender)
-      .then(() => ({ ok: true }))
-      .catch((e) => ({
-        // Remonter l'échec : le renderer peut afficher « terminal indisponible »
+  ipcMain.handle('terminal:create', (event, { id, shell, cols, rows, setup }) =>
+    enqueue(id, async () => {
+      // Session déjà vivante : rien à faire. Ce test est désormais FIABLE — la
+      // file garantit qu'aucun kill n'est en vol au moment où on le lit.
+      if (sessions.has(id)) return { ok: true }
+      try {
+        await createSession(id, shell, cols, rows, setup, event.sender)
+        return { ok: true }
+      } catch (e) {
+        // Remonter l'échec : le renderer affiche « terminal indisponible »
         // au lieu de rester sur un panneau noir sans explication.
-        ok: false,
-        error: String(e?.message ?? e),
-      }))
-      .finally(() => { creating.delete(id) })
-    creating.set(id, promise)
-    return promise
-  })
+        return { ok: false, error: String(e?.message ?? e) }
+      }
+    }))
 
   ipcMain.handle('terminal:write', (_, { id, data }) => {
     const proc = sessions.get(id)
@@ -654,16 +661,16 @@ export function setupTerminalIPC() {
     }
   })
 
-  ipcMain.handle('terminal:kill', async (_, { id }) => {
-    // Si une création est en vol, on l'attend avant de tuer : sinon le PTY
-    // apparaîtrait dans la Map juste après le kill et survivrait.
-    const pending = creating.get(id)
-    if (pending) { try { await pending } catch { /* ignore */ } }
-    const proc = sessions.get(id)
-    if (proc) {
-      killed.add(id)                 // avant le kill : onExit est synchrone sous ConPTY
-      try { proc.kill() } catch { /* déjà mort */ }
-    }
-    sessions.delete(id)
-  })
+  ipcMain.handle('terminal:kill', (_, { id }) =>
+    enqueue(id, () => {
+      const proc = sessions.get(id)
+      if (proc) {
+        // killed AVANT le kill : onExit peut se déclencher immédiatement, et il
+        // ne doit pas afficher « le shell s'est arrêté » pour une fermeture
+        // que nous avons nous-mêmes demandée.
+        killed.add(id)
+        try { proc.kill() } catch { /* déjà mort */ }
+      }
+      sessions.delete(id)
+    }))
 }
