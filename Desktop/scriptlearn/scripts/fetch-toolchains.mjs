@@ -41,8 +41,22 @@ const TOOLCHAINS = {
     url: 'https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-amd64.zip',
     type: 'zip', strip: false, check: 'python.exe',
   },
+  // PHP : la SEULE toolchain dont l'URL se perime. windows.php.net DEPLACE chaque
+  // correctif de /downloads/releases/ vers /downloads/releases/archives/ des qu'un
+  // nouveau sort — une URL figee renvoie donc un 404 quelques semaines apres avoir
+  // ete ecrite (c'est arrive avec 8.3.31). D'ou trois niveaux de repli :
+  //   1. resolve() lit sha256sum.txt et trouve le correctif COURANT de la branche
+  //      (et recupere son empreinte au passage, donc verification gratuite) ;
+  //   2. l'URL figee dans /releases/ (valable tant que 8.3.31 est le courant) ;
+  //   3. la MEME archive dans /releases/archives/ — ce chemin-la, lui, ne bouge
+  //      plus jamais, c'est le filet de securite si php.net est injoignable
+  //      autrement ou si son format de listing change.
   php: {
-    url: 'https://windows.php.net/downloads/releases/php-8.3.31-nts-Win32-vs16-x64.zip',
+    resolve: resolvePhp,
+    urls: [
+      'https://windows.php.net/downloads/releases/php-8.3.31-nts-Win32-vs16-x64.zip',
+      'https://windows.php.net/downloads/releases/archives/php-8.3.31-nts-Win32-vs16-x64.zip',
+    ],
     type: 'zip', strip: false, check: 'php.exe',
   },
   // MinGW-w64 (winlibs, UCRT) : gcc/g++ natifs Windows + linker GNU (réutilisé
@@ -124,6 +138,59 @@ async function download(url, dest, expectedHash) {
   renameSync(part, dest)
 }
 
+// Branche PHP visee. On reste sur une BRANCHE (8.3) et non sur un correctif
+// precis : les correctifs d'une meme branche sont compatibles entre eux, et c'est
+// le correctif qui disparait de /releases/, pas la branche.
+const PHP_BRANCH = '8.3'
+
+// Trouve le correctif courant de PHP_BRANCH sur windows.php.net.
+// POURQUOI passer par sha256sum.txt plutot que par la page HTML : c'est un format
+// stable (« <empreinte>  <fichier> » par ligne) qui donne le nom du fichier ET son
+// empreinte SHA-256. On obtient donc la verification d'integrite sans avoir a
+// maintenir une constante a la main dans SHA256 ci-dessus.
+async function resolvePhp () {
+  const listUrl = 'https://windows.php.net/downloads/releases/sha256sum.txt'
+  const res = await fetch(listUrl)
+  if (!res.ok) throw new Error(`HTTP ${res.status} pour ${listUrl}`)
+  // nts = non thread safe (suffisant : on lance `php script.php` en CLI, jamais
+  // de module serveur) ; vs\d+ car le compilateur change d'une branche a l'autre
+  // (vs16, vs17…) et figer le numero reintroduirait exactement le bug corrige ici.
+  const wanted = new RegExp(`^php-${PHP_BRANCH.replace('.', '\\.')}\\.(\\d+)-nts-Win32-vs\\d+-x64\\.zip$`)
+  let best = null
+  for (const line of (await res.text()).split(/\r?\n/)) {
+    const m = line.trim().match(/^([0-9a-f]{64})\s+\*?(\S+)$/i)
+    if (!m) continue
+    const hit = m[2].match(wanted)
+    if (!hit) continue
+    const patch = Number(hit[1])
+    if (!best || patch > best.patch) best = { patch, sha256: m[1].toLowerCase(), name: m[2] }
+  }
+  if (!best) throw new Error(`aucun build PHP ${PHP_BRANCH} nts x64 liste dans ${listUrl}`)
+  return { url: `https://windows.php.net/downloads/releases/${best.name}`, sha256: best.sha256 }
+}
+
+// Essaie plusieurs URL dans l'ordre et s'arrete a la premiere qui aboutit.
+// Chaque candidat porte SA propre empreinte : la version resolue dynamiquement et
+// la version figee ne sont pas le meme fichier, appliquer l'empreinte de l'une a
+// l'autre ferait echouer le repli pour de mauvaises raisons.
+async function downloadFirst (candidates, dest) {
+  const errors = []
+  for (const c of candidates) {
+    try {
+      console.log(`  <- ${c.url}`)
+      await download(c.url, dest, c.sha256)
+      return c.url
+    } catch (err) {
+      // Une empreinte invalide n'est PAS un probleme d'URL : le fichier servi ne
+      // correspond pas a ce qu'on attend, essayer l'URL suivante masquerait un
+      // probleme d'integrite. On remonte immediatement.
+      if (/Empreinte SHA-256/.test(err.message)) throw err
+      errors.push(`${c.url} -> ${err.message}`)
+    }
+  }
+  throw new Error(`aucune URL exploitable :\n      ${errors.join('\n      ')}`)
+}
+
 // IMPORTANT : on cible le bsdtar de Windows (libarchive) par chemin ABSOLU. Le
 // `tar` du PATH (Git-bash) est GNU tar, incapable de lire les .zip. bsdtar gère
 // .zip ET .tar.gz de façon uniforme.
@@ -150,22 +217,60 @@ function stripTop(outDir) {
   }
 }
 
-const wanted = process.argv.slice(2)
-const names = wanted.length ? wanted : Object.keys(TOOLCHAINS)
+const requested = process.argv.slice(2)
+const names = requested.length ? requested : Object.keys(TOOLCHAINS)
+
+// POURQUOI un try/catch PAR toolchain et non un throw global : avant, la premiere
+// URL morte (le 404 de php-8.3.31) interrompait tout le script — mingw, jdk, git
+// et go n'etaient meme pas tentes, alors qu'ils n'avaient aucun probleme. On
+// telecharge donc tout ce qui peut l'etre, on recapitule les echecs a la fin, et
+// on sort en code 1 pour que `npm run prepackage` refuse quand meme de packager
+// un installateur incomplet.
+const failures = []
 
 for (const name of names) {
   const tc = TOOLCHAINS[name]
-  if (!tc) { console.error(`! toolchain inconnue : ${name}`); continue }
+  if (!tc) { console.error(`! toolchain inconnue : ${name}`); failures.push(`${name} : toolchain inconnue`); continue }
   const out = join(ROOT, name)
   if (existsSync(join(out, tc.check))) { console.log(`✓ ${name} déjà présent`); continue }
-  console.log(`→ ${name} : téléchargement ${tc.url}`)
-  const archive = join(DL, `${name}.${tc.type === 'tgz' ? 'tar.gz' : tc.type}`)
-  await download(tc.url, archive, SHA256[name])
-  console.log(`  extraction…`)
-  rmSync(out, { recursive: true, force: true })
-  extract(archive, tc.type, out)
-  if (tc.strip) stripTop(out)
-  if (!existsSync(join(out, tc.check))) throw new Error(`Extraction ${name} : ${tc.check} introuvable`)
-  console.log(`✓ ${name} prêt (${tc.check})`)
+
+  try {
+    // Candidats = [version resolue dynamiquement] + [URL figees], dans cet ordre.
+    // Une empreinte renseignee a la main dans SHA256 prime toujours sur celle
+    // annoncee par le serveur : c'est le seul moyen d'epingler une version.
+    const candidates = []
+    if (tc.resolve) {
+      try {
+        const r = await tc.resolve()
+        console.log(`→ ${name} : version courante résolue (${r.url.split('/').pop()})`)
+        candidates.push({ url: r.url, sha256: SHA256[name] ?? r.sha256 })
+      } catch (err) {
+        console.log(`  (résolution dynamique impossible : ${err.message} — repli sur les URL figées)`)
+      }
+    }
+    for (const u of (tc.urls ?? [tc.url])) candidates.push({ url: u, sha256: SHA256[name] })
+
+    console.log(`→ ${name} : téléchargement`)
+    const archive = join(DL, `${name}.${tc.type === 'tgz' ? 'tar.gz' : tc.type}`)
+    await downloadFirst(candidates, archive)
+    console.log('  extraction…')
+    rmSync(out, { recursive: true, force: true })
+    extract(archive, tc.type, out)
+    if (tc.strip) stripTop(out)
+    if (!existsSync(join(out, tc.check))) throw new Error(`${tc.check} introuvable après extraction`)
+    console.log(`✓ ${name} prêt (${tc.check})`)
+  } catch (err) {
+    console.error(`✗ ${name} : ${err.message}`)
+    failures.push(`${name} : ${err.message}`)
+  }
 }
-console.log('Terminé.')
+
+if (failures.length) {
+  console.error(`\n${failures.length} toolchain(s) en échec :`)
+  for (const f of failures) console.error(`  - ${f}`)
+  console.error('\nLes autres sont installées. Pour réessayer une seule toolchain :')
+  console.error('  node scripts/fetch-toolchains.mjs <nom>')
+  process.exitCode = 1
+} else {
+  console.log('Terminé.')
+}
