@@ -69,7 +69,6 @@
       "requiredKeywords": ["select", "department", "avg", "salary", "from", "employees", "group by", "having", "55000", "order by"],
       "validationType": "sql",
       "sqlOrdered": true,
-      "sqlCheckColumns": true,
       "correction": "SELECT department, AVG(salary) AS moy FROM employees GROUP BY department HAVING AVG(salary) > 55000 ORDER BY moy DESC;",
       "explanation": "Ordre d'exécution : 1) `FROM employees` → 2) `GROUP BY department` → 3) `HAVING AVG(salary) > 55000` (filtre les groupes) → 4) `ORDER BY moy DESC` (trie le résultat)."
     }

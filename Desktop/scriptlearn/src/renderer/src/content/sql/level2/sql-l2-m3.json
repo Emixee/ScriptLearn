@@ -27,7 +27,6 @@
       "instructions": "Joignez `employees` et `departments` pour afficher le **nom de l'employé** et le **nom de son département**.\n\nLien : `employees.dept_id = departments.id`.",
       "requiredKeywords": ["select", "from", "employees", "inner join", "departments", "on", "dept_id", "departments.id"],
       "validationType": "sql",
-      "sqlCheckColumns": true,
       "correction": "SELECT employees.name, departments.name AS dept FROM employees INNER JOIN departments ON employees.dept_id = departments.id;",
       "explanation": "`INNER JOIN ... ON` précise quelle colonne relie les deux tables. Sans `ON`, SQL ferait un produit cartésien (toutes les combinaisons) — souvent des millions de lignes inutiles."
     },
@@ -69,7 +68,6 @@
       "requiredKeywords": ["select", "city", "avg", "salary", "from", "employees", "inner join", "departments", "on", "group by", "city", "order by"],
       "validationType": "sql",
       "sqlOrdered": true,
-      "sqlCheckColumns": true,
       "correction": "SELECT d.city, AVG(e.salary) AS moy FROM employees e INNER JOIN departments d ON e.dept_id = d.id GROUP BY d.city ORDER BY moy DESC;",
       "explanation": "En joignant les tables, on peut agréger sur des colonnes qui n'existent pas dans la table principale. Ici `city` vient de `departments`, mais `salary` vient de `employees`."
     }

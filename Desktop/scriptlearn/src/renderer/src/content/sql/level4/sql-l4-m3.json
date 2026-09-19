@@ -37,8 +37,6 @@
       "instructions": "Calculez le **cumul des salaires** dans l'ordre croissant de `salary`, avec `SUM() OVER (ORDER BY salary)`.",
       "requiredKeywords": ["select", "name", "salary", "sum", "salary", "over", "order by", "salary", "from", "employees"],
       "validationType": "sql",
-      "sqlOrdered": true,
-      "sqlCheckColumns": true,
       "correction": "SELECT name, salary, SUM(salary) OVER (ORDER BY salary) AS cumul FROM employees;",
       "explanation": "Avec `ORDER BY` dans `OVER`, `SUM()` devient cumulatif : chaque ligne contient la somme de toutes les lignes précédentes + elle-même. Parfait pour les totaux progressifs."
     },
@@ -59,7 +57,6 @@
       "instructions": "Affichez pour chaque employé (trié par `hire_date`) son salaire et le salaire de l'employé **embauché juste avant**.",
       "requiredKeywords": ["select", "name", "salary", "lag", "salary", "1", "over", "order by", "hire_date", "from", "employees"],
       "validationType": "sql",
-      "sqlOrdered": true,
       "correction": "SELECT name, hire_date, salary, LAG(salary, 1) OVER (ORDER BY hire_date) AS salaire_precedent FROM employees;",
       "explanation": "`LAG(salary, 1)` récupère la valeur de `salary` de la ligne précédente (dans l'ordre `hire_date`). La première ligne retourne `NULL` car il n'y a pas de précédent."
     },
@@ -70,7 +67,6 @@
       "instructions": "Affichez pour chaque employé son salaire et le salaire de l'employé **embauché juste après** (trié par `hire_date`).",
       "requiredKeywords": ["select", "name", "salary", "lead", "salary", "1", "over", "order by", "hire_date", "from", "employees"],
       "validationType": "sql",
-      "sqlOrdered": true,
       "correction": "SELECT name, hire_date, salary, LEAD(salary, 1) OVER (ORDER BY hire_date) AS prochain_salaire FROM employees;",
       "explanation": "`LEAD` est le miroir de `LAG` — il regarde vers l'avant. La dernière ligne retourne `NULL`. On peut ajouter une valeur par défaut : `LEAD(salary, 1, 0)` pour remplacer `NULL` par 0."
     }

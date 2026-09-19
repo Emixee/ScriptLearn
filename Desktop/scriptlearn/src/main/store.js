@@ -80,6 +80,11 @@ function load() {
         const d = migrate(JSON.parse(readFileSync(bak, 'utf8')))
         _loadWarning = 'Fichier de données illisible — restauration de la copie de sécurité.'
         try { copyFileSync(file, file + '.corrupt') } catch { /* ignore */ }
+        // On RÉÉCRIT immédiatement le fichier principal avec les données
+        // restaurées. POURQUOI : sinon il reste corrompu, et la première écriture
+        // suivante le recopierait par-dessus la (bonne) copie de sécurité avant
+        // de le remplacer — on perdrait le dernier filet.
+        try { persist(d) } catch { /* disque en lecture seule : on continue en mémoire */ }
         return d
       }
     } catch { /* la sauvegarde est aussi illisible */ }

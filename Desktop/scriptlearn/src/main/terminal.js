@@ -57,6 +57,9 @@ function checkToolAvailable(tool) {
 // closure, donc une fenêtre recréée (macOS « activate ») recevait… l'ancienne
 // référence, détruite. Ici le destinataire est celui qui a demandé la session.
 const sessions = new Map()
+// Créations EN COURS (id → promesse), pour réserver un id avant que la session
+// n'existe réellement (voir le handler terminal:create).
+const creating = new Map()
 
 // Marqueur de PROMPT émis par le shell AVANT chaque invite (mode terminal-auto).
 // Doit être IDENTIQUE à PROMPT_MARKER dans src/renderer/src/lib/langs.js (main ESM et
@@ -96,6 +99,11 @@ function runProc(file, args = [], { input, env, timeout = 30000, cwd } = {}) {
     const timer = setTimeout(() => {
       try { child.kill() } catch { /* déjà mort */ }
       out += `\n[ScriptLearn] Exécution interrompue : délai de ${Math.round(timeout / 1000)} s dépassé.`
+      // On RÉSOUT ici, sans attendre l'événement 'close'. POURQUOI : un arbre de
+      // processus lancé depuis bash peut survivre au kill() du parent — la
+      // promesse restait alors en attente indéfiniment et la validation ne
+      // rendait jamais la main à l'élève.
+      finish()
     }, timeout)
 
     const finish = () => {
@@ -571,14 +579,28 @@ export function setupTerminalIPC() {
 
   ipcMain.handle('terminal:create', async (event, { id, shell, cols, rows, setup }) => {
     if (sessions.has(id)) return { ok: true }
-    try {
-      await createSession(id, shell, cols, rows, setup, event.sender)
-      return { ok: true }
-    } catch (e) {
-      // Remonter l'échec : le renderer peut afficher « terminal indisponible »
-      // au lieu de rester sur un panneau noir sans explication.
-      return { ok: false, error: String(e?.message ?? e) }
-    }
+    // Création DÉJÀ EN COURS pour cet id ? On attend la même promesse au lieu d'en
+    // lancer une seconde.
+    // POURQUOI : createSession est asynchrone et n'inscrit la session dans la Map
+    // qu'APRÈS avoir exécuté le `setup` (jusqu'à 15 s). Deux appels rapprochés sur
+    // le même id (StrictMode, changement d'acte rapide) passaient donc tous les
+    // deux le test `sessions.has(id)` : le second écrasait l'entrée du premier,
+    // dont le PTY survivait hors de la Map — donc hors de portée de kill() et de
+    // killAllSessions(). En réservant l'id de façon SYNCHRONE ici, la fenêtre de
+    // course disparaît.
+    const pending = creating.get(id)
+    if (pending) return pending
+    const promise = createSession(id, shell, cols, rows, setup, event.sender)
+      .then(() => ({ ok: true }))
+      .catch((e) => ({
+        // Remonter l'échec : le renderer peut afficher « terminal indisponible »
+        // au lieu de rester sur un panneau noir sans explication.
+        ok: false,
+        error: String(e?.message ?? e),
+      }))
+      .finally(() => { creating.delete(id) })
+    creating.set(id, promise)
+    return promise
   })
 
   ipcMain.handle('terminal:write', (_, { id, data }) => {
@@ -598,7 +620,11 @@ export function setupTerminalIPC() {
     }
   })
 
-  ipcMain.handle('terminal:kill', (_, { id }) => {
+  ipcMain.handle('terminal:kill', async (_, { id }) => {
+    // Si une création est en vol, on l'attend avant de tuer : sinon le PTY
+    // apparaîtrait dans la Map juste après le kill et survivrait.
+    const pending = creating.get(id)
+    if (pending) { try { await pending } catch { /* ignore */ } }
     const proc = sessions.get(id)
     if (proc) { try { proc.kill() } catch { /* déjà mort */ } }
     sessions.delete(id)

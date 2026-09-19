@@ -75,26 +75,28 @@ export function validateRegex(chapter, code) {
   let ok = true
   // Chaînes de test tronquées : elles viennent du contenu, mais une chaîne
   // anormalement longue multiplierait le coût de chaque test.
-  const cap = (x) => String(x).slice(0, MAX_CASE_LENGTH)
+  const capLen = (x) => String(x).slice(0, MAX_CASE_LENGTH)
 
   // 2) Chaînes à reconnaître. On utilise test() (correspondance de sous-chaîne) :
   //    les ancres ^ $ du motif imposent d'elles-mêmes une correspondance totale
   //    quand la consigne l'exige.
   for (const raw of (t.mustMatch ?? [])) {
-    const s = cap(raw)
+    const s = capLen(raw)
     const pass = test(s)
     if (!pass) ok = false
     lines.push(`${pass ? '✅' : '❌'} reconnaît ${JSON.stringify(s)}`)
   }
   // 3) Chaînes à rejeter.
   for (const raw of (t.mustReject ?? [])) {
-    const s = cap(raw)
+    const s = capLen(raw)
     const pass = !test(s)
     if (!pass) ok = false
     lines.push(`${pass ? '✅' : '❌'} rejette ${JSON.stringify(s)}`)
   }
   // 4) Groupes de capture (exec → match[1], match[2], …).
-  for (const cap of (t.captures ?? [])) {
+  for (const c of (t.captures ?? [])) {
+    // `c` et non `cap` : le nom masquait l'utilitaire de troncature capLen/cap.
+    const cap = { ...c, input: capLen(c.input) }
     const m = exec(cap.input)
     const got = m ? m.slice(1) : null
     const pass = !!got && JSON.stringify(got) === JSON.stringify(cap.groups)

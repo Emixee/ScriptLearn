@@ -118,11 +118,21 @@ export default function Flashcards() {
   // et elle n'existait qu'à la souris (la carte était un <div onClick>).
   useEffect(() => {
     const onKey = (e) => {
-      // On ne détourne pas les flèches quand l'utilisateur est dans un champ.
-      if (e.target instanceof Element && e.target.closest('input, textarea')) return
+      const el = e.target instanceof Element ? e.target : null
+      // On ne détourne rien quand l'utilisateur est dans un champ de saisie.
+      if (el?.closest('input, textarea')) return
       if (e.key === 'ArrowRight') { e.preventDefault(); goNext() }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
-      else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard() }
+      else if (e.key === ' ' || e.key === 'Enter') {
+        // POURQUOI cette garde : quand le focus est sur un bouton (la carte
+        // elle-même, « Suivant », un point de position), l'élément gère DÉJÀ
+        // Espace/Entrée. Sans elle, la carte était retournée deux fois dans le
+        // même lot React — donc pas du tout — et Entrée sur « Suivant »
+        // déclenchait à la fois la navigation et le retournement.
+        if (el?.closest('button, [role="button"]')) return
+        e.preventDefault()
+        flipCard()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

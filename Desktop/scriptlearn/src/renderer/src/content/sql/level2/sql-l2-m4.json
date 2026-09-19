@@ -57,7 +57,6 @@
       "instructions": "Écrivez une requête avec `LEFT JOIN` entre `orders` et `customers` pour afficher **toutes les commandes** même celles sans client associé (`customer_id` peut être NULL).",
       "requiredKeywords": ["select", "from", "orders", "left join", "customers", "on", "customer_id"],
       "validationType": "sql",
-      "sqlCheckColumns": true,
       "correction": "SELECT o.id, o.total, c.name AS client FROM orders o LEFT JOIN customers c ON o.customer_id = c.id;",
       "explanation": "Avec `INNER JOIN`, les commandes sans client seraient perdues. Avec `LEFT JOIN`, elles apparaissent avec `NULL` comme nom de client — utile pour auditer des incohérences de données."
     },

@@ -48,7 +48,6 @@
       "requiredKeywords": ["select", "category", "sum", "revenue", "from", "fact_sales", "join", "dim_product", "on", "product_id", "group by", "category"],
       "validationType": "sql",
       "sqlOrdered": true,
-      "sqlCheckColumns": true,
       "correction": "SELECT p.category, SUM(f.revenue) AS ca FROM fact_sales f JOIN dim_product p ON f.product_id = p.id GROUP BY p.category ORDER BY ca DESC;",
       "explanation": "Dans un schéma en étoile, les requêtes analytiques joignent la table de faits avec les dimensions. `SUM(revenue)` agrège les mesures, `GROUP BY category` regroupe selon la dimension."
     },

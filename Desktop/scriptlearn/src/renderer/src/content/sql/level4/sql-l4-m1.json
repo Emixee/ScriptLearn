@@ -37,7 +37,6 @@
       "instructions": "Créez une CTE `dept_avg` calculant le salaire moyen par département, puis listez les départements dont la moyenne dépasse `60000`.",
       "requiredKeywords": ["with", "dept_avg", "as", "select", "department", "avg", "salary", "from", "employees", "group by", "select", "from", "dept_avg", "where", "60000"],
       "validationType": "sql",
-      "sqlCheckColumns": true,
       "correction": "WITH dept_avg AS (SELECT department, AVG(salary) AS moy FROM employees GROUP BY department) SELECT * FROM dept_avg WHERE moy > 60000;",
       "explanation": "Ici la CTE remplace une table dérivée dans `FROM`. L'avantage : la logique d'agrégation est clairement séparée du filtre final — chaque partie peut être lue et testée indépendamment."
     },

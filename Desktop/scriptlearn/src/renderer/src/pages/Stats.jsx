@@ -91,7 +91,10 @@ export default function Stats() {  const navigate = useNavigate()
   const rateByLang = useMemo(() => {
     const res = {}
     for (const lang of CONTENT_LANGS) {
-      const done = stats.completedByLang[lang] ?? 0
+      // doneExercisesByLang et non completedByLang : ce dernier compte des MODULES
+      // terminés (pour les badges), alors que `total` ci-dessous est un nombre
+      // d'EXERCICES — les mélanger affichait « 3 / 210 — 1 % ».
+      const done = stats.doneExercisesByLang?.[lang] ?? 0
       const total = exByLang[lang]
       res[lang] = { done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 }
     }

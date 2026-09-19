@@ -278,8 +278,14 @@ export default function Exercise() {
   //  2. Ctrl+R était intercepté avec preventDefault() MÊME quand le focus était
   //     dans le terminal — ce qui volait la recherche d'historique (reverse-i-search)
   //     de bash et de PowerShell, essentielle en mode terminal-auto.
-  const shortcutRef = useRef({ handleRun, handleValidate, reset })
-  shortcutRef.current = { handleRun, handleValidate, reset }
+  // Le ref est créé VIDE ici et alimenté plus bas, APRÈS la déclaration des
+  // handlers. POURQUOI : `useRef({ handleRun, … })` évaluerait l'objet
+  // immédiatement, alors que handleRun/handleValidate/reset sont déclarés en
+  // `const` plus loin dans le composant → « Cannot access 'handleRun' before
+  // initialization » (zone morte temporelle) à chaque rendu, donc écran blanc sur
+  // toute la page Exercice. Même piège que celui documenté plus haut pour
+  // `module`/`exercise`/`noteKey`.
+  const shortcutRef = useRef({})
   useEffect(() => {
     const handler = (e) => {
       // Le terminal xterm gère lui-même ses raccourcis : on ne lui prend rien.
@@ -287,11 +293,13 @@ export default function Exercise() {
       if (inTerminal) return
       if (e.ctrlKey && e.key === 'Enter') {
         e.preventDefault()
-        if (e.shiftKey) { shortcutRef.current.handleValidate() } else { shortcutRef.current.handleRun() }
+        // Appels optionnels : le ref reste vide si le composant est sorti par son
+        // `return` précoce (« Exercice introuvable ») — l'écouteur, lui, est déjà posé.
+        if (e.shiftKey) { shortcutRef.current.handleValidate?.() } else { shortcutRef.current.handleRun?.() }
       }
       if (e.ctrlKey && e.key === 'r') {
         e.preventDefault()
-        shortcutRef.current.reset()
+        shortcutRef.current.reset?.()
       }
       // Ctrl+I : ouverture/fermeture de l'assistant IA. Le bouton annonçait déjà ce
       // raccourci dans son title alors qu'aucun handler ne l'implémentait.
@@ -474,6 +482,11 @@ export default function Exercise() {
       window.electronAPI.terminal.write({ id: termId, data: clearCmd })
     }
   }
+
+  // Mise à jour du ref des raccourcis : APRÈS la déclaration des handlers, à
+  // chaque rendu, pour que l'écouteur clavier (posé une seule fois) appelle
+  // toujours la version courante.
+  shortcutRef.current = { handleRun, handleValidate, reset }
 
   const goNext = () => {
     if (isLast) navigate('/app/courses')

@@ -36,7 +36,14 @@ export const BADGE_DEFS = [
 
 export function computeStats(progress, activityDates = []) {
   let totalDone = 0, firstTryCount = 0, maxAttempts = 0
+  // completedByLang : MODULES terminés par langage (utilisé par les badges
+  // « Finir N modules <langage> »).
   const completedByLang = { bash: 0, python: 0, powershell: 0, kql: 0, sql: 0, regex: 0, git: 0, spl: 0, yaml: 0, html: 0, php: 0 }
+  // doneExercisesByLang : EXERCICES réussis par langage.
+  // POURQUOI les deux : la page Stats affiche « X / Y » où Y est un nombre
+  // d'exercices ; en lui donnant completedByLang (des modules) elle afficherait
+  // « 3 / 210 — 1 % ». Les deux unités doivent donc coexister explicitement.
+  const doneExercisesByLang = {}
   const langsSet = new Set()
   let perfectModules = 0
 
@@ -54,6 +61,7 @@ export function computeStats(progress, activityDates = []) {
         langsSet.add(lang)
         if (entry.firstAttemptSuccess) firstTryCount++
         if ((entry.attempts ?? 0) > maxAttempts) maxAttempts = entry.attempts
+        doneExercisesByLang[lang] = (doneExercisesByLang[lang] ?? 0) + 1
       }
       if (!entry?.firstAttemptSuccess) modPerfect = false
     }
@@ -107,14 +115,25 @@ export function computeStats(progress, activityDates = []) {
 
   const streak = computeStreak(activityDates)
 
-  return { totalDone, totalExercises, firstTryCount, maxAttempts, completedByLang, langsWithProgress: langsSet.size, perfectModules, streak }
+  return { totalDone, totalExercises, firstTryCount, maxAttempts, completedByLang, doneExercisesByLang, langsWithProgress: langsSet.size, perfectModules, streak }
+}
+
+// Clé de date LOCALE (AAAA-MM-JJ) — MÊME format que src/main/store.js (todayISO)
+// et que pages/Dashboard.jsx.
+// POURQUOI c'est critique ici : le store enregistre les dates d'activité en heure
+// locale. Comparer avec `toISOString()` (UTC) cassait la série entre minuit et
+// 2 h du matin en France : la date du jour côté store ne correspondait ni au
+// « today » ni au « yesterday » calculés en UTC, et la série retombait à 0.
+function localDateKey(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
 export function computeStreak(dates) {
   if (!dates || dates.length === 0) return 0
   const sorted = [...new Set(dates)].sort().reverse()
-  const today = new Date().toISOString().slice(0, 10)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const today = localDateKey(new Date())
+  const yesterday = localDateKey(new Date(Date.now() - 86400000))
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0
   let streak = 1
   for (let i = 1; i < sorted.length; i++) {
