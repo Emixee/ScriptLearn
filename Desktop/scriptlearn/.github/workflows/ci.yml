@@ -1,0 +1,55 @@
+# ============================================================================
+# Intégration continue.
+#
+# POURQUOI : le dépôt n'avait aucune vérification automatique. Les défauts les
+# plus coûteux de l'audit du 18/09/2026 (validations impossibles à échouer,
+# exercices dont la correction ne satisfait pas ses propres mots-clés, hooks React
+# mal déclarés) sont tous détectables sans intervention humaine.
+#
+# Ce workflow NE construit PAS l'installateur : celui-ci pèse ~2,6 Go de
+# toolchains téléchargées (resources/), ce qui n'a pas sa place dans une CI à
+# chaque push. Il vérifie le code et le contenu, c'est-à-dire ce qui casse
+# vraiment. La release reste manuelle (scripts/release.ps1).
+# ============================================================================
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # Le code vérifié ici est multiplateforme (React + Node) ; seules la
+    # compilation Electron et les toolchains embarquées sont propres à Windows.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # --ignore-scripts : node-pty est un module natif dont la recompilation
+      # n'apporte rien pour le lint, les tests et le build du renderer — et
+      # échouerait sur un runner Linux sans outillage de build Windows.
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests unitaires
+        run: npm test
+
+      # Le plus utile des trois : intégrité du contenu pédagogique.
+      - name: Intégrité du contenu
+        run: npm run content:check
+
+      - name: Build
+        run: npm run build
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'

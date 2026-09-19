@@ -131,12 +131,23 @@ export function setupUpdaterIPC() {
         return { available: false, currentVersion }
       }
 
-      // Trouver l'installateur .exe dans les assets de la release.
-      // On exclut les .blockmap (fichiers de différence pour l'auto-updater) et on cherche le .exe.
-      // electron-builder nomme l'asset "ScriptLearn.Setup.X.Y.Z.exe" (GitHub remplace les espaces par des points).
-      const asset = release.assets?.find(
-        a => a.name.endsWith('.exe') && !a.name.endsWith('.blockmap')
+      // Choisir l'installateur à télécharger, de façon DÉTERMINISTE.
+      //
+      // POURQUOI ce n'est pas trivial : les releases publient DEUX installateurs
+      // Inno Setup (Hybrid ~800 Mo, Offline ~plusieurs Go avec l'image WSL et les
+      // modèles Ollama). L'ancien code prenait « le premier .exe qui n'est pas un
+      // .blockmap », c'est-à-dire l'ordre de l'API GitHub : la mise à jour pouvait
+      // télécharger des giga-octets inutiles, au hasard.
+      // Règle : Hybrid d'abord (c'est la mise à jour normale), puis un
+      // installateur electron-builder (« Setup »), puis n'importe quel .exe.
+      const exeAssets = (release.assets ?? []).filter(
+        a => a.name.toLowerCase().endsWith('.exe') && !a.name.toLowerCase().endsWith('.blockmap')
       )
+      const asset =
+        exeAssets.find(a => /hybrid/i.test(a.name)) ??
+        exeAssets.find(a => /setup/i.test(a.name) && !/offline/i.test(a.name)) ??
+        exeAssets.find(a => !/offline/i.test(a.name)) ??
+        exeAssets[0]
       if (!asset) return { available: false, currentVersion }
 
       // latest.yml (généré par electron-builder) contient le sha512 de
@@ -235,15 +246,23 @@ export function setupUpdaterIPC() {
     // Résultat sans /D= : deux versions coexistent, les raccourcis pointent toujours vers l'ancienne.
     const installDir = dirname(app.getPath('exe'))
 
-    // On lance l'installateur en mode VISIBLE (assistant NSIS) — PAS `/S` — pour que
+    // On lance l'installateur en mode VISIBLE — PAS de mode silencieux — pour que
     // l'utilisateur voie la barre de progression pendant la longue extraction
-    // (~2,6 Go de toolchains embarquées). `/D=` pré-remplit le dossier cible (le
-    // répertoire d'installation actuel) — DOIT être le dernier argument, sans
-    // guillemets — afin que la mise à jour écrase bien l'installation existante.
-    // ATTENTION : `/D=` est la syntaxe NSIS (electron-builder). Si la release est
-    // produite par Inno Setup (installer/*.iss), l'argument attendu est `/DIR=`
-    // et celui-ci est ignoré — les deux chaînes de build ne doivent pas coexister.
-    spawn(installerPath, [`/D=${installDir}`], {
+    // (~2,6 Go de toolchains embarquées). L'argument pré-remplit le dossier cible
+    // (le répertoire d'installation ACTUEL) afin que la mise à jour écrase bien
+    // l'installation existante au lieu d'en créer une seconde.
+    //
+    // ATTENTION : la syntaxe DIFFÈRE selon l'outil qui a produit l'installateur.
+    //   • Inno Setup (installer/*.iss → ScriptLearn-Setup-Hybrid.exe) : /DIR="..."
+    //   • NSIS / electron-builder (« ScriptLearn Setup X.Y.Z.exe ») : /D=... , qui
+    //     doit être le DERNIER argument et ne supporte pas les guillemets.
+    // L'ancien code envoyait toujours `/D=` : sur les releases Inno (celles
+    // réellement publiées par scripts/release.ps1), l'argument était donc ignoré
+    // en silence et le correctif « écraser l'installation existante » de la v0.4.3
+    // n'a jamais fonctionné.
+    const isInno = /-setup-(hybrid|offline)/i.test(basename(installerPath))
+    const args = isInno ? [`/DIR=${installDir}`] : [`/D=${installDir}`]
+    spawn(installerPath, args, {
       detached: true,   // L'installeur survit à la fermeture du parent (app.quit)
       stdio: 'ignore'   // Pas de pipes — l'installeur tourne dans sa propre fenêtre
     }).unref()

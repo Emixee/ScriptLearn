@@ -11,13 +11,19 @@
 // Usage : node scripts/fetch-toolchains.mjs [nom1 nom2 ...]
 //   sans argument : toutes les toolchains. Avec : seulement celles nommées.
 // ============================================================================
-import { existsSync, mkdirSync, rmSync, renameSync, readdirSync, createWriteStream } from 'fs'
+import { existsSync, mkdirSync, rmSync, renameSync, readdirSync, createWriteStream, createReadStream, statSync } from 'fs'
 import { execFileSync } from 'child_process'
-import { join, resolve } from 'path'
+import { join, resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { createHash } from 'crypto'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 
-const ROOT = resolve('resources')
+// ROOT ancré sur l'emplacement DU SCRIPT, pas sur le répertoire courant.
+// POURQUOI : `resolve('resources')` dépend du dossier depuis lequel on lance la
+// commande — lancé ailleurs, le script créait un `resources/` au mauvais endroit
+// et le packaging échouait ensuite sur un `from` inexistant.
+const ROOT = join(resolve(dirname(fileURLToPath(import.meta.url)), '..'), 'resources')
 const DL = join(ROOT, '_dl')
 mkdirSync(DL, { recursive: true })
 
@@ -56,13 +62,66 @@ const TOOLCHAINS = {
     url: 'https://github.com/git-for-windows/git/releases/download/v2.54.0.windows.1/PortableGit-2.54.0-64-bit.7z.exe',
     type: '7zexe', strip: false, check: 'bin/bash.exe',
   },
+  // SDK Go : `go run` natif Windows, utilisé par la Voie Go (src/main/terminal.js
+  // → goEnv). L'archive a un dossier de tête `go/` → strip.
+  //
+  // POURQUOI cette entrée a été ajoutée : package.json déclare `resources/go`
+  // dans extraResources, mais AUCUN script ne le provisionnait — `npm run package`
+  // échouait donc depuis un clone propre (resources/ est gitignoré).
+  go: {
+    url: 'https://go.dev/dl/go1.23.4.windows-amd64.zip',
+    type: 'zip', strip: true, check: 'bin/go.exe',
+  },
 }
 
-async function download(url, dest) {
-  if (existsSync(dest)) { console.log('  (déjà téléchargé)'); return }
+// Empreintes SHA-256 attendues, par toolchain (facultatif mais RECOMMANDÉ).
+// POURQUOI : on télécharge plusieurs centaines de Mo de binaires qui finissent
+// dans l'installateur distribué aux utilisateurs, sans aucune vérification
+// d'intégrité. Renseigner une empreinte ici la rend obligatoire pour cette
+// toolchain.
+// Comment l'obtenir : page officielle de la release, ou, après un premier
+// téléchargement réussi :  certutil -hashfile resources\_dl\<fichier> SHA256
+const SHA256 = {
+  // go: 'à renseigner depuis https://go.dev/dl/ (colonne SHA256)',
+}
+
+async function sha256(file) {
+  const h = createHash('sha256')
+  await pipeline(createReadStream(file), h)
+  return h.digest('hex')
+}
+
+async function download(url, dest, expectedHash) {
+  if (existsSync(dest)) {
+    // Une archive déjà présente n'est réutilisée que si son empreinte est connue
+    // ET correcte. POURQUOI : l'ancienne version réutilisait TOUT fichier
+    // existant — une archive tronquée par un Ctrl+C était donc reprise telle
+    // quelle au run suivant, et l'extraction échouait de façon incompréhensible.
+    if (expectedHash) {
+      const actual = await sha256(dest)
+      if (actual === expectedHash) { console.log('  (déjà téléchargé, empreinte vérifiée)'); return }
+      console.log('  archive existante invalide → nouveau téléchargement')
+      rmSync(dest, { force: true })
+    } else {
+      console.log(`  (déjà téléchargé, ${(statSync(dest).size / 1e6).toFixed(0)} Mo — empreinte non vérifiée)`)
+      return
+    }
+  }
+  // Téléchargement vers un fichier .part renommé à la fin : un téléchargement
+  // interrompu ne laisse jamais d'archive d'apparence complète.
+  const part = dest + '.part'
+  rmSync(part, { force: true })
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status} pour ${url}`)
-  await pipeline(Readable.fromWeb(res.body), createWriteStream(dest))
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(part))
+  if (expectedHash) {
+    const actual = await sha256(part)
+    if (actual !== expectedHash) {
+      rmSync(part, { force: true })
+      throw new Error(`Empreinte SHA-256 incorrecte pour ${url}\n  attendue : ${expectedHash}\n  obtenue  : ${actual}`)
+    }
+  }
+  renameSync(part, dest)
 }
 
 // IMPORTANT : on cible le bsdtar de Windows (libarchive) par chemin ABSOLU. Le
@@ -101,7 +160,7 @@ for (const name of names) {
   if (existsSync(join(out, tc.check))) { console.log(`✓ ${name} déjà présent`); continue }
   console.log(`→ ${name} : téléchargement ${tc.url}`)
   const archive = join(DL, `${name}.${tc.type === 'tgz' ? 'tar.gz' : tc.type}`)
-  await download(tc.url, archive)
+  await download(tc.url, archive, SHA256[name])
   console.log(`  extraction…`)
   rmSync(out, { recursive: true, force: true })
   extract(archive, tc.type, out)

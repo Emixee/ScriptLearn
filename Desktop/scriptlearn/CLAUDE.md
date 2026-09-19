@@ -80,32 +80,89 @@ Exemples : `1.0.0` → `1.0.1` (bug fix) → `1.1.0` (nouvelle feature) → `2.0
 
 ### Procédure obligatoire après chaque push
 
-Après chaque `git push`, **toujours** :
+> ⚠️ **Ce projet n'utilise PAS `electron-updater`.** Ce n'est pas une dépendance du
+> projet. La mise à jour est assurée par `src/main/updater.js` (updater maison sur
+> l'API GitHub), et les installateurs publiés sont produits par **Inno Setup**
+> (`installer/*.iss`), pas par le NSIS d'electron-builder. Toute consigne demandant
+> de publier un `.blockmap` ou de « faire comme electron-updater » est périmée.
 
-1. Bumper la version dans `package.json` selon SemVer
-2. Builder l'installateur : `npm run package`
-3. Créer la release GitHub avec les trois fichiers requis par `electron-updater` :
-   ```
-   ScriptLearn Setup X.Y.Z.exe
-   ScriptLearn Setup X.Y.Z.exe.blockmap
-   latest.yml
-   ```
-   Commande :
-   ```powershell
-   $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
-   gh release create vX.Y.Z `
-     "dist\ScriptLearn Setup X.Y.Z.exe" `
-     "dist\ScriptLearn Setup X.Y.Z.exe.blockmap" `
-     "dist\latest.yml" `
-     --repo Emixee/ScriptLearn `
-     --title "vX.Y.Z — <résumé>" `
-     --notes "<notes de version>"
-   ```
-4. Mettre à jour `docs/CONVERSATION.md` avec la nouvelle version et les changements.
-5. Committer et pusher `docs/CONVERSATION.md` et `package.json`.
+**Le chemin normal est un seul script** — il fait tout, dans le bon ordre, avec les
+vérifications préalables :
 
-> ⚠️ Ne jamais uploader `latest.yml` via l'interface web GitHub — GitHub bloque les `.yml`.
-> Toujours passer par le CLI `gh`.
+```powershell
+.\scripts\release.ps1            # bump patch (X.Y.Z → X.Y.Z+1)
+.\scripts\release.ps1 minor      # nouvelle fonctionnalité
+.\scripts\release.ps1 major      # changement incompatible
+.\scripts\release.ps1 -DryRun    # simule (affiche la version cible, ne touche à rien)
+```
+
+Ce qu'il enchaîne :
+
+1. **Vérifie** `ISCC.exe`, `gh` et que `origin` pointe bien sur `Emixee/ScriptLearn`
+   — avant le build, pas après plusieurs minutes perdues.
+2. Bumpe la version (`npm version --no-git-tag-version`).
+3. `npm run build` puis `npm run package` (electron-vite + electron-builder).
+4. Compile les installateurs Inno Setup **Hybrid** et **Offline**.
+5. Commit + tag `vX.Y.Z` + push (`main` et le tag).
+6. Génère `installer/output/latest.yml` (**sha512 en base64** de l'installateur
+   Hybrid) et crée la release GitHub avec `ScriptLearn-Setup-Hybrid.exe`,
+   `latest.yml` et, s'il existe, `ScriptLearn-Setup-Offline.exe`.
+
+**Puis, à la main** : mettre `docs/CONVERSATION.md` à jour (version + changements)
+et committer.
+
+#### Pourquoi `latest.yml` est indispensable
+
+`src/main/updater.js` télécharge l'installateur puis **l'exécute**. Il lit la ligne
+`sha512:` de `latest.yml` et **refuse d'exécuter** un fichier dont l'empreinte ne
+correspond pas. Sans ce fichier dans la release, la mise à jour fonctionne encore
+mais n'est plus vérifiée (seule la taille est contrôlée) — et l'app le signale.
+
+> ⚠️ Ne jamais téléverser `latest.yml` via l'interface web GitHub — GitHub bloque
+> les `.yml`. Toujours passer par le CLI `gh` (ce que fait `release.ps1`).
 >
-> ⚠️ Toujours préciser `--repo Emixee/ScriptLearn` dans la commande `gh release create`
-> car le dépôt racine (`C:\Users\gpiet`) pointe sur un autre remote par défaut.
+> ⚠️ Toujours préciser `--repo Emixee/ScriptLearn` dans une commande
+> `gh release create` lancée à la main : le dépôt racine pointe sur un autre remote
+> par défaut.
+>
+> ⚠️ L'updater choisit l'asset **Hybrid**. Ne pas publier d'autre `.exe` dont le nom
+> contient « Hybrid », et ne pas renommer celui-là sans adapter `updater.js`.
+
+## 6. Vérifications avant de committer
+
+```powershell
+npm run verify        # lint + tests + intégrité du contenu + build
+```
+
+ou séparément :
+
+| Commande | Rôle |
+|---|---|
+| `npm run lint` | ESLint + `react-hooks` (`eslint.config.js`) |
+| `npm test` | Vitest (validateurs) |
+| `npm run content:check` | intégrité du contenu pédagogique (`scripts/check-content.mjs`) |
+| `npm run build` | build electron-vite |
+
+**`content:check` est le plus important** : il détecte les validations impossibles à
+échouer, les exercices dont la correction ne satisfait pas ses propres mots-clés,
+les modules référencés sans fichier (et l'inverse), et les dossiers de langage
+absents du glob de `loader.js` (qui seraient silencieusement ignorés). La dette déjà
+inventoriée vit dans `scripts/content-known-issues.json` : en corriger une, c'est
+retirer son id de ce fichier.
+
+## 7. Pièges connus du projet
+
+- **`package.json` → `build.files`** ne package que `out/**` et
+  `node_modules/node-pty`. **Toute dépendance npm importée par le processus
+  principal serait absente de l'application installée** (elle marcherait en dev et
+  planterait en production). C'est pourquoi `updater.js` extrait le sha512 de
+  `latest.yml` à la regex plutôt qu'avec `js-yaml`.
+- **`loader.js`** liste les langages en dur dans `import.meta.glob` (Vite exige un
+  littéral) : ajouter `content/<langue>/` sans l'ajouter à cette liste rend le
+  contenu invisible. `content:check` le détecte.
+- **Fins de ligne** : le dépôt est normalisé en LF via `.gitattributes` (les `.ps1`,
+  `.iss`, `.nsh`, `.cmd` restent en CRLF). Après un changement dans ce fichier :
+  `git add --renormalize .`.
+- **WSL a été supprimé en v0.18.0.** Les commentaires « WSL » qui subsistent dans le
+  code sont historiques : le bash utilisé est celui de PortableGit
+  (`resources/git/bin/bash.exe`).

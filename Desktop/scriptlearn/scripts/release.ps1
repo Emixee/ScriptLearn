@@ -25,6 +25,31 @@ function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
 function Ok($msg)   { Write-Host "    OK  $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "    >>  $msg" -ForegroundColor Yellow }
 
+# ── 0. Vérifications PRÉALABLES ──────────────────────────────────────────────
+# POURQUOI en tête : ces deux chemins sont codés en dur et n'étaient vérifiés
+# nulle part. En cas d'absence (Inno Setup non installé, gh installé ailleurs),
+# l'échec survenait à l'étape 4, APRÈS `npm run build` + `npm run package`, soit
+# plusieurs minutes de build et ~2,6 Go d'extraction perdus.
+Step "Vérification de l'outillage"
+if (-not (Test-Path $ISCC)) {
+  throw "ISCC.exe introuvable : $ISCC`nInstalle Inno Setup 6, ou corrige le chemin en tete de ce script."
+}
+if (-not (Test-Path $GH)) {
+  # gh peut aussi etre sur le PATH (winget, scoop) : on tente de le resoudre.
+  # NB : pas d'operateur `?.` ici — il n'existe pas en Windows PowerShell 5.1,
+  # qui est l'interpreteur par defaut sur Windows.
+  $ghCmd = Get-Command gh -ErrorAction SilentlyContinue
+  if ($ghCmd) { $GH = $ghCmd.Source }
+  else { throw "gh.exe introuvable : $GH`nInstalle GitHub CLI, ou corrige le chemin en tete de ce script." }
+}
+# Le depot racine pointe sur un autre remote par defaut : on verifie AVANT de
+# publier quoi que ce soit (cf. consigne permanente du projet).
+$remote = (git -C $Root remote get-url origin)
+if ($remote -notmatch 'Emixee/ScriptLearn(\.git)?$') {
+  throw "Le remote origin ne pointe pas sur Emixee/ScriptLearn : $remote"
+}
+Ok "ISCC, gh et remote origin verifies"
+
 # ── 1. Lire et incrémenter la version ────────────────────────────────────────
 Step "Lecture de package.json"
 $pkg  = Get-Content $PkgJson -Raw | ConvertFrom-Json
@@ -43,10 +68,15 @@ Ok "Version : $cur  →  $new"
 if ($DryRun) { Warn "DryRun : aucune modification appliquée."; exit 0 }
 
 # ── 2. Mettre à jour package.json ────────────────────────────────────────────
+# `npm version` écrit la version de façon fiable (et met aussi à jour
+# package-lock.json). POURQUOI ce changement : l'ancien `-replace` était une
+# substitution GLOBALE sur le fichier brut — inoffensive tant que package.json n'a
+# qu'une seule clé "version", mais toute dépendance ou champ ajouté portant ce nom
+# aurait été réécrit silencieusement.
 Step "Mise à jour de package.json ($new)"
-$raw = Get-Content $PkgJson -Raw
-$raw = $raw -replace '"version":\s*"[^"]+"', "`"version`": `"$new`""
-Set-Content $PkgJson -Value $raw -NoNewline
+Set-Location $Root
+npm version $new --no-git-tag-version --allow-same-version | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "npm version a échoué" }
 Ok "package.json mis à jour"
 
 # ── 3. Build + package Electron ──────────────────────────────────────────────
@@ -73,7 +103,7 @@ Ok "ScriptLearn-Setup-Offline.exe compilé"
 
 # ── 5. Commit + tag git ──────────────────────────────────────────────────────
 Step "Commit et tag git v$new"
-git -C $Root add package.json
+git -C $Root add package.json package-lock.json
 git -C $Root commit -m "chore: version $new"
 git -C $Root tag "v$new"
 git -C $Root push origin main
@@ -85,15 +115,48 @@ Step "Création de la release GitHub v$new"
 $hybrid  = Join-Path $Root 'installer\output\ScriptLearn-Setup-Hybrid.exe'
 $offline = Join-Path $Root 'installer\output\ScriptLearn-Setup-Offline.exe'
 
-$assets = @($hybrid)
+if (-not (Test-Path $hybrid)) { throw "Installateur Hybrid introuvable : $hybrid" }
+
+# ── latest.yml : empreinte de l'installateur, LUE PAR L'APPLICATION ──────────
+# POURQUOI ce fichier : src/main/updater.js télécharge l'installateur puis
+# l'EXÉCUTE. Sans empreinte publiée, rien ne permet de vérifier que le binaire
+# téléchargé est bien celui publié ici (fichier tronqué, asset altéré). L'app lit
+# la ligne `sha512:` de latest.yml et refuse d'exécuter en cas d'écart.
+# Format : sha512 en BASE64 (même convention qu'electron-updater).
+Step "Calcul de l'empreinte sha512 de l'installateur"
+$sha512 = [System.Security.Cryptography.SHA512]::Create()
+$stream = [System.IO.File]::OpenRead($hybrid)
+try { $hashBytes = $sha512.ComputeHash($stream) } finally { $stream.Dispose() }
+$hashB64 = [Convert]::ToBase64String($hashBytes)
+$hybridName = Split-Path $hybrid -Leaf
+$size = (Get-Item $hybrid).Length
+$latestYml = Join-Path $Root 'installer\output\latest.yml'
+@(
+  "version: $new",
+  "files:",
+  "  - url: $hybridName",
+  "    sha512: $hashB64",
+  "    size: $size",
+  "path: $hybridName",
+  "sha512: $hashB64",
+  "releaseDate: '$(Get-Date -Format o)'"
+) | Set-Content $latestYml -Encoding UTF8
+Ok "latest.yml genere (sha512 $($hashB64.Substring(0,12))...)"
+
+# L'ordre des assets compte peu depuis que l'updater choisit explicitement
+# l'installateur « Hybrid », mais on le garde en premier par lisibilite.
+$assets = @($hybrid, $latestYml)
 if (Test-Path $offline) { $assets += $offline }
 
+# ATTENTION : latest.yml DOIT être téléversé par le CLI gh — l'interface web de
+# GitHub refuse les .yml.
 & $GH release create "v$new" @assets `
     --repo "Emixee/ScriptLearn" `
     --title "ScriptLearn v$new" `
-    --notes "## ScriptLearn v$new`n`n- ScriptLearn-Setup-Hybrid.exe : installation avec téléchargement WSL + Ollama`n- ScriptLearn-Setup-Offline.exe : installation 100% hors-ligne (si disponible)"
+    --notes "## ScriptLearn v$new`n`n- ScriptLearn-Setup-Hybrid.exe : installation avec téléchargement WSL + Ollama`n- ScriptLearn-Setup-Offline.exe : installation 100% hors-ligne (si disponible)`n- latest.yml : empreinte sha512 verifiee par la mise a jour automatique"
 
 if ($LASTEXITCODE -ne 0) { throw "Création de la release GitHub échouée" }
 Ok "Release GitHub v$new créée avec les installeurs"
 
 Write-Host "`n Version $new publiée avec succès !" -ForegroundColor Green
+Warn "Reste a faire a la main : mettre a jour docs/CONVERSATION.md (version + changements) puis committer.

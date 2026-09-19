@@ -1,6 +1,185 @@
 # ScriptLearn — Journal de développement
 
 ## Version actuelle : 0.21.0
+> Travaux non publiés en cours sur la branche `audit/corrections-2026-09`
+> (audit de code du 18-19/09/2026 — voir la section « Audit » ci-dessous).
+
+---
+
+## État courant (19/09/2026)
+
+**Contenu** : 213 modules / 808 exercices (dont **86 validés par exécution réelle**
+SQLite), 23 campagnes / 369 chapitres, 12 parcours complémentaires + 6 niveaux
+standard (bash, python, powershell).
+
+**Vérification automatique** — `npm run verify` enchaîne :
+
+| Commande | Ce qu'elle vérifie |
+|---|---|
+| `npm run lint` | ESLint + `react-hooks` (règles des hooks, dépendances d'effets) |
+| `npm test` | Vitest — validateurs Regex et « structured » |
+| `npm run content:check` | intégrité du contenu (voir `scripts/check-content.mjs`) |
+| `npm run build` | build electron-vite (main + preload + renderer) |
+
+La CI GitHub Actions (`.github/workflows/ci.yml`) lance exactement ces quatre
+étapes à chaque push. Elle **ne construit pas** l'installateur (~2,6 Go de
+toolchains) : la release reste manuelle via `scripts/release.ps1`.
+
+### Architecture (état courant — remplace la description de la v0.1.0, périmée)
+
+| Brique | Réalité |
+|---|---|
+| Stockage | **store JSON maison** (`src/main/store.js`, écriture atomique tmp+rename+.bak). *Pas* `electron-store` : cette dépendance n'a jamais existé dans le projet. |
+| Terminal | xterm.js + node-pty, avec le **bash MSYS2 embarqué** (`resources/git/bin/bash.exe`). **WSL a été supprimé en v0.18.0** — les commentaires « WSL » restants dans le code sont historiques. |
+| Toolchains | embarquées dans `resources/` via `extraResources`, provisionnées par `npm run toolchains` (node, python, php, mingw, jdk, git, **go**, rust). |
+| Chargement du contenu | `src/renderer/src/content/loader.js`, `import.meta.glob` avec une **liste explicite de langages** — Vite exige un littéral. **Ajouter un dossier de langage sans l'ajouter à cette liste rend ses modules invisibles** ; `content:check` le détecte. |
+| Mise à jour | updater **maison** (`src/main/updater.js`) sur l'API GitHub. `electron-updater` n'est **pas** une dépendance. `release.ps1` publie un `latest.yml` dont l'app lit le `sha512` pour vérifier l'installateur avant de l'exécuter. |
+| Validation des exercices | source unique : `src/renderer/src/lib/useCodeRunner.js` (6 moteurs réels + repli mots-clés). |
+
+### Bugs connus / dette (à jour au 19/09/2026)
+
+1. **19 exercices** dont la correction de référence ne satisfait pas ses propres
+   `requiredKeywords` : l'élève qui recopie la solution affichée obtient « Pas tout
+   à fait ». Liste dans `scripts/content-known-issues.json` (tolérée par
+   `content:check` pour garder la CI verte). Corriger = ajuster les mots-clés **ou**
+   la correction, puis retirer l'id de la liste.
+2. **80 modules** ont un titre différent entre `index.json` et le fichier de leçon
+   (le libellé change entre la carte du cours et la page du module). Signalé en
+   avertissement par `content:check`.
+3. **313 exercices** (KQL, SPL, Git, Regex, YAML, HTML) restent validés par
+   **mots-clés** — la validation la plus faible. Les moteurs réels existent
+   (`lib/validators/`) ; il manque la charge par exercice (`regexTests`,
+   `gitChecks`, `pipeline`, `domAssertions`, `yamlAssertions`).
+4. **4 exercices** en `output_nonempty` : valident dès que la commande produit une
+   sortie, quelle qu'elle soit.
+5. `dom.js` et `yaml.js` **ne sont pas couverts par des tests** (il faut jsdom pour
+   le premier, et un harnais d'import pour le second).
+6. Pas de CSP dans `src/renderer/index.html` : à ajouter en la testant avec v86
+   (WASM), les iframes d'aperçu et le serveur de dev Vite.
+7. `CourseList.jsx` contient encore une **copie en ligne** de `ModuleCard` (~90
+   lignes) qui a divergé du composant.
+8. `package.json` → `build.files` ne package que `out/**` et `node_modules/node-pty`.
+   **Toute dépendance importée par le processus principal serait absente de l'app
+   installée** (c'est pourquoi `updater.js` lit le `sha512` de `latest.yml` à la
+   regex plutôt qu'avec `js-yaml`).
+
+---
+
+## Audit de code et corrections — 18-19/09/2026 (branche `audit/corrections-2026-09`, non publiée)
+
+Audit complet du dépôt (rapport détaillé : `docs/AUDIT-CODE-2026-09-18.md`), puis
+trois lots de correctifs. Aucune montée de version : rien n'est publié.
+
+### Lot 1 — sécurité et fiabilité (`28f1aaa`)
+
+- **Chaîne XSS → exécution de code local fermée** : `utils/sanitizeHtml.js` (liste
+  blanche de balises/attributs) filtre TOUTE sortie de `marked`, qui ne désinfecte
+  plus rien depuis sa v5 ; les **notes de release GitHub** — seule donnée distante
+  affichée — sont désormais rendues en **texte brut**. Sans ça, un `<img onerror>`
+  dans un corps de release atteignait `window.electronAPI.terminal.runValidation`.
+- **Updater** : HTTPS obligatoire (redirections incluses), `basename()` sur le nom
+  d'asset distant (traversée de chemin), vérification **taille + sha512** avant
+  d'exécuter l'installateur, `pipeline()` pour ne résoudre qu'après vidage du
+  tampon (l'exe pouvait être lancé tronqué), chemin d'installateur restreint au
+  dossier temporaire.
+- **Validation Git** : le dossier jetable est créé et supprimé **par Node**. Avant,
+  les commandes de l'élève partageaient le shell d'un `rm -rf "$W"` — un
+  `W=$HOME` dans un exercice supprimait son dossier personnel.
+- **Store** : écriture atomique + `.bak` + conservation du fichier corrompu (un JSON
+  tronqué provoquait une remise à zéro **silencieuse**), ids de profil sans
+  collision, import JSON validé par liste blanche, dates en heure **locale**.
+- **Processus principal** : exécution 100 % **asynchrone** (plus de gel jusqu'à 90 s
+  pendant une compilation Go/Rust), handlers IPC enregistrés une seule fois
+  (plantage à la réouverture de fenêtre sur macOS), dossier temporaire **unique par
+  exécution**, PTY tués à la fermeture, garde `will-navigate`, fenêtre de rappel
+  quotidien corrigée.
+- `ProfileContext` : `try/finally` — un rejet IPC laissait l'app sur une fenêtre
+  noire. Suppression de profil en deux temps.
+
+### Lot 2 — validation des exercices (`abdc77e`)
+
+- `Exercise.jsx` n'importait **aucun** des six validateurs : les 399 exercices
+  statiques étaient validés par `includes()` de mots-clés alors que `useCodeRunner`
+  branchait déjà les moteurs pour les missions. La page **délègue** désormais au
+  hook, qui choisit aussi le moteur d'après la charge présente.
+- **SQL : 86 exercices sur 100** passent des mots-clés à une **exécution réelle**
+  dans SQLite (sql.js). `validators/sql.js` compare le jeu de lignes ou, quand la
+  correction ne renvoie rien (INSERT/UPDATE/DELETE/CREATE/DROP), l'**état de la
+  base** (schéma via `PRAGMA table_info` + contenu) — sans ce second mode,
+  `DROP TABLE commandes` était jugé « correct ». Vérifié par script : les 86
+  corrections se valident elles-mêmes, et `SELECT 1` comme un commentaire reprenant
+  tous les mots-clés sont rejetés dans les 86 cas.
+- **Validations impossibles à échouer** : `output_nonempty` testait la longueur du
+  **code** (un caractère suffisait) ; `matchesExpected` renvoyait vrai sans
+  `expectedOutput` ; les **commentaires** sont maintenant retirés avant la
+  comparaison de mots-clés (`-- select from employees …` satisfaisait les 10
+  mots-clés requis).
+- **Lab WASM** : la ligne **tapée** n'est plus envoyée au détecteur d'objectifs —
+  `echo 185.220.101.5` débloquait les 4 fragments sans exécuter une commande utile.
+- `requiredCmd` (opt-in par acte) : regex que la commande doit satisfaire, en plus
+  de la sortie — parade à `echo <résultat attendu>` en mode terminal-auto.
+- `Terminal.jsx` : cycle de vie refait (l'abonnement `onData` fuyait à chaque
+  démontage précoce → `onOutput` appelé deux fois par tour), troncature du tampon
+  préservant la ligne d'invite (au-delà de 16 Ko de sortie, une commande correcte
+  n'était **jamais** évaluée), resize debouncé, `onReady` exposé.
+- Garde-fou **ReDoS** dans `validators/regex.js`, `catch` manquants dans
+  `validators/sql.js`, stripAnsi complété (séquences OSC), délimiteurs de heredoc
+  uniques.
+
+### Lot 3 — socle technique (`b349d93`)
+
+- Compteurs faux corrigés : `levelMasteryScore` ignorait **Python** ; les badges
+  comptaient des exercices là où ils annonçaient des **modules** ; le Dashboard
+  comptait les **actes de mission** comme des exercices (pourcentage > 100 %
+  possible) ; le calendrier d'activité était décalé d'un jour (UTC vs local) ;
+  Stats et CourseMap affichaient des listes de langages codées en dur.
+- Écrans blancs : `Course.jsx` ne remettait pas `activeSection` à zéro au
+  changement de module ; `findNextModule` renvoyait toujours `null` pour les 12
+  parcours complémentaires (`parseInt('sql-l1')` = `NaN`).
+- Brouillons et notes : le nettoyage du debounce **annulait** la sauvegarde en
+  attente au démontage (texte perdu si l'on navigue en moins de 800 ms).
+- `lib/useProgress.js` : lecture de la progression factorisée, avec `.catch` et
+  garde d'obsolescence — 11 pages faisaient cet appel sans aucune des deux.
+- Cycles de vie : effet clavier sans tableau de dépendances (écouteur réattaché à
+  chaque frappe) et `Ctrl+R` qui volait la recherche d'historique du terminal,
+  `AIAssistant` sans garde de démontage et sans historique transmis au modèle,
+  index de recherche globale construit au démarrage de l'app, index des flashcards
+  reconstruit deux fois par montage.
+- Tables `LANG_COLORS`/`LANG_LABELS` dupliquées dans 8 fichiers → source unique
+  dans `lib/langs.js`.
+
+### Lot 4 — outillage, build, documentation
+
+- **ESLint** (config plate, ESLint 9) avec `react-hooks` : les deux règles qui
+  auraient signalé plusieurs bugs ci-dessus.
+- **Vitest** + 14 tests sur `validators/regex.js` et `validators/structured.js`.
+- **`scripts/check-content.mjs`** : intégrité du catalogue (ids manquants /
+  orphelins / dupliqués, dossiers hors du glob de `loader.js`, titres divergents),
+  validations impossibles à échouer, corrections incohérentes avec leurs mots-clés,
+  charges de moteur manquantes, regex `detect`/`requiredCmd` invalides. Dette connue
+  isolée dans `scripts/content-known-issues.json`.
+- **CI GitHub Actions** : lint + tests + contenu + build à chaque push.
+- **`.gitattributes`** : sans lui, `git status` affichait les **316 fichiers** du
+  dépôt comme modifiés (CRLF sur le disque contre LF dans l'index). Après
+  récupération : `git add --renormalize . && git commit`.
+- **`npm run package` réparé** : `resources/go` était déclaré dans
+  `extraResources` mais **aucun script ne le provisionnait** — le packaging
+  échouait depuis un clone propre. Ajout de la toolchain `go`, d'un script
+  `toolchains`/`prepackage`, du téléchargement en `.part` (une archive tronquée par
+  un Ctrl+C était réutilisée telle quelle) et d'un support d'empreinte SHA-256.
+- **`release.ps1`** : vérification d'`ISCC.exe`, de `gh` et du remote **avant** le
+  build (l'échec survenait après plusieurs minutes), `npm version` au lieu d'une
+  substitution regex, et **génération + publication de `latest.yml`** (sha512) que
+  l'updater lit pour vérifier l'installateur.
+- **Updater / installateurs réconciliés** : la release publie des installateurs
+  **Inno Setup** ; l'updater choisit désormais explicitement l'asset *Hybrid* (au
+  lieu du premier `.exe` renvoyé par l'API, qui pouvait être l'*Offline* de
+  plusieurs Go) et envoie `/DIR=` pour Inno, `/D=` pour NSIS — l'argument NSIS était
+  **ignoré en silence** par les installateurs réellement publiés, ce qui annulait le
+  correctif « écraser l'installation existante » de la v0.4.3.
+- Deux **dépendances fantômes** déclarées (`@codemirror/language`,
+  `@codemirror/view`), utilisées mais résolues seulement en transitif.
+
 
 ## v0.21.0 — Navigation vers les actes précédents (missions) (2026-07-03)
 

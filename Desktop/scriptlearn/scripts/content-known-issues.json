@@ -1,0 +1,25 @@
+{
+  "_comment": "Dette de contenu CONNUE, tolérée par scripts/check-content.mjs pour garder la CI verte. Chaque entrée est un vrai défaut à corriger : l'élève qui recopie la correction affichée voit « Pas tout à fait… » parce que requiredKeywords ne correspond pas à la correction de référence. Corriger = ajuster les mots-clés OU la correction, puis RETIRER l'id de cette liste. Relevé lors de l'audit du 18/09/2026.",
+  "keywordMismatch": [
+    "ex-html-l3-m3-1",
+    "ex-kql-l2-m3-1",
+    "ex-kql-l2-m3-2",
+    "ex-kql-l2-m3-5",
+    "ex-kql-l3-m1-4",
+    "ex-kql-l3-m2-1",
+    "ex-kql-l3-m2-4",
+    "ex-kql-l3-m3-3",
+    "ex-regex-l1-m4-4",
+    "ex-regex-l3-m1-3",
+    "ex-regex-l3-m4-5",
+    "ex-spl-l1-m2-2",
+    "ex-spl-l1-m3-1",
+    "ex-spl-l1-m3-5",
+    "ex-spl-l2-m3-4",
+    "ex-spl-l2-m3-5",
+    "ex-spl-l3-m1-1",
+    "ex-spl-l3-m2-4",
+    "ex-spl-l3-m2-5"
+  ],
+  "titleMismatch": []
+}
